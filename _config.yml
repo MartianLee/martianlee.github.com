@@ -1,10 +1,10 @@
-title: Your awesome title
-email: your-email@domain.com
+title: MartianLee's Blog
+email: martionlee@gmail.com
 description: description
-baseurl: /Jekyll-Avalon
-url: http://joshuaavalon.github.io
-twitter_username: joshuaavalon
-github_username:  joshuaavalon
+baseurl: /MartianLee
+url: http://MartianLee.github.io
+twitter_username: MartianLee
+github_username:  MartianLee
 
 sass:
   style: compressed
@@ -36,7 +36,12 @@ sticky_count: 3 # Number of sticky post shown
 gems:
   - jekyll-paginate
   - jekyll-feed
-  
+  - jekyll-mentions
+  - jemoji
+  - jekyll-redirect-from
+  - jekyll-sitemap
+  - jekyll-feed
+
 exclude:
   - Gemfile
   - Gemfile.lock
