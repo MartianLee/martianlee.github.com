@@ -1,40 +1,25 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link href="http://gmpg.org/xfn/11" rel="profile">
-
-  <!-- Enable responsiveness on mobile devices-->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-
-  <title>
-    {% if page.title == "Home" %}
-      {{ site.title }} &#8212; Designer
-    {% else %}
-      {{ site.title }} &#8212; {{ page.title }}
-    {% endif %}
-  </title>
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ site.url }}/styles.css">
-
-  <!-- Icons -->
-  <link rel="shortcut icon" href="https://s.gravatar.com/avatar/851f86118501494793119407e207b01f?s=64" />
-
-  <!-- Type Kit -->
-  <script src="//use.typekit.net/pgq1xjb.js"></script>
-  <script>try{Typekit.load();}catch(e){}</script>
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="{{ page.title }}"/>
-  <meta property="og:site_name" content="Bruno Marinho — Designer"/>
-  <meta property="og:url" content="http://www.brunomarinho.com"/>
-  <meta property="og:description" content=""/>
-
-  <!-- RSS -->
-  <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ site.url }}/atom.xml">
-</head>
-
-
-
+<!-- Header -->
+<header id="header"{% if page.layout == 'landing' %} class="alt"{% endif %}>
+  <h1><a href="{{ site.baseurl }}/index.html">{{ site.title }}</a></h1>
+  <nav id="nav">
+    <ul>
+      <li class="special">
+        <a href="#menu" class="menuToggle"><span>Menu</span></a>
+        <div id="menu">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            {% for my_page in site.pages %}
+            {% if my_page.title %}
+            <li><a href="{{ my_page.url | prepend: site.baseurl }}">{{ my_page.title }}</a></li>
+            {% endif %}
+            {% endfor %}
+            <li><a href="#">Sign Up</a></li>
+            <li><a href="#">Log In</a></li>
+            <li><a href="{{ "/feed.xml" | prepend: site.baseurl }}"
+                   class="icon fa-feed"> RSS Feed</a></li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+</header>
