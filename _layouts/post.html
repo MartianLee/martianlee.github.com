@@ -9,7 +9,7 @@ layout: base
 <div class="row">
 <h2>{{ page.title }}</h2>
 <div class="valign-wrapper">
-<div class="author"><img src="{{ site.author_img | prepend: site.baseurl }}" class="circle responsive-img"></div> {% for category in page.categories %}<h5><a href="{{ category | prepend: '/categories/' | prepend: site.baseurl }}">{{ category }}</a>{% unless forloop.last%}, {% endunless %}{% endfor%} - {{ page.date | date: "%m/%d/%Y" }}</h5>
+<div class="author"><img src="https://lh3.googleusercontent.com/sqX7Z0aE96wQvHw1AuckuP7sZsXncO9y6QgY7DKou3wK3nvZBrNaY6Zzfpv5ZmziXsJaFhNqnYnhCY_8yLYRbfoDXOOuv_v8zKtgqf3zKgwx7cuqvi3OTcuXtgIXNELterHjnJUD6X4vSHXq9SsbVAmgYUGcC7raJiahDj9hBs5C5aPelhrBE-lcSX5N4hO5w_EQkWsYfE4EXNOY5rxxQKPUfTOPJi21aY3Buv0yL4hNNLcZia-FAesaVTzfXm5hwqa4jimEM0cQQnVmKKJc3r6wUyQyTlqsmh8TQNtMd1ZOIZZHDQZ-xamyuC2iocyuecw172yyuD_oSZTHewezd-FfwOfYiTHU19-k1xylPpkT6YUUA_l4RJXjDM-fXULoA6s9dgmFVSQPB4HbyJejUcCxMqOe7GVSz81T2UPnYzddoZsNGX3LkAQOZiYphWgIg-AprEQdWAZBWRspHP2hUOakft5AyIBbNl7ZjHQEa5IL_Ds637vAsDyvwEEhYZaPyBa3gdRmJA8bs724UlsAZ7Xucx4K51gwjT-qk9YZDYHXDKzqJnqh6I4erls702Lce5FDY5ENQqhYNJkUyDj1E80y6tFjQ7YWuNbdS4Jdw7Fliu9cuhYb-Q=w960-h720-no" class="circle responsive-img"></div> {% for category in page.categories %}<h5><a href="{{ category | prepend: '/categories/' | prepend: site.baseurl }}">{{ category }}</a>{% unless forloop.last%}, {% endunless %}{% endfor%} - {{ page.date | date: "%m/%d/%Y" }}</h5>
 </div>
     {% for tag in page.tags %}
     {% if tag != site.sticky %}
