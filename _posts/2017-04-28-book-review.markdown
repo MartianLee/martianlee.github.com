@@ -1,0 +1,22 @@
+---
+layout: post
+title:  "리액트 책 리뷰"
+crawlertitle: "프론트엔드 프레임워크:리엑트"
+summary: "React Book Recommend"
+date:   2017-04-28 01:48:31 +0900
+categories: posts
+tags: 'book'
+author: MartianLee
+---
+
+[처음 시작하는 리액트, UI를 위한 자바스크립트 라이브러리 ReactJK][react11]
+![react1]({{ site.images }}/react1.jpg)
+너무 글자만 있다. 어디서부터 접근해야 할 지 찾기 힘들다.
+처음부터 계속해서 읽어나가면 좋을 수도 있지만 중간에 내가 필요로 하는 내용만 따라가기 힘들다.
+
+[시작하세요! 리액트 프로그래밍][react22]
+![react2]({{ site.images }}/react2.jpg)
+앞선 책보다 비교적 시각화가 잘 되어 있다.
+
+[react11]: http://www.yes24.com/24/goods/30684524?scode=032&OzSrank=1
+[react22]: http://www.yes24.com/24/goods/32732555?scode=032&OzSrank=1
