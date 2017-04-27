@@ -43,3 +43,6 @@ sass:
 
 
 images: '/assets/images'
+
+google-analytics:
+  id: "UA-98236060-1"
