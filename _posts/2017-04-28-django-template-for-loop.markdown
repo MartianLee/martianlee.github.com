@@ -12,7 +12,7 @@ author: MartianLee
 장고에서 우리가 흔히 알고 있는 빙고게임과 같은 기능을 구현하려고 하였다.
 그렇게 하려면 게임판의 사이즈를 알고 그 사이즈*사이즈 만큼의 HTML table을 그려야 하는데, 기존에 내가 알고 있던 장고Django 템플릿Template의 for loop는 그저 주어진 객체의 갯수만큼 자동으로 반복되는 수 밖에 없었다. 그래서 찾아 보았더니...
 
-{% hilight html+django %}
+{% highlight html+django %}
 ...
 render_to_response('foo.html', {..., 'range': range(10), ...}, ...)
 ...
@@ -27,7 +27,7 @@ and in the template:
 
 혹은 정말 상수번 반복하고 싶으면,
 
-{% hilight html+django %}
+{% highlight html+django %}
 
 {% for i in "1234567" %}
     <option value={{i}}> {{i}}</option>
