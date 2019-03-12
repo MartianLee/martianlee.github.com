@@ -18,7 +18,7 @@ author: MartianLee
 오늘은 리모트로 출근한 첫날이고 겨우 큅에 있는 튜토리얼 문서를 읽으면서 설치를 했다. 설치를 하는 일은 생각보다 오래 걸렸다. 3시나 되어서나 [가브크래프트 깃헙][parti11]를 읽기 시작했고 저장소를 클론해서 가져오는 중에서 막혔다. 또륵. 그렇게 6시가 지났고 하루 일과가 끝이 났다. 무서운 점은 6시가 끝나도 버튼을 끄지 않는다는 사실이고 계속 설치를 하고 싶었다. 그 뒤로 밥을 먹구 조금 놀다가 설치를 다시 봐야지 하다가 왔다갔다 했는데, 계속 설치는 지지부진하고 이렇게 글을 쓰고 있다. 리모트 근무라니. 만만한 일이 아니다. ㅋㅋ
 
 
-[parti11]: https://github.com/parti-xyz/parti-union
-[parti22]: https://github.com/parti-xyz
+[parti11]: https://github.com/parti-coop/govcraft
+[parti22]: https://github.com/parti-coop
 [parti33]: https://docs.parti.xyz/
 [parti44]: http://h21.hani.co.kr/arti/society/society_general/41891.html
