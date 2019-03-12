@@ -21,6 +21,7 @@ disqus_username:
 
 # Build settings
 markdown: kramdown
+highlighter: rouge
 relative_permalinks: false
 permalink: /:categories/:title/
 
