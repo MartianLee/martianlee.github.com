@@ -5,7 +5,7 @@ crawlertitle: "Parti 회사 적응하기"
 summary: "새로운 회사에서"
 date:   2018-01-29 23:24:17 +0900
 categories: posts
-tags: ['develop']
+tags: ['develop','job','daily']
 author: MartianLee
 ---
 
