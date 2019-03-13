@@ -1,6 +1,8 @@
 ---
 # Only the main Sass file needs front matter (the dashes are enough)
 ---
+$baseurl: "{{ site.baseurl }}";
+
 @charset "utf-8";
 
 
@@ -13,3 +15,5 @@
   "media-queries",
   "syntax-highlighting"
 ;
+
+@import "home"
