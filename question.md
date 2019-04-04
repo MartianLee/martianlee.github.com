@@ -1,15 +1,15 @@
 ---
 bg: "spring.jpg"
 layout: page
-permalink: /posts/
-title: "Posts"
-crawlertitle: "All articles"
-summary: "Posts about Development"
+permalink: /question/
+title: "Questions"
+crawlertitle: "Questions"
+summary: "Archive Daily Question"
 active: archive
 ---
 
 {% for post in site.posts %}
-  {% unless post.tags contains "question" %}
+  {% if post.tags contains "question" %}
   <article class="index-page">
     <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
     {{ post.excerpt }}
@@ -19,5 +19,5 @@ active: archive
       <span class="date">{{ post.date | date: "%d-%m-%Y"  }}</span>
     {% endif %}
   </article>
-  {% endunless %}
+  {% endif %}
 {% endfor %}

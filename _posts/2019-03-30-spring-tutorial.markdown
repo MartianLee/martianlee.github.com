@@ -49,7 +49,7 @@ Jdbc url을 기본 url 에서 jdbc:h2:mem:testdb 으로 바꿔주어야 한다.
 Test code는 꼭 test 폴더에 만듭시다.
 
 
-### BaseEntity 만드는 법
+### BaseEntity 개념
 
 Rails에서는 ActiveRecord를 상속받기만 하면 되는데 스프링은 내가 필요한 BaseEntity를 만들어서 상속해야 합니다.
 
