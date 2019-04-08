@@ -1,16 +1,10 @@
-#My Homepage
+# My Homepage
 
 https://martianlee.github.io/
 
 This is Martian.Lee's Blog which made by Jekyll.
 
-## Voyager
-
-Just another jekyll theme. Demo: <http://redvi.github.io/voyager>
-
-### Feathures:
-
-All HTML files are compressed (see `_layouts/compress.html`).
+Cumstomized Jekyll minima theme.
 
 **Post**
 
