@@ -19,6 +19,10 @@ comments: true
 
     {{ content }}
 
+    <div class="comments">
+      {% include comments.html %}
+    </div>
+    
     {% if page.next.url %}
       <a class="link-to-post" href="{{ page.next.url }}">
         <span class="link-to-post__next">&#10535; &nbsp;Next post</span>
@@ -31,9 +35,8 @@ comments: true
         <span class="link-to-post__prev">&#10535; &nbsp;Previous post</span>
         <span class="link-to-post__title">{{ page.previous.title }}</span>
       </a>
-    {% endif %}
+    {% endif %}    
 
   </div>
-  {% include comments.html %}
 
 </article>
