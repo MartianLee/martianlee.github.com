@@ -5,7 +5,7 @@ crawlertitle: "SCCC 홈페이지 리뉴얼 with 지킬 블로그"
 summary: "SCCC 소모임 홈페이지를 지킬 블로그로 리뉴얼합니다."
 date:   2019-04-17 18:27:41 +0900
 categories: posts
-tags: ['develop']
+tags: ['develop','jekyll']
 author: MartianLee
 ---
 

@@ -3,9 +3,9 @@ layout: post
 title:  "Jekyll로 깃헙 블로그 멋대로 디자인하기"
 crawlertitle: "Jekyll로 깃헙 블로그 멋대로 디자인하기"
 summary: "Jekyll로 깃헙 블로그를 생성하고 스타일을 멋대로 입혀봅니다"
-date:   2019-04-11 19:03:48 +0900
+date:   2019-04-15 19:12:17 +0900
 categories: posts
-tags: ['algorithm']
+tags: ['develop','jekyll']
 author: MartianLee
 ---
 
