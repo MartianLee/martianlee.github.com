@@ -124,12 +124,12 @@ permalink: /:categories/:title/
 
 permalinks 는 https://martianlee.github.io/posts/ 의 뒤에  posts와 같이 페이지, 포스트, 콜렉션의 주소를 나타냅니다. 주소 설정에 대한 자세한 정보는 [지킬 공식 홈페이지](https://jekyllrb-ko.github.io/docs/permalinks/)를 참조해 주세요.
 
-### 스타일 및 메인 페이지뜯어 고치기
+### 스타일 및 메인 페이지 뜯어 고치기
 
-1. 우선 자동으로 생성되는 index.md 파일을 삭제합니다.
+* 우선 자동으로 생성되는 index.md 파일을 삭제합니다.
 index.html 과 index.md 가 동시에 있으면 index.md를 먼저 참조하기 때문입니다.
-2. index.html 을 생성합니다. 이제 저희 마음대로 메인 페이지를 꾸밀 수 있습니다. 저는 bootstrap 테마를 가져와서 살짝 고쳤는데요, 제 index.html을 고쳐 쓰셔도 무방합니다. (home.scss의 background 파일에 유의하세요!)
-3. assets/css 에 main.scss 파일을 생성합니다. 이제 이 파일에 메인 페이지을 포함해 우리가 적용하고 싶은 스타일을 저장할 것입니다.
+* index.html 을 생성합니다. 이제 저희 마음대로 메인 페이지를 꾸밀 수 있습니다. 저는 bootstrap 테마를 가져와서 살짝 고쳤는데요, 제 index.html을 고쳐 쓰셔도 무방합니다. (home.scss의 background 파일에 유의하세요!)
+* assets/css 에 main.scss 파일을 생성합니다. 이제 이 파일에 메인 페이지을 포함해 우리가 적용하고 싶은 스타일을 저장할 것입니다.
 
 main.scss 파일의 내용은 다음과 같습니다. 제일 위에는 메인 Sass 를 뜻하는 --- 를 넣어줍니다. 그리고 앞으로 변수로 사용한 baseurl을 정의합니다. 그리고 @import 를 사용해 우리가 import할 파일을 포함시켜 줍니다. 아예 0부터 디자인하실 분은 하나씩 만들 때마다 추가해 주시면 됩니다. 저와 비슷한 스타일로 시작하시려면 제 저장소에서 파일을 복사해 가시면 됩니다.
 ```
@@ -153,9 +153,11 @@ $baseurl: "{{ site.baseurl }}";
 
 @import "home"
 ```
-4. assets/_sass/home.scss 파일을 수정합니다.
 
-5. _includes/head.html 을 확인해 봅니다. 저는 css framework bootstrap을 사용합니다. 다른 framework를 사용하고 싶은 분들은 바꿔서 쓰시면 됩니다. 
+* assets/_sass/home.scss 파일을 수정합니다.
+
+* _includes/head.html 을 확인해 봅니다. 저는 css framework bootstrap을 사용합니다. 다른 framework를 사용하고 싶은 분들은 바꿔서 쓰시면 됩니다. 
+
 ```
 <head>
   <meta charset="utf-8">
@@ -219,16 +221,16 @@ $baseurl: "{{ site.baseurl }}";
 home/about.md 파일은 about 페이지입니다.이 처럼 메인 경로에 파일을 추가하고 active: about 으로 설정하면 메뉴에 about 이 추가됩니다. 
 
 _include/header.html 을 봅시다.
-```
-
-    {% for my_page in site.pages %}
-      {% if my_page.active %}
-        <a href="{{ my_page.url | prepend: site.baseurl }}">{{ my_page.title }}</a>
-      {% endif %}
-    {% endfor %}
 
 ```
-여기서 site.pages 에 방금 우리가 active에 등록한 페이지가 포함된다는 것을 알 수 있습니다.
+for my_page in site.pages
+      if my_page.active
+        <a href="my_page.url | prepend: site.baseurl "> my_page.title </a>
+      endif
+    endfor
+```
+
+여기서 site.pages 에 방금 우리가 active에 등록한 페이지가 포함된다는 것을 알 수 있습니다. (계속 지킬이 스크립트로 인식해서 %를 제거하였습니다.)
 
 ### 댓글 기능 추가하기
 [이 게시글](https://xho95.github.io/blog/jekyll/disqus/migration/2017/01/20/Add-Disqus-to-Jekyll.html)과 [다른 게시글](https://17billion.github.io/jekyll/disqus/reply/2017/06/01/jekyll_disqus.html
@@ -241,7 +243,7 @@ _include/header.html 을 봅시다.
 ## 깃헙에 연결하기
 repository - setting - options - GitHub Pages 에서 github page 를 설정하실 수 있습니다.
 
-![img1]({{ site.images }}/190415_jekyll-blog.png)
+![img1]({{ site.images }}/190415_jekyll-blog/image1.png)
 
 ## 마무리
 
