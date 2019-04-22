@@ -7,7 +7,13 @@ date:   2019-04-17 18:27:41 +0900
 categories: posts
 tags: ['develop','jekyll']
 author: MartianLee
+output:
+  html_document:
+    toc: true
 ---
+
+* 목차
+{:toc}
 
 ## 배경
 2016년 숭실대학교 소모임 SCCC(Soongsil Computing Contest Club) 페이지를 만들었습니다. nginx에 올라가 있는 정적 페이지였습니다.
