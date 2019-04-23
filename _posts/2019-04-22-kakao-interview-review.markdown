@@ -73,8 +73,8 @@ output:
     * 페이지 조각 Caching
     * 페이지 Caching
 * 데이터베이스에 인덱스를 생성하는 규칙
-  * 힌트절 사용
-  * 
+  * 옵티마이저가 추천하는 힌트절 사용
+  * [인덱스 적용원칙](http://wiki.gurubee.net/pages/viewpage.action?pageId=688163)
 * 커넥션 풀이란?
   * a database connection cache implementation 데이터베이션 커넥션 캐시를 구현한 것
   * 보통 minimum pool size와 maximum pool size가 있습니다. 만약 maximum pool size에 도달하여, 사용가능한 커넥션이 없다면 풀에서 자원이 반납될 때까지 기다립니다. time-out 시간 안에 다른 커넥션이 반납되지 않는다면 에러가 발생합니다.
