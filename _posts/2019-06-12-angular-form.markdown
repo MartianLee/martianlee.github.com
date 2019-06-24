@@ -12,10 +12,10 @@ output:
     toc: true
 ---
 
+![img1]({{ site.images }}/190612_angular_form/form.png)
+
 * 목차
 {:toc}
-
-![img1]({{ site.images }}/190612_angular_form/form.png)
 
 ## 문제
 AngularJS를 사용할 때 selectbox를 form binding해서 사용하게 된다. 이 때 분명 html의 selected 속성을 사용하였는데, 기본값을 설정할 수 없는 문제가 발생하였다.
