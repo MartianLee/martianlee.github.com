@@ -31,7 +31,7 @@ output:
 
 ### 1. view-service-model
 
-앵귤러 튜토리얼에서 제안하는 아키텍쳐입니다. view-service-model을 활용합니다. 기존 패턴처럼 코딩한다면 redux pattern 에서 해결하고자 하는 문제인 view와 model이 아주 복잡하게 뒤섞이는 일이 발생합니다. 그렇지만 이 문제는 앵귤러의 RxJS를 활용하면 쉽게 풀립니다. 데이터 모델의 흐름이 달라서 작업이라서 시간이 좀 걸렸습니다.
+앵귤러 튜토리얼에서 제안하는 아키텍쳐입니다. view-service-model을 활용합니다. 기존 패턴처럼 코딩한다면 redux pattern 에서 해결하고자 하는 문제인 view와 model이 아주 복잡하게 뒤섞이는 일이 발생합니다. 그렇지만 이 문제는 앵귤러의 RxJS를 활용하면 쉽게 풀립니다. 데이터 모델의 흐름이 state에서 관리하는 방식과 달라서 익숙해지는 데 시간이 좀 걸렸습니다.
 
 ![img2]({{ site.images }}/190725_angular_architecture/2.png)
 
