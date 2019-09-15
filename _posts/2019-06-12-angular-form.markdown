@@ -23,7 +23,7 @@ AngularJS를 사용할 때 selectbox를 form binding해서 사용하게 된다. 
 ## 해결
 모든 option의 value와 model, 렌더링되는 시점을 확인해 보아도 문제가 없었다. 분명히 selected가 설정되어야 했다.
 
-```
+```Angular
 <div class="form-select-area">
   <label class="form-label" for="gender">성별</label>
   <select id="gender" name="gender" class="form-select"
