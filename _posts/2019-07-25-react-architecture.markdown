@@ -1,0 +1,171 @@
+---
+layout: post
+title:  "ReactJS 프로젝트 구성하기"
+crawlertitle: "ReactJS의 상태 관리, 미들웨어, 스타일링 라이브러리 알아보기"
+summary: "리엑트는 다양한 라이브러리가 장점입니다. 구현해야 할 기능 별로 다양한 라이브러리를 알아봅니다."
+date: 2019-09-10 18:22:34 +0900
+categories: posts
+tags: ['develop','ReactJS']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img]({{ site.images }}/190910_react_architecture/react.png)
+
+* 목차
+{:toc}
+
+## 문제
+리엑트ReactJS로 약간 규모가 있는 어플리케이션을 개발합니다. 리엑트는 추상화가 잘 되어 있어서 거의 모든 부분에 다른 종류의 라이브러리를 사용할 수 있습니다. 개발자가 선택해야 하는 부분과 옵션에 대해서 정리합니다.
+
+개발환경
+* ReactJS
+* Node v10
+
+## 해결
+
+처음 리엑트 프로젝트를 시작하고 정말 놀랐다. 어플리케이션의 모든 핵심적인 영역에서 다른 라이브러리가 있었기 때문이다. 대박. 리엑트라는 프레임워크 자체가 확장성을 고려해서 만들어졌다는 걸 느낄 수 있었다. 이 글에서는 프론트엔드 어플리케이션의 난제인 4가지 영역과 라이브러리를 소개한다.
+
+### 상태 관리
+
+#### Redux vs MobX vs Hook + context
+처음 리엑트 튜토리얼을 검색했는데 너무 헷갈렸다. 리엑트에 대해서 개념이 제대로 잡히지도 않은 상태에서 redux도 있고 mobX도 있고 잘 모르겠는데 추천한다고 하고 그런데 이 튜토리얼에 있는 것은 다른 튜토리얼에 없고 대체 뭐가 정답이지??? 이랬던 것이다.
+
+![img]({{ site.images }}/190910_react_architecture/redux.png)
+#### Redux
+Redux는 아주 옛날부터 리엑트와 함께 사용되어 온 라이브러리다.
+상태 관리 패턴인 Flux 패턴으로 작성된 라이브러리다. store의 변화에 대해 엄격한 규칙을 가지고 있다. action과 reducer가 분리되어 있다. 그러니까 명령의 호출과 상태의 변경이 분리되어 있다. 그리고 상태는 일부만 update 하는 것이 아니고 새로운 object로 덮어씌워서 적용할 수밖에 없다.
+
+![img]({{ site.images }}/190910_react_architecture/mobx.png)
+#### MobX
+[MobX](https://mobx.js.org/)는 RxJS를 사용할 수 있게 해주는 라이브러리다. Redux보다 덜 엄격해서 작은 어플리케이션을 만들 때 더 유리하다. MobX는 반응형 프로그래밍 개념을 적용해서 Observable을 사용한다.
+
+![img]({{ site.images }}/190910_react_architecture/mobx-flow.png)
+
+
+#### Hook + context API
+[React Hook](https://reactjs.org/docs/hooks-intro.html)은 리엑트 버젼 16.8에 적용된 기능이다. 다른 라이브러리를 import하지 않고 바로 쓸 수 있다는 장점이 있다. 그렇다 보니 당연히 작은 규모의 어플리케이션에 유리하다. Context.Provider를 이용해 변경 사항을 자식 트리에 전달할 수 있다. 그리고 .Consumer선언해서 변경 사항을 구독한다. 
+아직 사용해 보지 않아서 좀 더 연구가 필요하다.
+
+### 미들웨어 Middleware (비동기 처리 Asyncrhonous)
+
+#### Thunk vs Saga vs Observable
+사실 프론트엔드 개발자의 고민의 전부라고 할 정도로 귀찮은 문제다. 많은 언어들이 synchronous하게 실행되기 때문에 개발자가 익숙해지기 쉽지 않은 문제다. 원론적인 고민은 접어놓더라도 중요한 부분이다. 프론트엔드에서 뿌려줄 정보를 서버에 요청하거나 새로운 정보를 전송하고 ``(가장중요) 변화를 어떻게 사용자 경험의 끊김 없이 새로고침할 것인지!!``  이것이 문제인 것이다.
+
+여기서 Thunk와 Saga는 Redux와 조합으로 사용한다.
+
+#### Thunk
+Redux에서 dispatch할 때는 무조건 action 객체가 필요하다. 하지만 Redux-thunk를 사용하면 '액션 생성 함수'를 dispatch할 수 있습니다. 간단하게 이야기해서 당장 action을 실행하는 것이 아니라 내가 원하는 작업을 무언가 실행하고 그 뒤에 action을 실행할 수 있게 해 주는 것입니다. redux 튜토리얼에도 포함되어 있을 만큼 쉬운 미들웨어입니다.
+
+#### Saga
+
+![img]({{ site.images }}/190910_react_architecture/redux-saga.png)
+
+
+Redux-Saga는 애플리케이션의 사이드 이펙트들(데이터 요청(fetch) 등의 비동기 작업, 브라우저 캐시 같은 순수하지 않은 것들)을 쉽게 관리하고 효과적으로 실행하고 간단한 테스트와 쉬운 실패 처리를 목적으로 한다. Saga는 자체적인 몇 가지 기능을 제공한다. 비동기 처리가 필요한 부분에 yield만 붙여주면 마치 동기적으로 작성된 것 처럼 작동한다. asnyc / awiat가 생각날 수도 있는데 실제로 비슷하다. redux store에 saga를 결합하고 takeLatest로 action의 실행과 saga 함수를 bindng하면 된다. binding된 saga 함수는 특정한 액션이 끝나자마자 실행된다.
+
+### 서버 사이드 렌더링 Server Side Rendering
+
+#### NextJS vs. Gastby vs. CRA
+
+엔터프라이즈 어플리케이션이 아닌 경우에는 여기까지 고민할 필요가 없는 경우가 많다. 프론트엔드에서 렌더링해도 보통 속도가 문제가 없는 경우가 많기 때문이다. 하지만 페이지별 썸네일, 조금 많은 양의 정보를 렌더링해야 하는 경우에 서버 사이드 렌더링을 사용하게 된다.
+
+#### NextJS
+![img]({{ site.images }}/190910_react_architecture/nextjs.png)
+NextJS는 폴더 구조가 조금 정해지고 라우팅 규칙도 미리 정해진 리엑트라고 생각하면 된다. 소스 폴더에 pages 폴더가 있어야 하고 그 밑에 다시 라우팅될 페이지들을 생성해주면 된다. _App.js와 _Document.js 파일을 설정해 공통적으로 필요한 정보를 import할 수 있다. 
+리엑트 클래스 내에
+```
+static async getInitialProps (props) {
+    const { store, isServer } = props.ctx
+    return { isServer }
+}
+```
+함수를 선언해 server에서 렌더링 될 때 해줘야 할 특정한 작업을 정의할 수 있다.
+
+### 스타일링 Styling
+
+jsx style vs Styled Component vs CSS Module vs etc...
+아 프론트엔드 개발자는 할 게 너무 많다. 이렇게 복잡한 리엑트의 구조를 넘어서 style도 적용해야 하기 때문이다. 모든 div에 className을 지어야 하고 그 className에 해당하는 스타일을 붙이다 보면 해가 몇번이나 저무는 걸 볼 수 있다.
+
+#### jsx style
+jsx style은 다른 라이브러리 없이 기본으로 제공하는 방법이다.
+```
+return (
+    <div className={light ? 'light' : ''}>
+      {format(new Date(lastUpdate))}
+      <style jsx>{`
+        div {
+          padding: 15px;
+          display: inline-block;
+          color: #82fa58;
+          font: 50px menlo, monaco, monospace;
+          background-color: #000;
+        }
+        .light {
+          background-color: #999;
+        }
+      `}</style>
+    </div>
+  )
+```
+위와 같이 jsx 문법 내에 선언되며 className을 지정해 주어야 한다. 당장 스타일을 붙일 수 있어서 가장 쉽고 간단하다. 어플리케이션이 점점 커질 수록 문제가 발생할 수 있다. 스타일의 복제, 분리가 쉽지 않기 때문이다.
+
+#### Styled Component
+```
+const ButtonWrapper = styled.div`
+    text-align: center;
+  `
+
+const Button = styled.button`
+  width: 40%;
+  &:not(:last-child) {
+    margin-right: 10%;
+  }
+  `
+
+return (
+  <ButtonWrapper>
+    <Button>
+        상세보기
+    </Button>
+    <Button>
+        구매하기
+    </Button>
+  </ButtonWrapper>
+)
+```
+위에서 계속 className 이야기를 한 것은 바로 이 Styled Component의 강력함을 홍보하기 위해서였다. 스타일 컴포넌트를 선언해서 감싸주는 방법으로 스타일을 적용한다. 같은 파일 안에서 선언해도 되고, Wrapper 컴포넌트를 따로 구현해서 감싸주어도 된다. 컴포넌트의 className은 실제 렌더링할 때 자동으로 알아서 생성해서 스타일을 적용해 준다. styled componnet는 ES6의 Template literals 기능을 사용합니다.
+
+그 외 다른 라이브러리는 Radium, Aphrodite 등등 많은데 [9가지 React 스타일링 방법](https://blog.bitsrc.io/9-css-in-js-libraries-you-should-know-in-2018-25afb4025b9b)이라는 게시글을 참조해 주시면 좋습니다.
+
+### 덤) 폴더 구조
+많은 튜토리얼을 읽다 보면 '개발자 취향대로' 라는 말이 많이 보인다. 자신이 편한 방법대로 폴더 이름/계층을 만들어 쓰면 된다. 나도 아직 확신은 없어서 그 때 그 때 편한 방법으로 개발하고 있다. 가장 크게 나누어 보자면, 컴포넌트를 ``기능별로`` 나눌 것인지, ``관심사별로`` 나눌 것인지 정도 되겠다. 개인적으로는 기능별로 나누는 편을 선호한다.
+
+### 덤) 테스트 프레임워크
+뭔가 빠진 것 같다면 바로 테스트다. 아직 프로젝트가 테스트 할 사이즈가 아니(라는 의견도 논란의 여지가 있다)라고 생각해서 아직 테스트가 없다. 테스트 프레임워크는 다른 글에서 찾아봽도록 하겠다.
+
+
+## 결론
+
+처음 리엑트 프로젝트를 고민하시는 분께 어떤 라이브러리를 사용해야 하는 지 길잡이가 되었으면 하는 마음으로 작성했다. 하나씩 리서치하는 데 품이 좀 들어서 그런 시간이 줄었으면 하는 마음이다. 어느 것이 좋다 나쁘다 보다는 프로젝트의 특성에 따라서 사용하면 된다.
+
+현재는 Redux + Saga + Styled Component로 현재 개발하고 있는데, 약간 큰 어플리케이션을 개발해야 해서 이렇게 선택했다. 아직까지는 큰 불편함 없이 잘 개발하고 있다.
+
+``혹시 잘못된 지식이나 새로운 라이브러리가 있으면 댓글로 달아주시면 감사하겠습니다.``
+
+
+``그럼 즐거운 프론트엔드 개발 하시길!``
+
+
+## 참고자료
+
+* [리엑트 공식 페이지](https://reactjs.org/)
+* [React에서 Mobx 경험기 (Redux와 비교기)](http://woowabros.github.io/experience/2019/01/02/kimcj-react-mobx.html)
+* [리덕스 사가 github](https://github.com/redux-saga/redux-saga)
+* [Redux-saga에 대하여](https://medium.com/@han7096/redux-saga%EC%97%90-%EB%8C%80%ED%95%98%EC%97%AC-5e39b72380af)
+* [리덕스 미들웨어, 그리고 비동기 작업 (외부데이터 연동)](https://velopert.com/3401)
+* [한국어로 배우는 리엑트](https://github.com/reactkr/learn-react-in-korean)
+* [Building Scalable Applications using React — Part 1: Choosing the right mix of tools](https://medium.com/finiteloop-systems/building-scalable-applications-using-react-part-1-choosing-the-right-mix-of-tools-74d5afd9e854)
+* [React Context 간단 정리](https://medium.com/@pks2974/react-context-%EA%B0%84%EB%8B%A8-%EC%A0%95%EB%A6%AC-9c35ce6617fc)
