@@ -76,8 +76,30 @@
   <script type="text/javascript">
     $(function() {
       $('#gform').on('submit', function(e) {
-        $('#gform *').fadeOut(2000);
-        $('#gform').prepend('Your submission has been processed...');
+        var result = [];
+        for(var k=0;k<4;k++){
+          sum = 0;
+          for(var i=0;i<4;i++){
+            val = 0;
+            for(var j=1;j<=5;j++){
+              num = (k * 4 + i) * 5 + j;
+              nameOfRadio = '#radio'+num;
+              valueOfRadio = $(nameOfRadio)[0].checked;
+              if (valueOfRadio) {
+                val = j;
+              }
+            }
+            sum += val;
+            console.log(val);
+          }
+          console.log('sum: ',sum);
+          result.push(sum);
+        }
+        $('#gform *').fadeOut(1200);
+        $('#gform').prepend('당신의 응답이 기록되었습니다.');
+        for(var k=0;k<4;k++){
+          $('#gform').prepend('파트'+ (k+1) + ':' + result[k] + '점');
+        }
       });
     });
   </script>
