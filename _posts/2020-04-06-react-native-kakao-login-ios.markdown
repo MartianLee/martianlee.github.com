@@ -43,7 +43,9 @@ npm install ./KakaoModule
 ### 카카오 SDK를 import하여 카카오링크 적용하기
 처음부터 쉽게 다른 오픈소스 라이브러리를 import하지 않고 직접 모듈을 만들 생각이었습니다. 구글링을 하던 중 [React Native 앱에 카카오링크 적용하기](https://medium.com/@zeroweb.tech/react-native-앱에-카카오링크-적용하기-d170d31b780b) 글을 발견해서 하나씩 따라하기 시작했습니다.
 1. 위 게시글의 가장 첫 번째 실습. Native module method 실행에 성공하였습니다.
+
 KakaoModule/ios/RNKakaoTest.m
+
 ```
 #import "RNKakaoTest.h"
 
@@ -61,7 +63,8 @@ RCT_EXPORT_METHOD(foo:(RCTResponseSenderBlock)callback)
 
 @end
 ```
-위 게시글의 소스를 가져왔습니다. iOS를 전혀 모르시는 분도 foo라는 함수를 export하겠다는 말을 짐작할 수 있습니다.
+
+위 게시글의 소스를 가져왔습니다. iOS를 전혀 모르시는 분도 foo라는 함수를 export하겠다는 뜻을 짐작할 수 있습니다.
 
 ```
 ...
@@ -85,11 +88,6 @@ import RNKakaoTest from 'react-native-kakao-module';
     3. 파일로 framework add하는 방법은 카카오톡 공식 개발문서에도 언급되어 있는데요, 시키는 대로 프로젝트를 빌드했지만 실패했습니다.
     4. 에러 내용은 "Cannot include <KakaoLinkSDK.h> 였습니다. 물론 다른 SDK를 import해도 마찬가지였습니다 ㅠㅠㅠ
       검색 결과로는 파일의 참조가 문제라서 copy if need 와 같은 체크박스에 체크를 하고 직접 프로젝트에 import도 하고 build phase에 추가된 것을 아무리 확인해도 import가 되지 않았습니다.
-
-![img]({{ site.images }}/200209_django-gae-deploy/1.png)
-```
-./google-cloud-sdk/install.sh
-```
 
 
 ### 싹 지우고 새로운 프로젝트에서 도전
