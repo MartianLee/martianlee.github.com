@@ -5,7 +5,7 @@ permalink: /archive/
 title: "Archive"
 crawlertitle: "All articles with tags"
 summary: "Archive all Posts about Development"
-active: archive
+
 ---
 
 {% for tag in site.tags %}
