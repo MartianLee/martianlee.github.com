@@ -24,6 +24,7 @@ AngularJS를 사용할 때 selectbox를 form binding해서 사용하게 된다. 
 모든 option의 value와 model, 렌더링되는 시점을 확인해 보아도 문제가 없었다. 분명히 selected가 설정되어야 했다.
 
 ```Angular
+{% raw %}
 <div class="form-select-area">
   <label class="form-label" for="gender">성별</label>
   <select id="gender" name="gender" class="form-select"
@@ -40,6 +41,7 @@ AngularJS를 사용할 때 selectbox를 form binding해서 사용하게 된다. 
     This field is required
   </p>
 </div>
+{% endraw %}
 ```
 위에서 option을 하나 추가해서 그것을 기본 선택자로 해두고 그것은 선택할 수 없게 했다. 그리고 value에 "" 빈 string을 입력해 두었다. 하지만 여기서 문제를 발견했다. 내가 value를 입력했지만 이 값이 binding된 ``[(ngModel)]="data.sex"`` 값과 달랐기 때문이었다. 두 값이 다른 경우 어떠한 경우에도 selected가 설정되지 않았다. 심지어 
 수동으로 selected 설정을 해도 전혀 작동하지 않았다 !!
