@@ -8,33 +8,34 @@ summary: "About this blog"
 active: about
 ---
 
+[LinkedIn Profile](https://www.linkedin.com/in/martianlee/)
+
 ## "사람과 사람을 연결하는 개발자"
 
-사람을 좋아합니다. 새로운 것도 좋아합니다.
+사람을 좋아합니다. 새로운 것도 좋아합니다. 팀으로 일하는 것을 좋아합니다.
 
-사람의 삶에 기여할 수 있는 기술을 개발합니다. 기술이 세상을 바꿀 수 있지만 아주 느리고 신중하게 접근해야 한다고 생각합니다.
-
-항상 이야기 나누고 싶고 즐거운 에너지를 가진 사람이었으면 좋겠습니다.
-
-몸으로 하는 일을 좋아하고 그 중에서 특히 축구를 좋아합니다.
-
-글 쓰고 기록하는 일을 좋아합니다.
-
-\#인권 \#페미니즘 \#자본주의 \#제로웨이스트
+사람의 삶에 기여할 수 있는 기술을 개발합니다. 기술이 세상을 바꿀 수 있지만 아주 느리고 신중하게 접근해야 한다고 생각합니다. 항상 이야기 나누고 싶고 즐거운 에너지를 가진 사람이었으면 좋겠습니다. 몸으로 하는 일을 좋아하고 그 중에서 특히 축구를 좋아합니다. 글 쓰고 기록하는 일을 좋아합니다.
 
 ## 기술 스택 Skillset
 
-C/C++,
+React.js,
+React-Native.js,
+Django,
+Google Cloud Platform,
 RubyOnRails,
 Vue.js,
 Oracle/MySQL,
 Python,
+C/C++,
 Linux,
-Communication
+Communication,
+
 
 ## 경력 History
 
-2018.1 ~ 2019.1 [Parti](http://partiunion.org/) 에서 개발자로 일했습니다. 루비온레일즈 프레임워크를 사용했습니다. 타운홀 1.0 리뉴얼 프로젝트에 참여했습니다.
+* 2019.11 ~ [VEZT](https://vezt.co.kr/) Spring, Django, React-Native, GAE
+* 2019.6 ~ 2019.8 [Pilus](https://www.pilatespilus.com/) 프리랜서
+* 2018.1 ~ 2019.1 [Parti](http://partiunion.org/) 에서 개발자로 일했습니다. 루비온레일즈 프레임워크를 사용했습니다. 타운홀 1.0 리뉴얼 프로젝트에 참여했습니다.
 
 ## 수상경력 Award
 
@@ -120,8 +121,15 @@ Communication
       * MVVM
       * Vuex
       * Nuxt.js
+    * React.js
+      * Redux
+      * MobX
+      * Next.js
+    * React-Native
 * MySQL/Oracle
   * Grammar
+    * 5.5
+    * 5.7
   * PL/SQL
 * HTML/CSS
   * HTML5
@@ -145,7 +153,9 @@ Communication
 * Machine Learning
   * Basic Concepts
     * Neural Network
+    * LSTM
   * Libraries
+    * TensorFlow
     * Word2Vec
 * Linux
   * Commands
@@ -156,5 +166,7 @@ Communication
     * Rich & Precise
   * Tools
     * Slack
+    * Notion
+    * Google Docs
     * Wunderlist
 
