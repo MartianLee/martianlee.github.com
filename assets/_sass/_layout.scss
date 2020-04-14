@@ -198,17 +198,22 @@ main {
 
 .index-page {
   position: relative;
+  //border-bottom: 1px solid #eee;
   &:after {
-    content: "***";
+    // content: "***";
     position: absolute;
     margin-top: 1em;
     width: 100px;
     left: 50%;
   }
+  h2 {
+    padding-bottom: 0.7em;
+    border-bottom: 1px solid #eee;
+  }
 }
 
 article {
-  padding: 2em 1em;
+  padding: 1.8em 0.8em;
   img,
   embed,
   object,

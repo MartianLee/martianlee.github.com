@@ -223,6 +223,29 @@ body {
         bottom: 5px;
         right: 5px;
     }
+    .bg-primary {
+        background-color: #0d0f0a !important;
+    }
+    .text-primary {
+        color: #0d0f0a !important;
+    }
+    .read-more {
+        margin: 30px auto;
+        width: 14rem;
+        background-color: dimgrey;
+        color: white;
+        padding: 10px;
+    }
+
+    .index-page {
+        padding: 0.4em 1em;
+        h2 {
+            font-size: 1.5em;
+            padding-bottom: 0.7em;
+            border-bottom: 1px solid #eee;
+        }
+      }
+      
 }
 
 .home-footer {
