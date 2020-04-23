@@ -146,17 +146,32 @@ body {
         width: 100%;
         height: 100%;
         margin-top: 50px;
-        background: url($baseurl + '/assets/images/background1.jpg') no-repeat center center scroll;
+        // background: url($baseurl + '/assets/images/background1.jpg') no-repeat center center scroll;
+        background-color: mediumseagreen;
         -webkit-background-size: cover;
         -moz-background-size: cover;
         background-size: cover;
         -o-background-size: cover;
-        height: calc(60vh - 50px);
+        height: calc(45vh - 50px);
+        h1 {
+            font-family: 'Nanum Pen Script';
+            @media only screen and (min-width: 660px) {
+                font-size: 5em !important;
+            }
+            @media only screen and (max-width: 659px) {
+                font-size: 4em !important;
+            }
+        }
     }
     /* About */
     .about,
     .services {
         padding: 20px 0;
+        background-color: mediumseagreen;
+        color: white;
+        a {
+            color: white !important;
+        }
     }
     /* Services */
     .service-item {
@@ -193,6 +208,8 @@ body {
         &:hover {
             opacity: 0.8;
         }
+    }
+    .contents {
     }
     /* Call to Action */
     .call-to-action {
