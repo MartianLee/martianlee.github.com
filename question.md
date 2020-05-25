@@ -2,9 +2,9 @@
 bg: "spring.jpg"
 layout: page
 permalink: /question/
-title: "Questions"
-crawlertitle: "Questions"
-summary: "Archive Daily Question"
+title: "Today I Learn"
+crawlertitle: "TIL"
+summary: "Archive Daily Learned things"
 active: archive
 ---
 
@@ -12,7 +12,7 @@ active: archive
   {% if post.tags contains "question" %}
   <article class="index-page">
     <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
-    {{ post.excerpt }}
+    {{ post.content | strip_html | truncatewords: 50}}
     {% if post.lastmod %}
       <span class="date">{{ post.lastmod | date: "%d-%m-%Y"  }}</span>
     {% else %}
