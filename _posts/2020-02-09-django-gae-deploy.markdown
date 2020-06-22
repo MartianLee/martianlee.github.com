@@ -170,3 +170,4 @@ gcloud app deploy
 ## 참고자료
 
 * [구글 클라우드 플랫폼 공식 튜토리얼](https://cloud.google.com/gcp/getting-started/?hl=ko)
+* [구글 스토리지 사용법이 포함된 다른 한국어 튜토리얼](https://amanokaze.github.io/blog/Construct-Django-Application-using-GAE-Storage/)
