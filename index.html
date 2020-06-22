@@ -93,7 +93,7 @@ summary: "Be the Change"
           <hr class='small'>
           <div class='row'>
             <div class='col-md-6'>
-              <div class='portfolio-item text-center'>
+              <div data-aos="fade-up" data-aos-offset="200" class='portfolio-item text-center'>
                 <div class='portfolio-image-wrapper'>
                   <a href='#'>
                     <img class='img-portfolio img-responsive' src="{{ site.baseurl }}/assets/images/icpclogo.png"> 
@@ -108,7 +108,7 @@ summary: "Be the Change"
               </div>
             </div>
             <div class='col-md-6'>
-              <div class='portfolio-item text-center'>
+              <div data-aos="fade-up" data-aos-offset="200" class='portfolio-item text-center'>
                 <div class='portfolio-image-wrapper'>
                   <img class='img-portfolio img-responsive' src="{{ site.baseurl }}/assets/images/townhall.PNG"> 
                 </div>
@@ -121,7 +121,7 @@ summary: "Be the Change"
           </div>
           <div class='row'>
             <div class='col-md-6'>
-              <div class='portfolio-item text-center'>
+              <div data-aos="fade-right" class='portfolio-item text-center'>
                 <div class='portfolio-image-wrapper'>
                   <img class='img-portfolio img-responsive' src="{{ site.baseurl }}/assets/images/hearim.PNG"> 
                 </div>
@@ -135,7 +135,7 @@ summary: "Be the Change"
               </div>
             </div>
             <div class='col-md-6'>
-              <div class='portfolio-item text-center'>
+              <div data-aos="fade-left" class='portfolio-item text-center'>
                 <div class='portfolio-image-wrapper'>
                   <img class='img-portfolio img-responsive' src="{{ site.baseurl }}/assets/images/sccc.jpg"> 
                 </div>
@@ -150,7 +150,7 @@ summary: "Be the Change"
           </div>
           <div class='row'>
             <div class='col-md-6'>
-              <div class='portfolio-item text-center'>
+              <div data-aos="fade-down" class='portfolio-item text-center'>
                 <div class='portfolio-image-wrapper'>
                   <img class='img-portfolio img-responsive' src="{{ site.baseurl }}/assets/images/manjum.PNG"> 
                 </div>
@@ -163,7 +163,7 @@ summary: "Be the Change"
               </div>
             </div>
             <div class='col-md-6'>
-              <div class='portfolio-item text-center'>
+              <div data-aos="fade-down" class='portfolio-item text-center'>
                 <div class='portfolio-image-wrapper'>
                   <img class='img-portfolio img-responsive' src="{{ site.baseurl }}/assets/images/vezt.jpg"> 
                 </div>
@@ -194,9 +194,11 @@ summary: "Be the Change"
             <div class='row'>
               
               {% for post in site.posts limit: 4 %}
+              <div data-aos="flip-up" data-aos-offset="200">
               <article class="index-page">
                 <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
               </article>
+              </div>
               {% endfor %}
               <a href="/posts">
                 <div class="read-more">
@@ -210,7 +212,7 @@ summary: "Be the Change"
     </section>
   <section class='about' id='about'>
     <div class='container'>
-      <div class='row'>
+      <div data-aos="flip-up" data-aos-duration="500" class='row'>
         <div class='col-lg-12 text-center'>
           <h2>다양한 곳에서 저를 만나보세요!</h2>
           <hr class='small'>
@@ -236,3 +238,7 @@ summary: "Be the Change"
     </div>
   </section>
   </section>
+
+<script>
+  AOS.init();
+</script>
