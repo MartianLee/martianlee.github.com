@@ -176,7 +176,7 @@ original_labels = np.argmax(y_test, axis=1)
 for i in range(50):
     print("기사제목 : ", test_data[i][2], "/\t 원래 라벨 : ", original_labels[i], "/\t예측한 라벨 : ", predict_labels[i])
 ```
-[img]({{ site.images }}/200629_manjum-ml/pn.png)
+![img]({{ site.images }}/200629_manjum-ml/pn.png)
 * 한 기사당 max_len에 따라서 정확도가 달라진다. 길수록 정확하지만 생성 속도는 느려진다.
 * Embedding 차원과 LSTM Layer의 갯수는 모델의 크기에 큰 영향을 끼친다. 나는 GCP 혹은 Heroku에서 작동할 수 있는 크기 (메모리 300mb)로 만들기 위해 커스터마이징하였다. 차원과 레이어를 늘리면 정확도가 개선된다. 하지만 제한된 inpu에서 차원과 레이어만 늘린다고 해서 정확도가 개선되지는 않는다. (오히려 overfitting되어서 더 이상한 결과를 낼 수 있음.)
 * 몇 번 반복해서 학습시킬지(epochs)는 10번 내외가 결과가 좋았다. 너무 적게 반복하거나 너무 많이 반복하면 정확도가 좋지 않았다.
