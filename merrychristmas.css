@@ -1,0 +1,77 @@
+body {
+  background-color: #000;
+  color: #ffffff;
+}
+
+.tree {
+  display: flex;
+  justify-content: center;
+  align-items: center ;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 40px;
+  text-align: center;
+  padding: 20px;
+}
+
+.menu-title {
+  text-align: center;
+  font-size: 24px;
+  padding: 10px;
+}
+
+.menu {
+  display: flex;
+  padding: 10px;
+}
+
+.menu-tab {
+  flex: 1;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+}
+
+.moment {
+  font-size: 20px;
+  padding: 10px;
+}
+
+.description {
+  padding: 10px;
+}
+
+.letter-i {
+  width: 60vh;
+  height: 60vh;
+}
+
+  
+.cls-1 {
+  /* $delay: calc(var(--item) * 1s) */
+  fill: none;
+  stroke: #000;
+  stroke-miterlimit: 10;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-miterlimit: 10;
+  stroke-dasharray: 1500;
+  animation: lines 5s infinite calc(var(--item) * 1s);
+}
+
+.dot {
+  stroke-dasharray: 500;
+  stroke: var(--color);
+}
+
+.stem {
+  stroke: var(--color);
+}
+
+@keyframes lines {
+  100% {
+    stroke-dashoffset: 4000;
+  }
+}
