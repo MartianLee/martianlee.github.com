@@ -199,11 +199,12 @@ body {
     .portfolio-image-wrapper {
         max-height: 240px;
         overflow: hidden;
+        display: flex;
+        justify-content: center;
     }
     .img-portfolio {
         margin: 0 auto;
-        max-width: 100%;
-        max-height: 240px;
+        width: 100%;
         align-self: center;
         transition: transform .5s ease;
         &:hover {
