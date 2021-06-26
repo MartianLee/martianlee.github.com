@@ -4,7 +4,7 @@ layout: page
 title: "About"
 crawlertitle: "Why and how this blog was created"
 permalink: /about/
-summary: "About this blog"
+summary: "About Me"
 active: about
 ---
 
@@ -14,7 +14,7 @@ active: about
 
 사람을 좋아합니다. 새로운 것도 좋아합니다. 팀으로 일하는 것을 좋아합니다.
 
-사람의 삶에 기여할 수 있는 기술을 개발합니다. 기술이 세상을 바꿀 수 있지만 아주 느리고 신중하게 접근해야 한다고 생각합니다. 항상 이야기 나누고 싶고 즐거운 에너지를 가진 사람이었으면 좋겠습니다. 몸으로 하는 일을 좋아하고 그 중에서 특히 축구를 좋아합니다. 글 쓰고 기록하는 일을 좋아합니다.
+사람의 삶에 기여할 수 있는 기술을 개발합니다. 기술이 세상을 바꿀 수 있지만 아주 느리고 신중하게 접근해야 한다고 생각합니다. 항상 이야기 나누고 싶고 즐거운 에너지를 가진 사람이었으면 좋겠습니다. 몸으로 하는 일을 좋아합니다. 글 쓰고 기록하는 일을 좋아합니다.
 
 ## 기술 스택 Skillset
 
@@ -33,7 +33,8 @@ Communication,
 
 ## 경력 History
 
-* 2019.11 ~ [VEZT](https://vezt.co.kr/) Spring, Django, React-Native, GAE
+* 2020.07 ~ 현재 [FUMI](https://fumi.co.kr/) AWS, Express, GraphQL, MySQL, Angular9, Ionic Capacitor, Appsflyer, Firebase, Amplitude
+* 2019.11 ~ 2020.07 [VEZT](https://vezt.co.kr/) Spring, Django, React-Native, GAE
 * 2019.6 ~ 2019.8 [Pilus](https://www.pilatespilus.com/) 프리랜서
 * 2018.1 ~ 2019.1 [Parti](http://partiunion.org/) 에서 개발자로 일했습니다. 루비온레일즈 프레임워크를 사용했습니다. 타운홀 1.0 리뉴얼 프로젝트에 참여했습니다.
 

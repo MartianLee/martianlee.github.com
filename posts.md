@@ -1,5 +1,4 @@
 ---
-bg: "spring.jpg"
 layout: page
 permalink: /posts/
 title: "Posts"

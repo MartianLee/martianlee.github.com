@@ -37,9 +37,12 @@ body {
         font-size: 3.5em;
         font-weight: 700;
     }
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .home-wrapper {
+    overflow: hidden;
     /* Custom Button Styles */
     .btn-dark {
         border-radius: 0;
@@ -147,7 +150,7 @@ body {
         height: 100%;
         margin-top: 50px;
         // background: url($baseurl + '/assets/images/background1.jpg') no-repeat center center scroll;
-        background-color: mediumseagreen;
+        background-color: #aa93d6;
         -webkit-background-size: cover;
         -moz-background-size: cover;
         background-size: cover;
@@ -156,10 +159,10 @@ body {
         h1 {
             font-family: 'Nanum Pen Script';
             @media only screen and (min-width: 660px) {
-                font-size: 5em !important;
+                font-size: 4.5em !important;
             }
             @media only screen and (max-width: 659px) {
-                font-size: 4em !important;
+                font-size: 3.2em !important;
             }
         }
     }
@@ -167,7 +170,7 @@ body {
     .about,
     .services {
         padding: 20px 0;
-        background-color: mediumseagreen;
+        background-color: #aa93d6;
         color: white;
         a {
             color: white !important;

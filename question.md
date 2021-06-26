@@ -1,5 +1,4 @@
 ---
-bg: "spring.jpg"
 layout: page
 permalink: /question/
 title: "Today I Learn"
