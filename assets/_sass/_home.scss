@@ -198,12 +198,16 @@ body {
     }
     .portfolio-item {
         margin-bottom: 30px;
+        a {
+            font-weight: 700;
+        }
     }
     .portfolio-image-wrapper {
         max-height: 240px;
         overflow: hidden;
         display: flex;
         justify-content: center;
+        border: 1px solid lightgrey;
     }
     .img-portfolio {
         margin: 0 auto;
