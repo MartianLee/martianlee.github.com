@@ -2,8 +2,6 @@
 * Base Styles
 * ========================================================================== */
 
-@import url(https://fonts.googleapis.com/earlyaccess/nanumgothiccoding.css);
-
 .center-wrapper {
     max-width: $break-point;
     margin: 0 auto;
@@ -18,7 +16,7 @@
 }
 
 body {
-    font: normal 17px/1.5 "Nanum Gothic Coding", 'PT Serif', "Helvetica Neue", "Helvetica", Arial, sans-serif !important;
+    font: normal 17px/1.5 "SUIT", 'PT Serif', "Helvetica Neue", "Helvetica", Arial, sans-serif !important;
     width: 100%;
     height: 100%;
     background: #fdfdfd;
@@ -44,7 +42,7 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: "Nanum Gothic Coding", 'Roboto Condensed', sans-serif !important;
+    font-family: "SUIT", 'Roboto Condensed', sans-serif !important;
     font-weight: bold;
     a:link,
     a:hover,
