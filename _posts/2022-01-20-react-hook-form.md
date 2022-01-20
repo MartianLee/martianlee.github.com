@@ -21,7 +21,7 @@ author: MartianLee
 
 한국어 번역으로 “유연하고 확장 가능한 사용하기 쉬운 고성능 폼 검증 라이브러리” 라고 소개한다. 
 
-awesome react 에서 form 부문에서 [2번째로 소개 | [https://react-hook-form.com/](https://react-hook-form.com/) ] 되고 있는 라이브러리다. 1번째로 star가 많은 라이브러리는 formik이다. 기회가 되면 써보고 어떤 패턴으로 폼을 구현하면서 생기는 문제를 해결하는 지 공부하면 좋겠다. 공식문서가 무려 한국어 | [https://react-hook-form.com/kr/](https://react-hook-form.com/kr/) 로 번역도 되어 있다.
+awesome react 에서 form 부문에서 [2번째로 소개](https://github.com/enaqx/awesome-react#forms) 되고 있는 라이브러리다. 1번째로 star가 많은 라이브러리는 formik이다. 기회가 되면 써보고 어떤 패턴으로 폼을 구현하면서 생기는 문제를 해결하는 지 공부하면 좋겠다. 공식문서가 [무려 한국어](https://react-hook-form.com/kr/) 로 번역도 되어 있다.
 
 ### 좋은 점
 
