@@ -6,6 +6,21 @@ This is Martian.Lee's Blog which made by Jekyll.
 
 Cumstomized Jekyll minima theme.
 
+## Install
+```
+gem install bundler
+bundle
+bundle exec jekyll serve
+```
+
+If Error occurs
+```
+Could not fetch specs from https://rubygems.org/ due to underlying error
+<Errno::EHOSTUNREACH: Failed to open TCP connection to rubygems.org:443 (No route to
+host - connect(2) for "rubygems.org" port 443) (https://rubygems.org/specs.4.8.gz)>
+```
+Change `https://rubygems.org/` to `http://rubygems.org/`
+
 **Post**
 
 All post settings can be changed. Example:
