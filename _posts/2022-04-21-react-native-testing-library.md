@@ -1,0 +1,97 @@
+---
+layout: post
+title:  "react-native-testing-library 설치하기"
+crawlertitle: "react-native-testing-library 설치하기"
+summary: "react-hook-form"
+date: 2022-04-21 23:42:15 +0900
+categories: posts
+tags: ['javascript', 'react', 'react-native', 'test']
+author: MartianLee
+---
+
+* 목차
+{:toc}
+
+
+## 배경
+회사에서 오래 된 다른 라이브러리를 새로운 버전으로 마이그레이션하면서 전체 컴포넌트를 수정할 일이 있었다. 다행히도 이전에 쓰인 테스트 코드가 있었다. 하지만 일부 테스트 코드는 작동하지 않았고 작성자의 의도와는 달리 항상 통과되는 테스트들도 있었다. 특히 비동기 작업이 포함된 테스트의 경우 테스트할 방법이 없었다. 그래서 얕게 생각해서 react-testing-library 대신 enzyme을 도입하면 해결되는 게 아닐까? 잠깐 생각했지만 분명 공식 문서에는 비동기 작업도 지원하다고 되어 있었다. 무엇이 잘못일까 확인해 보았더니 library 버전이 상당히 오래 된 것을 발견했다. 그래서 [library를 최신화](https://callstack.github.io/react-native-testing-library/docs/migration-v7/)하고 테스트 코드를 일부 개선했다. 덕분에 이런저런 핑걔로 테스트 코드를 거칠게 작성하고 넘어가던 습관을 바로잡고자 지금 사용하는 react-testing-library를 차근차근 공부해보기로 마음 먹었다.
+
+
+## react-native-testing-library란?
+react-native-testing-library 는 react-testing-library에서 영감을 받은 테스트 라이브러리다. React Native는 브라우저에서 실행되지 않기 때문에 핵심 쿼리들은 다른 DOM Testing Library와 다르게  독자적으로 구현되어 있다. [Callstack](https://www.callstack.com/open-source?utm_source=testing-library.com&utm_medium=referral&utm_campaign=react-native-testing-library)이라는 회사에서 개발하고 있다.
+
+[공식 문서](https://testing-library.com/docs/react-native-testing-library/intro)
+
+### 좋은 점
+
+1. react-testing-library와 유사해서 금방 사용할 수 있다.
+2. 다른 @testing-library 들과 함께 maintainer와 커뮤니티에 의해 잘 관리되고 있다.
+
+```tsx
+```
+
+## 설치
+
+```bash
+npm install --save-dev @testing-library/react-native
+yarn add --dev @testing-library/react-native
+```
+[설치 가이드](https://testing-library.com/docs/react-native-testing-library/setup)
+
+혹시 jest가 설치가 안되어 있으신 분들은 다른 라이브러리도 설치가 필요하다.
+```bash
+npm install --save-dev jest @testing-library/jest-native @babel/preset-typescript
+yarn add --dev jest @testing-library/jest-native @babel/preset-typescript
+```
+
+### jest.config.js 설정
+```
+const transformWhitelist = [
+    'react-native',
+    '@react-native',
+    '@react-navigation',
+];
+
+const transformIgnorePatternsRegx = `node_modules/(?!${transformWhitelist.join('|')})`;
+
+const config = {
+    verbose: true,
+    preset: "@testing-library/react-native",
+    transformIgnorePatterns: [transformIgnorePatternsRegx],
+    setupFiles: ['<rootDir>/tests/setup.ts'],
+};
+
+module.exports = config;
+```
+
+### test 파일 작성
+```
+// 예시)
+import { render } from '@testing-library/react-native';
+import React from 'react';
+import Header from '../../src/components/Header';
+import CalendarScreen from '../../src/screens/CalendarScreen';
+
+describe('CalendarScreen', () => {
+    describe('render components', () => {
+        it(`render header`, () => {
+            const { getByText } = render(<Header />);
+            getByText('앱이름');
+        });
+    })
+});
+```
+예시로 만든 어플리케이션에서 헤더 컴포넌트에서 `앱이름` 텍스트가 잘 표시되는 지 확인하는 테스트 코드다.
+
+![img]({{ site.images }}/220422_react-native-testing-library/test1.png)
+
+무사히 테스트가 통과하는 것을 확인할 수 있다.
+
+
+### 테스트 실행
+```bash
+yarn test
+```
+
+## 앞으로 할 일
+다음 시간에는 테스트 코드를 더 많이 작성하고, 실제로 버튼을 눌러보는 액션, 비동키 코드에 대한 테스트를 해보려고 한다.
