@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import React from 'react';
 import Navbar from '../navigation/Navbar';
+import SEO from './SEO';
 
 const LayoutWrapper = styled.div`
   max-width: 960px;
@@ -8,11 +9,13 @@ const LayoutWrapper = styled.div`
 `;
 const Main = styled.main`
   margin-bottom: 4rem;
+  padding: 0.5rem;
 `;
 
 export default function Layout({ children }) {
   return (
     <LayoutWrapper>
+      <SEO />
       <Navbar />
       <Main>{children}</Main>
       <footer>

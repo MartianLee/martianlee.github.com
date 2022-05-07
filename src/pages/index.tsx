@@ -33,7 +33,6 @@ const Warning = styled.div`
 `;
 
 const IndexPage = ({ data }) => {
-  console.log(data);
   const posts = data.allMdx.nodes;
   return (
     <Layout>

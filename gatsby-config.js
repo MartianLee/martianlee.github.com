@@ -4,7 +4,8 @@ module.exports = {
     title: `MartianLee's Blog`,
     email: `martionlee@gmail.com`,
     siteUrl: `https://martianlee.github.io`,
-    description: `Simple blog theme starter`,
+    image: 'conents/assets/base.jpg',
+    description: `Earth Driven Developer MartianLee's tech blog`,
     locale: `ko`,
     socialLinks: [
       {
@@ -61,10 +62,30 @@ module.exports = {
     {
       resolve: 'gatsby-source-filesystem',
       options: {
+        name: 'images',
+        path: './contents/assets/',
+      },
+      __key: 'images',
+    },
+    {
+      resolve: 'gatsby-source-filesystem',
+      options: {
         name: 'pages',
         path: './src/pages/',
       },
       __key: 'pages',
+    },
+    {
+      resolve: `gatsby-plugin-manifest`,
+      options: {
+        name: `MartianLee's Blog`,
+        short_name: `MartianLee's Blog`,
+        start_url: `/`,
+        background_color: `#000000`,
+        theme_color: `#a2466c`,
+        display: `standalone`,
+        icon: `contents/assets/favicon.png`,
+      },
     },
   ],
 };
