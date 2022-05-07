@@ -1,5 +1,7 @@
+import styled from '@emotion/styled';
 import { graphql, Link } from 'gatsby';
 import * as React from 'react';
+import Header from '../components/common/Header';
 import Layout from '../components/common/Layout';
 import { slugToTitle } from '../utils';
 
@@ -17,12 +19,29 @@ type Post = {
   };
 };
 
+const Button = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: grey;
+  color: white;
+  font-size: 1rem;
+  border-radius: 4px;
+`;
+
+const Warning = styled.div`
+  text-align: center;
+  font-size: 2rem;
+`;
+
 const IndexPage = ({ data }) => {
   console.log(data);
   const posts = data.allMdx.nodes;
   return (
     <Layout>
-      <h1>성화 블로그</h1>
+      <Header />
+      <Warning>
+        <h2>공사중입니다!</h2>
+      </Warning>
+      <h2>최근 글</h2>
       {posts.map((post: Post) => {
         return (
           <article key={`post-${post.slug}`}>
@@ -32,6 +51,9 @@ const IndexPage = ({ data }) => {
           </article>
         );
       })}
+      <Link to="/posts">
+        <Button>더 보기</Button>
+      </Link>
     </Layout>
   );
 };

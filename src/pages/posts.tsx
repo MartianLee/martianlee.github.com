@@ -1,5 +1,6 @@
 import { graphql, Link } from 'gatsby';
 import * as React from 'react';
+import Header from '../components/common/Header';
 import Layout from '../components/common/Layout';
 import { slugToTitle } from '../utils';
 
@@ -18,15 +19,14 @@ type Post = {
 };
 
 const IndexPage = ({ data }) => {
-  console.log(data);
   const posts = data.allMdx.nodes;
   return (
     <Layout>
-      <h1>성화 블로그</h1>
+      <Header />
       {posts.map((post: Post) => {
         return (
           <article key={`post-${post.slug}`}>
-            <Link to={`posts/${slugToTitle(post.slug)}`}>
+            <Link to={`${slugToTitle(post.slug)}`}>
               <h2>{post.frontmatter.title}</h2>
             </Link>
           </article>
