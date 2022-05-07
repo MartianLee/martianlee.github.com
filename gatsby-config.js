@@ -1,8 +1,21 @@
 /** @type {import('gatsby').GatsbyConfig} */
 module.exports = {
   siteMetadata: {
-    title: ``,
-    siteUrl: `https://www.yourdomain.tld`,
+    title: `MartianLee's Blog`,
+    email: `martionlee@gmail.com`,
+    siteUrl: `https://martianlee.github.io`,
+    description: `Simple blog theme starter`,
+    locale: `ko`,
+    socialLinks: [
+      {
+        text: 'Twitter',
+        link: 'https://twitter.com/earthloverdev',
+      },
+      {
+        text: 'GitHub',
+        link: 'https://github.com/MartianLee',
+      },
+    ],
   },
   plugins: [
     'gatsby-plugin-emotion',
@@ -15,8 +28,27 @@ module.exports = {
     'gatsby-plugin-image',
     'gatsby-plugin-react-helmet',
     'gatsby-plugin-sitemap',
-    'gatsby-plugin-mdx',
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `pages`,
+        path: `${__dirname}/contents/posts/`,
+      },
+    },
+    {
+      resolve: 'gatsby-plugin-page-creator',
+      options: {
+        path: `${__dirname}/contents/posts/`,
+      },
+    },
+    {
+      resolve: 'gatsby-plugin-mdx',
+      options: {
+        extensions: ['.mdx', '.md', '.markdown'],
+      },
+    },
     'gatsby-plugin-sharp',
+    'gatsby-plugin-emotion',
     'gatsby-transformer-sharp',
     {
       resolve: 'gatsby-source-filesystem',

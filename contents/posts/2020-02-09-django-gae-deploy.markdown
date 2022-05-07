@@ -1,0 +1,173 @@
+---
+layout: post
+title:  "Django 프로젝트를 생성하고 Google App Engine에 배포하기 1"
+crawlertitle: "Django 프로젝트를 생성하고 Google App Engine에 배포하기 1"
+summary: "Django 프로젝트를 생성하고 Google App Engine에 배포하는 방법을 알아봅니다."
+date: 2020-02-09 22:18:49 +0900
+categories: posts
+tags: ['develop','django', 'GCP']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img]({{ site.images }}/200209_django-gae-deploy/0.jpg)
+
+* 목차
+{:toc}
+
+## 목표
+장고Django 프로젝트를 생성하고 Google Appe Engine에 배포해 봅니다.
+
+개발환경
+* MacOS Mojave 10.14.6
+* Python 3.7.4
+* Django 3.0
+* Gooogle Cloud Platform SDK
+
+이 문서는 Django 프레임워크와 커맨드 라인, mysql 사용에 능숙한 분을 대상으로 쓰여졌습니다.
+
+## 해결과정
+
+회사에서 어플리케이션 배포를 위해 Google Cloud Platform을 입문했습니다. Amazon의 Elastic Beans Talk와 비슷하다고 하는데, 저는 Elastic Beans Talk보다 GAE(Google App Engine)을 먼저 입문해서 그런지 적응하니 상당히 편하게 사용하고 있습니다. 스케일링 가능한 웹앱을 쉽게 배포할 수 있다는 점이 큰 장점입니다.
+
+### Google Cloud Platform SDK 설치
+[구글 클라우드 공식 문서](https://cloud.google.com/sdk/docs/quickstarts)에 자세한 설명이 나와 있습니다. 홈페이지에서 sdk를 다운받은 후 압축을 해제합니다. 그리고 그 안의 ``install.sh``를 실행하면 됩니다.
+![img]({{ site.images }}/200209_django-gae-deploy/1.png)
+```
+./google-cloud-sdk/install.sh
+```
+그리고 변경사항 적용을 위해 쉘을 다시 시작합니다. 사용하는 커맨드라인에 따라서 ``source ~/.zshrc`` 혹은 ``source ~/.bashrc`` 를 입력합니다.
+
+```
+gcloud auth login
+```
+이제 google cloud sdk에 로그인할 수 있습니다. 이 명령어를 입력하면 브라우저 창이 떠서 로그인 정보를 입력해야 합니다.
+
+### Google Cloud Platform 프로젝트 세팅
+
+이 튜토리얼에서는 빠른 설정과 배포를 위해 Google App Engine을 사용합니다.
+
+App engine을 만들기 전에 Project를 만들어주어야 합니다. GCP는 모든 앱이 프로젝트 단위로 관리합니다.
+
+다음과 같이 프로젝트를 생성합니다.
+
+![img]({{ site.images }}/200209_django-gae-deploy/3.jpg)
+
+
+```
+gcloud config set project mysite
+```
+
+그리고 방금 만든 project를 현재 작업중인 project로 설정합니다.
+
+### Django App Initialze
+장고 기본 어플리케이션 설치는 [장고 공식 튜토리얼](https://docs.djangoproject.com/en/3.0/intro/tutorial01/)을 참고하였습니다.
+
+```bash
+django-admin startproject mysite
+```
+startproject 명령어를 사용하여 mysite를 만듭니다.
+
+
+### 데이터베이스 생성 및 연결
+
+```mysql
+CREATE DATABASE mysite CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+이모지가 입력 가능한 utf8mb4 타입으로 데이터베이스를 생성합니다. 저는 mysql이 편해서 mysql을 사용하였는데요, Google SQL에서는 2020년 3월 현재 MySQL, PostgreSQL, SQL Server를 지원합니다.
+
+![img]({{ site.images }}/200209_django-gae-deploy/2.jpg)
+
+``mysite/settings.py``를 열고 다음과 같이 설정해 줍니다.
+
+```python
+if os.getenv('GAE_INSTANCE'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME'),
+            'HOST': os.getenv('DB_HOST'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            # For MySQL, set 'PORT': '3306' instead of the following. Any Cloud
+            # SQL Proxy instances running locally must also be set to tcp:3306.
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'OPTIONS': {
+                'read_default_file': os.path.join(BASE_DIR, 'prod.cnf'),
+            },
+        }
+    }
+```
+
+``prod.cnf``
+```
+host = 000.000.000.000
+database = mysite
+user = root
+password = 
+port = 3306
+default-character-set = utf8mb4
+```
+``prod.cnf``를 프로젝트 루트에 생성해 주세요. 이 파일은 로컬 데이터베이스 접속정보를 설정하는 파일입니다.
+
+### app.yaml 설정
+
+앞서 데이터베이스를 설정할 때 ``os.getenv()``를 사용해서 설정을 주입하였는데요, 이 데이터는 어디서 올까요? 먼저 GAE 튜토리얼을 읽어보신 분이라면 아시겠지만 app.yaml 파일에 저장됩니다. GAE 배포에 관련된 거의 모든 설정을 작성하는 app.yaml 파일을 작성해 보겠습니다.
+
+```
+runtime: python37
+instance_class: F4
+entrypoint: gunicorn -b :$PORT main:app
+
+beta_settings:
+  cloud_sql_instances: mysite:asia-northeast2:mysite
+
+handlers:
+  # This configures Google App Engine to serve the files in the app's static
+  # directory.
+  - url: /static
+    static_dir: mysite/static/
+
+  # This handler routes all requests not caught above to your main app. It is
+  # required when static routes are defined, but can be omitted (along with
+  # the entire handlers section) when there are no static files defined.
+  - url: /.*
+    script: auto
+
+env_variables:
+  DB_PROD: 'TRUE'
+  DB_HOST: '/cloudsql/mysite:asia-northeast2:mysite'
+  DB_PORT: '3306'
+  DB_NAME: 'mysite'
+  DB_USER: 'root'
+  DB_PASSWORD: 'password'
+```
+
+### Google App Engine을 위한 설정
+
+```python
+from mysite.wsgi import application
+
+app = application
+```
+``app.yaml`` 파일의 entrypoint 항목을 보면 ``main:app``이라고 설정하였습니다. 이 뜻은 main.py의 app을 실행하겠다는 뜻인데요, django app에서 기본적으로 생성한 ``wsgi.py``의 application가 방금 생성한 프로젝트입니다.
+
+### 배포하기
+
+```bash
+gcloud app deploy
+```
+놀랍게도 이 한 문장이면 됩니다. 이 명령어는 자동으로 app.yaml을 설정합니다. 여러 버전으로 배포하고 싶다면 뒤에 ``dev.yaml`` 이런 식으로 덧붙이면 해당 설정으로 배포할 수 있습니다.
+
+## 참고자료
+
+* [구글 클라우드 플랫폼 공식 튜토리얼](https://cloud.google.com/gcp/getting-started/?hl=ko)
+* [구글 스토리지 사용법이 포함된 다른 한국어 튜토리얼](https://amanokaze.github.io/blog/Construct-Django-Application-using-GAE-Storage/)

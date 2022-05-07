@@ -1,0 +1,23 @@
+---
+layout: post
+title:  "190404"
+crawlertitle: "190404"
+summary: "Spring Boot를 설치하고 기본 기능을 사용해 봅니다"
+date:   2019-04-04 21:10:29 +0900
+categories: posts
+tags: ['question']
+author: MartianLee
+---
+
+### Question
+- UsersRepository interface에서
+Users findByEmail(String email); 이렇게만 선언하면 어떤 원리로 잘 작동하는 것이지? (관습에 의해서 작동하는 것 같은데 실제로 어떻게 되어 있는지 뜯어보기)
+- @RequestBody 어노테이션은 정확히 어떤 기능을 하는걸까?
+
+
+### 오늘자 배움
+- 레일즈를 오래 쓰다 보니 익숙해진 “관습”은 Job Interview 때 독으로 작용한다. 실제로 동작하는 원리나 상세한 메소드, 성능 개선을 위해서 어떤 일을 해야 하는지? 등을 아예 모르고 쓰게 되기 때문이다.
+
+### Answer
+
+

@@ -1,0 +1,190 @@
+---
+layout: post
+title:  "머신러닝을 활용한 뉴스 데이터 긍/부정 분석"
+crawlertitle: "머신러닝을 활용한 뉴스 데이터 긍/부정 분석"
+summary: "머신러닝을 활용한 뉴스 데이터 긍/부정 분석"
+date: 2020-06-28 21:20:12 +0900
+categories: posts
+tags: ['ML', 'keras', '뉴스 머신러닝', '뉴스 크롤링', '빅카인즈']
+author: MartianLee
+---
+
+* 목차
+{:toc}
+
+
+## 목표
+작년 겨울, 만점프로젝트에서 뉴스 데이터를 활용한 가치평가 프로젝트를 진행했다. 기업에 대한 뉴스를 크롤링한 뒤 긍정/부정 기사들의 양을 비교하고 싶었다. 또한 kSDG(Korea Sustainable Development Goals) 기준으로 기사를 분류해서 특정 기업의 가치, 긍정/부정 행위 평가를 자동화하는 것이 목표다. 이번 글에서는 뉴스 본문 데이터를 크롤링하고 긍정/부정을 평가하는 머신러닝 모델을 만드는 방법을 소개한다.
+
+## 방법
+```
+이 글은 파이썬을 어느 정도 사용할 줄 알고 머신러닝에 대한 배경지식이 있는 독자를 대상으로 한다.
+```
+
+### 사용한 도구
+* Python 3.7.5
+* konlpy
+* keras
+* asyncio
+* [크롤링, 머신러닝에 사용한 코드](https://github.com/MartianLee/manjum)
+
+### 크롤링
+python 3.7부터 기본적으로 제공하는 비동기 라이브러리 asyncio를 활용해 빠른 크롤링
+뉴스 데이터 플랫폼 빅카인즈에서는 뉴스 데이터 검색결과를 제공하는데, 본문 검색을 지원하지 않아 직접 크롤링하였다. 크롤링 이후 파싱한 데이터들이 예측에 어긋나는 것들이 많아 database가 가끔 터져서 애를 먹었다.
+* 키워드가 5000바이트가 넘는 row가 있음
+* 기사 입력 시간이 null인 row가 있음
+* 그 외 null이거나 값이 이상한 데이터 다수.
+이후 파싱하는 로직이 완성되고 나서 asyncio를 도입해 비동기로 페이지를 요청해 파싱하니 크롤링 속도가 아주 빨랐다.
+
+### 형태소 분석
+파이썬 한글 형태소분석 라이브러리인 konlpy를 사용했다. 신조어를 제외하면 아주 잘 작동한다. 명사 데이터베이스도 커스텀 가능하다. 태그는 Okt를 사용했다.
+
+```python
+# 불용어
+stopwords=['의','가','이','은','들','는','좀','잘','걍','과','도','를','으로','자','에','와','한','하다', 'br', '/><', '/>', '.<']
+
+from konlpy.tag import Okt
+from konlpy.utils import pprint
+
+okt = Okt()
+
+all_nouns = []
+all_nouns2 = []
+for row in train_data:
+    temp_X = okt.morphs(row[3], stem=True) # 토큰화
+    temp_X = [word for word in temp_X if not word in stopwords] # 불용어 제거
+    all_nouns.append(temp_X)
+
+for row in test_data:
+    temp_X = okt.morphs(row[3], stem=True) # 토큰화
+    temp_X = [word for word in temp_X if not word in stopwords] # 불용어 제거
+    all_nouns2.append(temp_X)
+```
+라이브러리 사용방법은 아주 쉽다. Okt를 인스턴스화한다음 okt.morphs(토큰화 할 string, stem여부)를 입력하면 string array를 반환한다.
+
+### 데이터 모델링
+형태소 분석은 생각보다 어렵지 않았다. 다음으로 텍스트 행렬을 머신러닝 모델에 학습시킬 수 있게 numpy array 형태로 예쁘게 가공해야 한다. 또한 raw text가 아니고 text의 번호를 붙여줘서 벡터화하는 작업이 필요하다.
+
+```python
+# 데이터 토큰화
+from keras.preprocessing.text import Tokenizer
+import json
+
+max_words = 10000
+tokenizer = Tokenizer(num_words = max_words)
+tokenizer.fit_on_texts(all_nouns)
+
+from datetime import datetime
+now = datetime.now()
+current_time = now.strftime("%H-%M-%S")
+outputfilename = 'all_nouns' + current_time + '.json'
+
+with open(outputfilename, 'w') as outfile:
+    json.dump(all_nouns, outfile)
+
+X_train = tokenizer.texts_to_sequences(all_nouns)
+X_test = tokenizer.texts_to_sequences(all_nouns2)
+
+print("본문의 최대 길이 : ", max(len(l) for l in X_train))
+print("본문의 평균 길이 : ", sum(map(len, X_train))/ len(X_train))
+
+# 결과를 차트로 출력
+import matplotlib.pyplot as plt
+plt.hist([len(s) for s in X_train], bins=50)
+plt.xlabel('length of Data')
+plt.ylabel('number of Data')
+plt.show()
+
+# 학습 데이터, 테스트 데이터 분리
+import numpy as np
+y_train = []
+y_test = []
+
+type_of_result = 18
+y_result = []
+for i in range(type_of_result):
+    temp = []
+    for j in range(type_of_result):
+        if j == i:
+            temp.append(1)
+        else:
+            temp.append(0)
+    y_result.append(temp.copy())
+
+for i in range(len(train_data)):
+    for type in range(type_of_result):
+        if train_data[i][4] == type:
+            y_train.append(y_result[type].copy())
+
+for i in range(len(test_data)):
+    for type in range(type_of_result):
+        if test_data[i][4] == type:
+            y_test.append(y_result[type].copy())
+
+y_train = np.array(y_train)
+y_test = np.array(y_test)
+```
+
+### 머신러닝
+최종적인 정확도에 가장 큰 영향을 끼치는 과정이다.
+1. max_len으로 총 단어의 갯수 제한 (ex. 300)
+2. Embedding을 몇차원으로 할 것인지 (ex. 60)
+3. LSTM 레이어를 몇 개 둘 것인지 (ex. 30)
+4. 모델의 최적화를 어떤 optimizier를 사용할 것인지, 손실 모델은 무엇으로 할 것인지(ex. 'adam', 'categorical_crossentropy')
+5. 몇 번 반복해서 학습시킬 것인지 (ex. 10)
+
+자세한 keras.models의 사용법은 [이곳](https://keras.io/api/)에서 확인할 수 있다.
+
+```python
+from keras.layers import Embedding, Dense, LSTM
+from keras.models import Sequential
+from keras.preprocessing.sequence import pad_sequences
+max_len = 300 # 전체 데이터의 길이를 300으로 맞춘다
+X_train = pad_sequences(X_train, maxlen=max_len)
+X_test = pad_sequences(X_test, maxlen=max_len)
+
+model = Sequential()
+model.add(Embedding(max_words, 60))
+model.add(LSTM(30))
+model.add(Dense(type_of_result, activation='softmax'))
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+history = model.fit(X_train, y_train, epochs=10, batch_size=10, validation_split=0.1)
+model.save('lstm_model_yn_'+ current_time + '.h5')
+```
+
+## 결과
+
+### 크롤링 속도
+
+* 180회, 2700ms; 1 request: 15ms
+* 9380회, 84000ms; 1 request: 9ms
+* 17036회, 201449ms; 1 request: 12ms
+
+크롤링은 python + asyncio + beautifulsoup 입니다.
+
+
+### 긍/부정 분석
+```python
+res = model.evaluate(X_test, y_test)
+print(f"테스트 정확도 : {res[1] * 100}%")
+
+# 예측한 값 비교하기
+predict = model.predict(X_test)
+import numpy as np
+predict_labels = np.argmax(predict, axis=1)
+original_labels = np.argmax(y_test, axis=1)
+for i in range(50):
+    print("기사제목 : ", test_data[i][2], "/\t 원래 라벨 : ", original_labels[i], "/\t예측한 라벨 : ", predict_labels[i])
+```
+![img]({{ site.images }}/200629_manjum-ml/pn.png)
+* 한 기사당 max_len에 따라서 정확도가 달라진다. 길수록 정확하지만 생성 속도는 느려진다.
+* Embedding 차원과 LSTM Layer의 갯수는 모델의 크기에 큰 영향을 끼친다. 나는 GCP 혹은 Heroku에서 작동할 수 있는 크기 (메모리 300mb)로 만들기 위해 커스터마이징하였다. 차원과 레이어를 늘리면 정확도가 개선된다. 하지만 제한된 inpu에서 차원과 레이어만 늘린다고 해서 정확도가 개선되지는 않는다. (오히려 overfitting되어서 더 이상한 결과를 낼 수 있음.)
+* 몇 번 반복해서 학습시킬지(epochs)는 10번 내외가 결과가 좋았다. 너무 적게 반복하거나 너무 많이 반복하면 정확도가 좋지 않았다.
+긍,부정 분석 결과는 아주 좋았다(평가 데이터 기준 96%). LSTM이 긍,부정 평가에 좋다는 글을 보고 적용해 보았는데 이렇게 좋을 줄은 몰랐다. 이정도 정확도면 가치 평가 이전에 어떤 기사가 긍정적인 기사인지 부정적인 기사인지 평가하는 일은 충분히 자동화할 수 있을 것 같다. 텍스트 본문 기반으로 긍,부정 평가 문제를 해결해야 하는 사람은 LSTM 모델 적용을 적극 추천한다.
+
+### 참고한 글
+* [딥 러닝을 이용한 자연어 처리 입문 - 로이터 뉴스 분류하기(Reuters News Classification)](https://wikidocs.net/22933)
+* [케라스로 딥러닝하자](https://lsjsj92.tistory.com/409)
+
+### 다음
+다음은 위에서 학습시킨 머신러닝 모델을 클라우드(GAE + Heroku)에 배포하는 방법을 알아본다.
