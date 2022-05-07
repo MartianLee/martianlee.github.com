@@ -1,4 +1,5 @@
 const path = require('path');
+const utils = require(`./src/utils`);
 
 exports.createPages = async ({ actions, graphql }) => {
   const { createPage } = actions;
@@ -24,7 +25,7 @@ exports.createPages = async ({ actions, graphql }) => {
   `);
   const posts = data.allMdx.nodes;
   posts.forEach(async (node, index) => {
-    const pagetitle = node.slug?.split('-').splice(3).join('-');
+    const pagetitle = utils.slugToTitle(node.slug);
     createPage({
       path: `/posts/${pagetitle}`,
       component: path.resolve('./src/templates/post-details.tsx'),

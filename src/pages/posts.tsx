@@ -39,8 +39,8 @@ const IndexPage = ({ data }) => {
 export default IndexPage;
 
 export const query = graphql`
-  query Posts {
-    allMdx(sort: { fields: frontmatter___date, order: DESC }, limit: 5) {
+  query PostList {
+    allMdx(sort: { fields: frontmatter___date, order: DESC }) {
       nodes {
         slug
         frontmatter {
