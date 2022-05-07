@@ -27,7 +27,7 @@ module.exports = {
       },
     },
     'gatsby-plugin-image',
-    'gatsby-plugin-react-helmet',
+    'gatsby-plugin-react-helmet-async',
     'gatsby-plugin-sitemap',
     {
       resolve: `gatsby-source-filesystem`,
