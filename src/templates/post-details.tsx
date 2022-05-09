@@ -8,12 +8,24 @@ import styled from '@emotion/styled';
 const H1 = ({ children }) => <h1>{children}</h1>;
 const H2 = ({ children }) => <h2>{children}</h2>;
 const H3 = ({ children }) => <h3>{children}</h3>;
-const P = ({ children }) => <p>{children}</p>;
+const PWrapper = styled.p`
+  line-height: 1.5rem;
+`;
+const P = ({ children }) => <PWrapper>{children}</PWrapper>;
+const CodeWrapper = styled.code`
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #fbfbf8;
+  padding: 1rem 0.5rem;
+`;
+const CODE = ({ children }) => <CodeWrapper>{children}</CodeWrapper>;
 const components = {
   h1: H1,
   h2: H2,
   h3: H3,
   p: P,
+  code: CODE,
 };
 const Body = styled.section`
   padding: 0.5rem;

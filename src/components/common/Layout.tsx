@@ -8,8 +8,10 @@ const LayoutWrapper = styled.div`
   margin: 0 auto;
 `;
 const Main = styled.main`
-  margin-bottom: 4rem;
-  padding: 0.5rem;
+  padding: calc(4rem - 3px) 1rem 4rem;
+`;
+const Footer = styled.footer`
+  text-align: center;
 `;
 
 export default function Layout({ children }) {
@@ -23,9 +25,9 @@ export default function Layout({ children }) {
       />
       <Navbar />
       <Main>{children}</Main>
-      <footer>
+      <Footer>
         <div>This blog is developed by Gatsby and Copyright by @MartianLee</div>
-      </footer>
+      </Footer>
     </LayoutWrapper>
   );
 }
