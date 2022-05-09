@@ -1,7 +1,15 @@
 import styled from '@emotion/styled';
 import { graphql, Link, useStaticQuery } from 'gatsby';
 import React from 'react';
+import colors from '../common/colors';
 
+const Navigation = styled.nav`
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: ${colors.white};
+  border-bottom: 1px solid ${colors.keyColor2};
+`;
 const ButtonWrapper = styled.ul`
   display: flex;
   align-items: center;
@@ -16,13 +24,16 @@ const Button = styled.li`
   color: white;
   font-size: 1rem;
   border-radius: 4px;
+  font-weight: 500;
 `;
 const Home = styled.li`
+  font-weight: 700;
   flex: 1;
+  color: ${colors.keyColor3};
 `;
 
 const StyledLink = styled((props) => <Link {...props} />)`
-  color: black;
+  color: ${colors.keyColor3};
   text-decoration: none;
 `;
 
@@ -38,7 +49,7 @@ function Navbar() {
   `);
   const { title } = data.site.siteMetadata;
   return (
-    <nav>
+    <Navigation>
       <ButtonWrapper>
         <Home>
           <StyledLink to="/">{title}</StyledLink>
@@ -50,7 +61,7 @@ function Navbar() {
           <StyledLink to="/posts">Posts</StyledLink>
         </Button>
       </ButtonWrapper>
-    </nav>
+    </Navigation>
   );
 }
 

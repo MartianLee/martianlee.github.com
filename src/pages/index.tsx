@@ -3,6 +3,7 @@ import { graphql, Link } from 'gatsby';
 import * as React from 'react';
 import Header from '../components/common/Header';
 import Layout from '../components/common/Layout';
+import Reference from '../components/common/Reference';
 import { slugToTitle } from '../utils';
 
 type Post = {
@@ -37,15 +38,14 @@ const IndexPage = ({ data }) => {
   return (
     <Layout>
       <Header />
-      <Warning>
-        <h2>공사중입니다!</h2>
-      </Warning>
+      <h2>경력</h2>
+      <Reference />
       <h2>최근 글</h2>
       {posts.map((post: Post) => {
         return (
           <article key={`post-${post.slug}`}>
             <Link to={`posts/${slugToTitle(post.slug)}`}>
-              <h2>{post.frontmatter.title}</h2>
+              <h3>{post.frontmatter.title}</h3>
             </Link>
           </article>
         );
