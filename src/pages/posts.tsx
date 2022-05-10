@@ -22,7 +22,6 @@ type Post = {
 
 const StyledLink = styled((props) => <Link {...props} />)`
   color: ${colors.keyColor1};
-  text-decoration: none;
 `;
 
 const IndexPage = ({ data }) => {
