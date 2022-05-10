@@ -7,6 +7,7 @@ const Navigation = styled.nav`
   position: fixed;
   top: 0;
   width: 100%;
+  max-width: 960px;
   background: ${colors.white};
   border-bottom: 1px solid ${colors.keyColor2};
 `;
