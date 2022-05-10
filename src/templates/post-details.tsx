@@ -27,19 +27,27 @@ const components = {
   p: P,
   code: CODE,
 };
+const Head = styled.div`
+  padding-top: 1rem;
+`;
 const Body = styled.section`
   padding: 0.5rem;
 `;
 
 export default function ProjectDetails({ data, pageContext }) {
-  const { title, summary, featuredImg, tags } = data.mdx.frontmatter;
+  const { body, frontmatter } = data.mdx;
+  const { title, summary, featuredImg, tags, date } = frontmatter;
+  const [publishDate, publishTime] = new Date(date).toISOString().split('T');
+
   return (
     <Layout>
-      <h1>{title}</h1>
-      Wrote at {data.mdx.frontmatter.date}
+      <Head>
+        <h1>{title}</h1>
+        Published: {publishDate} {publishTime.split('.')[0]}
+      </Head>
       <Body>
         <MDXProvider components={components}>
-          <MDXRenderer>{data.mdx.body}</MDXRenderer>
+          <MDXRenderer>{body}</MDXRenderer>
         </MDXProvider>
       </Body>
     </Layout>

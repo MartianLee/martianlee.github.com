@@ -1,9 +1,9 @@
+import * as React from 'react';
 import styled from '@emotion/styled';
 import { graphql, Link } from 'gatsby';
-import * as React from 'react';
+import colors from '../components/common/colors';
 import Header from '../components/common/Header';
 import Layout from '../components/common/Layout';
-import Reference from '../components/common/Reference';
 import { slugToTitle } from '../utils';
 
 type Post = {
@@ -33,26 +33,28 @@ const Warning = styled.div`
   font-size: 2rem;
 `;
 
+const StyledLink = styled((props) => <Link {...props} />)`
+  color: ${colors.keyColor1};
+`;
+
 const IndexPage = ({ data }) => {
   const posts = data.allMdx.nodes;
   return (
     <Layout>
       <Header />
-      <h2>경력</h2>
-      <Reference />
       <h2>최근 글</h2>
       {posts.map((post: Post) => {
         return (
           <article key={`post-${post.slug}`}>
-            <Link to={`posts/${slugToTitle(post.slug)}`}>
+            <StyledLink to={`posts/${slugToTitle(post.slug)}`}>
               <h3>{post.frontmatter.title}</h3>
-            </Link>
+            </StyledLink>
           </article>
         );
       })}
-      <Link to="/posts">
+      <StyledLink to="/posts">
         <Button>더 보기</Button>
-      </Link>
+      </StyledLink>
     </Layout>
   );
 };
