@@ -1,0 +1,61 @@
+---
+layout: post
+title: '링크 관리 서비스 기획서'
+crawlertitle: '링크 관리 서비스 기획서'
+summary: 'react-hook-form'
+date: 2022-07-17 19:56:23 +0900
+categories: posts
+tags: ['javascript', 'react', 'product', 'toy project']
+author: MartianLee
+---
+
+- 목차
+  {:toc}
+
+## 배경
+
+평소에 웹서핑 중 읽을만한 유용한 링크를 발견하는데 카톡 혹은 슬랙에 던져놓고 흘러가는 경우가 많았다. 노션에 정리하는 것도 노션에는 사용하는 다른 페이지들이 많은데 그 페이지에 찾아가서 특정 형식에 맞추어 넣는 것이 모바일에서 그렇게 유연하지 않았다. 그런데 최근에 읽은 다른 분들의 사고방식은, 이런 요구사항을 간단한 서비스로 만들어서 조금씩 발전시키는 방식으로 사고하는 것을 발견하고 나도 한 번 따라해 보기로 했다.
+
+## 서비스 기획
+
+가칭 : 초록링크 - 초링
+
+초링에 읽고 싶은 링크를 던져 넣으세요. 초링이 원하는 시간에 읽을 수 있게 정리해 드립니다.
+
+### 서비스 사용 시나리오
+
+step 1. 웹서핑 중 발견한 링크를 초링에 입력합니다.
+
+step 2. 초링은 매일 정해진 시간에 당신에게 알람을 보냅니다.
+
+step 3. 당신은 링크 내용을 읽고 요약을 작성하거나 우선순위를 설정해 다음으로 미룹니다.
+
+### 링크 CRUD
+
+- 링크 속성
+  - url, 링크 별명, 태그, 읽음여부, 우선순위(enum 12345), 링크 요약(markdown format)
+- 관련 기능
+  - 링크 입력시 별명 입력 안할 경우 자동으로 meta title 입력
+- 구현
+
+### Cron
+
+- 유저와 1:1 매칭
+- 요일, 시간(초기에는 분 입력 x) 입력, 기본은 매일 오후 10시
+- 구현
+  - github action (ex. nextjs cron https://github.com/paulphys/nextjs-cron, [범용적인 cron job in github action](https://yceffort.kr/2020/07/cron-job-with-github-actions))
+  - easy cron [https://www.easycron.com/](https://www.easycron.com/)
+
+### Architecture
+
+- Framework
+  - React - NexstJS vs Svelte
+- Nextjs
+  - css framework
+    - tailwind vs emotion/styled vs ??
+
+### Deploy
+
+- [s3 호스팅](https://dev.to/parmentierchristophe/how-to-deploy-static-next-js-to-aws-s3-1d4f)
+- vercel 호스팅
+- github page
