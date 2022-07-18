@@ -12,6 +12,7 @@ const Button = styled.button`
   font-size: 1rem;
   border-radius: 4px;
   font-weight: bold;
+  cursor: pointer;
 `;
 const Info = styled.div`
   display: flex;
