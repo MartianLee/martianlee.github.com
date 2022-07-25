@@ -36,8 +36,12 @@ const Body = styled.section`
 
 export default function ProjectDetails({ data, pageContext }) {
   const { body, frontmatter } = data.mdx;
-  const { title, summary, featuredImg, tags, date } = frontmatter;
-  const [publishDate, publishTime] = new Date(date).toISOString().split('T');
+  const { title, summary, featuredImg, tags, date }: { date: string } = frontmatter;
+  const [publishDate, publishTime] = new Date(
+    date.replace(' ', 'T').replace(' ', '')
+  )
+    .toISOString()
+    .split('T');
 
   return (
     <Layout>
