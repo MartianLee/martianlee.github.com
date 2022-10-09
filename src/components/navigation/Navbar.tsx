@@ -21,7 +21,8 @@ const ButtonWrapper = styled.ul`
 `;
 const Button = styled.li`
   padding: 0.5rem 1rem;
-  background-color: lightgrey;
+  background-color: #eeeeee;
+  border: 1px solid #666666;
   color: white;
   font-size: 1rem;
   border-radius: 4px;

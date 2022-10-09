@@ -22,8 +22,9 @@ type Post = {
 
 const Button = styled.button`
   padding: 0.5rem 1rem;
-  background-color: grey;
+  background-color: #222222;
   color: white;
+  font-weight: bold;
   font-size: 1rem;
   border-radius: 4px;
 `;
