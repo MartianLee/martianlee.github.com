@@ -1,0 +1,63 @@
+---
+layout: post
+title: 'css 이미지 가로 세로 비율 유지하기'
+crawlertitle: 'css 이미지 가로 세로 비율 유지하기'
+summary: 'react-hook-form'
+date: 2022-07-29 17:26:45 +0900
+categories: posts
+tags: ['javascript', 'react', 'html', 'css']
+author: MartianLee
+---
+
+- 목차
+  {:toc}
+
+## 배경
+
+커머스를 만들 때 가장 중요한 일은 상품 썸네일 이미지를 나열하는 일이다. 그런데 보통은 썸네일을 1:1 혹은 특수한 비율로 쇼핑몰의 컨셉을 잡아서 보여주는데 여태까지 어떻게든 구현을 하면서도 영 아름답지 못하다는 생각을 해왔다.
+
+## 이전의 구현방법
+
+### margin-top 이용하기
+
+```html
+<div class='item'>
+  <div class='dummy'></div>
+  <div class='title'></title>
+</div>
+```
+
+```css
+.item {
+  position: relative;
+}
+.dummy {
+  margin-top: 100%;
+}
+.title {
+}
+```
+
+## aspect ratio
+
+```html
+<div class="demo"></div>
+```
+
+```css
+.demo {
+  background: black;
+  width: 500px;
+  aspect-ratio: 4/3;
+}
+```
+
+element의 비율을 가로세로 4:3로 지정하겠다는 뜻이다. 대박
+
+### 예시
+
+### Usage
+
+### 출처
+
+[stackoverflow](https://stackoverflow.com/questions/1495407/maintain-the-aspect-ratio-of-a-div-with-css)
