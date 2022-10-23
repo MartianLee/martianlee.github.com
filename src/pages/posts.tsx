@@ -29,12 +29,12 @@ const IndexPage = ({ data }) => {
   return (
     <Layout>
       <Header />
-      <h1>Posts</h1>
+      <h2>게시글</h2>
       {posts.map((post: Post) => {
         return (
           <article key={`post-${post.slug}`}>
             <StyledLink to={`${slugToTitle(post.slug)}`}>
-              <h2>{post.frontmatter.title}</h2>
+              <h3>{post.frontmatter.title}</h3>
             </StyledLink>
           </article>
         );

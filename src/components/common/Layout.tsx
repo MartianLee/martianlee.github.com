@@ -9,11 +9,11 @@ const LayoutWrapper = styled.div`
   margin: 0 auto;
 `;
 const Main = styled.main`
-  padding: calc(4rem + 3px) 1rem 3rem;
+  padding: calc(4rem + 5px) 0 3rem;
 `;
 const Footer = styled.footer`
   text-align: center;
-  padding: 1rem 0;
+  padding: 2rem 1rem 3rem 1rem;
   border-top: 1px solid ${colors.keyColor2};
 `;
 
@@ -29,7 +29,10 @@ export default function Layout({ children }) {
       <Navbar />
       <Main>{children}</Main>
       <Footer>
-        <div>This blog is developed by Gatsby and Copyright by @MartianLee</div>
+        <div>
+          This blog is developed by Gatsby and Copyright by&nbsp;
+          <a href="https://github.com/MartianLee">@MartianLee</a>
+        </div>
       </Footer>
     </LayoutWrapper>
   );

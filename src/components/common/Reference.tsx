@@ -20,10 +20,10 @@ const A = styled.a`
 `;
 const Current = styled.div`
   display: grid;
-  grid-template-columns: minmax(120px, auto) 1fr 1fr;
-  @media (max-width: 425px) {
+  grid-template-columns: minmax(180px, auto) 1fr;
+  @media (max-width: 526px) {
     grid-template-columns: none;
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-rows: repeat(1, 1fr);
   }
   gap: 1rem;
   margin-bottom: 1rem;
@@ -34,20 +34,25 @@ const Current = styled.div`
 function Reference() {
   return (
     <ReferenceWrapper>
+      <h3>현재</h3>
       <Current>
-        현재
         <A href="https://tomorrowuse.com" target={'_blank'}>
           <ReferenceCard>내일의쓰임</ReferenceCard>
         </A>
+        <div>Cofunder & Product Owner & Fullstack Developer</div>
       </Current>
+      <h3>과거</h3>
       <Current>
-        과거
         <A href="https://miso.kr" target={'_blank'}>
           <ReferenceCard>MISO</ReferenceCard>
         </A>
+        <div>Frontend Developer</div>
+      </Current>
+      <Current>
         <A href="https://fumi.co.kr/" target={'_blank'}>
           <ReferenceCard>FUMI</ReferenceCard>
         </A>
+        <div>Software Engineer</div>
       </Current>
     </ReferenceWrapper>
   );
