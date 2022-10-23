@@ -29,7 +29,7 @@ const Button = styled.li`
   font-weight: 500;
 `;
 const Home = styled.li`
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   flex: 1;
   color: ${colors.keyColor3};

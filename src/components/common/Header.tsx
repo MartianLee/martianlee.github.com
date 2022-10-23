@@ -12,7 +12,7 @@ const HeaderWrapper = styled.header`
     ${colors.keyColor4} 40%
   );
   padding: 1rem;
-  margin: 0 -1rem;
+  margin: 0 0;
 `;
 const HeaderText = styled.h1`
   color: ${colors.white};

@@ -5,8 +5,10 @@ import { MDXRenderer } from 'gatsby-plugin-mdx';
 import Layout from '../components/common/Layout';
 import styled from '@emotion/styled';
 
-const H1 = ({ children }) => <h1>{children}</h1>;
-const H2 = ({ children }) => <h2>{children}</h2>;
+const H1 = styled.h1``;
+const H2 = styled.h2`
+  margin: 2rem 0 1rem;
+`;
 const H3 = ({ children }) => <h3>{children}</h3>;
 const PWrapper = styled.p`
   line-height: 1.5rem;
@@ -16,8 +18,11 @@ const CodeWrapper = styled.code`
   display: block;
   white-space: pre-wrap;
   word-wrap: break-word;
-  background: #fbfbf8;
-  padding: 1rem 0.5rem;
+  background: #fbfbf4;
+  padding: 1rem 1rem;
+  line-height: 1.1rem;
+  border: 1px solid #999999;
+  border-radius: 8px;
 `;
 const CODE = ({ children }) => <CodeWrapper>{children}</CodeWrapper>;
 const components = {
@@ -28,10 +33,15 @@ const components = {
   code: CODE,
 };
 const Head = styled.div`
-  padding-top: 1rem;
+  padding: 2.5rem 1rem 0.5rem 1rem;
+  background: #e9e9e9;
 `;
 const Body = styled.section`
   padding: 0.5rem;
+  line-height: 1.4rem;
+`;
+const ReleaseDate = styled.div`
+  text-align: right;
 `;
 
 export default function ProjectDetails({ data, pageContext }) {
@@ -40,14 +50,14 @@ export default function ProjectDetails({ data, pageContext }) {
   const [publishDate, publishTime] = new Date(
     date.replace(' ', 'T').replace(' ', '')
   )
-    .toISOString()
+    .toLocaleString()
     .split('T');
 
   return (
     <Layout>
       <Head>
         <h1>{title}</h1>
-        Published: {publishDate} {publishTime.split('.')[0]}
+        <ReleaseDate>발행일: {publishDate}</ReleaseDate>
       </Head>
       <Body>
         <MDXProvider components={components}>
