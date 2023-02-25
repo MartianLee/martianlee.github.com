@@ -1,0 +1,77 @@
+---
+layout: post
+title: '아임웹 랜딩페이지에 내 도메인을 aws route53으로 붙이기'
+crawlertitle: '아임웹 랜딩페이지에 내 도메인을 aws route53으로 붙이기'
+summary: '아임웹 랜딩페이지에 내 도메인을 붙이는 방법을 알아봅니다'
+date: 2023-02-25 15:06:17 +0900
+categories: posts
+tags: ['infra', 'domain', 'aws', 'route53', '아임웹']
+author: MartianLee
+---
+
+**Gihtub에서 author가 잘못된 커밋이 많이 쌓였을 때**
+
+회사에서 github에 커밋을 많이 하는데, 어느 순간부턴가 깃헙에 잔디가 찍히지 않는 다는 것을 발견했다. 뭔가 문제겠지 라고 생각하다가 어느 날 호기심이 들어서 찾아봤다.
+
+원인은, 쉽게 설명하면 github이 내가 작성한 commit이라는 것을 모른다는 것. ssh 키는 인증이 되어서 그걸로 알아서 나인지 판단한다고 생각했는데 github은 그것을 email과 name으로 판단한다.
+
+그러니까 이미 작성된 몇백개의 commit을 다 수정해 주어야 하는 것이었다! 어떡하지...
+
+하지만, 다행히 방법이 있었다.
+
+## 커밋을 되돌릴 repository로 이동한다.
+
+```bash
+git log
+```
+
+![glg]("./contents/images/230225_github_author-problem/glg.png")
+
+를 실행하면 지난 커밋들이 보입니다. 여기서 잘못된 이메일을 찾습니다.
+저의 경우에는 한글자가 앞뒤로 잘못되어 있었습니다.
+
+## 아래 스크립트를 실행한다.
+
+아래 스크립트를 보시면
+
+- WRONG_EMAIL="{틀리게작성된@이메일}"
+- NEW_NAME="{새롭게작성할이름}"
+- NEW_EMAIL="{새롭게설정한@이메일}"
+
+이렇게 세 부분을 직접 작성하셔야 합니다.
+
+```bash
+git filter-branch --env-filter '
+WRONG_EMAIL="{틀리게작성된@이메일}"
+NEW_NAME="{새롭게작성할이름}"
+NEW_EMAIL="{새롭게설정한@이메일}"
+
+if [ "$GIT_COMMITTER_EMAIL" = "$WRONG_EMAIL" ]
+then
+    export GIT_COMMITTER_NAME="$NEW_NAME"
+    export GIT_COMMITTER_EMAIL="$NEW_EMAIL"
+fi
+if [ "$GIT_AUTHOR_EMAIL" = "$WRONG_EMAIL" ]
+then
+    export GIT_AUTHOR_NAME="$NEW_NAME"
+    export GIT_AUTHOR_EMAIL="$NEW_EMAIL"
+fi
+' --tag-name-filter cat -- --branches --tags
+```
+
+이 명령어를 사용하면 다음과 같이 결과가 출력됩니다.
+![overwritten]("./contents/images/230225_github_author-problem/overwritten.png")
+
+## 주의사항
+
+출처의 블로그에서도 나와있지만 위 명령어는 **"매우 주의해서:"** 사용해야 한다고 합니다. 다른 stack-overflow에서도 권장하지 않는 방법이라는 이야기가 있습니다. 이전 커밋들을 몽땅 수정하는 명령어이기때문에 혹시 push되지 않은 repository라면 미리 clone해 놓거나 작업이 어느정도 일단락되어서 마무리된 상황에서 시도하면 될 것 같습니다.
+(참고로, 커밋되지 않은 변경사항이 있는 경우 명령어가 작동하지 않습니다.)
+
+결과
+![my-commits]("./contents/images/230225_github_author-problem/my-commits.png")
+
+덕분에 정말 수백 개의 커밋이 다시 잔디로 바뀌었다 흑흑. 잔디 없을 때는 별 생각 없었는데, 막상 채워지니까 뿌듯하다. 잔디를 더 많이많이 심어야지~
+
+## 출처
+
+[https://madplay.github.io/post/change-git-author-name](https://madplay.github.io/post/change-git-author-name)
