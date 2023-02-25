@@ -1,11 +1,11 @@
 ---
 layout: post
-title: '아임웹 랜딩페이지에 내 도메인을 aws route53으로 붙이기'
-crawlertitle: '아임웹 랜딩페이지에 내 도메인을 aws route53으로 붙이기'
-summary: '아임웹 랜딩페이지에 내 도메인을 붙이는 방법을 알아봅니다'
+title: 'Gihtub에서 author가 잘못된 커밋이 많이 쌓였을 때'
+crawlertitle: 'Gihtub에서 author가 잘못된 커밋이 많이 쌓였을 때'
+summary: 'Gihtub에서 author가 잘못된 커밋이 많이 쌓였을 때 어떻게 해결하는 지 알아봅니다.'
 date: 2023-02-25 15:06:17 +0900
 categories: posts
-tags: ['infra', 'domain', 'aws', 'route53', '아임웹']
+tags: ['git', 'github', 'bash', 'script']
 author: MartianLee
 ---
 
