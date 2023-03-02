@@ -23,6 +23,7 @@ const CODE = styled.code`
   line-height: 1.1rem;
   border: 1px solid #999999;
   border-radius: 8px;
+  margin: 0.5rem auto;
 `;
 const components: Components = {
   h1: H1,

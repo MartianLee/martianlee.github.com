@@ -5,6 +5,7 @@ import Layout from '../components/common/Layout';
 import Reference from '../components/common/Reference';
 
 const Contents = styled.section`
+  padding: 0 1rem;
   margin-bottom: 3rem;
 `;
 const Button = styled.button`

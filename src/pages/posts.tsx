@@ -23,22 +23,27 @@ type Post = {
 const StyledLink = styled((props) => <Link {...props} />)`
   color: ${colors.keyColor1};
 `;
+const Contents = styled.div`
+  padding: 0 1rem;
+`;
 
 const IndexPage = ({ data }) => {
   const posts = data.allMdx.nodes;
   return (
     <Layout>
       <Header />
-      <h2>게시글</h2>
-      {posts.map((post: Post) => {
-        return (
-          <article key={`post-${post.frontmatter.slug}`}>
-            <StyledLink to={`${slugToTitle(post.frontmatter.slug)}`}>
-              <h3>{post.frontmatter.title}</h3>
-            </StyledLink>
-          </article>
-        );
-      })}
+      <Contents>
+        <h2>게시글</h2>
+        {posts.map((post: Post) => {
+          return (
+            <article key={`post-${post.frontmatter.slug}`}>
+              <StyledLink to={`${slugToTitle(post.frontmatter.slug)}`}>
+                <h3>{post.frontmatter.title}</h3>
+              </StyledLink>
+            </article>
+          );
+        })}
+      </Contents>
     </Layout>
   );
 };
