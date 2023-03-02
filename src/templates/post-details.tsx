@@ -36,7 +36,7 @@ const Head = styled.div`
   background: #e9e9e9;
 `;
 const Body = styled.section`
-  padding: 0.5rem;
+  padding: 1rem;
   line-height: 1.4rem;
 `;
 const ReleaseDate = styled.div`
