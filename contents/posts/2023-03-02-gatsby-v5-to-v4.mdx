@@ -1,0 +1,58 @@
+---
+layout: post
+title: 'Gatsby v5 to v4와 mdx v1 to v2'
+slug: '2023-03-02-gatsby-v5-to-v4'
+crawlertitle: 'Gatsby v5 to v4와 mdx v1 to v2'
+summary: 'Gatsby v5 to v4와 mdx v1 to v2 어떻게 해결하는 지 알아봅니다.'
+date: 2023-03-02 23:62:57 +0900
+categories: posts
+tags: ['git', 'github', 'bash', 'script']
+author: MartianLee
+---
+
+## Migration
+
+Gatsby v4에서 v5로 마이그레이션하면 `@mdx-js/react` 라이브러리도 v2로 버전업 해야 한다.
+이 때 여러 문제가 동시다발적을 터져서 고통받았다. 혹시 같이 겪는 분을 위해 기록을 남긴다.
+
+## 문제1
+
+mdx 파일 안에 기존 jekyll 에서 사용하던 문자열 ex. `{:toc}` 같은 것들이 포함되어 있었다.
+그런데 파서는 원인을 찾기 어려운 동일한 에러를 띄웠다.
+
+에러는 계속해서 `Invalid left-hand side in prefix operation. (1:2)` 혹은 `Could not parse expression with acorn` 과 같은 에러가 발생했다.
+처음에 나는 mdx 파서가 frontmatter를 읽지 못하는 줄 알았다. 에러가 거의 대부분의 파일에서 발생했기 때문이다.
+그러나 검색을 하고 mdx 파일을 수정하던 결과 결국 mdx 포맷에 맞지 않는 구문을 사용하면 그냥 최상단에서 에러가 발생하다는 것을 발견했다.
+
+[참조한 글](https://paulie.dev/posts/2022/08/mdx-2-breaking-changes-and-gatsby-plugin-mdx-v4/)
+
+최종적으로는 위 글에 큰 도움을 받았다.
+
+이 글에서는 jsx 포맷에서 사용되는 `{` 대괄호를 그냥 사용하면 안된다는 것을 지적한다.
+
+그래서 mdx 파일을 찬찬히 봤더니 정말로 잘못 사용하고 있었다.
+jekyll에서 사용하던 문서들을 migration해서 썼던 탓에 `{:toc}` 혹은 `{{ site.url }}`과 같은 구문이 거의 대부분의 문서에 포함되어 있었다.
+
+이것들을 모두 제공했더니 아무 에러 없이 빌드가 되었다.
+
+## 문제2
+
+slug가 없어졌다. 기존의 page create는 전적으로 slug에 의존하고 있었기 때문에 바로 에러가 났다.
+방법을 고민하다, 기존 페이지(SEO)와의 호환성을 위해 페이지별로 수동으로 slug frontmatter 값을 추가해 주었다.
+
+```
+---
+...
+slug: '2023-03-02-gatsby-v5-to-v4'
+...
+---
+```
+
+위와 같이 모든 파일에 일일히 기존의 파일 이름을 추가했다.
+추후에 글 쓸 때 약간 번거로울 수 있지만 우선은 기존 포맷으로 가기로 했다.
+
+## 마치며
+
+문제 해결을 위해서 eslint 파서가 문제인가? 하면서 babel을 뜯어야 하는걸까? 온갖 고민을 다했다.
+다행히, 실마리를 찾아서 잘 해결해서 지금은 배포한 상태다. 도구들에 의존하는데, 도구를 잘 알지 못하고 버전업을 하다 보면 이렇게 문제에 부닥친다.
+덕분에 Gatsby와 조금 더 친해진 기분이 든다. 한번 고통받고 나니 차라리 static page도 nextjs로 마이그레이션 하는 게 나은 게 아닐까? 라는 생각까지 하고 있다. 하하.
