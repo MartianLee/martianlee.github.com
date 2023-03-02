@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { graphql, Link } from 'gatsby';
+import { GatsbyLinkProps, graphql, Link } from 'gatsby';
 import * as React from 'react';
 import colors from '../components/common/colors';
 import Header from '../components/common/Header';
@@ -7,9 +7,9 @@ import Layout from '../components/common/Layout';
 import { slugToTitle } from '../utils';
 
 type Post = {
-  slug: string;
   frontmatter: {
     title: string;
+    slug: string;
     author: string;
     categories: string;
     crawlertitle: string;
@@ -32,8 +32,8 @@ const IndexPage = ({ data }) => {
       <h2>게시글</h2>
       {posts.map((post: Post) => {
         return (
-          <article key={`post-${post.slug}`}>
-            <StyledLink to={`${slugToTitle(post.slug)}`}>
+          <article key={`post-${post.frontmatter.slug}`}>
+            <StyledLink to={`${slugToTitle(post.frontmatter.slug)}`}>
               <h3>{post.frontmatter.title}</h3>
             </StyledLink>
           </article>
@@ -47,11 +47,11 @@ export default IndexPage;
 
 export const query = graphql`
   query PostList {
-    allMdx(sort: { fields: frontmatter___date, order: DESC }) {
+    allMdx(sort: { frontmatter: { date: DESC } }) {
       nodes {
-        slug
         frontmatter {
           title
+          slug
           author
           categories
           crawlertitle

@@ -1,0 +1,77 @@
+---
+layout: post
+title: 'SCCC 홈페이지 리뉴얼'
+slug: '2019-04-17-renwal-sccc-page'
+crawlertitle: 'SCCC 홈페이지 리뉴얼 with 지킬 블로그'
+summary: 'SCCC 소모임 홈페이지를 지킬 블로그로 리뉴얼합니다.'
+date: 2019-04-17 18:27:41 +0900
+categories: posts
+tags: ['develop', 'jekyll']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+- 목차
+
+## 배경
+
+2016년 숭실대학교 소모임 SCCC(Soongsil Computing Contest Club) 페이지를 만들었습니다. nginx에 올라가 있는 정적 페이지였습니다.
+간단한 부투스트랩 테마를 응용한 html/css/javascript 페이지였습니다. 시간은 흐르고 3년 정도면 같은 디자인에 질리기 마련입니다.
+마침 최근에 소모임 활동이 활발해지기도 했고 홈페이지에 풀이를 공유할 수 있는 방법을 고민하다가 Github Page의 Jekyll 블로그로 만들어 보면 좋겠다고 결정했습니다. 원래는 레일즈로 회원가입부터 게시판, 아카이빙까지 작동하는 홈페이지를 만드는 것이 목표였지만 목표가 너무 커서 지지부진 했던 차였습니다.
+빠르게 호스팅 가능하고 '풀이 공유' 라는 기능만 활용하기에 Jekyll 블로그는 적당해 보였습니다.
+
+## 문제
+
+html/css/javascript -> jekyll 블로그 입니다.
+여기에 덧붙여서 조금 더 예쁜 디자인을 도입하는 것이 목표입니다.
+
+## 방법
+
+그렇지 않아도 며칠 전에 제 Jekyll 블로그를 리뉴얼 하였습니다. 자세한 방법은 링크에서 확인해 주세요.
+
+같은 방법을 활용하되 목표한 것은 4가지였습니다.
+
+- 기존의 홈페이지처럼 소모임 홍보/정보 전달 기능을 유지하면서 '솔루션' 탭을 만들자.
+- 상당 헤더를 애니메이션을 활용해 꾸며보자
+- 스크롤 할 때 예쁜 애니메이션을 보여주자
+- 부트스트랩은 질려서 다른 CSS Framework를 사용해 보자
+
+## 해결방법
+
+1. Jekyll의 Collection 기능을 사용하여 게시글(posts) 처럼 솔루션(solutions) 탭을 새로 만든다.
+   1. 처음에는 posts의 tag를 solution으로 하려고 하였으나 추후에 스타일 적용, iteration의 편의 등을 고려해서 Collection을 사용하기로 결정했습니다.
+   2. Collection 기능을 처음 샤용해 보아 #2h 걸렸습니다.
+2. [Anime.js](https://animejs.com/) 를 사용해 직접 애니메이션을 작성해 보자.
+   1. CSS 라이브러리를 꽤 찾아보았는데요, Anime.js 가 아주 많은 깃헙 스타와 범용적인 기능을 가지고 있었습니다. 그래서 선택!
+   2. 꽤 오래 걸렸습니다. #1h~#2h 사이에 걸린 것 같습니다. 아주 의도한 만큼은 아니지만 최소한 정도 느낌은 난 것 같습니다. 초기에는 쾅 하면서 떨어지고 조각이 날리는 효과까지 생각했는데 욕심인 것 같아서 쉬운 방법으로 선회했습니다.ㅋㅋㅋ
+3. [AOS(Animate On Scroll) CSS Library](https://michalsnik.github.io/aos/)를 사용해 플로팅 애니메이션을 적용하자.
+   1. 스크롤 할 때 애니메이션 라이브러리가 여러 종류가 있었는데 도입이 굉장히 쉬워 보여서(속성 하나만 붙이면 됨) 결정했습니다.
+   2. 도큐먼트의 설명대로 역시 굉장히 간단했습니다. 라이브러리 인클루드 후 필요한 태그들에 속성을 적용합니다. #30min 걸렸습니다.
+4. Bootstrap 대신에 [Semantic UI](https://semantic-ui.com/)를 사용해 보자.
+   1. 유명한 CSS Framework 중에서 Bootstrap 다음으로 불리는 Semantic UI를 사용해 봅니다.
+   2. Semantic UI를 사용한 이유는 Sidebar가 컸습니다. 생각보다 class가 의도하는 대로 작동하지 않아 #2h 는 걸린 것 같습니다.
+
+#### Desktop page
+
+![img1](./contents/190417_renewal-sccc-homepage/homepage.png)
+
+#### Mobile page
+
+![img2](./contents/190417_renewal-sccc-homepage/mobile1.png)
+![img3](./contents/190417_renewal-sccc-homepage/mobile2.png)
+
+## 결론
+
+현재는 https://ssu-sccc.github.io/sccc-homepage/ 에 구현되어 있습니다. 솔루션 페이지의 스타일까지 완료되면 [sccc.kr](http://sccc.kr) 도메인을 붙이려고 합니다.
+
+홈페이지 리뉴얼은 작년부터 미뤄왔던 일인데요, 마침 최근에 제 Jekyll 블로그를 리뉴얼하면서 손에 익어 많은 시간을 들이지 않고 꽤 괜찮은 퀄리티의 결과를 만들어 낼 수 있었습니다.
+
+저는 졸업했지만 많은 소모임 회원들이 솔루션을 공유하고 커밋하고 issue에 대한 pull request를 날리는 아름다운(?) 그림을 상상하면서 개발하니 아주 집중이 잘 된 것 같습니다. 아. 마지막으로 프로젝트에 적극 협조해준 2019년 회장님의 도움도 컸습니다. 앉은자리에서 솔루션 하나를 바로 작성해서 공유해 주는 열정 !!!
+
+이전처럼 소스가 저희 서버에만 올라와 있지도 않으니 추후에 후배님들이 새로 만들기도 아주 용이할 것 같습니다. Repository 주소는 다음과 같습니다.( https://github.com/ssu-sccc/sccc-homepage )
+
+ACM을 향해서 SCCC 화이팅입니다!
+
+[codeground]: https://www.codeground.org/practice

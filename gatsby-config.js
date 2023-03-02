@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('gatsby').GatsbyConfig} */
 module.exports = {
   siteMetadata: {
@@ -29,25 +31,43 @@ module.exports = {
     'gatsby-plugin-image',
     'gatsby-plugin-react-helmet-async',
     'gatsby-plugin-sitemap',
-    {
-      resolve: `gatsby-source-filesystem`,
-      options: {
-        name: `pages`,
-        path: `${__dirname}/contents/posts/`,
-      },
-    },
-    {
-      resolve: 'gatsby-plugin-page-creator',
-      options: {
-        path: `${__dirname}/contents/posts/`,
-      },
-    },
+    // {
+    //   resolve: 'gatsby-plugin-page-creator',
+    //   options: {
+    //     path: `${__dirname}/contents/posts/`,
+    //   },
+    // },
     {
       resolve: 'gatsby-plugin-mdx',
       options: {
+        defaultLayouts: {
+          default: path.resolve('./src/templates/post-details.tsx'),
+        },
         extensions: ['.mdx', '.md', '.markdown'],
+        gatsbyRemarkPlugins: [
+          {
+            resolve: `gatsby-remark-images`,
+            options: {
+              maxWidth: 590,
+            },
+          },
+        ],
       },
     },
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `posts`,
+        path: `${__dirname}/contents/posts/`,
+      },
+    },
+    {
+      resolve: `gatsby-plugin-page-creator`,
+      options: {
+        path: `${__dirname}/contents/posts`,
+      },
+    },
+    `gatsby-transformer-remark`,
     'gatsby-plugin-sharp',
     'gatsby-plugin-emotion',
     'gatsby-transformer-sharp',

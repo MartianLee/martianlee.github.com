@@ -1,0 +1,69 @@
+---
+layout: post
+title: 'Github에 ssh-key 추가하기'
+crawlertitle: 'Github에 ssh-key 추가하기'
+slug: '2019-03-12-ssh-github'
+summary: 'Github에 ssh-key를 추가하고 push하는 과정을 설명합니다'
+date: 2019-03-12 15:13:19 +0900
+categories: posts
+tags: ['develop', 'github']
+author: MartianLee
+---
+
+저는 오늘 새 노트북을 데려왔어요. 회사에서 주는 노트북을 몇 번 써 보기는 했지만 완전히 내 노트북을 가진 지는 몇 년 만인지 기억도 안나네요. 여튼 처음 github에 key를 등록하시는 분들은 대부분 비슷한 처지에 있을 것 같습니다. 처음 한 번 개발환경을 설치하고 나면 보통 건드릴 일이 없으니까요.
+
+지금부터 처음 맥북을 산 뒤에 github repository를 클론하는 법을 알아보겠습니다.
+
+기본적으로 이전에 개발하던 repository가 있고 ssh로 연결하는 과정을 소개합니다.
+
+## 1. ssh key 생성
+
+![img2](./contents/190312_ssh_key_github/img2.png)
+
+커맨드 라인에 ssh-keygen 이라는 명령어를 입력합니다.
+그러면 1. 어떤 위치에 저장할지 물어보고 (엔터를 치면 기본 위치 ~/.ssh/id_rsa)로 저장됩니다. 2. 비밀번호를 입력합니다.
+
+상세한 내용은 [이 링크][ssh-key]에서 확인하실 수 있습니다.
+
+## 2. 생성한 key를 [github][github]에 등록
+
+key는 ~/.ssh 폴더에 있습니다.
+
+![img4](./contents/190312_ssh_key_github/img4.png)
+
+![img5](./contents/190312_ssh_key_github/img5.png)
+
+스크린샷과 같이 setting메뉴에 들어가서 ssh 항목에 키를 추가합니다.
+
+## 3. 로컬에 github 계정 등록
+
+![img3](./contents/190312_ssh_key_github/img3.png)
+
+> git config --global user.name "유저 이름"
+
+> git config --global user.email "유저 이메일"
+
+github은 내가 누구인지 알아야 내 commit을 작성할 수 있겠죠? 우선 global로 내 정보를 설정합니다. config에는 다른 설정이 있으니 구글링이나 git --help를 타이핑해서 확인해 보는 것도 좋습니다.
+
+## 4. git clone
+
+![img6](./contents/190312_ssh_key_github/img6.png)
+
+## \* 마주칠 수 있는 에러 메세지
+
+### local에 ssh-key가 없는 경우
+
+![img1](./contents/190312_ssh_key_github/img1.png)
+
+제가 처음 마주친 에러입니다. ssh로 git clone을 했는데 그냥 권한이 없다고 뜹니다. 내 pc가 정말 내 것인지 github이 알 수 없기 때문이죠. ssh-key를 generate하고 github setting에 가셔서 ssh-key를 등록하면 됩니다.
+
+### Ssh key를 github에 등록하지 않은 경우
+
+~/.ssh/id_rsa 파일이 생성되어 있으면 깃헙의 setting메뉴에 들어가서 ssh 항목에 키가 잘 추가되어 있는지 보면 됩니다.
+
+## 마치며
+
+저도 처음 깃헙을 접했을 때는 ssh가 무엇인지 막 헷갈려서 https로 설정해서 그냥 쓰곤 했습니다. 그런데 private 프로젝트에 참여하기 되니 자연스럽게 ssh-key가 필요하게 되었습니다. 이 글을 읽으시는 분께서도 무사히 깃헙에 커밋을 성공하시기를 기원합니다.
+
+[github]: https://github.com/
+[ssh-key]: https://git-scm.com/book/ko/v1/Git-%EC%84%9C%EB%B2%84-SSH-%EA%B3%B5%EA%B0%9C%ED%82%A4-%EB%A7%8C%EB%93%A4%EA%B8%B0

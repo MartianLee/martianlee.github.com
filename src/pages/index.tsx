@@ -7,9 +7,9 @@ import Layout from '../components/common/Layout';
 import { slugToTitle } from '../utils';
 
 type Post = {
-  slug: string;
   frontmatter: {
     title: string;
+    slug: string;
     author: string;
     categories: string;
     crawlertitle: string;
@@ -46,8 +46,8 @@ const IndexPage = ({ data }) => {
       <h2>최근 글</h2>
       {posts.map((post: Post) => {
         return (
-          <article key={`post-${post.slug}`}>
-            <StyledLink to={`posts/${slugToTitle(post.slug)}`}>
+          <article key={`post-${post.frontmatter.slug}`}>
+            <StyledLink to={`posts/${slugToTitle(post.frontmatter.slug)}`}>
               <h3>{post.frontmatter.title}</h3>
             </StyledLink>
           </article>
@@ -64,10 +64,10 @@ export default IndexPage;
 
 export const query = graphql`
   query Posts {
-    allMdx(sort: { fields: frontmatter___date, order: DESC }, limit: 5) {
+    allMdx(sort: { frontmatter: { date: DESC } }, limit: 5) {
       nodes {
-        slug
         frontmatter {
+          slug
           title
           author
           categories

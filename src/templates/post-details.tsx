@@ -1,20 +1,20 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { graphql } from 'gatsby';
 import { MDXProvider } from '@mdx-js/react';
-import { MDXRenderer } from 'gatsby-plugin-mdx';
 import Layout from '../components/common/Layout';
 import styled from '@emotion/styled';
+import { Components } from '@mdx-js/react/lib';
 
 const H1 = styled.h1``;
 const H2 = styled.h2`
   margin: 2rem 0 1rem;
 `;
-const H3 = ({ children }) => <h3>{children}</h3>;
-const PWrapper = styled.p`
+const H3 = styled.h3``;
+const P = styled.p`
   line-height: 1.5rem;
 `;
-const P = ({ children }) => <PWrapper>{children}</PWrapper>;
-const CodeWrapper = styled.code`
+const CodeWrapper = styled.code``;
+const CODE = styled.code`
   display: block;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -24,8 +24,7 @@ const CodeWrapper = styled.code`
   border: 1px solid #999999;
   border-radius: 8px;
 `;
-const CODE = ({ children }) => <CodeWrapper>{children}</CodeWrapper>;
-const components = {
+const components: Components = {
   h1: H1,
   h2: H2,
   h3: H3,
@@ -44,9 +43,21 @@ const ReleaseDate = styled.div`
   text-align: right;
 `;
 
-export default function ProjectDetails({ data, pageContext }) {
-  const { body, frontmatter } = data.mdx;
-  const { title, summary, featuredImg, tags, date }: { date: string } = frontmatter;
+type Props = {
+  data: any;
+  pageContext: any;
+  children: ReactNode;
+};
+export default function ProjectDetails({ data, pageContext, children }: Props) {
+  const { frontmatter } = data.mdx;
+  const {
+    title,
+    summary,
+    featuredImg,
+    tags,
+    date,
+  }: { title: string; summary: any; featuredImg: string; tags: any; date: string } =
+    frontmatter;
   const [publishDate, publishTime] = new Date(
     date.replace(' ', 'T').replace(' ', '')
   )
@@ -60,9 +71,7 @@ export default function ProjectDetails({ data, pageContext }) {
         <ReleaseDate>발행일: {publishDate}</ReleaseDate>
       </Head>
       <Body>
-        <MDXProvider components={components}>
-          <MDXRenderer>{body}</MDXRenderer>
-        </MDXProvider>
+        <MDXProvider components={components}>{children}</MDXProvider>
       </Body>
     </Layout>
   );
@@ -71,7 +80,6 @@ export default function ProjectDetails({ data, pageContext }) {
 export const query = graphql`
   query ProjectsPage($title: String) {
     mdx(frontmatter: { title: { eq: $title } }) {
-      body
       frontmatter {
         author
         categories
