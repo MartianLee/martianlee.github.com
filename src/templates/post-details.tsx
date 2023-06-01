@@ -12,8 +12,18 @@ const H2 = styled.h2`
 const H3 = styled.h3``;
 const P = styled.p`
   line-height: 1.5rem;
+  & > code {
+    display: inline-block;
+    background: transparent;
+    padding: 0 0.4rem;
+    background: #fcf55f;
+    border-radius: 0;
+    border: none;
+    font-weight: bold;
+  }
 `;
 const CodeWrapper = styled.code``;
+const PRE = styled.pre``;
 const CODE = styled.code`
   display: block;
   white-space: pre-wrap;
@@ -25,12 +35,25 @@ const CODE = styled.code`
   border-radius: 8px;
   margin: 0.5rem auto;
 `;
+
+const STRONG = styled.strong`
+  background: red;
+  padding: 1rem 1rem;
+  line-height: 1.1rem;
+  border: 1px solid #999999;
+  border-radius: 8px;
+  margin: 0.5rem auto;
+`;
+
 const components: Components = {
   h1: H1,
   h2: H2,
   h3: H3,
   p: P,
   code: CODE,
+  strong: STRONG,
+  blockquote: STRONG,
+  pre: CodeWrapper,
 };
 const Head = styled.div`
   padding: 2.5rem 1rem 0.5rem 1rem;
