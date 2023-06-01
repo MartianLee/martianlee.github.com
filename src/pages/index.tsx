@@ -27,6 +27,7 @@ const Button = styled.button`
   font-weight: bold;
   font-size: 1rem;
   border-radius: 4px;
+  cursor: pointer;
 `;
 
 const Warning = styled.div`
