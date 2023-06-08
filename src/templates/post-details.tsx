@@ -20,6 +20,7 @@ const P = styled.p`
     border-radius: 0;
     border: none;
     font-weight: bold;
+    word-break: break-all;
   }
 `;
 const CodeWrapper = styled.code``;
@@ -45,6 +46,14 @@ const STRONG = styled.strong`
   margin: 0.5rem auto;
 `;
 
+const IMG = styled.img`
+  margin: 1rem 0;
+`;
+
+const A = (props: any) => {
+  return <a {...props} target="_blank" rel="noopener noreferrer" />;
+};
+
 const components: Components = {
   h1: H1,
   h2: H2,
@@ -54,6 +63,8 @@ const components: Components = {
   strong: STRONG,
   blockquote: STRONG,
   pre: CodeWrapper,
+  img: IMG,
+  a: A,
 };
 const Head = styled.div`
   padding: 2.5rem 1rem 0.5rem 1rem;
