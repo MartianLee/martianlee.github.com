@@ -102,7 +102,7 @@ module.exports = {
       resolve: 'gatsby-source-filesystem',
       options: {
         name: 'images',
-        path: '../images/images/',
+        path: './contents/images/',
       },
       __key: 'images',
     },
@@ -118,7 +118,7 @@ module.exports = {
       resolve: 'gatsby-source-filesystem',
       options: {
         name: 'images',
-        path: '../images/assets/',
+        path: './contents/assets/',
       },
       __key: 'images',
     },
