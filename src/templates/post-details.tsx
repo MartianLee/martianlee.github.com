@@ -50,8 +50,12 @@ const IMG = styled.img`
   margin: 1rem 0;
 `;
 
+const Hyperlink = styled.a`
+  word-break: break-all;
+`;
+
 const A = (props: any) => {
-  return <a {...props} target="_blank" rel="noopener noreferrer" />;
+  return <Hyperlink {...props} target="_blank" rel="noopener noreferrer" />;
 };
 
 const components: Components = {
