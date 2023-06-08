@@ -197,13 +197,13 @@ public class JwtServiceImpl implements JwtService{
 ### Token 확인해 보기
 
 PostMan을 활용해서 로그인을 해 보았습니다. response 형태는 제일 단순하게 token만 보내게 만들어 보았습니다.
-![img1](./contents/190409_JWT-springboot-login/token.png)
+![img1](../images/190409_JWT-springboot-login/token.png)
 토큰을 잘 반환되는 것을 확인할 수 있습니다.
 
-![img2](./contents/190409_JWT-springboot-login/token2.png)
+![img2](../images/190409_JWT-springboot-login/token2.png)
 반환된 토큰을 (클라이언트에서는 쿠키에 저장해서 보낸다고 생각하고) Autorization의 Bearer Token을 선택하고 입력해 줍니다.
 
-![img3](./contents/190409_JWT-springboot-login/token3.png)
+![img3](../images/190409_JWT-springboot-login/token3.png)
 에러 없이 사용자 정보가 반환되는 것을 확인할 수 있습니다.
 
 - 만약 405 에러가 발생하는 경우에는 1. 토큰이 만료되었거나 2. 인증 과정에서 문제가 생겼을 수도 있고 3. 컨트롤러에 적절한 api를 만들지 않았을 수도 있으니 에러 로그를 잘 확인해서 에러를 해결하시면 됩니다.

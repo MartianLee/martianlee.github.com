@@ -13,7 +13,7 @@ output:
     toc: true
 ---
 
-![img](./contents/190725_angular_architecture/overview.png)
+![img](../images/190725_angular_architecture/overview.png)
 
 - 목차
 
@@ -29,13 +29,13 @@ output:
 
 ## 해결
 
-![img1](./contents/190725_angular_architecture/1.png)
+![img1](../images/190725_angular_architecture/1.png)
 
 ### 1. view-service-model
 
 앵귤러 튜토리얼에서 제안하는 아키텍쳐입니다. view-service-model을 활용합니다. 기존 패턴처럼 코딩한다면 redux pattern 에서 해결하고자 하는 문제인 view와 model이 아주 복잡하게 뒤섞이는 일이 발생합니다. 그렇지만 이 문제는 앵귤러의 RxJS를 활용하면 쉽게 풀립니다. 데이터 모델의 흐름이 state에서 관리하는 방식과 달라서 익숙해지는 데 시간이 좀 걸렸습니다.
 
-![img2](./contents/190725_angular_architecture/2.png)
+![img2](../images/190725_angular_architecture/2.png)
 
 ### 2. view-service-repository-model
 
@@ -47,7 +47,7 @@ output:
 
 어플리케이션이 커지면 커질수록 확실히 mvc model의 한계가 느껴졌습니다. 물론 Angular에서 기본적으로 RxJS를 사용하게 되어 있어서 서버 혹은 사용자의 입력에 의한 비동기 처리 후 데이터 변화를 전파하는 부분은 설계에 따라 아주 명쾌할 수 있습니다. 하지만 3개정도 모델을 바인딩하고 호출해서 결과를 뿌려주고 또 액션까지 처리하려고 하니 머릿속이 복잡해진 것은 사실입니다. (아직 RxJS가 익숙하지 않아서 그럴 수도 있습니다)
 
-![img](./contents/190725_angular_architecture/4.png)
+![img](../images/190725_angular_architecture/4.png)
 
 코드가 복잡해지면 복잡해 질 수록 이전에 react와 vue.js에서 적극적으로 사용하고 있는 [flux 아키텍쳐](https://taegon.kim/archives/5288)가 생각나기도 했습니다. 각 컴포넌트에서 여러 개의 스트림이 열려 있고 그것에 따른 전파 로직이 너무 복잡하게 느껴졌기 때문입니다. 그냥 state에 다 때려넣고 싶은 마음이 불쑥불쑥 ㅋㅋ
 

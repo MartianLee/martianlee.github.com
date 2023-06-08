@@ -13,7 +13,7 @@ output:
     toc: true
 ---
 
-![img](./contents/200209_django-gae-deploy/0.jpg)
+![img](../images/200209_django-gae-deploy/0.jpg)
 
 - 목차
 
@@ -37,7 +37,7 @@ output:
 ### Google Cloud Platform SDK 설치
 
 [구글 클라우드 공식 문서](https://cloud.google.com/sdk/docs/quickstarts)에 자세한 설명이 나와 있습니다. 홈페이지에서 sdk를 다운받은 후 압축을 해제합니다. 그리고 그 안의 `install.sh`를 실행하면 됩니다.
-![img](./contents/200209_django-gae-deploy/1.png)
+![img](../images/200209_django-gae-deploy/1.png)
 
 ```
 ./google-cloud-sdk/install.sh
@@ -59,7 +59,7 @@ App engine을 만들기 전에 Project를 만들어주어야 합니다. GCP는 �
 
 다음과 같이 프로젝트를 생성합니다.
 
-![img](./contents/200209_django-gae-deploy/3.jpg)
+![img](../images/200209_django-gae-deploy/3.jpg)
 
 ```
 gcloud config set project mysite
@@ -85,7 +85,7 @@ CREATE DATABASE mysite CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 이모지가 입력 가능한 utf8mb4 타입으로 데이터베이스를 생성합니다. 저는 mysql이 편해서 mysql을 사용하였는데요, Google SQL에서는 2020년 3월 현재 MySQL, PostgreSQL, SQL Server를 지원합니다.
 
-![img](./contents/200209_django-gae-deploy/2.jpg)
+![img](../images/200209_django-gae-deploy/2.jpg)
 
 `mysite/settings.py`를 열고 다음과 같이 설정해 줍니다.
 
