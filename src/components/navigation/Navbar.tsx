@@ -10,6 +10,7 @@ const Navigation = styled.nav`
   max-width: 960px;
   background: ${colors.white};
   border-bottom: 1px solid ${colors.keyColor2};
+  z-index: 1000;
 `;
 const ButtonWrapper = styled.ul`
   display: flex;
