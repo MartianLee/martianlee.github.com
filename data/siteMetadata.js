@@ -4,7 +4,7 @@ const siteMetadata = {
   author: 'MartianLee',
   headerTitle: "MartianLee's Dev Blog",
   description: 'A blog created with Next.js and Tailwind.css',
-  language: 'en-us',
+  language: 'ko-KR',
   theme: 'system', // system, dark or light
   siteUrl: 'https://martianlee.github.io/',
   siteRepo: 'https://github.com/MartianLee/martianlee.github.com',

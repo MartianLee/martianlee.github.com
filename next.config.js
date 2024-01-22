@@ -74,7 +74,7 @@ module.exports = () => {
         },
       ],
     },
-    basePath: "",
+    // basePath: "",
     // async headers() {
     //   return [
     //     {
