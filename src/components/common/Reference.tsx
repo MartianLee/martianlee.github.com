@@ -28,7 +28,7 @@ const Current = styled.div`
   gap: 1rem;
   margin-bottom: 1rem;
   text-align: center;
-  align-items: center; ;
+  align-items: center;
 `;
 
 function Reference() {
@@ -36,12 +36,18 @@ function Reference() {
     <ReferenceWrapper>
       <h3>현재</h3>
       <Current>
+        <A href="" target={'_blank'}>
+          <ReferenceCard>-</ReferenceCard>
+        </A>
+        <div>#OpentoWork</div>
+      </Current>
+      <h3>과거</h3>
+      <Current>
         <A href="https://tomorrowuse.com" target={'_blank'}>
           <ReferenceCard>내일의쓰임</ReferenceCard>
         </A>
         <div>Cofunder & Product Owner & Fullstack Developer</div>
       </Current>
-      <h3>과거</h3>
       <Current>
         <A href="https://miso.kr" target={'_blank'}>
           <ReferenceCard>MISO</ReferenceCard>
@@ -53,6 +59,12 @@ function Reference() {
           <ReferenceCard>FUMI</ReferenceCard>
         </A>
         <div>Software Engineer</div>
+      </Current>
+      <Current>
+        <A href="https://parti.coop/" target={'_blank'}>
+          <ReferenceCard>빠띠</ReferenceCard>
+        </A>
+        <div>Software Developer</div>
       </Current>
     </ReferenceWrapper>
   );
