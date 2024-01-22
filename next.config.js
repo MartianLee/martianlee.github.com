@@ -74,7 +74,7 @@ module.exports = () => {
         },
       ],
     },
-    basePath: "/martianlee.github.com",
+    basePath: "/",
     // async headers() {
     //   return [
     //     {
