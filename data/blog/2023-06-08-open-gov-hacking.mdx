@@ -1,0 +1,75 @@
+---
+slug: '2023-06-08-open-gov-hacking'
+title: '정보공개포털에서 특정 페이지를 조회할 수 없는 문제 해결하기'
+crawlertitle: '정보공개포털에서 특정 페이지를 조회할 수 없는 문제 해결하기'
+summary: '정보공개포털에서 특정 페이지를 조회할 수 없는 문제 해결합니다'
+date: 2023-06-08 23:38:14 +0900
+categories: posts
+tags: ['civic hacking', 'post']
+author: MartianLee
+---
+
+![정보공개포털 정보목록 이미지](/static/post-images/2023-06-08-open-gov-hacking/share-page1.png)
+
+## 배경
+
+지난 '96년 \<공공기관의 정보공개에 관한 법률\>에 의해 정보공개포털이 운영되고 있습니다.
+바로 [open.go.kr](https://open.go.kr) 입니다.
+
+그런데 말입니다.
+
+정보공개 포털의 공개정보 목록에서 정보의 상세 페이지를 조회하면 무언가 이상한 점을 발견할 수 있습니다.
+
+바로 모든 페이지의 주소가 같아서 공유할 수가 없습니다. 심지어 주소창에 있는 주소 `https://www.open.go.kr/othicInfo/infoList/infoListDetl2.do` 를 입력하면 아무것도 없는 빈 상세 페이지가 나옵니다.
+
+헉...
+
+## 문제
+
+![정보공개포털 정보목록 이미지](/static/post-images/2023-06-08-open-gov-hacking/share-page2.png)
+정보 목록 중 하나를 선택해 페이지를 이동하고 주소창을 자세히 보면
+
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page3.png) 그
+주소가 `https://www.open.go.kr/othicInfo/infoList/infoList.do` 으로 고정되어 있는 것을
+확인할 수 있습니다. 이 때문에, 정보공개된 자료를 누군가에게 공유하고 싶어도 주소를 몰라서 몇페이지 몇 번째 게시글 아니면 매번 검색을 해야 하는 문제가 있습니다.
+
+## 정보 상세 페이지 관찰
+
+분명 페이지가 바뀌었는데 주소가 같아서 너무나 당황스러운 저는 개발자 도구를 열어 왜 그런지 확인해 보기로 하였습니다.
+
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page9.png)
+
+아니 이럴수가... 페이지를 불러오는 요청이 GET이 아니라 POST 였던 것이었습니다.
+
+아직 공공기관 페이지와 친하지 않은 저는 벌써 어떻게 해야 하지 눈앞이 하얗게 되었습니다.
+
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page4.png)
+
+어쨌든 페이지가 바뀌면, POST 메세지로 전송하는 페이로드 값이 바뀌는 것은 확인하였습니다.
+
+그렇다면 localStorage 혹은 cookie에 저장되어 것일까? 확인해 봤지만 알 수 없었습니다.
+
+어떡하지... 그렇다면 무식하게, 이 쿼리 파라미터를 주소값에 붙여서 넘겨주면 POST 메세지로 날아가지 않을까? 생각해 보았습니다.
+
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page5.png)
+
+페이로드에서 '소스 보기'를 누르고 기존 `https://www.open.go.kr/othicInfo/infoList/infoListDetl2.do` 주소 뒤에 ? (물음표)를 붙여준 뒤 쿼리 파라미터를 입력해 줍니다.
+
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page6.png)
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page7.png)
+
+(드래그 해서 복사하는 중)
+
+![정보공개포털 정보목록 주소](/static/post-images/2023-06-08-open-gov-hacking/share-page8.png)
+
+그래서 최종적으로 [https://www.open.go.kr/othicInfo/infoList/infoListDetl2.do?prdnNstRgstNo=DCTA28189F0B5C12623708693C8D2121358&prdnDt=20230607163213&nstSeCd=C&prevUrl=%2FothicInfo%2FinfoList%2FinfoList.do&offSet=3&kwd=&preKwds=&reSrchFlag=off&othbcSeCd=&insttSeCd=C&eduYn=N&startDate=20230510&endDate=20230608&insttCdNm=&insttCd=&searchMainYn=&rowPage=10&viewPage=1&sort=s&pSelt=&hash=true](https://www.open.go.kr/othicInfo/infoList/infoListDetl2.do?prdnNstRgstNo=DCTA28189F0B5C12623708693C8D2121358&prdnDt=20230607163213&nstSeCd=C&prevUrl=%2FothicInfo%2FinfoList%2FinfoList.do&offSet=3&kwd=&preKwds=&reSrchFlag=off&othbcSeCd=&insttSeCd=C&eduYn=N&startDate=20230510&endDate=20230608&insttCdNm=&insttCd=&searchMainYn=&rowPage=10&viewPage=1&sort=s&pSelt=&hash=true) 이 주소를 주소창에 입력하면!
+
+짜잔! 특정한 페이지가 잘 로딩됩니다.
+
+이 주소를 통해 앞으로 많은 정보가 시민들에게 공유되기를 기대해 봅니다 :)
+
+## 앞으로 할 일
+
+이렇게 매번 개발자 도구를 열어서 공유하는 것도 방법이지만, 이 페이지가 고쳐지지 않는다면 다른 쉬운 방법이 필요하다는 생각이 들었습니다.
+위 과정을 클릭 한 번으로, 그러니까 크롬 익스텐션으로 만들면 보다 사용하기 편하지 않을까 생각이 들었습니다.
+다음 목표는 위 기능을 크롬 익스텐션 만들기로 도전하는 일이 되겠습니다 !

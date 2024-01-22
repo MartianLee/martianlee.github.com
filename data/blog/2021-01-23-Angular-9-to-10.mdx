@@ -1,0 +1,71 @@
+---
+title: 'Angular 9 to 10'
+crawlertitle: 'Angular 9 to 10'
+slug: '2021-01-23-Angular-9-to-10'
+summary: 'Angular 9 to 10'
+date: 2021-01-23 22:07:33 +0900
+categories: posts
+tags: ['Angular', 'frontend']
+author: MartianLee
+---
+
+- 목차
+
+## 목표
+
+회사에서 Angular9으로 된 프로젝트를 V10으로 업데이트 하였습니다. 그 과정과 중간의 시행착오를 기록합니다. Angular10의 릴리즈 노트는 [이곳](https://han41858.tistory.com/51)에서 한국어로 확인이 가능합니다.
+
+## 방법
+
+```
+이 글은 앵귤러, npm에 대한 기본적인 이해도가 있는 분을 대상으로 쓰여졌습니다.
+```
+
+### 사용한 도구
+
+- node 14.16.0
+- npm 7.14.0
+- Angular
+
+### 과정
+
+조금만 검색을 하신 분은 아시겠지만 [Angular Update Guide](https://update.angular.io/)에서 버전별 업데이트 가이드를 제공하고 있습니다. 가이드에서 현재 버전, 업데이트할 버전을 선택하고 앱의 복잡도에 따라 basic, medium, advance를 선택하면 업데이트전 체크리스트를 제공합니다. [앵귤러 공식 가이드](https://v10.angular.io/guide/updating-to-version-10)에서 더 자세한 설명을 제공합니다.
+
+1. ng update 명령어 실행
+
+   Angular에서 자동으로 typescript 및 필요한 라이브러리를 업데이트합니다. 타입스크립트는 최소 3.9 버전이 필요합니다.
+
+   ```bash
+   ng update @angular/core@10 @angular/cli@10 --force
+   ```
+
+   뒤의 `--force`는 옵션입니다. 저는 다른 라이브러리와 충돌이 있지만 일단 Angular부터 올리고 맞춰가는 방법으로 업데이트하였습니다.
+
+2. 다른 library 업데이트
+   1. videogular2 → @videogular/ngx-videogular 등 라이브러리 버전이 맞지 않는 문제 해결
+3. scss에서 절대 경로로 수정 (.../.../../assets로 변경)
+4. 빌드 중 commonJS를 사용하는 곳은 warning이 엄청 뜹니다. ECMAScript 모듈을 사용하기를 권장한다고 합니다. [https://angular.io/guide/build#configuring-commonjs-dependencies](https://angular.io/guide/build#configuring-commonjs-dependencies)
+
+#### 에러
+
+저는 videogular2라는 라이브러리를 사용하고 있었는데요, v10과 맞지 않았습니다.
+
+```bash
+npm uninstall videogular2
+npm install @videogular/ngx-videogular --save
+```
+
+다행히 기존 패키지를 지우고 새로운 패키지를 설치하기만 해도 해결되었습니다.
+
+## 결과
+
+```bash
+ng version
+```
+
+을 입력하면 무사히 cli와 core가 모두 Angular10으로 업그레이드 된 것을 확인할 수 있습니다. 다행히 8에서 9가 아니라 Ivy rendering engine에 대해서 신경쓰지 않아도 되었네요. 다음 10에서 11, 12도 무탈하기를 기원합니다.
+
+### 참고한 글
+
+- [Angular 공식 가이드](https://v10.angular.io/guide/updating-to-version-10)
+- [Angular 10.0.0 릴리즈 노트](https://han41858.tistory.com/51)
