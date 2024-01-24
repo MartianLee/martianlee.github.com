@@ -1,0 +1,110 @@
+---
+slug: '2024-01-24-leetcode-1239 (en)'
+title: 'leetcode-1239 solutions'
+crawlertitle: 'leetcode-1239 solutions'
+summary: 'leetcode-1239 solutions'
+date: 2024-01-24 11:37:15 +0900
+categories: posts
+tags: ['javascript', 'leetcode', 'post']
+author: MartianLee
+---
+
+## Problem
+
+1239.Maximum Length of a Concatenated String with Unique Characters
+
+## Description
+
+This problem, you need to find longest length of string from the given array of strings.
+The way to find the longest length is that you need to concatenate strings and check if the concatenated string has unique characters.
+And the unique characters means that the string has no duplicated characters in 26 alphabets.
+
+This is input & outout data.
+```txt
+Input: arr = ["un","iq","ue"]
+Output: 4
+```
+
+You can make "uniq" or "ique" from the given array of strings.
+If you want to concatenate "un" and "ue", It's not possible because "unue" has duplicated character "u".
+
+
+## Approach
+
+### First
+I thought It as simple greedy way. Maybe I can call it one dimension dynamic programming.
+I memorize the longest string that can includes 'i'th string.
+So first I iterate all array which is 'i'
+and I iterate previous memorized array which is 'j'.
+
+But I found that counterexample. for example, ["ab", "cd", "defgh"]
+If I put ab and cd, in seconde iteration I memorized "abcd".
+But the answer is to concat "ab" and "defgh"
+
+
+### Second
+Then I read condition again. condition was pretty small. It limits the length of string is 26.
+So It means, I can't make that much strings. First I thought all number of cases is 16!(factorial) but It's not.
+(arr.length is under 16)
+
+So I concat all the cases.
+For example, just make simple memoization array.
+After that iterate all array of strings and concat all the possible cases.
+That's it.
+
+## Solution
+```javascript
+/**
+ * @param {string[]} arr
+ * @return {number}
+ */
+var maxLength = function (arr) {
+    const memo = [];
+    for (let i = 0; i < arr.length; i++) {
+        if (hasDuplicate(arr[i])) {
+            continue;
+        }
+        const memoLength = memo.length; // It can be changed in loop
+        for (let j = 0; j < memoLength; j++) {
+            if (isPossible(memo[j], arr[i])) {
+                memo.push(memo[j] + arr[i]);
+            }
+        }
+        memo.push(arr[i]);
+    }
+    let max = 0;
+    memo.forEach(item => {
+        if (item.length > max) {
+            max = item.length;
+        }
+    });
+    return max;
+};
+
+var isPossible = function (str1, str2) {
+    let possible = true;
+    [...str1].forEach(c => {
+        if (str2.includes(c)) {
+            possible = false;
+        }
+    });
+    return possible;
+}
+var hasDuplicate = function (str) {
+    for (let i = 0; i < str.length; i++) {
+        for (let j = i + 1; j < str.length; j++) {
+            if (str.at(i) == str.at(j)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+```
+
+
+## Retrospect
+
+I need to read condition more carefully.
+Also need to try more test cases.
+
