@@ -1,0 +1,38 @@
+---
+slug: '2024-01-31-js-small-tricks-for-ps-1 (en)'
+title: 'JS Small tricks for Problem solving 1 - Iterating'
+crawlertitle: 'JS Small tricks for Problem solving 1 - Iterating'
+summary: 'JS Small tricks for Problem solving 1 - Iterating'
+date: 2024-01-31 17:52:15 +0900
+categories: posts
+tags: ['javascript', 'problemsolving', 'post']
+author: MartianLee
+---
+
+## Iteration in Array, Set, Map
+Iterating through an array with an index is pretty straightforward. You can use the ES6 `forEach()` method:
+
+```tsx
+arr.forEach((item, index) => { ... });
+```
+However, when you want to return a value immediately while iterating through an object, it's not easy to exit the parent function.
+
+In such cases, if we are willing to sacrifice a bit of time and space complexity, we can try `Object.entries()`. After that, we simply use `for...of` to iterate.
+
+```tsx
+for (let [index, value] of iterable) {
+  console.log(index, value);
+}
+```
+We also use `Map` and `Set` in problem-solving to decrease time complexity.
+
+Therefore, we need to be proficient with for...in and `for...of` for iterating over objects.
+
+→ [Related docs: Difference between ( for... in ) and ( for... of ) statements?](https://stackoverflow.com/questions/29285897/difference-between-for-in-and-for-of-statements)
+
+## In Practice
+
+For example, when you want to find numbers in an array without duplication and then iterate over the array, you can put all numbers into a `Set` and iterate over it using `for...of`. That’s it!
+
+
+
