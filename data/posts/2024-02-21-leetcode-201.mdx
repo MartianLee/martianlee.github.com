@@ -1,0 +1,131 @@
+---
+slug: '2024-02-21-leetcode-201 (en)'
+title: 'leetcode-201 solutions'
+crawlertitle: 'leetcode-201 solutions'
+summary: 'leetcode-201 solutions #bit manipulation #number theory'
+date: 2024-02-21 16:16:16 +0900
+categories: posts
+tags: ['javascript', 'leetcode', 'post', 'bit manipulation']
+author: MartianLee
+---
+
+## Problem
+
+201.Bitwise AND of Numbers Range (leetcode daliy streak)
+
+## Description
+
+Input gives to number left, right. We need to caculate bitwise `&` calculation of all number in the range left to right.
+
+```txt
+Input: left = 5, right = 7
+Output: 4
+```
+
+in this case, let's check all numbers with binary.
+5 : 101
+6 : 110
+7 : 111
+
+So, only bit 100, which is 4 can be 1.
+result is 4
+
+## Approach
+
+### First
+
+I write all number in binary. 1 to 15, and try to find pattern.
+
+for example
+```
+3 is 011
+7 is 111
+```
+and while 3 go to 7 it has number like 4 100, every bit will be 0 if you bitwise it all.
+
+After that I found that, if two number share start bit (which means it is in the range of pow of 2), It is result.
+But If they have difference length in binary like 3 and 7,
+
+I take point with difference. and I try to calculate difference. 
+```javascript
+    const diff = (right - left);
+    let binary = left.toString(2).split('');
+    let pow = 1, count = 0;
+    while (diff >= pow) {
+        pow *= 2;
+        count++;
+    }
+    binary = binary.slice(0, binary.length - count);
+    binary = binary.concat(new Array(count).fill('0'));
+    const result = parseInt(binary.join(""), 2);
+```
+
+But while I'm doing it I found that problem is not just difference.
+
+for example, `11 to 12` is different with `13 to 14`.
+It has same difference but result is different.
+
+```
+1011
+1100
+// result: 1000(2) = 8
+
+1101
+1110
+// result : 1100(2) = 10
+```
+
+### Second
+
+I found that problem is difference with close minimum pow of 2.
+Also I just found that bit checking is recursive.
+
+So case 13, 14
+```
+1101
+1110
+// check it has same bit? 1000 ✅
+ 101
+ 110
+// check it has same bit? 100 ✅
+  01
+  10
+// cend with 0
+```
+
+So the result is sum of 1000(2), and 100(2), `1100(2) = 10`
+
+
+## Solution
+```javascript
+/**
+ * @param {number} left
+ * @param {number} right
+ * @return {number}
+ */
+var rangeBitwiseAnd = function (left, right) {
+    if (left == right) {
+        return left;
+    }
+    const closeLeft = 1 << 32 - Math.clz32(left);
+    const closeRight = 1 << 32 - Math.clz32(right);
+    const lowLeft = 1 << 31 - Math.clz32(left)
+    if (closeLeft != closeRight) {
+        return 0;
+    }
+    return lowLeft + rangeBitwiseAnd(left - lowLeft, right - lowLeft);
+};
+```
+
+
+## Retrospect
+
+I found that I'm still not get used to bit problems cause I take over 20 min to find the regularity.
+Also I need to search the bitwise operator like `Math.clz32()` , It takes more time.
+
+## Refernces
+
+- [Bitwise &(AND) MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_AND)
+- [Math.clz32 MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32)
+
+
