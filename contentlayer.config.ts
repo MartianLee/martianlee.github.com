@@ -135,7 +135,7 @@ export default makeSource({
     cwd: process.cwd(),
     remarkPlugins: [
       remarkExtractFrontmatter,
-      remarkGfm,
+      // remarkGfm,
       remarkCodeTitles,
       remarkMath,
       remarkImgToJsx,
@@ -143,15 +143,16 @@ export default makeSource({
     rehypePlugins: [
       rehypeSlug,
       rehypeAutolinkHeadings,
-      rehypeKatex,
+      // rehypeKatex,
+      // @ts-ignore
       [rehypeCitation, { path: path.join(root, 'data') }],
       [rehypePrismPlus, { defaultLanguage: 'js', ignoreMissing: true }],
-      rehypePresetMinify,
+      // rehypePresetMinify,
     ],
   },
   onSuccess: async (importData) => {
-    const { allBlogs } = await importData()
-    createTagCount(allBlogs)
-    createSearchIndex(allBlogs)
+    const { allDocuments } = await importData()
+    createTagCount(allDocuments)
+    createSearchIndex(allDocuments)
   },
 })
