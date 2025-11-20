@@ -74,7 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
       <meta name="google-site-verification" content="l2zk4JY3T1ltE03043YiRwzZLUkoTLxHVqMyF-zyGAc" />
       <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
-      <body className="bg-white text-black antialiased dark:bg-gray-950 dark:text-white">
+      <body
+        className="bg-white text-black antialiased dark:bg-gray-950 dark:text-white"
+        suppressHydrationWarning
+      >
         <ThemeProviders>
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
           <SectionContainer>
