@@ -23,6 +23,12 @@ const projectsData: Project[] = [
   //   href: '/blog/the-time-machine',
   // },
   {
+    title: 'UJET',
+    description: `UJET is AI-Powered Cloud Contact Center Platform for Premium CX`,
+    imgSrc: '/static/projects/ujet-logo.svg',
+    href: 'https://ujet.cx/',
+  },
+  {
     title: '스테핑',
     description: `스테핑은 기업·브랜드가 지속가능할 수 있도록 복잡한 탄소중립 절차와 기후행동 프로젝트를 지원합니다`,
     imgSrc: '/static/projects/stepping-logo.png',
