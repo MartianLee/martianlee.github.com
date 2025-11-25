@@ -11,7 +11,7 @@ export default function HeroSection() {
     setMounted(true)
   }, [])
 
-  const roles = ['Full Stack Developer', 'Software Engineer', 'Tech Enthusiast']
+  const roles = ['Senior Software Engineer', 'Full Stack Developer', 'Former CTO']
   const [currentRole, setCurrentRole] = useState(0)
 
   useEffect(() => {
@@ -81,9 +81,15 @@ export default function HeroSection() {
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Passionate about building scalable web applications and sharing knowledge through
-              writing. I love exploring new technologies and solving complex problems.
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-4 max-w-3xl mx-auto leading-relaxed">
+              <span className="font-semibold text-gray-900 dark:text-white">
+                6+ years of experience
+              </span>{' '}
+              building scalable systems and leading engineering teams.
+            </p>
+            <p className="text-base md:text-lg text-gray-500 dark:text-gray-500 mb-12 max-w-2xl mx-auto">
+              Specialized in full-stack development, cloud architecture, and delivering high-impact
+              products to millions of users.
             </p>
           </div>
 
