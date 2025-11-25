@@ -13,7 +13,7 @@ export default function Projects() {
             Projects
           </h1>
           <p className="text-lg leading-7 text-gray-500 dark:text-gray-400">
-            Introduce my previous projects & companies.
+            Personal projects and side projects I've built
           </p>
         </div>
         <div className="container py-12">
@@ -25,6 +25,9 @@ export default function Projects() {
                 description={d.description}
                 imgSrc={d.imgSrc}
                 href={d.href}
+                techStack={d.techStack}
+                demo={d.demo}
+                github={d.github}
               />
             ))}
           </div>

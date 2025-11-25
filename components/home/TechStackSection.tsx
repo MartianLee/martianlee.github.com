@@ -8,9 +8,11 @@ interface TechItem {
 }
 
 const techStack: TechItem[] = [
+  { name: 'Rails', category: 'Backend' },
   { name: 'React', category: 'Frontend' },
   { name: 'Next.js', category: 'Frontend' },
   { name: 'TypeScript', category: 'Language' },
+  { name: 'React Native', category: 'Frontend' },
   { name: 'Node.js', category: 'Backend' },
   { name: 'Python', category: 'Language' },
   { name: 'Django', category: 'Backend' },
@@ -19,6 +21,8 @@ const techStack: TechItem[] = [
   { name: 'Angular', category: 'Frontend' },
   { name: 'Tailwind CSS', category: 'Styling' },
   { name: 'Docker', category: 'DevOps' },
+  { name: 'Kubernetes', category: 'DevOps' },
+  { name: 'GCP', category: 'Cloud' },
   { name: 'AWS', category: 'Cloud' },
 ]
 
@@ -82,8 +86,8 @@ export default function TechStackSection() {
                       : 'none',
                   }}
                 >
-                  <div className="px-6 py-3 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 rounded-full border border-pink-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg cursor-default">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300">
+                  <div className="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 rounded-full border border-pink-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg cursor-default">
+                    <span className="text-sm md:text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300">
                       {tech.name}
                     </span>
                   </div>
@@ -103,9 +107,9 @@ export default function TechStackSection() {
             }`}
           >
             {[
-              { number: '100+', label: 'Blog Posts' },
-              { number: '10+', label: 'Projects' },
-              { number: '5+', label: 'Tech Stacks' },
+              { number: '50+', label: 'Blog Posts' },
+              { number: '10+', label: 'Tech Stacks' },
+              { number: '3+', label: 'Projects' },
               { number: '∞', label: 'Passion for Learning' },
             ].map((stat, index) => (
               <div
