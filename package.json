@@ -6,11 +6,11 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "next dev --webpack -p 3456",
-    "dev": "cross-env INIT_CWD=$PWD next dev --webpack -p 3456",
-    "build": "cross-env INIT_CWD=$PWD next build --webpack && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
+    "start": "next dev --turbopack -p 3456",
+    "dev": "cross-env INIT_CWD=$PWD next dev --turbopack -p 3456",
+    "build": "cross-env INIT_CWD=$PWD next build --turbopack && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
     "serve": "next start",
-    "analyze": "cross-env ANALYZE=true next build --webpack",
+    "analyze": "cross-env ANALYZE=true next build --turbopack",
     "lint": "eslint ."
   },
   "dependencies": {

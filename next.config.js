@@ -88,6 +88,15 @@ module.exports = () => {
 
       return config
     },
+    // Turbopack configuration for Next.js 16+
+    turbopack: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
     output: 'export',
   })
 }
