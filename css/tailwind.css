@@ -227,3 +227,105 @@ input:-webkit-autofill:focus {
 .token.table {
   display: inline;
 }
+
+/* Prose (MDX Content) Styling Improvements */
+.prose {
+  @apply text-gray-700 dark:text-gray-300;
+}
+
+.prose h1 {
+  @apply mb-6 mt-8 text-3xl font-bold text-gray-900 dark:text-gray-100;
+}
+
+.prose h2 {
+  @apply mb-4 mt-8 text-2xl font-bold text-gray-900 dark:text-gray-100;
+}
+
+.prose h3 {
+  @apply mb-3 mt-6 text-xl font-semibold text-gray-900 dark:text-gray-100;
+}
+
+.prose h4 {
+  @apply mb-2 mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100;
+}
+
+.prose p {
+  @apply mb-4 leading-7;
+}
+
+.prose ul,
+.prose ol {
+  @apply mb-4 ml-6 space-y-2;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose li {
+  @apply leading-7;
+}
+
+.prose li > p {
+  @apply mb-2;
+}
+
+.prose blockquote {
+  @apply my-6 border-l-4 border-pink-500 bg-gray-50 py-3 pl-4 pr-4 italic text-gray-700 dark:border-pink-400 dark:bg-gray-800 dark:text-gray-300;
+}
+
+.prose code {
+  @apply rounded bg-gray-100 px-1.5 py-0.5 text-sm font-mono text-pink-600 dark:bg-gray-800 dark:text-pink-400;
+}
+
+.prose pre {
+  @apply my-6 overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm dark:bg-gray-950;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-gray-100;
+}
+
+.prose a {
+  @apply font-medium text-pink-600 underline decoration-pink-600/30 underline-offset-2 transition-colors hover:text-pink-700 hover:decoration-pink-700/50 dark:text-pink-400 dark:decoration-pink-400/30 dark:hover:text-pink-300 dark:hover:decoration-pink-300/50;
+}
+
+.prose strong {
+  @apply font-bold text-gray-900 dark:text-gray-100;
+}
+
+.prose em {
+  @apply italic;
+}
+
+.prose img {
+  @apply my-6 rounded-lg;
+}
+
+.prose hr {
+  @apply my-8 border-gray-200 dark:border-gray-700;
+}
+
+.prose table {
+  @apply my-6 w-full;
+}
+
+.prose thead {
+  @apply border-b-2 border-gray-300 dark:border-gray-600;
+}
+
+.prose th {
+  @apply px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100;
+}
+
+.prose td {
+  @apply border-b border-gray-200 px-4 py-2 dark:border-gray-700;
+}
+
+.prose tbody tr:last-child td {
+  @apply border-b-0;
+}
