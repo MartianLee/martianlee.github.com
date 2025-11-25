@@ -82,7 +82,8 @@ export default function HeroSection() {
             }`}
           >
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-              {siteMetadata.description}
+              Passionate about building scalable web applications and sharing knowledge through
+              writing. I love exploring new technologies and solving complex problems.
             </p>
           </div>
 

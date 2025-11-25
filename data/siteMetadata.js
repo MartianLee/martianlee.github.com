@@ -9,7 +9,7 @@ const siteMetadata = {
   siteUrl: 'https://martianlee.github.io/',
   siteRepo: 'https://github.com/MartianLee/martianlee.github.com',
   siteLogo: '/static/favicons/favicon.png',
-  socialBanner: '/static/images/twitter-card.png',
+  socialBanner: '/static/images/thumnail-github2.png',
   // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'martionlee@gmail.com',
   github: 'https://github.com/MartianLee',
