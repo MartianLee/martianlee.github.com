@@ -88,38 +88,46 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
                 }`}
                 style={{ transitionDelay: `${index * 150}ms` }}
               >
-                <Link href={`/posts/${post.slug}`} className="block h-full">
-                  <div className="h-full p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
-                    {/* Date */}
-                    <time
-                      dateTime={post.date}
-                      className="text-sm text-pink-600 dark:text-pink-400 font-medium"
+                <div className="h-full p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+                  {/* Date */}
+                  <time
+                    dateTime={post.date}
+                    className="text-sm text-pink-600 dark:text-pink-400 font-medium"
+                  >
+                    {formatDate(post.date, siteMetadata.locale)}
+                  </time>
+
+                  {/* Title */}
+                  <h3 className="mt-3 text-xl font-bold line-clamp-2">
+                    <Link
+                      href={`/posts/${post.slug}`}
+                      className="text-gray-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300"
                     >
-                      {formatDate(post.date, siteMetadata.locale)}
-                    </time>
-
-                    {/* Title */}
-                    <h3 className="mt-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300 line-clamp-2">
                       {post.title}
-                    </h3>
+                    </Link>
+                  </h3>
 
-                    {/* Summary */}
-                    <p className="mt-3 text-gray-600 dark:text-gray-400 line-clamp-3 text-sm leading-relaxed">
-                      {post.summary}
-                    </p>
+                  {/* Summary */}
+                  <p className="mt-3 text-gray-600 dark:text-gray-400 line-clamp-3 text-sm leading-relaxed">
+                    {post.summary}
+                  </p>
 
-                    {/* Tags */}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {post.tags?.slice(0, 3).map((tag) => (
-                        <Tag key={tag} text={tag} />
-                      ))}
-                    </div>
+                  {/* Tags */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {post.tags?.slice(0, 3).map((tag) => (
+                      <Tag key={tag} text={tag} />
+                    ))}
+                  </div>
 
-                    {/* Read more link */}
-                    <div className="mt-4 flex items-center text-pink-600 dark:text-pink-400 font-medium text-sm group-hover:gap-2 transition-all duration-300">
+                  {/* Read more link */}
+                  <div className="mt-4">
+                    <Link
+                      href={`/posts/${post.slug}`}
+                      className="inline-flex items-center text-pink-600 dark:text-pink-400 font-medium text-sm hover:gap-2 transition-all duration-300"
+                    >
                       <span>Read more</span>
                       <svg
-                        className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300"
+                        className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-300"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -131,9 +139,9 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
                           d="M9 5l7 7-7 7"
                         />
                       </svg>
-                    </div>
+                    </Link>
                   </div>
-                </Link>
+                </div>
               </article>
             ))}
           </div>
