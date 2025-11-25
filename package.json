@@ -11,7 +11,8 @@
     "build": "cross-env INIT_CWD=$PWD next build --turbopack && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
     "serve": "next start",
     "analyze": "cross-env ANALYZE=true next build --turbopack",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "contentlayer2 build"
   },
   "dependencies": {
     "@next/bundle-analyzer": "latest",
