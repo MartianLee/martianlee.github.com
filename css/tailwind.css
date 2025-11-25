@@ -16,6 +16,8 @@
   --color-primary-950: #500724;
 }
 
+@variant dark (&:where(.dark, .dark *));
+
 /* Custom Animations */
 @keyframes blob {
   0% {
