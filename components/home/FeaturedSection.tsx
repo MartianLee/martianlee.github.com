@@ -24,12 +24,6 @@ const features: Feature[] = [
     link: '/projects',
   },
   {
-    icon: '🏷️',
-    title: 'Tags',
-    description: 'Tags from the posts',
-    link: '/tags',
-  },
-  {
     icon: '👨‍💻',
     title: 'About',
     description: 'Learn more about me and my career',
@@ -81,7 +75,7 @@ export default function FeaturedSection() {
           </div>
 
           {/* Feature Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <Link
                 key={feature.title}
