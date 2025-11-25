@@ -84,7 +84,7 @@ export default function ImpactMetricsSection() {
             {metrics.map((metric, index) => (
               <div
                 key={index}
-                className={`group relative bg-white dark:bg-gray-800 rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-pink-500 dark:hover:border-pink-500 ${
+                className={`group relative bg-white dark:bg-gray-800 rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
                 style={{
@@ -105,14 +105,14 @@ export default function ImpactMetricsSection() {
                 <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
                   {metric.description}{' '}
                   {metric.highlight && (
-                    <span className="font-bold text-pink-600 dark:text-pink-400 block mt-2">
+                    <span className="font-bold text-blue-600 dark:text-blue-400 block mt-2">
                       {metric.highlight}
                     </span>
                   )}
                 </p>
 
                 {/* Hover Effect Border */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-slate-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none" />
               </div>
             ))}
           </div>
@@ -124,7 +124,7 @@ export default function ImpactMetricsSection() {
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-pink-600 dark:text-pink-400 mb-2">
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 6+
               </div>
               <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
@@ -132,7 +132,7 @@ export default function ImpactMetricsSection() {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-pink-600 dark:text-pink-400 mb-2">
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 3
               </div>
               <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
@@ -140,7 +140,7 @@ export default function ImpactMetricsSection() {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-pink-600 dark:text-pink-400 mb-2">
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 10M+
               </div>
               <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
@@ -148,7 +148,7 @@ export default function ImpactMetricsSection() {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-pink-600 dark:text-pink-400 mb-2">
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                 5+
               </div>
               <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">

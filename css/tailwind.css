@@ -3,17 +3,18 @@
 @theme {
   --font-family-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 
-  --color-primary-50: #fdf2f8;
-  --color-primary-100: #fce7f3;
-  --color-primary-200: #fbcfe8;
-  --color-primary-300: #f9a8d4;
-  --color-primary-400: #f472b6;
-  --color-primary-500: #ec4899;
-  --color-primary-600: #db2777;
-  --color-primary-700: #be185d;
-  --color-primary-800: #9d174d;
-  --color-primary-900: #831843;
-  --color-primary-950: #500724;
+  /* Professional Blue Color Scheme */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
 }
 
 @variant dark (&:where(.dark, .dark *));
@@ -123,7 +124,7 @@ input:-webkit-autofill:focus {
 }
 
 .highlight-line {
-  @apply -mx-4 border-l-4 border-pink-500 bg-gray-700/50;
+  @apply -mx-4 border-l-4 border-blue-500 bg-gray-700/50;
 }
 
 .line-number::before {
@@ -277,11 +278,11 @@ input:-webkit-autofill:focus {
 }
 
 .prose blockquote {
-  @apply my-6 border-l-4 border-pink-500 bg-gray-50 py-3 pl-4 pr-4 italic text-gray-700 dark:border-pink-400 dark:bg-gray-800 dark:text-gray-300;
+  @apply my-6 border-l-4 border-blue-500 bg-gray-50 py-3 pl-4 pr-4 italic text-gray-700 dark:border-blue-400 dark:bg-gray-800 dark:text-gray-300;
 }
 
 .prose code {
-  @apply rounded bg-gray-100 px-1.5 py-0.5 text-sm font-mono text-pink-600 dark:bg-gray-800 dark:text-pink-400;
+  @apply rounded bg-gray-100 px-1.5 py-0.5 text-sm font-mono text-blue-600 dark:bg-gray-800 dark:text-blue-400;
 }
 
 .prose pre {
@@ -293,7 +294,7 @@ input:-webkit-autofill:focus {
 }
 
 .prose a {
-  @apply font-medium text-pink-600 underline decoration-pink-600/30 underline-offset-2 transition-colors hover:text-pink-700 hover:decoration-pink-700/50 dark:text-pink-400 dark:decoration-pink-400/30 dark:hover:text-pink-300 dark:hover:decoration-pink-300/50;
+  @apply font-medium text-blue-600 underline decoration-blue-600/30 underline-offset-2 transition-colors hover:text-blue-700 hover:decoration-blue-700/50 dark:text-blue-400 dark:decoration-blue-400/30 dark:hover:text-blue-300 dark:hover:decoration-blue-300/50;
 }
 
 .prose strong {

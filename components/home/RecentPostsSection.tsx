@@ -59,7 +59,7 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
             </div>
             <Link
               href="/posts"
-              className="hidden md:flex items-center gap-2 text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-semibold transition-colors duration-300 group"
+              className="hidden md:flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors duration-300 group"
             >
               View All Posts
               <svg
@@ -92,7 +92,7 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
                   {/* Date */}
                   <time
                     dateTime={post.date}
-                    className="text-sm text-pink-600 dark:text-pink-400 font-medium"
+                    className="text-sm text-blue-600 dark:text-blue-400 font-medium"
                   >
                     {formatDate(post.date, siteMetadata.locale)}
                   </time>
@@ -154,7 +154,7 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
           >
             <Link
               href="/posts"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-slate-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
             >
               View All Posts
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
