@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 'use client'
 
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
@@ -72,6 +73,7 @@ export default function ListLayoutWithTags({
   const tagCounts = tagData as Record<string, number>
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
+  const [isTagsOpen, setIsTagsOpen] = useState(false)
 
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
@@ -79,10 +81,72 @@ export default function ListLayoutWithTags({
     <>
       <div>
         <div className="pb-6 pt-6">
-          <h1 className="text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:hidden sm:text-4xl sm:leading-10 md:text-6xl md:leading-14">
+          <h1 className="text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14">
             {title}
           </h1>
         </div>
+
+        {/* Mobile Tags Section - Collapsible */}
+        <div className="mb-8 sm:hidden">
+          <button
+            onClick={() => setIsTagsOpen(!isTagsOpen)}
+            className="flex w-full items-center justify-between rounded-lg bg-gray-50 px-4 py-3 text-left font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-lg">🏷️</span>
+              <span>Browse by Tags</span>
+            </span>
+            <svg
+              className={`h-5 w-5 transition-transform duration-200 ${
+                isTagsOpen ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {/* Collapsible Tags Content */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              isTagsOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="mt-4 flex flex-wrap gap-2 rounded-lg bg-white p-4 dark:bg-gray-900">
+              <Link
+                href="/posts"
+                className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                  pathname.startsWith('/posts') && !pathname.includes('/tags/')
+                    ? 'bg-pink-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-pink-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                All Posts
+              </Link>
+              {sortedTags.map((t) => (
+                <Link
+                  key={t}
+                  href={`/tags/${slug(t)}`}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                    pathname.split('/tags/')[1] === slug(t)
+                      ? 'bg-pink-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-pink-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {`${t} (${tagCounts[t]})`}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="flex sm:space-x-24">
           <div className="hidden h-full max-h-screen min-w-[280px] max-w-[280px] flex-wrap overflow-auto rounded bg-gray-50 pt-5 shadow-md dark:bg-gray-900/70 dark:shadow-gray-800/40 sm:flex">
             <div className="px-6 py-4">
