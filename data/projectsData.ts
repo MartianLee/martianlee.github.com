@@ -1,44 +1,38 @@
 interface Project {
-  title: string,
-  description: string,
-  href?: string,
-  imgSrc?: string,
+  title: string
+  description: string
+  href?: string
+  imgSrc?: string
+  techStack?: string[]
+  github?: string
+  demo?: string
+  featured?: boolean
 }
 
 const projectsData: Project[] = [
-  // {
-  //   title: 'A Search Engine',
-  //   description: `What if you could look up any information in the world? Webpages, images, videos
-  //   and more. Google has many features to help you find exactly what you're looking
-  //   for.`,
-  //   imgSrc: '/static/images/google.png',
-  //   href: 'https://www.google.com',
-  // },
-  // {
-  //   title: 'The Time Machine',
-  //   description: `Imagine being able to travel back in time or to the future. Simple turn the knob
-  //   to the desired date and press "Go". No more worrying about lost keys or
-  //   forgotten headphones with this simple yet affordable solution.`,
-  //   imgSrc: '/static/images/time-machine.jpg',
-  //   href: '/blog/the-time-machine',
-  // },
   {
-    title: 'UJET',
-    description: `UJET is AI-Powered Cloud Contact Center Platform for Premium CX`,
-    imgSrc: '/static/projects/ujet-logo.svg',
-    href: 'https://ujet.cx/',
+    title: '칭찬할고양',
+    description: '매일 자신을 칭찬하는 습관을 만들어주는 칭찬 일기 앱. 긍정적인 마인드셋을 위한 일상 기록 서비스입니다.',
+    techStack: ['React Native', 'Firebase', 'TypeScript'],
+    demo: 'https://play.google.com/store/apps/details?id=com.teiroleema.cheercat3',
+    imgSrc: '/static/projects/cheercat.png',
+    featured: true,
   },
   {
-    title: '스테핑',
-    description: `스테핑은 기업·브랜드가 지속가능할 수 있도록 복잡한 탄소중립 절차와 기후행동 프로젝트를 지원합니다`,
-    imgSrc: '/static/projects/stepping-logo.png',
-    href: 'https://stepping.co.kr/',
+    title: '지구침략자',
+    description: 'Phaser3 기반 슈팅 게임. 지구를 침략하는 외계인을 물리치는 클래식 아케이드 스타일 게임입니다.',
+    techStack: ['Phaser3', 'TypeScript', 'Rollup', 'Vercel'],
+    demo: 'https://phaser3-rollup-typescript-vercel.vercel.app/',
+    imgSrc: '/static/projects/earth-invaders.png',
+    featured: true,
   },
   {
-    title: 'Miso',
-    description: `대한민국 1등 홈서비스 미소에서 Client 유지보수, CX 서비스 개선을 위한 백오피스 개발 등을 담당했습니다`,
-    imgSrc: '/static/projects/miso-logo.png',
-    href: 'https://miso.kr/',
+    title: 'Shoulder Check',
+    description: '가방 무게를 계산하고 관리할 수 있는 웹 애플리케이션. 건강한 어깨를 위한 스마트한 가방 무게 체크 서비스입니다.',
+    techStack: ['React', 'TypeScript', 'Next.js'],
+    demo: 'https://www.shoulder-check.cloud/',
+    imgSrc: '/static/projects/shoulder-check.png',
+    featured: true,
   },
 ]
 

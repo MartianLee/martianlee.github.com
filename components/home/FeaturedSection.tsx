@@ -20,7 +20,7 @@ const features: Feature[] = [
   {
     icon: '🚀',
     title: 'Projects',
-    description: 'Completed projects and open source contributions',
+    description: 'Personal projects and side projects',
     link: '/projects',
   },
   {
@@ -32,7 +32,7 @@ const features: Feature[] = [
   {
     icon: '👨‍💻',
     title: 'About',
-    description: 'Learn more about me',
+    description: 'Learn more about me and my career',
     link: '/about',
   },
 ]
