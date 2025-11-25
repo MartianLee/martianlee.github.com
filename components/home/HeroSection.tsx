@@ -25,11 +25,11 @@ export default function HeroSection() {
     <section className="relative min-h-[calc(100vh-200px)] flex items-center justify-center overflow-hidden">
       {/* Animated background gradient */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900" />
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-pink-300 dark:bg-pink-900 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-70 animate-blob" />
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-70 animate-blob animation-delay-2000" />
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 dark:bg-pink-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-70 animate-blob animation-delay-4000" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-slate-50 dark:from-gray-900 dark:via-gray-950 dark:to-slate-950" />
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-300 dark:bg-blue-900 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-60 animate-blob" />
+          <div className="absolute top-0 -right-4 w-72 h-72 bg-slate-300 dark:bg-slate-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-60 animate-blob animation-delay-2000" />
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-blue-200 dark:bg-blue-800 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-60 animate-blob animation-delay-4000" />
         </div>
       </div>
 
@@ -41,7 +41,7 @@ export default function HeroSection() {
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            <p className="text-lg md:text-xl text-pink-600 dark:text-pink-400 font-medium mb-4">
+            <p className="text-lg md:text-2xl text-blue-600 dark:text-blue-400 font-medium mb-4">
               Hello 👋
             </p>
           </div>
@@ -54,7 +54,7 @@ export default function HeroSection() {
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
               I'm{' '}
-              <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-slate-700 bg-clip-text text-transparent">
                 {siteMetadata.author}
               </span>
             </h1>
@@ -102,14 +102,14 @@ export default function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 href="/posts"
-                className="group relative px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-slate-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
               >
                 <span className="relative z-10">View Posts</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-slate-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </Link>
               <Link
                 href="/projects"
-                className="px-8 py-4 border-2 border-pink-500 dark:border-pink-400 text-pink-600 dark:text-pink-400 rounded-full font-semibold text-lg hover:bg-pink-50 dark:hover:bg-pink-950/30 transform hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-lg font-semibold text-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transform hover:scale-105 transition-all duration-300"
               >
                 View Projects
               </Link>
@@ -128,7 +128,7 @@ export default function HeroSection() {
                   href={siteMetadata.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transform hover:scale-110 transition-all duration-300"
+                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transform hover:scale-110 transition-all duration-300"
                   aria-label="GitHub"
                 >
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export default function HeroSection() {
                   href={siteMetadata.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transform hover:scale-110 transition-all duration-300"
+                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transform hover:scale-110 transition-all duration-300"
                   aria-label="LinkedIn"
                 >
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">

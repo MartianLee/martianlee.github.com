@@ -86,8 +86,8 @@ export default function TechStackSection() {
                       : 'none',
                   }}
                 >
-                  <div className="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 rounded-full border border-pink-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg cursor-default">
-                    <span className="text-sm md:text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300">
+                  <div className="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-blue-50 to-slate-50 dark:from-gray-800 dark:to-gray-800 rounded-full border border-blue-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg cursor-default">
+                    <span className="text-sm md:text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                       {tech.name}
                     </span>
                   </div>
@@ -114,9 +114,9 @@ export default function TechStackSection() {
             ].map((stat, index) => (
               <div
                 key={stat.label}
-                className="text-center p-6 rounded-xl bg-gradient-to-br from-pink-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 border border-pink-100 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-500 transition-all duration-300 transform hover:scale-105"
+                className="text-center p-6 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 dark:from-gray-800 dark:to-gray-800 border border-blue-100 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 transform hover:scale-105"
               >
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-2">
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-slate-700 bg-clip-text text-transparent mb-2">
                   {stat.number}
                 </div>
                 <div className="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">

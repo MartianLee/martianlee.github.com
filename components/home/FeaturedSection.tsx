@@ -87,14 +87,14 @@ export default function FeaturedSection() {
               >
                 <div className="relative h-full p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 overflow-hidden">
                   {/* Hover gradient effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-purple-600/0 group-hover:from-pink-500/5 group-hover:to-purple-600/5 transition-all duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-slate-600/0 group-hover:from-blue-500/5 group-hover:to-slate-600/5 transition-all duration-300" />
 
                   {/* Content */}
                   <div className="relative z-10">
                     <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
                       {feature.icon}
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                       {feature.title}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -103,7 +103,7 @@ export default function FeaturedSection() {
                   </div>
 
                   {/* Arrow icon */}
-                  <div className="absolute bottom-6 right-6 text-pink-500 dark:text-pink-400 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                  <div className="absolute bottom-6 right-6 text-blue-500 dark:text-blue-400 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                     <svg
                       className="w-6 h-6"
                       fill="none"

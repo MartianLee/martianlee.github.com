@@ -52,7 +52,7 @@ export default function CareerSection() {
             >
               <div className="relative h-full p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 overflow-hidden">
                 {/* Hover gradient effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-purple-600/0 group-hover:from-pink-500/5 group-hover:to-purple-600/5 transition-all duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-slate-600/0 group-hover:from-blue-500/5 group-hover:to-slate-600/5 transition-all duration-300" />
 
                 {/* Content */}
                 <div className="relative z-10">
