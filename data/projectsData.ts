@@ -34,6 +34,13 @@ const projectsData: Project[] = [
     imgSrc: '/static/projects/shoulder-check.png',
     featured: true,
   },
+  {
+    title: 'Fish Tank Simulator (수족관 시뮬레이터)',
+    description: '뽀모도로 타이머와 수족관 시뮬레이션이 결합된 도트 그래픽 방치형 생산성 도구. 집중 세션을 완료하여 물고기 알을 획득하고, 12종 이상의 다양한 물고기를 수집하며 자신만의 수족관을 성장시킵니다.',
+    techStack: ['Phaser3', 'TypeScript', 'Vercel'],
+    demo: 'https://phaser3-fish-tank.vercel.app/',
+    featured: true,
+  },
 ]
 
 export default projectsData
