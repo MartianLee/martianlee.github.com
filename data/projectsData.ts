@@ -27,20 +27,21 @@ const projectsData: Project[] = [
     featured: true,
   },
   {
+    title: 'Fish Tank Simulator (수족관 시뮬레이터)',
+    description: '뽀모도로 타이머와 수족관 시뮬레이션이 결합된 도트 그래픽 방치형 생산성 도구. 집중 세션을 완료하여 물고기 알을 획득하고, 12종 이상의 다양한 물고기를 수집하며 자신만의 수족관을 성장시킵니다.',
+    techStack: ['Phaser3', 'TypeScript', 'Vercel'],
+    demo: 'https://phaser3-fish-tank.vercel.app/',
+    imgSrc: '/static/projects/phaser3-fish-tank.jpg',
+    featured: true,
+  },
+  {
     title: 'Shoulder Check',
     description: '가방 무게를 계산하고 관리할 수 있는 웹 애플리케이션. 건강한 어깨를 위한 스마트한 가방 무게 체크 서비스입니다.',
     techStack: ['React', 'TypeScript', 'Next.js'],
     demo: 'https://www.shoulder-check.cloud/',
     imgSrc: '/static/projects/shoulder-check.png',
     featured: true,
-  },
-  {
-    title: 'Fish Tank Simulator (수족관 시뮬레이터)',
-    description: '뽀모도로 타이머와 수족관 시뮬레이션이 결합된 도트 그래픽 방치형 생산성 도구. 집중 세션을 완료하여 물고기 알을 획득하고, 12종 이상의 다양한 물고기를 수집하며 자신만의 수족관을 성장시킵니다.',
-    techStack: ['Phaser3', 'TypeScript', 'Vercel'],
-    demo: 'https://phaser3-fish-tank.vercel.app/',
-    featured: true,
-  },
+  }
 ]
 
 export default projectsData
