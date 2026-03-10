@@ -1,0 +1,1192 @@
+---
+slug: '2026-03-11-openclaw-architecture'
+title: 'OpenClaw 아키텍처 분석 보고서 / 실사용 시나리오 Q&A'
+crawlertitle: 'OpenClaw 아키텍처 분석 보고서 / 실사용 시나리오 Q&A'
+summary: 'TypeScript 기반 Personal AI Assistant 프레임워크 OpenClaw의 전체 아키텍처 분석. 기술 스택, 핵심 모듈, 메시지 파이프라인, 채널 시스템 등을 상세하게 다룹니다.'
+date: 2026-03-11 01:14:00 +0900
+categories: posts
+tags: ['openclaw', 'architecture', 'typescript', 'ai', 'agent']
+author: MartianLee
+---
+
+> 분석 일자: 2026-03-11
+> 대상 버전: v2026.3.8
+> 저장소: https://github.com/openclaw/openclaw
+
+---
+
+*This article is mostly written by Cluade Code*
+
+## 목차
+
+1. [프로젝트 개요](#1-프로젝트-개요)
+2. [기술 스택](#2-기술-스택)
+3. [전체 아키텍처](#3-전체-아키텍처)
+4. [핵심 모듈 구조](#4-핵심-모듈-구조)
+5. [메시지 처리 파이프라인](#5-메시지-처리-파이프라인)
+6. [Gateway 서버 상세](#6-gateway-서버-상세)
+7. [Agent 엔진](#7-agent-엔진)
+8. [채널 시스템](#8-채널-시스템)
+9. [설정 시스템](#9-설정-시스템)
+10. [플러그인 & 확장 시스템](#10-플러그인--확장-시스템)
+11. [핵심 데이터 구조](#11-핵심-데이터-구조)
+12. [레이어별 의존 관계](#12-레이어별-의존-관계)
+13. [일반 LLM과의 차별점](#13-일반-llm과의-차별점)
+14. [디렉토리 트리](#14-디렉토리-트리)
+15. [핵심 개념 설명](#15-핵심-개념-설명)
+16. [Q&A: 실제 사용 시나리오](#16-qa-실제-사용-시나리오)
+
+---
+
+## 1. 프로젝트 개요
+
+**OpenClaw**는 TypeScript 기반의 Personal AI Assistant 프레임워크로, 사용자의 기기에서 직접 실행되는 로컬 퍼스트 AI 비서입니다.
+
+- **슬로건:** "OpenClaw is the AI that actually does things. It runs on your devices, in your channels, with your rules."
+- **핵심 가치:** 로컬 실행, 프라이버시, 보안 기본값, 확장성
+- **지원 채널:** WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, BlueBubbles, IRC, Microsoft Teams, Matrix, Feishu, LINE, Mattermost, Nextcloud Talk, Nostr, Synology Chat, Tlon, Twitch, Zalo, Zalo Personal, WebChat (22개+)
+- **지원 플랫폼:** macOS, Linux, Windows (WSL2), Raspberry Pi + iOS/Android 앱
+
+---
+
+## 2. 기술 스택
+
+| 영역 | 기술 |
+|------|------|
+| 언어 | TypeScript (ES2023, ESM) |
+| 런타임 | Node.js v22+ (Bun 선택 지원) |
+| 패키지 관리 | pnpm 모노레포 |
+| 빌드 | tsdown, esbuild |
+| 테스트 | Vitest (커버리지 70% 임계값) |
+| 린터/포매터 | Oxlint + Oxfmt |
+| CLI 프레임워크 | Commander.js 14.0.3 |
+| HTTP 서버 | Express 5.2.1 |
+| WebSocket | ws 8.18.1 |
+| AI 런타임 | @mariozechner/pi-* (Pi agent) |
+| 웹 UI | Lit 3.3.2 + Vite |
+| 스케줄러 | croner 10.0.1 |
+| 파일 감시 | chokidar 5.0.0 |
+| 스키마 검증 | AJV 8.18.0 + Zod |
+
+### 채널별 SDK
+
+| 채널 | 라이브러리 |
+|------|------------|
+| WhatsApp | @whiskeysockets/baileys 7.0.0-rc.9 |
+| Telegram | grammY 4.18.2 |
+| Slack | @slack/bolt 4.6.0 |
+| Discord | discord.js |
+| LINE | @line/bot-sdk 10.6.0 |
+| Signal | signal-cli (subprocess) |
+
+---
+
+## 3. 전체 아키텍처
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                          OpenClaw System                                 ║
+║                                                                          ║
+║  ┌─────────────────────────────────────────────────────────────────┐    ║
+║  │                    CLI Entry Layer                               │    ║
+║  │  entry.ts → run-main.ts → program.ts → Commander.js commands    │    ║
+║  │  openclaw onboard / gateway / agent / send / doctor / config    │    ║
+║  └───────────────────────┬─────────────────────────────────────────┘    ║
+║                          │ start                                         ║
+║  ┌───────────────────────▼─────────────────────────────────────────┐    ║
+║  │                    Gateway (Control Plane)                       │    ║
+║  │   ws://127.0.0.1:18789  +  HTTP                                 │    ║
+║  │                                                                  │    ║
+║  │  server.impl.ts ──┬── server-http.ts (Express + WS)             │    ║
+║  │                   ├── server-chat.ts (ChatRunRegistry)           │    ║
+║  │                   ├── server-channels.ts (ChannelManager)        │    ║
+║  │                   ├── server-cron.ts (Croner scheduler)          │    ║
+║  │                   ├── server-plugins.ts (Plugin registry)        │    ║
+║  │                   └── server-methods/ (100+ RPC handlers)        │    ║
+║  └──────────┬─────────────────────────────┬───────────────────────┘    ║
+║             │ WebSocket frames             │ Channel events              ║
+║             ▼                             ▼                              ║
+║  ┌──────────────────┐         ┌──────────────────────────────────────┐  ║
+║  │   WS Clients     │         │         Channel Manager              │  ║
+║  │                  │         │                                      │  ║
+║  │ • Control UI     │         │  telegram/ discord/ slack/           │  ║
+║  │ • macOS app      │         │  signal/  imessage/ whatsapp/        │  ║
+║  │ • iOS/Android    │         │  line/    + 15개 extensions          │  ║
+║  │ • WebChat        │         └──────────────┬───────────────────────┘  ║
+║  └──────────────────┘                        │ inbound/outbound          ║
+║                                              ▼                           ║
+║  ┌───────────────────────────────────────────────────────────────────┐  ║
+║  │                      Agent Engine                                 │  ║
+║  │                                                                   │  ║
+║  │  agent-scope.ts ──→ ResolvedAgentConfig                          │  ║
+║  │       │              (workspace, model, skills, heartbeat)        │  ║
+║  │       ▼                                                           │  ║
+║  │  pi-embedded-runner/ ──→ Pi Agent (RPC)                          │  ║
+║  │       │                                                           │  ║
+║  │       ├── tools/         (browser, canvas, cron, system)         │  ║
+║  │       ├── skills/        (notion, github, spotify...)            │  ║
+║  │       ├── memory/        (vector search, session files)          │  ║
+║  │       └── infra/agent-events.ts (EventBus)                      │  ║
+║  └───────────────────────────────────────────────────────────────────┘  ║
+║             │                                                            ║
+║             ▼                                                            ║
+║  ┌──────────────────────────┐                                           ║
+║  │   LLM Providers          │                                           ║
+║  │  OpenAI / Anthropic /    │                                           ║
+║  │  Google / 20+ others     │                                           ║
+║  └──────────────────────────┘                                           ║
+╚══════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. 핵심 모듈 구조
+
+| 모듈 | 역할 | 핵심 파일 |
+|------|------|-----------|
+| **CLI** | 사용자 인터페이스 | `entry.ts`, `cli/run-main.ts`, `cli/program.ts` |
+| **Gateway** | 중앙 오케스트레이션 + WS 서버 | `gateway/server.impl.ts`, `server-http.ts`, `server-chat.ts` |
+| **Agents** | 에이전트 생명주기 & 실행 | `agents/agent-scope.ts`, `agents/pi-embedded-runner/` |
+| **Channels** | 메시징 채널 플러그인 | `channels/plugins/index.ts`, `channels/dock.ts` |
+| **Config** | 설정 관리 | `config/config.ts`, `config/io.ts`, `config/sessions/` |
+| **Protocol** | WebSocket 프레임 정의 | `gateway/protocol/index.ts`, `gateway/server/ws-connection.ts` |
+| **Infra** | 공통 유틸 (이벤트, 인증, 실행) | `infra/agent-events.ts`, `infra/outbound/` |
+| **Secrets** | 자격증명 관리 | `secrets/command-config.ts`, `secrets/runtime.ts` |
+| **Memory** | 에이전트 지식 저장소 | `memory/`, `memory/session-files.ts` |
+| **Process** | 서브프로세스 실행 & 승인 | `process/exec.ts`, `infra/exec-approval-forwarder.ts` |
+
+---
+
+## 5. 메시지 처리 파이프라인
+
+```
+[사용자 WhatsApp 메시지 수신]
+        │
+        ▼
+src/web/ (WhatsApp Web handler)
+  └── 메시지 파싱 & 정규화
+        │
+        ▼
+src/routing/session-key.ts
+  └── "agent:main:whatsapp/+1234567890" 세션 키 생성
+        │
+        ▼
+src/channels/allowlists/
+  └── dmPolicy 검사
+        ├── "pairing" → 페어링 코드 요청
+        ├── "open"    → 처리 허용
+        └── "block"   → 차단
+              │ 허용된 경우
+              ▼
+src/gateway/server-chat.ts (ChatRunRegistry)
+  └── 세션에 runId 할당, 큐 등록
+        │
+        ▼
+src/agents/pi-embedded-runner/
+  └── Pi Agent RPC 실행
+        ├── LLM API 호출 (스트리밍)
+        └── Tool 실행 (필요 시)
+              │ 완료
+              ▼
+src/infra/agent-events.ts (EventBus)
+  └── AgentEventPayload 발행
+      { stream: "assistant", data: "응답 텍스트" }
+        │
+        ├── → gateway/server/ws-connection.ts
+        │         WebSocket으로 Control UI에 실시간 전달
+        │
+        └── → src/infra/outbound/
+                  └── 원본 채널(WhatsApp)로 응답 전송
+```
+
+### 큐 처리 모드
+
+| 모드 | 설명 |
+|------|------|
+| FIFO | 선입선출 (기본값) |
+| LIFO | 후입선출 |
+| Random | 무작위 처리 |
+
+---
+
+## 6. Gateway 서버 상세
+
+### 초기화 시퀀스 (`src/gateway/server.impl.ts`)
+
+```
+1. 설정 로드 & 검증 (config/config.ts)
+2. 인증 초기화 (auth.ts)
+3. 플러그인 로드 (server-plugins.ts)
+4. 채널 매니저 생성 (server-channels.ts)
+5. HTTP/HTTPS 서버 생성 (server-http.ts)
+6. WebSocket 서버 연결
+7. RPC 메서드 등록 (server-methods/)
+8. 헬스 모니터링 시작
+9. Cron 서비스 시작
+10. 메인터넌스 타이머 시작
+```
+
+### RPC 메서드 카테고리
+
+| 카테고리 | 메서드 예시 |
+|----------|-------------|
+| `chat.*` | `chat.send`, `chat.history` |
+| `agents.*` | 에이전트 생명주기 관리 |
+| `config.*` | 설정 CRUD |
+| `channels.*` | 채널 작업 |
+| `node.*` | 원격 노드 실행 |
+| `cron.*` | 잡 스케줄링 |
+| `device.pair.*` | 디바이스 페어링 |
+| `exec-approvals.*` | 시스템 실행 승인 |
+
+### WebSocket 프레임 타입 (`src/gateway/protocol/index.ts`)
+
+```typescript
+GatewayFrame    // 요청/응답 (메서드 호출)
+EventFrame      // 브로드캐스트 이벤트
+ChatEvent       // 채팅 스트리밍 업데이트
+AgentEvent      // 에이전트 상태 업데이트
+HelloOk         // 연결 핸드셰이크
+```
+
+---
+
+## 7. Agent 엔진
+
+### 에이전트 설정 체인
+
+```typescript
+OpenClawConfig.agents.list[n]
+  → ResolvedAgentConfig {
+      name,
+      workspace,    // ~/.openclaw/agents/<id>/
+      model,        // LLM 모델 설정
+      skills,       // 사용 가능한 스킬 목록
+      heartbeat,    // 주기적 실행 설정
+      sandbox       // 샌드박스 정책
+    }
+  → AgentScope
+  → Agent 실행 컨텍스트
+```
+
+### 에이전트 이벤트 버스 (`src/infra/agent-events.ts`)
+
+```typescript
+AgentEventPayload {
+  runId: string        // 실행 단위 ID
+  seq: number          // 단조증가 시퀀스 번호
+  stream:              // 이벤트 스트림 타입
+    | "lifecycle"      // 에이전트 시작/종료
+    | "tool"           // 툴 실행 이벤트
+    | "assistant"      // 응답 텍스트
+    | "error"          // 에러 이벤트
+  data: Record<string, unknown>
+  sessionKey?: string  // 세션 라우팅
+}
+```
+
+### 지원 도구 (Tools)
+
+| 도구 | 설명 |
+|------|------|
+| Browser | Playwright 기반 웹 자동화 |
+| Canvas | A2UI 에이전트 제어 시각화 UI |
+| Cron | 시간 기반 자동 실행 |
+| Terminal (PTY) | 터미널 명령 실행 |
+| Memory | 벡터 검색 기반 메모리 |
+| File I/O | 파일 읽기/쓰기 |
+
+---
+
+## 8. 채널 시스템
+
+### 채널 설정 해결 (`src/channels/channel-config.ts`)
+
+```typescript
+ChannelEntryMatch {
+  entry,           // 직접 매칭 (예: telegram/+1234)
+  wildcardEntry,   // 와일드카드 매칭 (*)
+  parentEntry,     // 부모 채널 설정 상속
+  matchSource      // 매칭 출처 추적
+}
+```
+
+### 보안 정책 (DM Access)
+
+```yaml
+# config.yml
+channels:
+  telegram:
+    dmPolicy: "pairing"   # 기본: 페어링 코드 필요
+    # dmPolicy: "open"    # 명시적 허용 필요
+    # dmPolicy: "block"   # 전체 차단
+    allowFrom:
+      - "+1234567890"     # 허용된 연락처
+      # - "*"             # 전체 허용 (위험)
+```
+
+### 채널 런타임 상태
+
+```typescript
+ChannelRuntimeSnapshot {
+  channels: Map<channelId, ChannelPlugin>
+  channelAccounts: Map<accountId, ChannelAccountSnapshot>
+}
+
+ChannelAccountSnapshot {
+  accountId: string
+  defaultRuntime: ChannelRuntime
+  health: "ok" | "degraded" | "down"
+}
+```
+
+---
+
+## 9. 설정 시스템
+
+### 설정 파일 위치
+
+```
+~/.openclaw/
+  ├── config.yml          # 메인 설정 (JSON5 포맷)
+  ├── credentials/        # 인증 정보 (암호화)
+  ├── sessions/           # 세션 기록
+  │   ├── main.json
+  │   └── <agentId>.json
+  └── agents/
+      └── <agentId>/
+          └── sessions/*.jsonl
+```
+
+### 설정 레이어
+
+| 레이어 | 설명 |
+|--------|------|
+| Gateway | 바인딩 모드, 인증, TLS, HTTP 엔드포인트 |
+| Agents | 에이전트 목록, 워크스페이스, 모델, 스킬 |
+| Channels | 채널별 설정, 기본값, 허용 목록 |
+| Hooks | 웹훅 핸들러, 인증, 게이팅 |
+| Secrets | 자격증명 참조 & 관리 |
+| Memory | 에이전트 메모리 (벡터 검색 등) |
+| Cron | 잡 정의 |
+| Plugins | 플러그인별 설정 |
+
+### 설정 핫 리로드 (`src/gateway/config-reload.ts`)
+
+```
+config.yml 파일 변경 감지 (chokidar)
+  → 플러그인 재로드
+  → 채널 재시작 (변경된 채널만)
+  → 시크릿 업데이트
+  → 메모리 인덱스 갱신
+```
+
+---
+
+## 10. 플러그인 & 확장 시스템
+
+### Extensions (42개)
+
+```
+extensions/
+  ├── 채널 플러그인
+  │   ├── discord          # Discord 확장
+  │   ├── line             # LINE 메시징
+  │   ├── msteams          # Microsoft Teams
+  │   ├── matrix           # Matrix 프로토콜
+  │   ├── feishu           # Feishu/Lark
+  │   ├── googlechat       # Google Chat
+  │   ├── irc              # IRC
+  │   ├── mattermost       # Mattermost
+  │   ├── nostr            # Nostr 프로토콜
+  │   ├── zalo / zalouser  # Zalo (베트남)
+  │   ├── bluebubbles      # BlueBubbles (iMessage)
+  │   └── ...
+  ├── 메모리 플러그인
+  │   ├── memory-core      # 기본 메모리
+  │   └── memory-lancedb   # LanceDB 벡터 검색
+  └── 통합 플러그인
+      ├── llm-task         # LLM 태스크
+      ├── diagnostics-otel # OpenTelemetry
+      └── ...
+```
+
+### Skills (50개+)
+
+```
+skills/
+  ├── 개발
+  │   ├── coding-agent     # 코딩 자동화
+  │   └── gh-issues        # GitHub 이슈 관리
+  ├── 생산성
+  │   ├── notion           # Notion 연동
+  │   ├── obsidian         # Obsidian 연동
+  │   ├── things-mac       # Things 3 (macOS)
+  │   └── trello           # Trello 연동
+  ├── 콘텐츠
+  │   ├── blogwatcher      # 블로그 모니터링
+  │   └── summarize        # 콘텐츠 요약
+  └── 시스템
+      ├── healthcheck      # 시스템 헬스체크
+      ├── tmux             # tmux 제어
+      └── voice-call       # 음성 통화
+```
+
+### 플러그인 로드 방식
+
+```typescript
+// plugins/registry.ts
+// npm 패키지 또는 로컬 경로로 동적 로드
+import { loadPlugin } from 'openclaw/plugin-sdk'
+
+// 플러그인 인터페이스
+interface OpenClawPlugin {
+  id: string
+  channels?: ChannelPlugin[]
+  skills?: SkillPlugin[]
+  memory?: MemoryPlugin
+  cli?: CLIPlugin
+}
+```
+
+---
+
+## 11. 핵심 데이터 구조
+
+### 세션 키 포맷
+
+```
+"agent:main:telegram/+1234567890"
+   │     │    └── channel/account
+   │     └── agentId ("main" or custom)
+   └── prefix
+
+특수 케이스:
+  "agent:main:__default"  # 기본 계정
+  "cron:<jobId>"          # 크론 잡 세션
+  "acp:<id>"              # Agent Control Protocol
+```
+
+### 메시지 전달 흐름
+
+```
+ChannelId
+  → Agent
+    → SessionKey
+      → ChatRunEntry { sessionKey, clientRunId }
+        → AgentEventPayload (stream: lifecycle|tool|assistant)
+          → ChatEvent (WS frame)
+            → WebSocket Client (Control UI / 채널 응답)
+```
+
+### 에이전트 실행 컨텍스트
+
+```typescript
+AgentRunContext {
+  sessionKey: string
+  verboseLevel: "low" | "medium" | "high"
+  isHeartbeat: boolean
+  runId: string
+}
+```
+
+---
+
+## 12. 레이어별 의존 관계
+
+```
+entry.ts
+  └── cli/run-main.ts
+        └── cli/program.ts (Commander.js)
+              └── commands/ (284개 커맨드 핸들러)
+                    └── gateway/server.impl.ts  ← 핵심 허브
+                          ├── config/config.ts         (설정)
+                          ├── channels/plugins/        (채널)
+                          ├── agents/agent-scope.ts    (에이전트)
+                          ├── infra/agent-events.ts    (EventBus)
+                          ├── gateway/server-http.ts   (WS 서버)
+                          └── gateway/server-methods/  (RPC API)
+
+의존 방향:
+  CLI → Gateway → {Channels, Agents, Config, Infra}
+  Agents → {LLM Providers, Tools, Memory}
+  Channels → {Channel SDKs, Gateway EventBus}
+  Config → {File System, Migration, Zod Schemas}
+```
+
+---
+
+## 13. 일반 LLM과의 차별점
+
+| 특성 | 일반 LLM (ChatGPT 등) | OpenClaw |
+|------|----------------------|----------|
+| 실행 위치 | 외부 서버 | 내 기기 (Local-first) |
+| 접근 방식 | 웹/앱 직접 접속 | 기존 메신저에서 대화 |
+| 실행 권한 | 대화만 가능 | 실제 작업 실행 (브라우저, 파일, CLI) |
+| 메모리 | 세션 종료 시 소멸 | 영구 메모리 (LanceDB 벡터 검색) |
+| 상시 대기 | 불가 | 데몬으로 항상 실행 |
+| 자동화 | 제한적 | Cron으로 완전 자동화 |
+| 연동 | 공식 플러그인만 | 50개+ 스킬, 42개+ 확장 |
+| 보안 | 플랫폼 의존 | DM 페어링, 허용 목록, 로컬 암호화 |
+| 멀티 채널 | 단일 인터페이스 | 22개+ 메신저 동시 지원 |
+| 음성 | 제한적 | 웨이크워드 (macOS/iOS) + Talk Mode (Android) |
+
+---
+
+## 14. 디렉토리 트리
+
+```
+openclaw/
+├── src/                      # TypeScript 소스
+│   ├── entry.ts              # CLI 진입점
+│   ├── index.ts              # Public API 익스포트
+│   ├── cli/                  # CLI 레이어 (168 files)
+│   │   ├── program/
+│   │   ├── daemon-cli/
+│   │   ├── gateway-cli/
+│   │   ├── run-main.ts
+│   │   └── argv.ts
+│   ├── gateway/              # Gateway 서버 (236 files)
+│   │   ├── server.impl.ts    # 메인 서버
+│   │   ├── server-http.ts    # HTTP/WS
+│   │   ├── server-chat.ts    # 채팅 이벤트
+│   │   ├── server-channels.ts
+│   │   ├── protocol/         # WS 프레임 스키마
+│   │   └── server-methods/   # RPC 핸들러 (65 files)
+│   ├── agents/               # 에이전트 엔진 (530 files)
+│   │   ├── agent-scope.ts
+│   │   ├── pi-embedded-runner/
+│   │   ├── auth-profiles/
+│   │   ├── skills/
+│   │   └── tools/
+│   ├── channels/             # 채널 추상화 (65 files)
+│   │   ├── plugins/
+│   │   ├── allowlists/
+│   │   └── dock.ts
+│   ├── config/               # 설정 관리 (207 files)
+│   │   ├── config.ts
+│   │   ├── sessions/
+│   │   └── zod-schema.*.ts
+│   ├── infra/                # 인프라 유틸 (297 files)
+│   │   ├── agent-events.ts   # EventBus
+│   │   ├── outbound/
+│   │   └── heartbeat-runner.ts
+│   ├── memory/               # 메모리 시스템 (97 files)
+│   ├── browser/              # 브라우저 자동화 (127 files)
+│   ├── media/                # 미디어 파이프라인
+│   ├── routing/              # 메시지 라우팅
+│   ├── secrets/              # 자격증명 관리
+│   ├── security/             # 보안
+│   ├── commands/             # 커맨드 핸들러 (284 files)
+│   ├── telegram/             # Telegram 구현
+│   ├── discord/              # Discord 구현
+│   ├── slack/                # Slack 구현
+│   ├── signal/               # Signal 구현
+│   ├── imessage/             # iMessage 구현
+│   └── web/                  # WhatsApp Web 구현
+├── extensions/               # 42개 플러그인
+├── skills/                   # 50개+ 스킬
+├── apps/                     # 네이티브 앱
+│   ├── macos/                # SwiftUI 메뉴바 앱
+│   ├── ios/                  # Swift/SwiftUI iOS
+│   ├── android/              # Kotlin Android
+│   └── shared/               # 크로스플랫폼 공통
+├── ui/                       # 웹 UI (Lit + Vite)
+├── docs/                     # 문서 (Mintlify)
+├── scripts/                  # 자동화 스크립트 (100+)
+├── packages/                 # 내부 패키지
+├── package.json
+├── pnpm-workspace.yaml
+└── tsconfig.json
+```
+
+---
+
+## 참고 자료
+
+- 공식 문서: https://docs.openclaw.ai
+- GitHub: https://github.com/openclaw/openclaw
+- Discord: https://discord.gg/clawd
+- DeepWiki: https://deepwiki.com/openclaw/openclaw
+- Vision: `VISION.md`
+- 보안 정책: `SECURITY.md`
+- 기여 가이드: `CONTRIBUTING.md`
+
+---
+
+## 15. 핵심 개념 설명
+
+### 15-1. Playwright
+
+**Playwright**는 Microsoft가 만든 브라우저 자동화 라이브러리입니다.
+OpenClaw는 이것을 "사람 대신 마우스/키보드를 움직이는 엔진"으로 사용합니다.
+
+```
+사람이 하는 일                    Playwright가 하는 일
+────────────────────────────────────────────────────
+Chrome 창을 연다              →   chromium.launch()
+주소창에 URL 입력              →   page.goto(url)
+페이지 구조를 눈으로 파악       →   page.ariaSnapshot()
+링크를 클릭한다               →   locator.click()
+검색창에 타이핑한다            →   locator.fill("검색어")
+JS 콘솔에서 코드 실행          →   page.evaluate(fn)
+스크린샷 찍기                 →   page.screenshot()
+```
+
+**OpenClaw에서의 Playwright 위치:**
+
+```
+LLM (판단)
+  │
+  │  "이 버튼을 클릭해야겠다"
+  ▼
+Browser Tool (src/agents/tools/browser-tool.ts)
+  │
+  │  { action: "act", request: { kind: "click", ref: "e5" } }
+  ▼
+Playwright API (src/browser/pw-tools-core.interactions.ts)
+  │
+  │  locator.click({ timeout: 8000 })
+  ▼
+Chrome DevTools Protocol (CDP) via WebSocket
+  │
+  ▼
+실제 Chrome 브라우저
+```
+
+**핵심:** LLM은 "무엇을 할지" 결정하고, Playwright는 "어떻게 실행할지" 담당합니다.
+
+---
+
+### 15-2. Tool (도구)
+
+**Tool**은 LLM이 텍스트 생성 외에 실제 작업을 수행할 수 있도록 제공되는 기능 단위입니다.
+LLM 단독으로는 파일을 읽거나 브라우저를 제어할 수 없기 때문에, Tool을 통해 외부 세계와 상호작용합니다.
+
+**Tool의 구조:**
+
+```typescript
+// src/agents/tools/browser-tool.ts 예시
+{
+  name: "browser",                    // LLM이 호출할 이름
+  description: "Control a browser",  // LLM이 언제 쓸지 판단하는 설명
+  inputSchema: {                      // LLM이 넘겨야 하는 파라미터 정의
+    action: "navigate | snapshot | act | screenshot ...",
+    url: "string",
+    ref: "string",
+  },
+  execute: async (toolCallId, args) => {  // 실제 실행 코드
+    return result
+  }
+}
+```
+
+**OpenClaw에서 사용 가능한 Tool 목록:**
+
+| Tool | 역할 | 핵심 파일 |
+|------|------|-----------|
+| `browser` | Chrome 제어 (크롤링, 클릭, JS실행) | `tools/browser-tool.ts` |
+| `read` | 로컬 파일 읽기 | `tools/` |
+| `write` | 로컬 파일 생성 | `tools/` |
+| `edit` | 로컬 파일 수정 (old→new 교체) | `tools/` |
+| `exec` | 터미널 명령 실행 | `process/exec.ts` |
+| `cron` | 예약 작업 등록 | `gateway/server-cron.ts` |
+| `canvas` | 에이전트 제어 시각 UI | `canvas-host/` |
+| `memory` | 장기 기억 저장/검색 | `memory/` |
+
+**Tool 실행 흐름:**
+
+```
+LLM → tool_use 블록 생성
+  │
+  ▼
+src/agents/pi-embedded-subscribe.handlers.ts
+  case "tool_execution_start" → 툴 실행 시작 이벤트 발행
+  │
+  ▼
+src/agents/tools/<tool>.ts
+  execute(toolCallId, args) 호출
+  │
+  ▼
+src/infra/agent-events.ts (EventBus)
+  tool_execution_end → 결과 반환
+  │
+  ▼
+LLM → 결과를 읽고 다음 판단
+```
+
+---
+
+### 15-3. 멀티 턴 (Multi-turn)
+
+**멀티 턴**은 LLM이 한 번의 응답으로 끝내지 않고, Tool 실행 결과를 받아가며 **여러 번 대화를 반복**하는 방식입니다.
+
+**단일 턴 vs 멀티 턴:**
+
+```
+[단일 턴 - 일반 LLM]
+사용자: "네이버 뉴스 크롤링해줘"
+LLM:   "저는 인터넷에 접근할 수 없어서 직접 크롤링은 어렵습니다."
+끝.
+
+[멀티 턴 - OpenClaw]
+사용자: "네이버 뉴스 크롤링해줘"
+
+턴 1: LLM → browser.open("sports.naver.com")
+      결과: { url: "https://sports.naver.com", ok: true }
+
+턴 2: LLM → browser.snapshot()
+      결과: { refs: { e1: "해외축구", e5: "기사1"... } }
+
+턴 3: LLM → browser.act({ kind: "click", ref: "e1" })
+      결과: { ok: true }
+
+턴 4: LLM → browser.act({ kind: "evaluate", fn: "..." })
+      결과: { articles: [...] }
+
+턴 5: LLM → 최종 응답 생성 (더 이상 툴 없음)
+사용자: "뉴스 3건입니다: ..."
+```
+
+**멀티 턴이 가능한 이유:**
+
+```
+src/agents/pi-embedded-runner/run.ts
+
+while (true) {
+  response = await llm.send(messages + toolResults)
+
+  if (response.stopReason === "end_turn") break  // 완료
+
+  if (response.stopReason === "tool_use") {
+    result = await executeTool(response.toolCall)
+    messages.push({ role: "tool", content: result })
+    // 다음 턴으로 계속
+  }
+}
+```
+
+**턴 수 제한 및 비용:**
+- 턴이 많아질수록 LLM API 호출 횟수 증가 → 비용/시간 증가
+- 복잡한 작업(쇼핑, 코딩)은 10~20턴도 발생 가능
+- 단순 질문은 1~2턴으로 종료
+
+---
+
+### 15-4. Action (액션)
+
+**Action**은 Browser Tool 안에서 LLM이 Playwright에게 내리는 **구체적인 명령 단위**입니다.
+
+**사용 가능한 Action 전체 목록:**
+
+```typescript
+// 브라우저 관리
+"status"     → 브라우저 실행 상태 확인
+"start"      → 브라우저 시작
+"stop"       → 브라우저 종료
+
+// 탭 관리
+"open"       → 새 탭 열기 (URL 지정 가능)
+"tabs"       → 열린 탭 목록 조회
+"focus"      → 특정 탭으로 포커스 이동
+"close"      → 탭 닫기
+
+// 페이지 파악
+"navigate"   → URL로 이동
+"snapshot"   → 페이지 구조 추출 (ARIA 트리, refs 생성)
+"screenshot" → 화면 캡처 (PNG 저장)
+"pdf"        → 페이지를 PDF로 저장
+
+// 상호작용 (act)
+"act" + kind:
+  "click"          → 요소 클릭
+  "dblclick"       → 더블 클릭
+  "hover"          → 마우스 오버
+  "type"           → 키보드 입력
+  "fill"           → 폼 필드 채우기
+  "press"          → 특정 키 누르기 (Enter, Tab 등)
+  "select"         → 드롭다운 선택
+  "drag"           → 드래그 앤 드롭
+  "scrollIntoView" → 요소가 보이도록 스크롤
+  "wait"           → 조건 대기
+  "evaluate"       → 임의 JavaScript 실행
+  "resize"         → 뷰포트 크기 변경
+
+// 파일/다이얼로그
+"upload"     → 파일 업로드
+"dialog"     → 브라우저 다이얼로그 처리
+"console"    → 개발자 콘솔 JavaScript 실행
+```
+
+**ref 시스템 (snapshot ↔ act 연결고리):**
+
+```
+snapshot() 호출
+  → 페이지의 모든 요소를 ARIA 트리로 변환
+  → 각 요소에 짧은 ref ID 부여: e1, e2, e3 ...
+  → LLM에게 반환
+
+LLM이 스냅샷 읽음:
+  "link '해외축구' <e1>"
+  "article '손흥민 골' <e5>"
+
+act(click, ref: "e5") 호출
+  → ref "e5"를 실제 DOM 요소로 역참조
+  → Playwright locator로 변환 → 클릭 실행
+```
+
+---
+
+### 15-5. 개념 간 관계도
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    멀티 턴 루프                               │
+│                                                             │
+│  ┌──────────┐    tool_use     ┌──────────────────────────┐  │
+│  │          │ ─────────────→  │         Tool             │  │
+│  │   LLM    │                 │  (browser / read / exec) │  │
+│  │          │ ←─────────────  │                          │  │
+│  └──────────┘   tool_result   └────────────┬─────────────┘  │
+│       │                                    │                │
+│       │ (다음 턴)                           │ Action 실행    │
+│       └────────────────────────────────────┘                │
+└─────────────────────────────────────────────────────────────┘
+                                │
+                    Action (navigate, snapshot, act ...)
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │      Playwright       │
+                    │  page.goto()          │
+                    │  page.ariaSnapshot()  │
+                    │  locator.click()      │
+                    │  page.evaluate()      │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                         실제 Chrome 브라우저
+```
+
+| 개념 | 한 줄 설명 | 담당 코드 |
+|------|-----------|-----------|
+| **Playwright** | Chrome을 코드로 제어하는 라이브러리 | `src/browser/pw-*.ts` |
+| **Tool** | LLM이 실제 작업을 실행하는 기능 단위 | `src/agents/tools/` |
+| **멀티 턴** | 툴 결과를 반영하며 LLM이 반복 판단하는 루프 | `src/agents/pi-embedded-runner/` |
+| **Action** | Browser Tool 내부의 구체적 명령 (click, fill...) | `src/agents/tools/browser-tool.ts` |
+
+---
+
+## 16. Q&A: 실제 사용 시나리오
+
+### Q1. 네이버 스포츠 뉴스 크롤링 요청 시 어떤 일이 벌어지나요?
+
+**시나리오:** 사용자가 "네이버 스포츠 해외축구 뉴스 크롤링해줘"라고 요청
+
+#### 전체 플로우
+
+```
+사용자 메시지
+    │
+    ▼
+Pi Agent (pi-embedded-runner/run.ts)
+→ LLM이 "browser 툴 필요" 판단
+    │
+    ▼
+Browser Tool 등록 (src/agents/openclaw-tools.ts:125)
+    │
+    ▼
+Chrome 실행 (src/browser/chrome.ts)
+→ --remote-debugging-port 플래그로 실행
+→ CDP WebSocket 연결 대기
+    │
+    ▼
+Playwright 세션 연결 (src/browser/pw-session.ts)
+    │
+    ▼
+멀티턴 실행 루프
+```
+
+#### 멀티턴 실행 루프
+
+| 턴 | 액션 | 설명 |
+|----|------|------|
+| 1 | `open` | sports.naver.com 접속, SSRF 검사 통과 |
+| 2 | `snapshot` | ARIA 트리 추출 → `e1`(해외축구 링크), `e5`(기사1) ... |
+| 3 | `act: click` | `ref: "e1"` 해외축구 섹션 클릭 |
+| 4 | `snapshot` | 기사 목록 재파악 |
+| 5 | `act: click` | 첫 번째 기사 클릭 |
+| 6 | `act: evaluate` | JS 실행으로 제목/날짜/내용 추출 |
+| 7 | (2~6 반복) | 나머지 기사 수집 |
+| 완료 | 응답 | 수집된 기사 목록 반환 |
+
+#### 핵심 코드 위치
+
+| 단계 | 파일 |
+|------|------|
+| 툴 등록 | `src/agents/openclaw-tools.ts:125` |
+| Chrome 실행 | `src/browser/chrome.ts` |
+| Playwright 세션 | `src/browser/pw-session.ts` |
+| 페이지 스냅샷 | `src/browser/pw-tools-core.snapshot.ts` |
+| 클릭/JS실행 | `src/browser/pw-tools-core.interactions.ts` |
+| SSRF 보안 | `src/browser/navigation-guard.ts` |
+
+---
+
+### Q2. WhatsApp으로 쿠팡 쇼핑을 요청하면 어떤 일이 벌어지나요?
+
+**시나리오:** 사용자가 WhatsApp으로 "쿠팡에서 맥북 충전기 제일 싼 거 사줘" 요청
+
+#### 전체 플로우
+
+```
+📱 사용자 (WhatsApp)
+        │
+        ▼
+1. WhatsApp 채널 수신 (src/web/, @whiskeysockets/baileys)
+        │
+        ▼
+2. 보안 검사 (dmPolicy = "pairing")
+   ├─ 등록된 번호 → 처리 허용 ✅
+   └─ 미등록 번호 → 페어링 코드 요청 🔒
+        │
+        ▼
+3. 세션 키 생성: "agent:main:whatsapp/+1234567890"
+        │
+        ▼
+4. Pi Agent → LLM 판단: "브라우저 툴 필요"
+        │
+        ▼
+5. 브라우저 자동화 루프
+```
+
+#### 브라우저 자동화 루프
+
+| 턴 | 액션 | 설명 |
+|----|------|------|
+| 1 | `open` | coupang.com 접속 |
+| 2 | `snapshot` | 검색창 ref 파악 (`e1`) |
+| 3 | `act: fill` | 검색창에 "맥북 충전기" 입력 |
+| 4 | `snapshot` | 검색 결과 목록 파악 |
+| 5 | `act: evaluate` | JS로 상품 목록 추출 후 가격 정렬 |
+| 6 | `act: click` | 최저가 상품 클릭 |
+| ⚠️ 7 | `act: click` | 장바구니/결제 → **exec-approval 발동** |
+
+#### 현실적 한계
+
+| 장벽 | 우회 방법 |
+|------|-----------|
+| 로그인 필요 | `profile: "chrome"` 으로 기존 Chrome 쿠키 재사용 |
+| 봇 감지 | `browser.headless: false` 설정 |
+| 자동 결제 차단 | exec-approval로 사용자 수동 승인 필수 |
+
+---
+
+### Q3. WhatsApp으로 로컬 프로젝트에 기능 추가를 요청하면 어떤 일이 벌어지나요?
+
+**시나리오:** 사용자가 WhatsApp으로 "todo-list 프로젝트에 완료된 항목 필터링 기능 추가해줘" 요청
+
+#### 멀티턴 코딩 루프
+
+| 턴 | 툴 | 동작 |
+|----|-----|------|
+| 1 | `read` | `~/workspace/todo-list/` 디렉토리 구조 파악 |
+| 2 | `read` | `src/components/TodoList.tsx` 기존 코드 읽기 |
+| 3 | `edit` | 필터 기능 코드 삽입 (old → new 방식) |
+| 4 | `exec` | `npm run build` 실행 → **exec-approval 발동** |
+| 5 | (에러 시) | 빌드 에러 로그 읽고 자동 재수정 반복 |
+| 완료 | 응답 | 변경 내용 요약 WhatsApp 전송 |
+
+#### 크롤링과의 툴 비교
+
+| 시나리오 | 사용 툴 |
+|----------|---------|
+| 웹 크롤링 | Browser Tool (Chrome CDP) |
+| 로컬 파일 수정 | read / edit / write |
+| 명령 실행 | exec (승인 필요) |
+| 스케줄 자동화 | cron |
+
+---
+
+### Q4. 토큰이 폭증하고 컴팩션 후 크론 잡이 오작동하는 이유는 무엇인가요?
+
+**문제 상황:**
+- 크론 잡 다수 설정
+- 매일 일기 기록 (MD 저장)
+- 수시로 간단한 질문
+- 단순 질문에도 토큰 10,000개 이상 소모
+- Context Compaction 이후 크론 잡이 지시한 대로 작동 안 함
+
+#### 원인 1: LLM 호출 시 매번 포함되는 컨텍스트
+
+```
+LLM API 호출 1회 = 아래 모든 것의 합산
+──────────────────────────────────────────────────────
+① 시스템 프롬프트          약 5,000~15,000 토큰
+   - 에이전트 지시문
+   - 워크스페이스 파일 (bootstrap)
+   - 스킬 설명
+
+② 툴 스키마                약 2,000~5,000 토큰
+   - browser, read, edit, exec, memory...
+   - 매 호출마다 전체 전송
+
+③ 세션 히스토리            가변 (누적될수록 폭증)
+   - 과거 대화 전체
+   - 일기 항목들
+   - 크론 잡 실행 결과들
+
+④ 메모리 검색 결과          약 1,000~3,000 토큰
+
+총합 → 작은 질문에도 10,000~20,000 토큰 소모
+```
+
+**핵심 파일:** `src/agents/pi-embedded-runner/run/attempt.ts`
+
+```
+runEmbeddedAttempt()
+  → buildEmbeddedSystemPrompt()   ← ① 매번 재빌드
+  → SessionManager.open()         ← ③ 전체 세션 파일 로드
+  → limitHistoryTurns()           ← DM 설정 있을 때만 제한
+```
+
+#### 원인 2: 일기가 세션 히스토리를 비대하게 만드는 구조
+
+```
+세션 파일: ~/.openclaw/agents/{agentId}/sessions/{sessionId}.jsonl
+
+일기 1건 기록
+  → 세션에 메시지로 추가 (user + assistant + tool results)
+  → 다음 질문 시 이 일기 내용이 히스토리에 포함
+
+일기 30건 누적
+  → 매 질문마다 30개 대화 히스토리 전부 포함
+  → 단순 "오늘 날씨?" 질문도 과거 일기 전체가 컨텍스트에 포함
+```
+
+#### 원인 3: Context Compaction이 크론 잡을 망가뜨리는 이유
+
+**컴팩션이 하는 일:**
+
+```
+src/agents/pi-embedded-runner/compact.ts
+
+compactEmbeddedPiSession()
+  → sessionId.jsonl 파일 로드 (전체 대화 기록)
+  → contextEngine.assemble() 로 요약/압축
+  → 압축된 내용으로 파일 교체 (기존 내용 삭제)
+  → sessions.json에 compactionCount++ 기록
+```
+
+**크론 잡 정의 위치에 따른 영향:**
+
+```
+케이스 A: config.yml에 명시적으로 정의된 크론 잡
+  → 지시문이 config.yml에 있으므로 컴팩션 후에도 유지 ✅
+  → BUT: 크론 잡 실행 결과의 축적 내용은 사라짐 ⚠️
+
+케이스 B: 대화로 지시한 크론 잡 ("매일 아침 일기 써줘")
+  → 에이전트가 세션 히스토리 안에서만 "기억"
+  → 컴팩션 후 해당 지시문이 히스토리에서 삭제됨 ❌
+  → 에이전트가 지시를 "잊어버림" → 크론 잡 오작동
+```
+
+#### 원인 요약 표
+
+| 문제 | 원인 | 관련 파일 |
+|------|------|-----------|
+| 단순 질문에 10K+ 토큰 | 시스템 프롬프트+툴스키마+전체 히스토리 매번 전송 | `run/attempt.ts` |
+| 일기 쌓일수록 느려짐 | 일기가 세션 JSONL에 메시지로 누적 | `sessions/{id}.jsonl` |
+| 컴팩션 후 크론 오작동 | 대화로 지시한 크론은 히스토리 삭제 시 "기억" 소멸 | `compact.ts` |
+| 크론 결과 컨텍스트 손실 | 독립 세션도 컴팩션 대상 | `cron/isolated-agent/session.ts` |
+
+#### 예방 및 개선 방법
+
+**1. 크론 잡은 반드시 config.yml에 명시적으로 정의**
+
+```yaml
+# ~/.openclaw/config.yml
+cron:
+  jobs:
+    # ✅ 올바른 방법
+    - id: "daily-diary"
+      name: "매일 일기 기록"
+      schedule:
+        kind: "cron"
+        expr: "0 22 * * *"
+      payload:
+        kind: "agentTurn"
+        message: "오늘 하루를 요약해서 ~/diary/YYYY-MM-DD.md 파일로 저장해줘"
+      sessionKey: "cron:daily-diary"   # ← 독립 세션 사용
+
+    # ❌ 잘못된 방법: 대화로 지시 → 컴팩션 후 잊어버림
+```
+
+**2. 용도별로 에이전트 세션 분리**
+
+```yaml
+agents:
+  list:
+    - id: "quick"                              # 일상 Q&A용
+      model: { name: "claude-haiku-4-5" }
+      session:
+        dmHistoryLimit: 5                      # 최근 5턴만 유지
+
+    - id: "main"                               # 코딩/긴 작업용
+      model: { name: "claude-sonnet-4-6" }
+      session:
+        dmHistoryLimit: 20
+```
+
+**3. 세션 히스토리 자동 정리 설정**
+
+```yaml
+agents:
+  defaults:
+    session:
+      pruning:
+        maxEntries: 50        # 최대 메시지 수 제한
+        pruneAfter: "7d"      # 7일 지난 메시지 자동 삭제
+      dmHistoryLimit: 10      # DM 세션: 최근 10턴만 LLM에 전달
+```
+
+**4. 메모리 플러그인으로 크론 지시문 영속화**
+
+```
+사용자: "이 지시사항을 메모리에 저장해줘:
+        '매일 밤 10시에 오늘 배운 것을 요약해서 diary 폴더에 저장'"
+
+저장 위치: ~/.openclaw/agents/{agentId}/memory/instructions.md
+→ 컴팩션 대상이 아님 (별도 파일)
+→ memory_search 툴로 다시 로드 가능
+```
+
+#### 개선 전후 토큰 소모 비교
+
+```
+[개선 전]
+단순 질문 1회:
+  시스템 프롬프트:   8,000 토큰
+  툴 스키마:         3,000 토큰
+  세션 히스토리:    12,000 토큰 (일기 30건 + 크론 결과 누적)
+  메모리 결과:       2,000 토큰
+  합계:             25,000 토큰
+
+[개선 후] (quick 에이전트, haiku 모델, dmHistoryLimit=3)
+  시스템 프롬프트:   5,000 토큰
+  툴 스키마:         2,000 토큰
+  세션 히스토리:       800 토큰 (최근 3턴만)
+  메모리 결과:           0 토큰
+  합계:              7,800 토큰  ← 약 70% 절감
+```
+
+#### 핵심 관련 파일
+
+| 파일 | 역할 |
+|------|------|
+| `src/agents/pi-embedded-runner/run/attempt.ts` | LLM 컨텍스트 조립 |
+| `src/agents/pi-embedded-runner/compact.ts` | 컨텍스트 컴팩션 로직 |
+| `src/config/sessions/store.ts` | 세션 메타데이터 로드/저장 |
+| `src/cron/isolated-agent/session.ts` | 크론 전용 세션 해결 |
+| `src/cron/isolated-agent/run.ts` | 크론 잡 실행 |
+| `src/config/zod-schema.session.ts` | 세션 설정 스키마 |
