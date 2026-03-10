@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Link from '@/components/Link'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import Tag from '@/components/Tag'
 import { formatDate } from 'pliny/utils/formatDate'
 import siteMetadata from '@/data/siteMetadata'
@@ -13,34 +13,11 @@ interface RecentPostsSectionProps {
 }
 
 export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
-  const [isVisible, setIsVisible] = useState(false)
-  const sectionRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current)
-      }
-    }
-  }, [])
-
+  const { isVisible, ref } = useIntersectionObserver()
   const recentPosts = posts.slice(0, 3)
 
   return (
-    <section ref={sectionRef} className="py-20 bg-gray-50 dark:bg-gray-900/50">
+    <section ref={ref} className="py-20 bg-gray-50 dark:bg-gray-900/50">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
