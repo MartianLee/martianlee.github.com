@@ -34,7 +34,8 @@ author: MartianLee
 13. [일반 LLM과의 차별점](#13-일반-llm과의-차별점)
 14. [디렉토리 트리](#14-디렉토리-트리)
 15. [핵심 개념 설명](#15-핵심-개념-설명)
-16. [Q&A: 실제 사용 시나리오](#16-qa-실제-사용-시나리오)
+16. [기술적 계보 & 이후 동향](#16-기술적-계보--이후-동향)
+17. [Q&A: 실제 사용 시나리오](#17-qa-실제-사용-시나리오)
 
 ---
 
@@ -877,7 +878,232 @@ act(click, ref: "e5") 호출
 
 ---
 
-## 16. Q&A: 실제 사용 시나리오
+## 16. 기술적 계보 & 이후 동향
+
+### OpenClaw 이전: 어떤 프로젝트들이 있었나
+
+OpenClaw 이전에도 LLM + 툴 조합을 시도한 프로젝트들은 있었습니다. 하지만 "상시 실행 + 메신저 연동 + 일반 사용자 대상"을 동시에 만족한 프로젝트는 없었습니다.
+
+```
+2022 ──────────────────────────────────────────────────── 2026
+
+  [1세대: 자율 실험]   [2세대: 프레임워크]  [3세대: 표준화]  [4세대: 개인비서]
+         │                    │                  │                 │
+  2023.3 AutoGPT       2023   LangChain    2024.11 MCP      2025   OpenClaw
+  2023.4 BabyAGI       2023.6 Function    (Anthropic)       2026.1 NanoClaw
+  2023   AgentGPT            Calling                         2026   MicroClaw
+  2024   CrewAI        2024   AutoGen
+         SuperAGI
+```
+
+---
+
+### 1세대 (2023 초): 자율 에이전트 실험 — AutoGPT 충격
+
+```
+AutoGPT (2023.3, 10만+ GitHub Stars 폭발)
+  - "목표만 주면 LLM이 스스로 계획·실행·반복"
+  - 웹 검색, 파일 쓰기, 코드 실행 등 툴 연동
+  - 구조: LLM → 태스크 분해 → 실행 → 결과 반영 → 반복
+
+BabyAGI / AgentGPT (2023.4~)
+  - Task queue + LLM 루프를 단순화한 파생 프로젝트들
+  - BabyAGI: 태스크 생성 → 실행 → 우선순위 재정렬
+```
+
+**당시 한계:**
+- 한 번 실행하고 끝나는 구조 (상시 서버 아님)
+- 메신저 연동, 스케줄링, 개인 메모리 없음
+- 환각과 무한루프로 실사용 불가 수준
+- 개발자 전용 (일반인이 쓸 수 없음)
+
+---
+
+### 2세대 (2023 중~2024): 프레임워크 전쟁 — LangChain & ReAct
+
+**ReAct 패턴의 정립:**
+
+```
+ReAct = Reasoning + Acting
+
+LLM 판단: "날씨를 알아야 한다"
+    │
+    ▼
+Tool 호출: weather_api("Seoul")
+    │
+    ▼
+결과 관찰: "22°C, 맑음"
+    │
+    ▼
+LLM 재판단: "충분한 정보가 있다, 응답 생성"
+    │
+    ▼
+최종 응답
+```
+
+**주요 프레임워크:**
+
+| 프레임워크 | 특징 | 한계 |
+|------------|------|------|
+| LangChain | 500개+ 툴, 일관된 인터페이스 | 개발자 전용 라이브러리 |
+| CrewAI | 멀티 에이전트 역할 분담 | 일회성 실행 |
+| AutoGen (Microsoft) | 에이전트 간 대화로 협업 | 상시 서버 아님 |
+| Semantic Kernel | 기업용 AI 오케스트레이션 | 복잡한 설정 |
+
+**Function Calling 등장 (OpenAI, 2023.6):**
+
+```
+이전: LLM이 텍스트로 "웹 검색이 필요합니다" → 개발자가 파싱
+이후: LLM이 { "tool": "search", "query": "..." } 구조 반환
+     → 툴 연동 표준화의 시작
+```
+
+---
+
+### 3세대 (2024.11): 표준의 등장 — MCP
+
+**Model Context Protocol (Anthropic, 2024.11):**
+
+```
+MCP 이전:
+  Claude ──자체방식──→ 툴A
+  GPT-4  ──자체방식──→ 툴B  (각자 다른 연동 방식)
+  Gemini ──자체방식──→ 툴C
+
+MCP 이후:
+  Claude ─┐
+  GPT-4  ─┼──[MCP]──→ 툴A / 툴B / 툴C
+  Gemini ─┘           (공통 표준 인터페이스)
+```
+
+- "AI용 USB-C"로 불림
+- 2025.3 OpenAI 공식 채택 → 사실상 업계 표준
+- LangChain, CrewAI, AutoGen 모두 MCP 통합
+
+**OpenClaw와 MCP:** `mcporter` 브리지로 지원 (코어에 직접 내장하지 않고 분리).
+
+---
+
+### 4세대 (2025~): 상시 실행 개인비서 — OpenClaw
+
+**OpenClaw가 기존과 달랐던 5가지:**
+
+```
+① 상시 실행 (Always-on)
+   → 데몬으로 등록, 부팅 시 자동 시작
+
+② 메신저 퍼스트 (Messenger-first)
+   → 22개+ 메신저에서 직접 대화
+
+③ 보안 기본값 (Secure defaults)
+   → DM 페어링, exec-approval로 위험 명령 차단
+
+④ 일반 사용자 대상 (Consumer-grade UX)
+   → openclaw onboard 마법사로 설치, 코딩 지식 불필요
+
+⑤ 로컬 퍼스트 (Local-first)
+   → Gateway가 내 기기에서 실행, 데이터가 OpenClaw 서버를 통하지 않음
+```
+
+---
+
+### 5세대 (2026~): NanoClaw와 파생 프로젝트들
+
+#### NanoClaw (2026.1, MIT License)
+
+> "OpenClaw의 기능을 컨테이너 격리와 경량 코드베이스로 재구현"
+
+**개발 배경:**
+- 개발자: Gavriel Cohen (이스라엘)
+- 도구: Anthropic Claude Code로 개발
+- 출시 1주일 만에 GitHub Stars 7,000+ 돌파
+
+**OpenClaw와의 핵심 차이:**
+
+| 항목 | OpenClaw | NanoClaw |
+|------|----------|----------|
+| 코드베이스 | ~50만 라인 | 수백 줄 (파악 가능) |
+| 보안 방식 | 앱 레벨 (allowlist) | OS 레벨 (컨테이너 격리) |
+| Agent 런타임 | 자체 Pi Agent | Anthropic Agent SDK 직접 |
+| 실행 단위 | 단일 Node 프로세스 | 에이전트별 독립 컨테이너 |
+
+**컨테이너 격리 모델:**
+
+```
+OpenClaw 방식 (앱 레벨 격리):
+  개인 에이전트 ─┐
+                 ├─ 단일 Node 프로세스 (메모리 공유)
+  업무 에이전트 ─┘
+
+NanoClaw 방식 (OS 레벨 격리):
+  개인 에이전트 → Linux 컨테이너 A (독립 파일시스템)
+  업무 에이전트 → Linux 컨테이너 B (독립 파일시스템)
+  → Apple Container (macOS) / Docker 지원
+  → 컨테이너는 매 실행마다 새로 생성 후 폐기 (ephemeral)
+```
+
+**NanoClaw 최초 도입: Agent Swarms**
+
+```
+기존: 사용자 → 에이전트 1개 → 응답
+
+Swarms:
+  사용자 → 매니저 에이전트
+               ├─ 리서치 에이전트 (컨테이너 A)
+               ├─ 코딩 에이전트   (컨테이너 B)
+               └─ 검토 에이전트   (컨테이너 C)
+            → 결과 취합 → 응답
+```
+
+#### MicroClaw (2026, Rust)
+
+NanoClaw 설계 아이디어를 Rust로 재구현. 메모리 안전성 + 네이티브 성능 목표.
+
+---
+
+### 전체 기술 동향 타임라인
+
+| 시기 | 프로젝트/기술 | 핵심 기여 |
+|------|--------------|-----------|
+| 2023.3 | AutoGPT | LLM 자율 실행 가능성 증명 |
+| 2023.4 | BabyAGI | 태스크 큐 + LLM 루프 패턴 |
+| 2023 | LangChain | 툴 연동 프레임워크 표준화 |
+| 2023.6 | Function Calling | 구조화된 툴 호출 (OpenAI) |
+| 2024 | CrewAI / AutoGen | 멀티 에이전트 협업 |
+| 2024.11 | MCP (Anthropic) | 툴 연결 공통 표준 ("USB-C") |
+| 2025.3 | MCP (OpenAI 채택) | 사실상 업계 표준 확정 |
+| 2025 | OpenClaw | 상시 실행 개인비서 (일반인 대상) |
+| 2026.1 | NanoClaw | 컨테이너 격리 + 경량화 + Agent Swarms |
+| 2026 | MicroClaw | Rust 재구현 |
+
+---
+
+### 기술 흐름의 핵심 교훈
+
+```
+1세대 교훈: LLM은 자율 실행이 가능하지만, 안정성이 문제
+2세대 교훈: 툴 연동 표준화 없이는 생태계 파편화
+3세대 교훈: 공통 프로토콜(MCP)이 생태계를 폭발적으로 성장
+4세대 교훈: 기술보다 UX가 먼저 (개발자 → 일반인 전환)
+5세대 교훈: 보안은 앱 레벨이 아닌 OS 레벨에서 해결해야 함
+             (OpenClaw → NanoClaw의 컨테이너 격리)
+```
+
+---
+
+### 참고 링크
+
+- [NanoClaw GitHub](https://github.com/qwibitai/nanoclaw)
+- [NanoClaw 공식](https://nanoclaws.io/)
+- [OpenClaw, but in containers: Meet NanoClaw • The Register](https://www.theregister.com/2026/03/01/nanoclaw_container_openclaw/)
+- [NanoClaw Security Model](https://nanoclaw.dev/blog/nanoclaw-security-model/)
+- [MicroClaw GitHub](https://github.com/microclaw/microclaw)
+- [Model Context Protocol - Wikipedia](https://en.wikipedia.org/wiki/Model_Context_Protocol)
+- [AI Agent Framework Landscape 2025](https://medium.com/@hieutrantrung.it/the-ai-agent-framework-landscape-in-2025-what-changed-and-what-matters-3cd9b07ef2c3)
+
+---
+
+## 17. Q&A: 실제 사용 시나리오
 
 ### Q1. 네이버 스포츠 뉴스 크롤링 요청 시 어떤 일이 벌어지나요?
 
