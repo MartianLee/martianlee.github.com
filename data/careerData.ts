@@ -19,7 +19,7 @@ const careerData: Career[] = [
     href: 'https://ujet.cx/',
   },
   {
-    company: '스테핑',
+    company: 'Stepping',
     role: 'Founder / CTO',
     period: '2021 - 2023',
     description:
