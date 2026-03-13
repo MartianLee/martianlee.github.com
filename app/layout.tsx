@@ -24,13 +24,23 @@ export const metadata: Metadata = {
     template: `%s | ${siteMetadata.title}`,
   },
   description: siteMetadata.description,
+  keywords: [
+    '개발 블로그',
+    '웹 개발',
+    '소프트웨어 아키텍처',
+    'AI',
+    'LLM',
+    'Next.js',
+    'TypeScript',
+    'MartianLee',
+  ],
   openGraph: {
     title: siteMetadata.title,
     description: siteMetadata.description,
     url: './',
     siteName: siteMetadata.title,
     images: [siteMetadata.socialBanner],
-    locale: 'en_US',
+    locale: 'ko_KR',
     type: 'website',
   },
   alternates: {
@@ -52,6 +62,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     title: siteMetadata.title,
+    description: siteMetadata.description,
     card: 'summary_large_image',
     images: [siteMetadata.socialBanner],
   },
