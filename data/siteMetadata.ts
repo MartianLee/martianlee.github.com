@@ -11,7 +11,7 @@ const siteMetadata: PlinyConfig = {
   siteRepo: 'https://github.com/MartianLee/martianlee.github.com',
   siteLogo: '/static/favicons/favicon.png',
   image: '/static/images/avatar.png',
-  socialBanner: '/static/images/thumnail-github2.png',
+  socialBanner: '/static/images/github-thumnail2.png',
   // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'martionlee@gmail.com',
   github: 'https://github.com/MartianLee',
