@@ -23,8 +23,8 @@ const careerData: Career[] = [
     role: 'Founder / CTO',
     period: '2021 - 2023',
     description:
-      '스테핑은 기업·브랜드가 지속가능할 수 있도록 복잡한 탄소중립 절차와 기후행동 프로젝트를 지원합니다',
-    techStack: ['Next.js', 'React', 'Nest.js', 'PostgreSQL', 'AWS'],
+      'Stepping helps companies and brands navigate complex carbon-neutral processes and climate action projects to build a sustainable future.',
+    techStack: ['Next.js', 'React', 'Nest.js', 'PostgreSQL', 'AWS', '0to1'],
     imgSrc: '/static/projects/stepping-logo.png',
     href: 'https://stepping.co.kr/',
   },
@@ -33,7 +33,7 @@ const careerData: Career[] = [
     role: 'Frontend Developer',
     period: '2020 - 2021',
     description:
-      '대한민국 1등 홈서비스 미소에서 Client 유지보수, CX 서비스 개선을 위한 백오피스 개발 등을 담당했습니다',
+      "South Korea's leading home services platform. Responsible for client app maintenance and back-office development to improve CX operations.",
     techStack: ['React', 'React Native', 'Redux', 'TypeScript'],
     imgSrc: '/static/projects/miso-logo.png',
     href: 'https://miso.kr/',
