@@ -1,0 +1,853 @@
+---
+slug: '2026-03-13-lightpanda-architecture'
+title: 'Lightpanda 브라우저 아키텍처 분석 보고서'
+crawlertitle: 'Lightpanda 헤드리스 브라우저 아키텍처 분석 보고서'
+summary: 'Zig 기반 초경량 헤드리스 브라우저 Lightpanda의 전체 아키텍처 분석. Chrome 대비 9배 낮은 메모리, 11배 빠른 속도의 비결인 기술 스택, DOM 엔진, JavaScript V8 통합, CDP 프로토콜, 네트워크 레이어를 상세히 다룹니다.'
+date: 2026-03-12 00:29:00 +0900
+categories: posts
+tags: ['lightpanda', 'architecture', 'zig', 'browser', 'headless', 'cdp', 'v8']
+author: MartianLee
+---
+
+> 분석 일자: 2026-03-13
+> 대상 버전: main (dd35bdfe 기준)
+> 저장소: https://github.com/lightpanda-io/browser
+
+---
+
+*This article is mostly written by Claude Code*
+
+## 목차
+
+1. [프로젝트 개요](#1-프로젝트-개요)
+2. [기술 스택](#2-기술-스택)
+3. [전체 아키텍처](#3-전체-아키텍처)
+4. [핵심 모듈 구조](#4-핵심-모듈-구조)
+5. [페이지 로딩 파이프라인](#5-페이지-로딩-파이프라인)
+6. [브라우저 엔진 상세](#6-브라우저-엔진-상세)
+7. [JavaScript 런타임 통합](#7-javascript-런타임-통합)
+8. [Chrome DevTools Protocol (CDP)](#8-chrome-devtools-protocol-cdp)
+9. [네트워크 레이어](#9-네트워크-레이어)
+10. [메모리 관리 전략](#10-메모리-관리-전략)
+11. [Web API 구현 현황](#11-web-api-구현-현황)
+12. [빌드 시스템](#12-빌드-시스템)
+13. [운영 모드](#13-운영-모드)
+14. [디렉토리 트리](#14-디렉토리-트리)
+15. [핵심 데이터 구조](#15-핵심-데이터-구조)
+16. [레이어별 의존 관계](#16-레이어별-의존-관계)
+17. [Chrome과의 차별점](#17-chrome과의-차별점)
+18. [Q&A: 실제 사용 시나리오](#18-qa-실제-사용-시나리오)
+
+---
+
+## 1. 프로젝트 개요
+
+**Lightpanda**는 Zig 언어로 처음부터 작성한 오픈소스 헤드리스 브라우저 엔진입니다. Chromium, Blink, WebKit 기반이 아닌 독자적인 구현이며, AI 에이전트 연동, LLM 학습 데이터 수집, 웹 스크래핑, 자동화 테스트에 최적화되어 있습니다.
+
+- **슬로건:** "The browser for AI agents and web scraping. 9× less memory, 11× faster than Chrome."
+- **핵심 가치:** 초경량, 즉시 시작, Playwright/Puppeteer 호환, AI 친화적
+- **호환 프레임워크:** Playwright, Puppeteer, chromedp (Chrome DevTools Protocol 기반)
+- **지원 모드:** CLI 단일 fetch, CDP WebSocket 서버, MCP(Model Context Protocol) 서버
+
+---
+
+## 2. 기술 스택
+
+| 영역 | 기술 |
+|------|------|
+| 언어 | Zig 0.15.2 |
+| JavaScript 엔진 | V8 (zig-v8-fork v0.3.3) |
+| HTML 파서 | html5ever (Rust FFI) |
+| HTTP 클라이언트 | libcurl 8.18.0 |
+| TLS/SSL | BoringSSL (boringssl-zig) |
+| HTTP/2 | nghttp2 1.68.0 |
+| 압축 | zlib 1.3.2, brotli v1.2.0 |
+| 빌드 시스템 | Zig build system (build.zig) |
+| 패키지 관리 | build.zig.zon |
+| 컨테이너 | Docker |
+| 개발 환경 | Nix flake |
+| 프로토콜 | Chrome DevTools Protocol (CDP), MCP |
+
+---
+
+## 3. 전체 아키텍처
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                        Lightpanda Browser                                ║
+║                                                                          ║
+║  ┌─────────────────────────────────────────────────────────────────┐    ║
+║  │                    CLI / Entry Layer                             │    ║
+║  │  main.zig → Config → App.init()                                 │    ║
+║  │  lightpanda fetch | serve | mcp                                  │    ║
+║  └───────────────────────┬─────────────────────────────────────────┘    ║
+║                          │                                               ║
+║  ┌───────────────────────▼─────────────────────────────────────────┐    ║
+║  │                  Application (App.zig)                           │    ║
+║  │                                                                  │    ║
+║  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │    ║
+║  │  │  V8 Platform │  │ Network Rt.  │  │   Telemetry          │  │    ║
+║  │  │  Snapshot    │  │ (libcurl)    │  │   ArenaPool          │  │    ║
+║  │  └──────────────┘  └──────────────┘  └──────────────────────┘  │    ║
+║  └───────────────────────┬─────────────────────────────────────────┘    ║
+║                          │                                               ║
+║  ┌───────────────────────▼─────────────────────────────────────────┐    ║
+║  │                 Browser Engine                                   │    ║
+║  │                                                                  │    ║
+║  │  Browser.zig                                                     │    ║
+║  │    └── Session.zig  (쿠키, 히스토리, 스토리지 공유)              │    ║
+║  │          └── Page.zig  (DOM 트리, 이벤트, 스크립트)             │    ║
+║  │                ├── Factory.zig   (DOM 객체 생성)                 │    ║
+║  │                ├── EventManager  (이벤트 디스패치)               │    ║
+║  │                ├── ScriptManager (스크립트 로딩/실행)            │    ║
+║  │                └── HttpClient    (fetch API, XHR)               │    ║
+║  └──────────┬────────────────────────────┬───────────────────────┘    ║
+║             │                            │                              ║
+║  ┌──────────▼───────────┐   ┌───────────▼──────────────────────────┐  ║
+║  │   JavaScript (JS/)   │   │          Web API (webapi/)           │  ║
+║  │                      │   │                                      │  ║
+║  │  V8 Isolate          │   │  DOM Core / HTML / CSS / Events      │  ║
+║  │  Context             │   │  Fetch / XHR / Storage / Canvas      │  ║
+║  │  bridge.zig          │   │  MutationObserver / Performance      │  ║
+║  │  Snapshot            │   │  Crypto / CustomElements / 73 모듈   │  ║
+║  └──────────────────────┘   └──────────────────────────────────────┘  ║
+║                                                                          ║
+║  ┌─────────────────────────────────────────────────────────────────┐    ║
+║  │                 CDP / MCP / Server Layer                         │    ║
+║  │                                                                  │    ║
+║  │  Server.zig (WebSocket)  ──→  cdp/cdp.zig  ──→  domains/        │    ║
+║  │  mcp/  (stdio MCP)                                               │    ║
+║  └─────────────────────────────────────────────────────────────────┘    ║
+╚══════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. 핵심 모듈 구조
+
+| 모듈 | 역할 | 핵심 파일 |
+|------|------|-----------|
+| **CLI / Entry** | 실행 진입점, 인자 파싱 | `main.zig`, `Config.zig` |
+| **App** | 전역 상태, 플랫폼 초기화 | `App.zig` |
+| **Browser** | 브라우저 인스턴스, JS 환경 | `browser/Browser.zig` |
+| **Session** | 탭 컨테이너, 쿠키·히스토리 | `browser/Session.zig` |
+| **Page** | DOM 엔진, 이벤트, 렌더 트리 | `browser/Page.zig` (136KB) |
+| **Factory** | DOM 객체 할당·관리 | `browser/Factory.zig` |
+| **HttpClient** | HTTP/HTTPS fetch, XHR 구현 | `browser/HttpClient.zig` |
+| **ScriptManager** | `<script>` 태그 로딩·실행 순서 | `browser/ScriptManager.zig` |
+| **EventManager** | DOM 이벤트 디스패치 | `browser/EventManager.zig` |
+| **Web API** | W3C 표준 Web API 구현 (73개) | `browser/webapi/` |
+| **JS Runtime** | V8 바인딩, JS ↔ Zig 브리지 | `browser/js/` |
+| **Network** | 비동기 I/O, 커넥션 풀 | `network/Runtime.zig` |
+| **CDP** | Chrome DevTools Protocol | `cdp/cdp.zig`, `cdp/domains/` |
+| **Server** | WebSocket CDP 서버 | `Server.zig` |
+| **MCP** | Model Context Protocol 서버 | `mcp/` |
+| **Parser** | html5ever Rust FFI 연결 | `browser/parser/` |
+
+---
+
+## 5. 페이지 로딩 파이프라인
+
+```
+[사용자 → lightpanda fetch https://example.com]
+        │
+        ▼
+main.zig → Config 파싱
+        │
+        ▼
+App.init()
+  ├── V8 Platform 초기화
+  ├── V8 Snapshot 로드 (사전 초기화 상태)
+  ├── Network Runtime 시작 (libcurl poll)
+  └── ArenaPool 준비
+        │
+        ▼
+Browser.init()
+  └── JS Environment (V8 Isolate + Context) 생성
+        │
+        ▼
+Session.init()
+  ├── 쿠키 저장소
+  ├── 히스토리
+  └── LocalStorage / SessionStorage
+        │
+        ▼
+Page.init()
+  ├── DOM Document 생성
+  ├── window 객체 바인딩
+  └── 이벤트 루프 준비
+        │
+        ▼
+Page.navigate(url)
+  └── HttpClient.fetch(url)
+        ├── robots.txt 확인 (Robots.zig)
+        ├── HTTP 요청 (libcurl)
+        └── HTML 수신
+              │
+              ▼
+        html5ever 파서 (Rust FFI)
+          └── DOM 트리 구성
+                │
+                ▼
+        ScriptManager
+          └── <script> 태그 순서 처리
+                ├── 동기 스크립트 즉시 실행
+                └── defer/async 스크립트 큐
+                      │
+                      ▼
+                V8 JavaScript 실행
+                  └── bridge.zig ↔ Web API 호출
+                        │
+                        ▼
+                  Microtask / Macrotask 루프
+                    ├── Promise 처리
+                    ├── setTimeout / setInterval
+                    └── Fetch / XHR 콜백
+                          │
+                          ▼
+                  readyState: 'complete'
+                    └── 결과 출력 (HTML / Markdown / JSON)
+```
+
+---
+
+## 6. 브라우저 엔진 상세
+
+### Page.zig — 핵심 DOM 엔진 (136KB)
+
+`Page.zig`는 프로젝트에서 가장 복잡한 파일로, DOM 트리 전체의 생명주기를 관리합니다.
+
+**주요 책임:**
+- DOM 트리 루트(`document`) 소유 및 관리
+- 엘리먼트 캐시 (스타일, 데이터셋, 클래스 목록, 섀도우 루트)
+- 이벤트 타깃 속성 리스너 등록
+- Blob URL 레지스트리 (Object URL)
+- Live Range 추적 (MutationObserver 연동)
+- `<iframe>` / `<frame>` 중첩 관리
+- readyState 전환 로직
+
+### Factory.zig — DOM 객체 팩토리
+
+DOM 노드 생성과 메모리 소유권을 중앙 관리합니다.
+
+```
+Factory.create<HTMLDivElement>()
+  → Arena 할당
+  → V8 Local 값 래핑
+  → 브리지 바인딩 등록
+  → 반환 (소유권: Page 아레나)
+```
+
+### EventManager.zig (32KB)
+
+W3C Event 스펙 기반 디스패치 구현:
+- 버블링 / 캡처링 / 타깃 단계
+- `stopPropagation()`, `preventDefault()`
+- `CustomEvent`, `KeyboardEvent`, `MouseEvent` 등
+
+---
+
+## 7. JavaScript 런타임 통합
+
+### V8 통합 계층 (`browser/js/` — 27개 모듈)
+
+```
+js/
+├── Env.zig        V8 Isolate + Context 초기화
+├── Context.zig    실행 컨텍스트 (origin 격리)
+├── Isolate.zig    V8 Isolate 래퍼
+├── bridge.zig     JS ↔ Zig 바인딩 (34KB, 핵심)
+├── Snapshot.zig   스냅샷 생성/로드 (26KB)
+├── Local.zig      V8 Local<Value> 조작 (56KB)
+├── Platform.zig   V8 플랫폼 설정
+├── Inspector.zig  CDP 디버거 연결
+├── Promise.zig    Promise/A+ 구현
+└── TryCatch.zig   예외 처리
+```
+
+### V8 Snapshot 전략
+
+```
+[빌드 시간]
+lightpanda-snapshot-creator
+  └── V8 초기 상태를 시리얼라이즈 → snapshot.bin
+
+[런타임]
+App.init()
+  └── snapshot.bin 역직렬화 → V8 Context 즉시 사용 가능
+```
+
+- **효과:** V8 엔진 초기화 시간 대폭 단축 → 인스턴스당 수 ms 이내 시작
+- **용도:** 수백 개 병렬 인스턴스 운영 시 극적인 성능 향상
+
+### bridge.zig — JS ↔ Zig 바인딩 핵심
+
+```
+JavaScript:  document.getElementById("foo")
+                │
+                ▼
+           V8 C++ API 호출
+                │
+                ▼
+           bridge.zig 디스패치 테이블
+                │
+                ▼
+           Zig: Page.getElementById() 호출
+                │
+                ▼
+           DOM 노드 반환 → V8 Local<Object>으로 래핑
+```
+
+---
+
+## 8. Chrome DevTools Protocol (CDP)
+
+### CDP 서버 구조
+
+```
+Server.zig (WebSocket 서버)
+  ├── 클라이언트 수락 (스레드 per 클라이언트)
+  ├── WebSocket 핸드셰이크
+  └── 메시지 디스패치 → cdp/cdp.zig
+        │
+        ▼
+cdp.zig (메인 CDP 핸들러, 46KB)
+  └── domains/ (18개 도메인)
+        ├── browser/   브라우저 수준 제어
+        ├── dom/       DOM 트리 조작·조회
+        ├── page/      내비게이션, 스크린샷
+        ├── network/   요청 인터셉트, 헤더 조작
+        ├── runtime/   JS 평가, 스택 추적
+        ├── input/     마우스/키보드 시뮬레이션
+        ├── target/    멀티 타깃(탭) 관리
+        ├── fetch/     요청 가로채기
+        ├── log/       콘솔 이벤트 스트리밍
+        └── accessibility/  접근성 트리
+```
+
+### 지원 CDP 도메인
+
+| 도메인 | 주요 기능 |
+|--------|-----------|
+| `Page` | navigate, screenshot, printToPDF |
+| `DOM` | querySelector, getDocument, setAttributeValue |
+| `Runtime` | evaluate, callFunctionOn, getProperties |
+| `Network` | requestIntercepted, setExtraHTTPHeaders, setCookies |
+| `Input` | dispatchMouseEvent, dispatchKeyEvent |
+| `Target` | createTarget, attachToTarget |
+| `Fetch` | requestPaused, fulfillRequest, continueRequest |
+| `Accessibility` | getFullAXTree, AXNode |
+
+### Playwright / Puppeteer 호환성
+
+```
+Playwright / Puppeteer
+    │
+    │  CDP over WebSocket
+    ▼
+lightpanda serve --port 9222
+    │
+    │  내부 CDP 명령 처리
+    ▼
+Browser Engine (Page, DOM, JS)
+```
+
+---
+
+## 9. 네트워크 레이어
+
+### 비동기 I/O 모델
+
+```
+network/Runtime.zig
+  └── Poll 기반 reactor (epoll/kqueue)
+        ├── 소켓 수락 리스너
+        ├── HTTP 커넥션 풀 (호스트별)
+        ├── WebSocket 클라이언트 관리
+        └── 웨이크업 파이프 (스레드 간 신호)
+```
+
+### 주요 네트워크 기능
+
+| 기능 | 구현 |
+|------|------|
+| HTTP/HTTPS | libcurl 8.18.0 |
+| HTTP/2 | nghttp2 1.68.0 |
+| TLS | BoringSSL |
+| 압축 | gzip (zlib), brotli |
+| 프록시 | libcurl CURLOPT_PROXY |
+| 쿠키 | Session 레벨 쿠키 저장소 |
+| robots.txt | `network/Robots.zig` (33KB) |
+| Bot 인증 | `network/WebBotAuth.zig` |
+| 커넥션 풀링 | 호스트별 연결 재사용 |
+
+### robots.txt 준수
+
+```
+Page.navigate(url)
+  └── Robots.zig.check(url)
+        ├── robots.txt 캐시 조회
+        ├── 없으면 fetch + 파싱
+        └── User-agent 규칙 매칭
+              ├── 허용 → 요청 진행
+              └── 차단 → 에러 반환
+```
+
+---
+
+## 10. 메모리 관리 전략
+
+Lightpanda의 9배 메모리 절감은 단순히 렌더링 생략만의 결과가 아니라, 정밀한 메모리 관리 전략의 결과입니다.
+
+### 할당자 계층
+
+| 할당자 | 용도 | 특징 |
+|--------|------|------|
+| `ArenaPool` | 프레임/컴포넌트 단위 | 한 번에 대량 해제 |
+| `Slab Allocator` | 고정 크기 DOM 노드 | 단편화 없음, O(1) 할당 |
+| `Arena Allocator` | 요청 단위 임시 데이터 | reset으로 전체 해제 |
+| `DebugAllocator` | 개발 시 누수 감지 | 릴리즈에서 제거 |
+
+### DOM 객체 수명 관리
+
+```
+Page.init()  → Arena 할당자 생성
+     │
+     ├── Factory.create<Node>()   → Arena에서 할당
+     ├── Factory.create<Element>() → Arena에서 할당
+     └── ...
+           │
+           ▼
+Page.deinit()  → Arena 전체 해제 (O(1))
+```
+
+- **핵심 원칙:** DOM 노드 개별 해제 없음 → Page 아레나 일괄 해제
+- **효과:** GC 오버헤드 제로, 메모리 단편화 없음
+
+---
+
+## 11. Web API 구현 현황
+
+`browser/webapi/` 디렉토리에 73개 모듈로 W3C 표준 구현:
+
+### DOM Core
+
+| API | 구현 상태 |
+|-----|-----------|
+| Node, Element, Document | ✅ 구현 |
+| DocumentFragment, ShadowRoot | ✅ 구현 |
+| HTMLCollection, NodeList | ✅ 구현 |
+| DOMTokenList, NamedNodeMap | ✅ 구현 |
+| Range, TreeWalker | ✅ 구현 |
+
+### HTML Elements
+
+| 카테고리 | 포함 요소 |
+|----------|-----------|
+| 폼 | input, select, textarea, form, button |
+| 미디어 | video, audio, canvas |
+| 내비게이션 | a, area, base |
+| 스크립팅 | script, template |
+| 레이아웃 | div, span, table, 기타 |
+
+### Web APIs
+
+| API | 구현 상태 |
+|-----|-----------|
+| Fetch API | ✅ |
+| XMLHttpRequest | ✅ |
+| LocalStorage / SessionStorage | ✅ |
+| IndexedDB | ✅ |
+| MutationObserver | ✅ |
+| IntersectionObserver | ✅ |
+| Performance API | ✅ |
+| Crypto API | ✅ |
+| Console API | ✅ |
+| Custom Elements | ✅ |
+| structuredClone | ✅ (최신 추가) |
+| Canvas 2D (완전) | 🚧 부분 구현 |
+| WebGL | ❌ 미구현 (헤드리스 특성상 불필요) |
+
+---
+
+## 12. 빌드 시스템
+
+### build.zig 구조
+
+```
+빌드 대상
+├── lightpanda          메인 실행 파일
+│     └── src/main.zig + lightpanda 라이브러리
+│
+├── lightpanda-snapshot-creator   V8 스냅샷 생성기
+│     └── V8 초기 상태 직렬화
+│
+└── test runner         단위 테스트
+      └── 커스텀 test_runner.zig
+```
+
+### 외부 의존성 (build.zig.zon)
+
+| 패키지 | 버전 | 역할 |
+|--------|------|------|
+| zig-v8-fork | v0.3.3 | V8 JavaScript 엔진 |
+| libcurl | 8.18.0 | HTTP 클라이언트 |
+| html5ever (Rust) | - | HTML5 파서 |
+| zlib | 1.3.2 | gzip 압축 |
+| brotli | v1.2.0 | brotli 압축 |
+| nghttp2 | 1.68.0 | HTTP/2 프로토콜 |
+| boringssl-zig | - | TLS/SSL |
+
+### 빌드 명령
+
+```bash
+# 개발 빌드 (디버그)
+make build-dev
+
+# 최적화 빌드
+make build
+
+# 테스트 실행
+make test
+
+# 특정 테스트 필터
+make test filter=<pattern>
+
+# E2E 테스트 (demo 저장소 필요)
+make end2end
+```
+
+---
+
+## 13. 운영 모드
+
+### 1. `fetch` 모드
+
+단일 URL을 방문하고 결과를 출력합니다.
+
+```bash
+lightpanda fetch https://example.com
+lightpanda fetch --dump markdown https://example.com
+lightpanda fetch --dump json https://example.com
+```
+
+**내부 흐름:**
+
+```
+main.zig → App → Browser → Session → Page
+  └── navigate(url) → DOM 구성 → JS 실행
+        └── dump 결과 출력 → 종료
+```
+
+### 2. `serve` 모드
+
+CDP WebSocket 서버를 실행합니다. Playwright, Puppeteer와 연동합니다.
+
+```bash
+lightpanda serve --port 9222 --host 127.0.0.1
+```
+
+**내부 흐름:**
+
+```
+Server.zig (WebSocket listen :9222)
+  └── 클라이언트 연결 시 스레드 생성
+        └── CDP 메시지 루프
+              ├── Target.createTarget → 새 Page 생성
+              ├── Page.navigate → URL 로딩
+              └── Runtime.evaluate → JS 실행
+```
+
+### 3. `mcp` 모드
+
+AI 에이전트를 위한 Model Context Protocol 서버를 실행합니다.
+
+```bash
+lightpanda mcp
+```
+
+**특징:**
+- stdin/stdout 기반 통신
+- Claude, Cursor 등 MCP 호환 AI 도구와 직접 연동
+- 브라우저 탐색을 AI 도구로 노출
+
+---
+
+## 14. 디렉토리 트리
+
+```
+browser/
+├── src/
+│   ├── main.zig                  CLI 진입점
+│   ├── App.zig                   애플리케이션 상태
+│   ├── Config.zig                CLI 인자 파싱 (30KB)
+│   ├── Server.zig                CDP WebSocket 서버 (29KB)
+│   ├── lightpanda.zig            공개 API 집합체
+│   ├── Notification.zig          이벤트 알림 시스템
+│   ├── log.zig                   구조화 로깅
+│   ├── string.zig                문자열 유틸
+│   ├── slab.zig                  슬랩 할당자 (27KB)
+│   ├── ArenaPool.zig             아레나 풀
+│   ├── dump.zig                  DOM 덤프 (HTML/MD/JSON)
+│   ├── markdown.zig              마크다운 추출 (20KB)
+│   ├── interactive.zig           DOM 인터랙션 (클릭, 입력)
+│   ├── structured_data.zig       구조화 데이터 추출
+│   ├── SemanticTree.zig          접근성 트리 표현
+│   ├── browser/
+│   │   ├── Browser.zig           브라우저 인스턴스
+│   │   ├── Session.zig           세션 (탭 컨테이너)
+│   │   ├── Page.zig              DOM 엔진 (136KB, 최대)
+│   │   ├── Factory.zig           DOM 팩토리
+│   │   ├── HttpClient.zig        HTTP 클라이언트 (55KB)
+│   │   ├── EventManager.zig      이벤트 매니저 (32KB)
+│   │   ├── ScriptManager.zig     스크립트 매니저
+│   │   ├── parser/               html5ever FFI 연결
+│   │   ├── webapi/               Web API 구현 (73개 모듈)
+│   │   └── js/                   JavaScript 런타임 (27개 모듈)
+│   │       ├── bridge.zig        JS ↔ Zig 바인딩 (34KB)
+│   │       ├── Env.zig           V8 환경
+│   │       ├── Snapshot.zig      V8 스냅샷 (26KB)
+│   │       └── Local.zig         V8 값 조작 (56KB)
+│   ├── network/
+│   │   ├── Runtime.zig           비동기 I/O 이벤트 루프
+│   │   ├── http.zig              HTTP 프로토콜
+│   │   ├── websocket.zig         WebSocket (CDP용, 27KB)
+│   │   ├── Robots.zig            robots.txt (33KB)
+│   │   └── WebBotAuth.zig        봇 인증
+│   ├── cdp/
+│   │   ├── cdp.zig               CDP 핸들러 (46KB)
+│   │   ├── Node.zig              CDP 트리 노드
+│   │   ├── AXNode.zig            접근성 노드 (46KB)
+│   │   └── domains/              CDP 도메인 (18개)
+│   ├── mcp/                      MCP 서버
+│   ├── html5ever/                Rust FFI 바인딩
+│   ├── telemetry/                사용량 수집
+│   └── sys/                      시스템 바인딩 (libcurl)
+├── build.zig                     빌드 설정
+├── build.zig.zon                 의존성 매니페스트
+├── Makefile                      빌드 명령
+├── Dockerfile                    컨테이너 설정
+└── flake.nix                     Nix 개발 환경
+```
+
+---
+
+## 15. 핵심 데이터 구조
+
+### Page 상태 (Page.zig)
+
+```zig
+const Page = struct {
+    // DOM 트리
+    document: *Document,
+    arena: ArenaAllocator,
+
+    // 캐싱
+    style_cache: StyleCache,
+    dataset_cache: DatasetCache,
+    class_list_cache: ClassListCache,
+    shadow_root_cache: ShadowRootCache,
+
+    // 이벤트
+    event_listeners: AttributeListeners,
+    blob_registry: BlobRegistry,
+    live_ranges: RangeList,
+
+    // 프레임 트리
+    frames: FrameList,
+    iframes: IFrameList,
+
+    // 상태
+    ready_state: ReadyState,  // loading | interactive | complete
+    base_url: []const u8,
+};
+```
+
+### CDP 메시지 구조
+
+```zig
+const CDPMessage = struct {
+    id: u64,
+    method: []const u8,   // "Page.navigate"
+    params: ?json.Value,
+    sessionId: ?[]const u8,
+};
+
+const CDPResponse = struct {
+    id: u64,
+    result: ?json.Value,
+    error: ?CDPError,
+    sessionId: ?[]const u8,
+};
+```
+
+### 네트워크 요청 구조
+
+```zig
+const HttpRequest = struct {
+    url: []const u8,
+    method: Method,        // GET, POST, ...
+    headers: HeaderList,
+    body: ?[]const u8,
+    proxy: ?[]const u8,
+    follow_redirects: bool,
+    timeout_ms: u32,
+};
+```
+
+---
+
+## 16. 레이어별 의존 관계
+
+```
+main.zig
+    │
+    └── App.zig
+          ├── network/Runtime.zig  ←── sys/libcurl
+          ├── js/Platform.zig      ←── v8
+          ├── js/Snapshot.zig      ←── v8
+          └── browser/Browser.zig
+                └── browser/Session.zig
+                      └── browser/Page.zig
+                            ├── browser/Factory.zig
+                            ├── browser/EventManager.zig
+                            ├── browser/ScriptManager.zig
+                            ├── browser/HttpClient.zig  ←── network/
+                            ├── browser/parser/          ←── html5ever (Rust)
+                            ├── browser/webapi/          ←── DOM 표준
+                            └── browser/js/
+                                  ├── bridge.zig        ←── webapi/ ↔ v8
+                                  └── Env.zig           ←── v8
+
+Server.zig  ←── network/websocket.zig
+    └── cdp/cdp.zig
+          └── cdp/domains/ ←── browser/Browser.zig
+```
+
+---
+
+## 17. Chrome과의 차별점
+
+| 항목 | Lightpanda | Chrome (headless) |
+|------|------------|-------------------|
+| 메모리 사용 | ~20MB/인스턴스 | ~180MB/인스턴스 |
+| 시작 시간 | <10ms | ~500ms |
+| 렌더링 | ❌ 없음 (DOM only) | ✅ 완전한 렌더링 |
+| GPU | 불필요 | 필요 (headless 제외) |
+| 코드베이스 | Zig (단일 언어) | C++ + JavaScript (수천만 라인) |
+| 빌드 | `zig build` | Chromium 전체 빌드 (수 시간) |
+| 바이너리 크기 | 수십 MB | 수백 MB |
+| CSS 레이아웃 | 기본 지원 | 완전 구현 |
+| WebGL | ❌ | ✅ |
+| Playwright 호환 | CDP 기반 호환 | 완전 호환 |
+
+**Lightpanda가 적합한 경우:**
+- 대규모 병렬 웹 크롤링 (수백 인스턴스)
+- AI 에이전트 웹 탐색
+- LLM 학습 데이터 수집
+- JavaScript 실행이 필요한 스크래핑
+- 자원 제약 환경 (Raspberry Pi 등)
+
+**Chrome이 필요한 경우:**
+- 정확한 시각적 렌더링 (스크린샷 품질)
+- CSS 레이아웃 의존 DOM 조작
+- WebGL / Canvas 2D 완전 지원
+- 완전한 브라우저 표준 준수 테스트
+
+---
+
+## 18. Q&A: 실제 사용 시나리오
+
+### Q: Playwright 코드를 그대로 Lightpanda에서 쓸 수 있나요?
+
+**A:** 대부분의 경우 가능합니다. Lightpanda는 CDP 프로토콜을 구현하므로 `--port 9222`로 서버를 실행하고 Playwright를 연결하면 됩니다.
+
+```python
+# Python Playwright 예시
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    # Chrome 대신 Lightpanda에 연결
+    browser = p.chromium.connect_over_cdp("ws://localhost:9222")
+    page = browser.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+```
+
+단, CSS 레이아웃 계산에 의존하는 `element.getBoundingClientRect()` 등은 제한적일 수 있습니다.
+
+---
+
+### Q: AI 에이전트에서 어떻게 쓰나요?
+
+**A:** MCP 모드를 사용하면 Claude, Cursor 등의 AI 도구에서 직접 웹 브라우징을 도구로 사용할 수 있습니다.
+
+```json
+// Claude Desktop MCP 설정
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "lightpanda",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+AI 에이전트는 자연어로 "이 URL의 제품 가격을 알려줘"라고 요청하면, Lightpanda가 실제 브라우저처럼 페이지를 로드하고 JavaScript를 실행한 뒤 DOM을 반환합니다.
+
+---
+
+### Q: 수백 개 인스턴스를 동시에 실행할 수 있나요?
+
+**A:** 가능합니다. 인스턴스당 약 20MB 메모리를 소비하므로, 16GB RAM 서버에서 이론적으로 800개 이상의 인스턴스를 병렬로 실행할 수 있습니다. V8 스냅샷 덕분에 각 인스턴스는 수 ms 내에 시작됩니다.
+
+```bash
+# Docker 기반 다중 인스턴스 예시
+for i in $(seq 9222 9322); do
+  docker run -d -p $i:9222 lightpanda serve
+done
+```
+
+---
+
+### Q: SPA(React, Vue)도 파싱할 수 있나요?
+
+**A:** 네. V8 JavaScript 엔진을 내장하므로 React, Vue 등 SPA의 클라이언트 사이드 렌더링을 완전히 실행할 수 있습니다. `readyState: complete` 및 `networkidle` 이벤트를 기다린 후 DOM을 읽으면 최종 렌더링 결과를 얻을 수 있습니다.
+
+---
+
+### Q: robots.txt를 무시하고 싶으면 어떻게 하나요?
+
+**A:** `Config.zig`에서 robots.txt 준수 옵션을 끄거나, 커스텀 User-Agent를 설정하면 됩니다. 다만 robots.txt 무시는 법적·윤리적 문제가 생길 수 있으므로 주의하세요.
+
+---
+
+### Q: 커스텀 JavaScript를 페이지에 주입할 수 있나요?
+
+**A:** CDP `Runtime.evaluate`를 통해 가능합니다.
+
+```javascript
+// Puppeteer 예시
+await page.evaluate(() => {
+  document.querySelectorAll('.price').forEach(el => {
+    console.log(el.textContent);
+  });
+});
+```
+
+또는 CDP 직접 호출:
+```json
+{
+  "method": "Runtime.evaluate",
+  "params": {
+    "expression": "document.title",
+    "returnByValue": true
+  }
+}
+```
+
+---
+
+> **참고:** Lightpanda는 빠르게 발전하는 프로젝트입니다. 최신 Web API 지원 현황은 공식 저장소의 WPT(Web Platform Tests) 결과를 확인하세요.
