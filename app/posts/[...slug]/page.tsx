@@ -51,11 +51,12 @@ export async function generateMetadata(props: {
   return {
     title: post.title,
     description: post.summary,
+    keywords: post.tags,
     openGraph: {
       title: post.title,
       description: post.summary,
       siteName: siteMetadata.title,
-      locale: 'en_US',
+      locale: 'ko_KR',
       type: 'article',
       publishedTime: publishedAt,
       modifiedTime: modifiedAt,
