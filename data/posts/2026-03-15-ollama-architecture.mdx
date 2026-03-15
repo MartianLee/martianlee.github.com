@@ -1,0 +1,1032 @@
+---
+slug: '2026-03-15-ollama-architecture'
+title: 'Ollama 아키텍처 분석 보고서 / 실사용 시나리오 Q&A'
+crawlertitle: 'Ollama 아키텍처 분석 보고서 / 실사용 시나리오 Q&A'
+summary: 'Go 언어로 구현된 로컬 LLM 실행 플랫폼 Ollama의 전체 아키텍처 분석. 기술 스택, 스케줄러, 모델 관리, llama.cpp 통합, Runner 시스템 등을 상세하게 다룹니다.'
+date: 2026-03-15 00:00:00 +0900
+categories: posts
+tags: ['ollama', 'architecture', 'go', 'llm', 'llama.cpp', 'local-ai']
+author: MartianLee
+---
+
+> 분석 일자: 2026-03-15
+> 대상 버전: v0.18.0
+> 저장소: https://github.com/ollama/ollama
+
+---
+
+*This article is mostly written by Claude Code*
+
+## 목차
+
+1. [프로젝트 개요](#1-프로젝트-개요)
+2. [기술 스택](#2-기술-스택)
+3. [전체 아키텍처](#3-전체-아키텍처)
+4. [핵심 모듈 구조](#4-핵심-모듈-구조)
+5. [요청 처리 파이프라인](#5-요청-처리-파이프라인)
+6. [스케줄러 시스템](#6-스케줄러-시스템)
+7. [모델 관리 시스템](#7-모델-관리-시스템)
+8. [Runner 아키텍처](#8-runner-아키텍처)
+9. [설정 시스템](#9-설정-시스템)
+10. [REST API 구조](#10-rest-api-구조)
+11. [핵심 데이터 구조](#11-핵심-데이터-구조)
+12. [디렉토리 트리](#12-디렉토리-트리)
+13. [주요 설계 결정](#13-주요-설계-결정)
+14. [성능 최적화 전략](#14-성능-최적화-전략)
+15. [Q&A: 실제 사용 시나리오](#15-qa-실제-사용-시나리오)
+
+---
+
+## 1. 프로젝트 개요
+
+**Ollama**는 Go로 구현된 로컬 LLM(대형 언어 모델) 실행 플랫폼입니다. Docker에서 영감을 받아 설계되었으며, 복잡한 설정 없이 명령 한 줄로 최신 오픈소스 LLM을 로컬에서 실행할 수 있게 해줍니다.
+
+- **슬로건:** "Get up and running with large language models locally."
+- **핵심 가치:** 로컬 실행, 프라이버시 보호, GPU 자동 최적화, Docker스러운 모델 관리
+- **지원 모델:** LLaMA, Mistral, Qwen, Gemma, Phi, Deepseek, GLM 등 수십 가지
+- **지원 GPU:** NVIDIA CUDA, AMD ROCm, Apple Metal (M1/M2/M3/M4)
+- **지원 플랫폼:** macOS, Linux, Windows
+
+---
+
+## 2. 기술 스택
+
+| 영역 | 기술 |
+|------|------|
+| 언어 | Go 1.24.1 |
+| HTTP 프레임워크 | Gin v1.10.0 |
+| CLI 프레임워크 | Cobra v1.7.0 |
+| 추론 백엔드 | llama.cpp (CGO 바인딩) |
+| DB | SQLite (blob 메타데이터) |
+| 압축 | zstd |
+| 직렬화 | protobuf, JSON |
+| GPU 지원 | CUDA / ROCm / Metal / CPU |
+
+### GPU 지원 레이어
+
+| 백엔드 | 대상 하드웨어 |
+|--------|--------------|
+| NVIDIA CUDA | GeForce, RTX, Tesla, A100 등 |
+| AMD ROCm | RX 7000/6000 시리즈, MI300 등 |
+| Apple Metal | Apple Silicon (M1~M4) |
+| CPU | AVX2/AVX512 최적화 x86, ARM |
+
+---
+
+## 3. 전체 아키텍처
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                        Ollama System                             ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐   ║
+║  │                    CLI Layer (Cobra)                      │   ║
+║  │  ollama run / pull / push / create / list / show / serve  │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │                                         ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │              HTTP Server (Gin + CORS)                     │   ║
+║  │         127.0.0.1:11434  (OLLAMA_HOST 설정 가능)          │   ║
+║  │                                                           │   ║
+║  │   OpenAI Compatibility   Anthropic Compatibility          │   ║
+║  │   Middleware             Middleware                       │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │                                         ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │                   Route Handlers                          │   ║
+║  │  ChatHandler / GenerateHandler / EmbedHandler             │   ║
+║  │  PullHandler / PushHandler / CreateHandler                │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │ scheduleRunner()                        ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │                   Scheduler                               │   ║
+║  │  - 모델 로딩/언로딩 관리                                   │   ║
+║  │  - VRAM 기반 Eviction                                     │   ║
+║  │  - Reference Counting                                     │   ║
+║  │  - Keep-Alive 타이머                                      │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │ spawn process                           ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │               Runner Process (별도 프로세스)               │   ║
+║  │                                                           │   ║
+║  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │   ║
+║  │  │LlamaRunner  │  │OllamaRunner │  │ImageGen Runner  │  │   ║
+║  │  │(llama.cpp)  │  │(Go native)  │  │(diffusion)      │  │   ║
+║  │  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘  │   ║
+║  │         └────────────────┴──────────────────┘           │   ║
+║  │                          │                                │   ║
+║  │               GGML Backend (GPU/CPU)                      │   ║
+║  │           CUDA  /  ROCm  /  Metal  /  CPU                │   ║
+║  └──────────────────────────────────────────────────────────┘   ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐   ║
+║  │              Model Storage (Content-Addressable)          │   ║
+║  │   ~/.ollama/models/manifests/ + blobs/sha256-[digest]    │   ║
+║  └──────────────────────────────────────────────────────────┘   ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. 핵심 모듈 구조
+
+### `/api` - 클라이언트 API 패키지
+
+외부에서 Ollama 서버에 접근하기 위한 Go 클라이언트 라이브러리입니다.
+
+- `Client` struct: HTTP 클라이언트
+- 요청/응답 타입 정의: `GenerateRequest`, `ChatRequest`, `EmbedRequest` 등
+- 스트리밍 응답 핸들링
+- `StatusError`, `AuthorizationError` 등 에러 타입
+
+### `/server` - HTTP 서버 + 핵심 로직
+
+```go
+type Server struct {
+    addr          net.Addr    // 리스닝 주소
+    sched         *Scheduler  // 모델 스케줄러
+    defaultNumCtx int         // 기본 컨텍스트 길이
+}
+```
+
+주요 핸들러:
+- `ChatHandler` - 멀티턴 대화
+- `GenerateHandler` - 단일 프롬프트 생성
+- `EmbedHandler` - 임베딩 생성
+- `PullHandler` - 모델 다운로드
+- `CreateHandler` - 커스텀 모델 생성
+
+### `/llm` - LLM 서버 인터페이스
+
+Runner 프로세스와 통신하기 위한 추상 인터페이스입니다.
+
+```go
+type LlamaServer interface {
+    Load(ctx context.Context, opts api.Options) error
+    Ping(ctx context.Context) error
+    Completion(ctx context.Context, req CompletionRequest, fn func(CompletionResponse)) error
+    Embedding(ctx context.Context, input string) ([]float64, error)
+    Tokenize(ctx context.Context, content string) ([]int, error)
+    Detokenize(ctx context.Context, tokens []int) (string, error)
+    MemorySize(ctx context.Context) (uint64, error)
+    Close() error
+}
+```
+
+### `/runner` - 모델 실행 엔진들
+
+| 러너 | 경로 | 설명 |
+|------|------|------|
+| LlamaRunner | `runner/llamarunner/` | llama.cpp 기반 레거시 러너 |
+| OllamaRunner | `runner/ollamarunner/` | Go 네이티브 신규 엔진 |
+| ImageGen | `runner/x/imagegen/` | Stable Diffusion 계열 이미지 생성 |
+| MLX | `runner/x/mlxrunner/` | Apple MLX 최적화 러너 |
+
+### `/model` - 모델 아키텍처 구현
+
+Go 네이티브 엔진에서 사용하는 모델 구현체들입니다.
+
+- LLaMA, Mistral, Qwen, Gemma, Phi, Deepseek, GLM 등
+- `Model` 인터페이스: Forward pass 구현
+- `MultimodalProcessor`: 이미지 인코딩 (Vision 모델)
+- 모델 아키텍처 레지스트리 (`model.Register()`)
+
+### `/manifest` - 콘텐츠 어드레서블 스토리지
+
+Docker 이미지 레이어 방식과 유사한 모델 저장 시스템입니다.
+
+```
+Manifest (JSON)
+  └── Layers []Layer
+        ├── Digest: "sha256-abc123..."
+        ├── MediaType: "application/vnd.ollama.image.model"
+        └── Size: 4_000_000_000
+```
+
+미디어 타입:
+- `application/vnd.ollama.image.model` - 모델 가중치 (GGUF)
+- `application/vnd.ollama.image.projector` - Vision 프로젝터
+- `application/vnd.ollama.image.adapter` - LoRA 어댑터
+- `application/vnd.ollama.image.template` - 채팅 템플릿
+- `application/vnd.ollama.image.params` - 파라미터
+
+### `/template` - 채팅 템플릿 시스템
+
+각 모델이 기대하는 프롬프트 형식(ChatML, Llama3, Gemma 등)을 Go `text/template`으로 처리합니다.
+
+### `/discover` - GPU 디스커버리
+
+런타임에 설치된 GPU를 감지하고 VRAM 크기, 드라이버 버전 등 메타데이터를 수집합니다.
+
+---
+
+## 5. 요청 처리 파이프라인
+
+### Chat 요청 전체 흐름
+
+```
+클라이언트
+    │
+    │ POST /api/chat
+    ▼
+ChatHandler()
+    │ JSON 파싱 + 유효성 검사
+    │
+    ▼
+scheduleRunner(modelName, options)
+    │
+    ▼
+Scheduler.GetRunner()
+    ├─ [이미 로드됨] → Runner 참조 반환
+    └─ [미로드] → LlmRequest 큐에 추가
+                        │
+                        ▼
+             processPending() goroutine
+                        │
+                        ├─ GPU 디바이스 감지
+                        ├─ VRAM 여유 계산
+                        ├─ 필요 시 기존 모델 Eviction
+                        └─ Runner 프로세스 spawn
+                                 │
+                                 ▼
+                      Runner 프로세스 (별도 포트)
+                                 │
+                        HTTP RPC 통신
+                                 │
+                                 ▼
+Runner.Completion()
+    │
+    ├─ 메시지 → 토크나이즈
+    ├─ KV 캐시 초기화/재사용
+    ├─ Forward pass 실행 (GPU)
+    ├─ 다음 토큰 샘플링
+    └─ 반복 (EOS 또는 max_tokens까지)
+    │
+    ▼
+ChatResponse 청크 스트리밍 (NDJSON)
+    │
+    ▼
+클라이언트 (done: true + 메트릭)
+```
+
+### 모델 해석(Resolution) 흐름
+
+```
+"llama3.2:3b"
+    │
+    ▼
+GetModel(name)
+    │
+    ├─ 로컬 manifest 존재 확인
+    ├─ 없으면 registry에서 Pull
+    ▼
+manifest.json 파싱
+    │
+    ▼
+GGUF 헤더 파싱 → 모델 메타데이터 추출
+    │ (파라미터 수, 컨텍스트 길이, 양자화 방식 등)
+    ▼
+채팅 템플릿 자동 감지 or 명시적 로드
+    │
+    ▼
+Model struct 반환
+```
+
+---
+
+## 6. 스케줄러 시스템
+
+스케줄러(`/server/sched.go`)는 Ollama의 핵심 컴포넌트로, **동시에 여러 모델 요청이 들어올 때 VRAM을 효율적으로 관리**합니다.
+
+### 핵심 타입
+
+```go
+// 큐에 들어가는 요청 단위
+type LlmRequest struct {
+    ctx             context.Context
+    model           *Model
+    opts            api.Options
+    sessionDuration *api.Duration
+    successCh       chan *runnerRef   // 로드 완료 시 Runner 전달
+    errCh           chan error
+}
+
+// 실행 중인 Runner 참조 (Reference Counted)
+type runnerRef struct {
+    refMu    sync.Mutex
+    refCount uint          // 현재 처리 중인 요청 수
+    llama    llm.LlamaServer
+    model    *Model
+    pid      int           // Runner 프로세스 PID
+    gpus     []ml.DeviceID // 사용 중인 GPU
+    expireTimer *time.Timer
+}
+```
+
+### 스케줄러 동작 원리
+
+1. **단일 스레드 로딩**: 모델 로딩은 순차적으로 실행 → GPU 메모리 경쟁 방지
+2. **Keep-Alive 관리**: 요청 완료 후 설정된 시간(기본 5분) 동안 모델 메모리 유지
+3. **Eviction 정책**: 새 모델 로드 시 VRAM 부족하면 가장 오래된(마지막 사용) 모델 언로드
+4. **Reference Counting**: 같은 모델에 동시 요청이 들어오면 같은 Runner 인스턴스 공유
+
+```
+요청 A → llama3.2 로드 → refCount: 1
+요청 B → llama3.2 이미 로드됨 → refCount: 2
+요청 A 완료 → refCount: 1
+요청 B 완료 → refCount: 0 → Keep-Alive 타이머 시작
+5분 후 → 모델 언로드 (다음 요청 시 재로드)
+```
+
+---
+
+## 7. 모델 관리 시스템
+
+### 저장 구조
+
+```
+~/.ollama/models/
+├── manifests/
+│   └── registry.ollama.com/
+│       └── library/
+│           ├── llama3.2/
+│           │   ├── latest
+│           │   └── 3b
+│           └── mistral/
+│               └── latest
+└── blobs/
+    ├── sha256-abc123...  (모델 가중치 GGUF 파일)
+    ├── sha256-def456...  (템플릿)
+    └── sha256-ghi789...  (파라미터)
+```
+
+- **콘텐츠 어드레서블**: SHA256 다이제스트로 파일 저장 → 동일 파일은 여러 모델이 공유
+- **Manifest**: 어떤 블랍들로 모델이 구성되는지 기술 (Docker의 이미지 레이어와 동일 개념)
+
+### 모델 Pull 과정
+
+```
+1. 모델명 파싱 (registry/namespace/name:tag)
+2. 레지스트리 API에서 Manifest 조회
+3. 필요한 레이어 블랍 병렬 다운로드 (16파트 청크)
+4. 부분 다운로드 재개 지원 (Range 헤더)
+5. SHA256 다이제스트 검증
+6. Manifest + 블랍 로컬 저장
+```
+
+### Modelfile (커스텀 모델 생성)
+
+Docker의 `Dockerfile`에서 영감받은 형식입니다.
+
+```dockerfile
+FROM llama3.2
+
+SYSTEM """
+You are a helpful Korean assistant.
+항상 한국어로 답변해주세요.
+"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER num_ctx 8192
+
+TEMPLATE """
+{{- if .System }}<|system|>
+{{ .System }}<|end|>
+{{- end }}
+{{- range .Messages }}<|{{ .Role }}|>
+{{ .Content }}<|end|>
+{{- end }}<|assistant|>
+"""
+```
+
+---
+
+## 8. Runner 아키텍처
+
+### 프로세스 분리 설계
+
+```
+[Ollama Server Process]
+        │
+        │ exec.Command() 로 Runner 스폰
+        │ 환경변수로 포트/설정 전달
+        ▼
+[Runner Process (llama.cpp / ollama-engine)]
+        │
+        │ localhost:랜덤포트 HTTP 서버
+        │ JSON RPC 통신
+        ▼
+[GGML Backend]
+        │
+        ├── CUDA (libcuda.so)
+        ├── ROCm (librocblas.so)
+        ├── Metal (Apple Framework)
+        └── CPU (AVX2/AVX512)
+```
+
+**프로세스를 분리하는 이유:**
+- 모델 크래시 시 서버 전체가 죽지 않음
+- GPU 메모리 누수 방지 (프로세스 종료 = 메모리 반환)
+- 다양한 백엔드 (llama.cpp, Go native, imagegen) 통일된 인터페이스
+
+### llama.cpp CGO 통합
+
+`/llama/llama.go`에서 CGO를 통해 llama.cpp C/C++ 코드를 직접 호출합니다.
+
+```go
+// CGO 바인딩 예시 (개념적)
+/*
+#include "llama.h"
+*/
+import "C"
+
+func loadModel(modelPath string) *C.llama_model {
+    params := C.llama_model_default_params()
+    return C.llama_load_model_from_file(C.CString(modelPath), params)
+}
+```
+
+### 새 Ollama Engine (Go Native)
+
+`/runner/ollamarunner/`에 구현된 순수 Go 추론 엔진입니다.
+
+- 멀티 시퀀스 병렬 처리 (배치 추론)
+- KV 캐시 슬롯 관리
+- 멀티모달 (이미지) 지원
+- Go 네이티브이므로 CGO 없이 빌드 가능
+
+---
+
+## 9. 설정 시스템
+
+### 환경변수 (envconfig 패키지)
+
+| 환경변수 | 기본값 | 설명 |
+|---------|--------|------|
+| `OLLAMA_HOST` | `127.0.0.1:11434` | 서버 리스닝 주소 |
+| `OLLAMA_MODELS` | `~/.ollama/models` | 모델 저장 디렉토리 |
+| `OLLAMA_KEEP_ALIVE` | `5m` | 모델 메모리 유지 시간 |
+| `OLLAMA_NUM_PARALLEL` | `1` | 동시 모델 로딩 수 |
+| `OLLAMA_MAX_QUEUE` | `512` | 요청 큐 최대 크기 |
+| `OLLAMA_DEBUG` | `false` | 디버그 로깅 |
+| `OLLAMA_ORIGINS` | localhost | CORS 허용 출처 |
+| `OLLAMA_NUM_GPU` | `-1` (전체) | GPU에 오프로드할 레이어 수 |
+| `OLLAMA_NUM_THREAD` | 자동 | CPU 스레드 수 |
+| `OLLAMA_CONTEXT_LENGTH` | `2048` | 기본 컨텍스트 길이 |
+| `OLLAMA_LLM_LIBRARY` | 자동 | 강제 지정 GPU 라이브러리 |
+| `OLLAMA_USE_MMAP` | 자동 | 메모리 매핑 사용 여부 |
+
+### 추론 파라미터 (요청별 설정)
+
+```json
+{
+  "model": "llama3.2",
+  "messages": [...],
+  "options": {
+    "temperature": 0.8,
+    "top_k": 40,
+    "top_p": 0.9,
+    "min_p": 0.05,
+    "repeat_penalty": 1.1,
+    "num_ctx": 4096,
+    "num_predict": 512,
+    "seed": 42,
+    "stop": ["\n\n", "<|end|>"],
+    "num_gpu": 35
+  },
+  "keep_alive": "10m"
+}
+```
+
+---
+
+## 10. REST API 구조
+
+### 주요 엔드포인트
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| `POST` | `/api/chat` | 멀티턴 채팅 (스트리밍/비스트리밍) |
+| `POST` | `/api/generate` | 단일 프롬프트 텍스트 생성 |
+| `POST` | `/api/embed` | 텍스트 임베딩 생성 |
+| `POST` | `/api/pull` | 모델 다운로드 |
+| `POST` | `/api/push` | 모델 업로드 |
+| `POST` | `/api/create` | Modelfile로 커스텀 모델 생성 |
+| `DELETE` | `/api/delete` | 모델 삭제 |
+| `POST` | `/api/copy` | 모델 복사 |
+| `GET` | `/api/tags` | 로컬 모델 목록 |
+| `GET` | `/api/ps` | 현재 로드된 모델 목록 |
+| `POST` | `/api/show` | 모델 상세 정보 |
+| `HEAD` | `/api/blobs/:digest` | 블랍 존재 확인 |
+
+### OpenAI 호환 엔드포인트
+
+Ollama는 미들웨어를 통해 OpenAI API 형식도 지원합니다.
+
+```
+POST /v1/chat/completions     → ChatHandler (OpenAI 형식)
+POST /v1/completions          → GenerateHandler (OpenAI 형식)
+POST /v1/embeddings           → EmbedHandler (OpenAI 형식)
+GET  /v1/models               → ListHandler (OpenAI 형식)
+```
+
+### 스트리밍 응답 형식 (NDJSON)
+
+```json
+{"model":"llama3.2","message":{"role":"assistant","content":"안"},"done":false}
+{"model":"llama3.2","message":{"role":"assistant","content":"녕"},"done":false}
+{"model":"llama3.2","message":{"role":"assistant","content":"하세요"},"done":false}
+{"model":"llama3.2","message":{"role":"assistant","content":"!"},"done":false}
+{
+  "model":"llama3.2",
+  "done":true,
+  "total_duration": 2340000000,
+  "load_duration": 100000000,
+  "prompt_eval_count": 12,
+  "prompt_eval_duration": 340000000,
+  "eval_count": 48,
+  "eval_duration": 1900000000
+}
+```
+
+---
+
+## 11. 핵심 데이터 구조
+
+### 요청 타입
+
+```go
+type ChatRequest struct {
+    Model     string          `json:"model"`
+    Messages  []Message       `json:"messages"`
+    Stream    *bool           `json:"stream"`
+    Tools     []Tool          `json:"tools"`         // 함수 호출
+    Think     *ThinkValue     `json:"think"`         // 추론 모드 (DeepSeek 등)
+    KeepAlive *Duration       `json:"keep_alive"`
+    Options   map[string]any  `json:"options"`
+}
+
+type Message struct {
+    Role      string      `json:"role"`    // system/user/assistant/tool
+    Content   string      `json:"content"`
+    Images    []ImageData `json:"images"`  // Base64 이미지 (멀티모달)
+    ToolCalls []ToolCall  `json:"tool_calls"`
+}
+```
+
+### 런타임 옵션
+
+```go
+type Options struct {
+    // 샘플링 파라미터 (요청마다 변경 가능)
+    Temperature    float32   // 창의성 (0.0 ~ 2.0)
+    TopK           int       // Top-K 샘플링
+    TopP           float32   // Top-P (nucleus) 샘플링
+    MinP           float32   // Min-P 샘플링
+    RepeatPenalty  float32   // 반복 패널티
+    Seed           int       // 재현성을 위한 시드
+
+    // 로드 타임 파라미터 (모델 재로드 시 적용)
+    NumCtx         int       // 컨텍스트 윈도우 크기
+    NumBatch       int       // 배치 크기
+    NumGPU         int       // GPU 오프로드 레이어 수 (-1 = 전체)
+    NumThread      int       // CPU 스레드 수
+    UseMMap        *bool     // 메모리 매핑
+    UseMLock       bool      // 메모리 잠금 (스왑 방지)
+}
+```
+
+### 모델 구조체
+
+```go
+type Model struct {
+    Name           string
+    Config         model.ConfigV2
+    ModelPath      string
+    AdapterPaths   []string     // LoRA 어댑터
+    ProjectorPaths []string     // Vision 프로젝터
+    System         string       // 시스템 프롬프트
+    Template       *template.Template
+    Digest         string
+    Options        map[string]any
+    Messages       []api.Message // Few-shot 예시
+}
+```
+
+---
+
+## 12. 디렉토리 트리
+
+```
+ollama/
+├── api/              # Go 클라이언트 라이브러리 + 타입 정의
+├── auth/             # Ed25519 기반 인증
+├── cmd/              # CLI 커맨드 (cobra)
+│   └── cmd.go        # run, pull, push, list, show, create...
+├── convert/          # 모델 포맷 변환 (HuggingFace → GGUF 등)
+├── discover/         # GPU 감지 (CUDA, ROCm, Metal)
+├── envconfig/        # 환경변수 설정 파싱
+├── format/           # 파일 크기, 시간 등 포맷팅 유틸
+├── integration/      # 통합 테스트
+├── llama/            # llama.cpp CGO 바인딩 + C/C++ 소스
+├── llm/              # LlamaServer 인터페이스 + 구현체
+├── middleware/       # OpenAI/Anthropic 호환 미들웨어
+├── ml/               # ML 백엔드 추상화 레이어
+├── model/            # Go 네이티브 모델 아키텍처 구현
+│   ├── llama/
+│   ├── mistral/
+│   ├── qwen/
+│   └── ...
+├── manifest/         # 모델 매니페스트 + 블랍 관리
+├── runner/           # 모델 실행 엔진
+│   ├── llamarunner/  # llama.cpp 기반
+│   ├── ollamarunner/ # Go 네이티브
+│   └── x/
+│       ├── imagegen/ # 이미지 생성
+│       └── mlxrunner/# Apple MLX
+├── server/           # HTTP 서버 + 핸들러 + 스케줄러
+│   ├── routes.go     # 라우트 정의
+│   ├── sched.go      # 스케줄러
+│   └── ...
+├── template/         # 채팅 템플릿 시스템
+└── tokenizer/        # 토크나이저 유틸리티
+```
+
+---
+
+## 13. 주요 설계 결정
+
+### 1. 프로세스 분리 (Process-per-Model)
+
+각 모델은 별도 프로세스에서 실행됩니다. 모델이 크래시해도 메인 서버는 살아있고, 프로세스가 종료되면 GPU 메모리가 자동 반환됩니다.
+
+### 2. 콘텐츠 어드레서블 스토리지
+
+Docker Hub처럼 모델을 SHA256 다이제스트 기반 레이어로 관리합니다. 동일한 가중치 파일을 여러 모델 태그가 공유할 수 있어 디스크 공간을 절약합니다.
+
+### 3. 단일 스레드 모델 로딩
+
+GPU에 모델을 로딩하는 작업은 순차적으로 실행됩니다. 병렬로 여러 모델을 로딩하면 GPU 메모리 단편화가 발생하고 VRAM 계산이 틀려질 수 있기 때문입니다.
+
+### 4. Keep-Alive 캐싱
+
+모델이 한 번 로드되면 기본 5분 동안 메모리에 유지됩니다. 반복 요청 시 로딩 시간(수십 초) 없이 즉시 응답합니다. `OLLAMA_KEEP_ALIVE=0`으로 즉시 언로드, `-1`로 영구 유지 설정 가능합니다.
+
+### 5. 동적 GPU 레이어 할당
+
+모델 로드 시 사용 가능한 VRAM을 측정하고, 최대한 많은 레이어를 GPU에 올립니다. VRAM이 부족하면 나머지 레이어는 CPU RAM으로 fallback합니다.
+
+---
+
+## 14. 성능 최적화 전략
+
+| 최적화 기법 | 설명 |
+|------------|------|
+| **KV 캐시 재사용** | `context` 필드로 이전 요청의 KV 캐시 재활용 |
+| **메모리 매핑(mmap)** | GGUF 파일을 메모리에 매핑 → 빠른 로딩 |
+| **배치 추론** | 여러 시퀀스를 하나의 배치로 처리 |
+| **GPU 레이어 오프로딩** | `num_gpu` 파라미터로 레이어별 GPU/CPU 분배 |
+| **토큰 스트리밍** | 생성 즉시 클라이언트로 전달, 버퍼링 없음 |
+| **참조 카운팅** | 동일 모델 동시 요청 시 Runner 인스턴스 공유 |
+| **CPU SIMD** | AVX2/AVX512 명령어셋 활용 최적화 |
+
+---
+
+## 15. Q&A: 실제 사용 시나리오
+
+### Q1. `ollama run llama3.2` 실행 후 응답이 너무 느려요. 어떻게 하면 빠르게 할 수 있나요?
+
+**원인 분석:**
+
+1. **GPU가 사용되지 않는 경우**: `ollama ps` 명령으로 현재 로드된 모델 상태를 확인하세요. `Size` 컬럼 옆에 GPU/CPU 비율이 표시됩니다.
+
+2. **VRAM 부족으로 CPU fallback**: 모델이 VRAM보다 크면 일부 레이어가 CPU에서 실행됩니다. 이 경우 속도가 10배 이상 느려집니다.
+
+**해결책:**
+
+```bash
+# GPU 상태 확인
+ollama ps
+
+# VRAM에 올라간 레이어 수 확인 (디버그 로그)
+OLLAMA_DEBUG=1 ollama run llama3.2
+
+# VRAM이 부족하면 더 작은 양자화 모델 사용
+ollama pull llama3.2:3b-instruct-q4_K_M  # 4비트 양자화, ~2GB
+
+# 또는 CPU 스레드 수 늘리기
+OLLAMA_NUM_THREAD=8 ollama serve
+```
+
+---
+
+### Q2. API로 호출했는데 "context length exceeded" 에러가 납니다.
+
+**원인**: 모델의 기본 컨텍스트 길이(2048 토큰)를 초과했습니다.
+
+**해결책:**
+
+```bash
+# 요청 시 num_ctx 늘리기
+curl http://localhost:11434/api/chat -d '{
+  "model": "llama3.2",
+  "messages": [{"role": "user", "content": "긴 문서..."}],
+  "options": {
+    "num_ctx": 8192
+  }
+}'
+```
+
+또는 Modelfile로 기본값을 변경합니다.
+
+```dockerfile
+FROM llama3.2
+PARAMETER num_ctx 8192
+```
+
+```bash
+ollama create my-llama --file ./Modelfile
+```
+
+> **주의**: `num_ctx`를 늘리면 KV 캐시 크기가 증가해 더 많은 VRAM이 필요합니다. VRAM이 부족하면 로딩 자체가 실패할 수 있습니다.
+
+---
+
+### Q3. 같은 질문을 할 때마다 답변이 달라집니다. 일관된 결과를 원합니다.
+
+**원인**: 기본적으로 `temperature > 0`이라서 샘플링에 랜덤성이 있습니다.
+
+**해결책:**
+
+```bash
+curl http://localhost:11434/api/chat -d '{
+  "model": "llama3.2",
+  "messages": [{"role": "user", "content": "2+2=?"}],
+  "options": {
+    "temperature": 0,
+    "seed": 42
+  }
+}'
+```
+
+`temperature: 0`으로 설정하면 항상 가장 확률 높은 토큰을 선택합니다.
+
+---
+
+### Q4. Ollama를 외부 네트워크(다른 컴퓨터, Docker 컨테이너 등)에서 접근하려면?
+
+기본적으로 `127.0.0.1:11434`에서만 리스닝합니다.
+
+```bash
+# 모든 인터페이스에서 리스닝
+OLLAMA_HOST=0.0.0.0 ollama serve
+
+# 또는 특정 IP
+OLLAMA_HOST=192.168.1.100:11434 ollama serve
+```
+
+CORS 설정도 필요할 수 있습니다.
+
+```bash
+OLLAMA_ORIGINS="http://localhost:3000,https://myapp.com" ollama serve
+```
+
+> **보안 주의**: 외부 노출 시 방화벽 규칙으로 접근을 제한하세요. Ollama 자체에는 인증이 없습니다 (클라우드 모드 제외).
+
+---
+
+### Q5. 모델을 여러 개 동시에 사용하고 싶습니다. 가능한가요?
+
+가능하지만 VRAM 제한이 있습니다.
+
+```bash
+# 동시 로딩 허용 수 설정 (기본: 1)
+OLLAMA_NUM_PARALLEL=2 ollama serve
+```
+
+동작 방식:
+- 첫 번째 모델 로드: `llama3.2` → VRAM에 올라감
+- 두 번째 모델 로드: `mistral` → VRAM에 여유가 있으면 함께 로드, 없으면 `llama3.2` 언로드 후 로드
+
+모델을 영구적으로 메모리에 유지하려면:
+
+```bash
+# 모델을 keep_alive=-1로 호출하여 영구 유지
+curl http://localhost:11434/api/generate -d '{
+  "model": "llama3.2",
+  "keep_alive": -1,
+  "prompt": ""
+}'
+```
+
+---
+
+### Q6. `ollama pull` 중 인터넷 연결이 끊겼는데, 처음부터 다시 받아야 하나요?
+
+아니요. Ollama는 **재개 가능한 다운로드(Resumable Download)**를 지원합니다.
+
+`~/.ollama/models/blobs/` 디렉토리에 `sha256-[digest]-partial` 형태로 부분 다운로드 파일이 저장되며, 같은 `ollama pull` 명령을 재실행하면 이어받습니다.
+
+---
+
+### Q7. Apple Silicon Mac에서 가장 빠른 설정은?
+
+Apple Silicon에서는 Metal 백엔드가 자동으로 활성화됩니다.
+
+```bash
+# Unified Memory 활용 (CPU+GPU 공유 메모리)
+# MacBook Pro M3 Pro (18GB): llama3.2:8b Q8 모델까지 풀 GPU 실행 가능
+
+# 메모리 매핑 비활성화 시 초기 로딩은 느리지만 추론 속도 향상
+OLLAMA_USE_MMAP=0 ollama serve
+
+# MLX Runner 사용 (실험적 - 더 빠른 Metal 추론)
+OLLAMA_LLM_LIBRARY=mlx ollama serve
+```
+
+M1/M2/M3의 Unified Memory 특성상 VRAM 구분이 없어서, `num_gpu=-1`로 설정하면 전체 메모리를 GPU로 사용합니다.
+
+---
+
+### Q8. Python/JavaScript에서 Ollama API를 어떻게 호출하나요?
+
+**Python (공식 라이브러리)**:
+
+```python
+import ollama
+
+# 스트리밍 채팅
+for chunk in ollama.chat(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': '한국의 수도는?'}],
+    stream=True
+):
+    print(chunk['message']['content'], end='', flush=True)
+
+# 임베딩
+response = ollama.embed(model='nomic-embed-text', input='텍스트')
+print(response['embeddings'])
+```
+
+**JavaScript/TypeScript (공식 라이브러리)**:
+
+```typescript
+import ollama from 'ollama'
+
+const response = await ollama.chat({
+  model: 'llama3.2',
+  messages: [{ role: 'user', content: '안녕하세요!' }],
+  stream: true,
+})
+
+for await (const part of response) {
+  process.stdout.write(part.message.content)
+}
+```
+
+**OpenAI 호환 SDK 사용**:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url='http://localhost:11434/v1',
+    api_key='ollama',  # 아무 값이나 OK
+)
+
+response = client.chat.completions.create(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': 'Hello!'}],
+)
+```
+
+---
+
+### Q9. LangChain이나 LlamaIndex와 연동하려면?
+
+```python
+# LangChain
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(model="llama3.2", temperature=0)
+response = llm.invoke("파이썬으로 피보나치 수열을 구현해줘")
+
+# LlamaIndex
+from llama_index.llms.ollama import Ollama
+
+llm = Ollama(model="llama3.2", request_timeout=120.0)
+response = llm.complete("안녕하세요!")
+```
+
+---
+
+### Q10. HuggingFace의 GGUF 모델을 직접 Ollama에서 실행할 수 있나요?
+
+네, Modelfile의 `FROM` 지시어에 로컬 경로나 HuggingFace 레포를 지정할 수 있습니다.
+
+```bash
+# 방법 1: 로컬 GGUF 파일
+cat > Modelfile << 'EOF'
+FROM /path/to/my-model.gguf
+
+PARAMETER temperature 0.7
+SYSTEM "You are a helpful assistant."
+EOF
+
+ollama create my-custom-model --file Modelfile
+ollama run my-custom-model
+
+# 방법 2: HuggingFace 레포에서 직접
+ollama run hf.co/bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M
+```
+
+---
+
+### Q11. Vision 모델(이미지 이해)은 어떻게 사용하나요?
+
+```bash
+# LLaVA 모델 사용
+ollama pull llava
+
+# API로 이미지 전송 (Base64 인코딩)
+import base64, ollama
+
+with open('image.jpg', 'rb') as f:
+    image_data = base64.b64encode(f.read()).decode()
+
+response = ollama.chat(
+    model='llava',
+    messages=[{
+        'role': 'user',
+        'content': '이 이미지에 무엇이 보이나요?',
+        'images': [image_data]
+    }]
+)
+```
+
+---
+
+### Q12. Docker 컨테이너에서 Ollama를 GPU와 함께 실행하려면?
+
+```bash
+# NVIDIA GPU
+docker run -d \
+  --gpus=all \
+  -v ollama:/root/.ollama \
+  -p 11434:11434 \
+  --name ollama \
+  ollama/ollama
+
+# GPU 없이 CPU만
+docker run -d \
+  -v ollama:/root/.ollama \
+  -p 11434:11434 \
+  --name ollama \
+  ollama/ollama
+
+# 모델 실행
+docker exec -it ollama ollama run llama3.2
+```
+
+---
+
+### Q13. Function Calling(Tool Use)은 지원하나요?
+
+지원합니다! OpenAI 호환 방식으로 사용합니다.
+
+```python
+import ollama
+
+tools = [{
+    'type': 'function',
+    'function': {
+        'name': 'get_weather',
+        'description': '특정 도시의 날씨를 조회합니다',
+        'parameters': {
+            'type': 'object',
+            'properties': {
+                'city': {'type': 'string', 'description': '도시 이름'},
+            },
+            'required': ['city'],
+        },
+    },
+}]
+
+response = ollama.chat(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': '서울 날씨 알려줘'}],
+    tools=tools,
+)
+
+# tool_calls가 있으면 함수 실행
+if response.message.tool_calls:
+    for tool_call in response.message.tool_calls:
+        print(f"호출: {tool_call.function.name}({tool_call.function.arguments})")
+```
+
+> **주의**: Tool 사용은 모델에 따라 지원 여부가 다릅니다. `llama3.2`, `qwen2.5`, `mistral` 등 최신 모델을 권장합니다.
+
+---
+
+*분석된 소스코드 버전: Ollama v0.18.0 (2026년 3월 기준)*
