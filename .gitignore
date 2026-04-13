@@ -45,4 +45,8 @@ yarn-error.log*
 
 # Contentlayer
 .contentlayer
+
+# Build-generated files
+app/tag-data.json
+next-env.d.ts
 .vscode/*
