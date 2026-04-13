@@ -40,9 +40,9 @@ author: MartianLee
 
 ## 1. 프로젝트 개요
 
-**Beads (`bd`)**는 AI 에이전트를 위한 **분산 그래프 이슈 트래커**이다. [Dolt](https://github.com/dolthub/dolt)(버전 관리 SQL 데이터베이스)를 기반으로 코딩 에이전트가 구조화된 메모리를 유지하고, 복잡한 의존성을 관리하며, 장기 태스크(long-horizon task)를 수행할 수 있도록 설계되었다.
+**Beads (`bd`)**는 AI 에이전트를 위한 **분산 그래프 이슈 트래커**입니다. [Dolt](https://github.com/dolthub/dolt)(버전 관리 SQL 데이터베이스)를 기반으로 코딩 에이전트가 구조화된 메모리를 유지하고, 복잡한 의존성을 관리하며, 장기 태스크(long-horizon task)를 수행할 수 있도록 설계되었습니다.
 
-v1.0.0에서 **프로덕션 안정성 마일스톤**에 도달했으며, 빠른 반복(rapid iteration) 단계에서 안정적 운영 단계로 전환되었다.
+v1.0.0에서 **프로덕션 안정성 마일스톤**에 도달했으며, 빠른 반복(rapid iteration) 단계에서 안정적 운영 단계로 전환되었습니다.
 
 ### 핵심 철학
 
@@ -199,7 +199,7 @@ bd create "New feature"
          on_create 훅 발화 (트랜잭션 커밋 후)
 ```
 
-**핵심**: 모든 쓰기 작업이 자동으로 Dolt 커밋을 생성한다. 트랜잭션은 `withRetryTx()`로 처리되며, 변경된 테이블만 선택적으로 스테이징한다. v1.0.0부터 `HookFiringStore` 데코레이터가 CLI가 아닌 스토리지 계층에서 훅을 발화하여, 모든 뮤테이션 경로에서 훅이 일관되게 실행된다.
+**핵심**: 모든 쓰기 작업이 자동으로 Dolt 커밋을 생성합니다. 트랜잭션은 `withRetryTx()`로 처리되며, 변경된 테이블만 선택적으로 스테이징합니다. v1.0.0부터 `HookFiringStore` 데코레이터가 CLI가 아닌 스토리지 계층에서 훅을 발화하여, 모든 뮤테이션 경로에서 훅이 일관되게 실행됩니다.
 
 ### 4.3 Read Path (읽기 경로)
 
@@ -207,7 +207,7 @@ bd create "New feature"
 bd ready → SQL SELECT from ready_issues view → 로컬 Dolt DB 직접 쿼리
 ```
 
-네트워크 없이 로컬 DB를 직접 조회한다. `ready_issues`와 `blocked_issues` 뷰가 사전 정의되어 있다.
+네트워크 없이 로컬 DB를 직접 조회합니다. `ready_issues`와 `blocked_issues` 뷰가 사전 정의되어 있습니다.
 
 ### 4.4 Embedded vs Server 모드
 
@@ -220,7 +220,7 @@ bd ready → SQL SELECT from ready_issues view → 로컬 Dolt DB 직접 쿼리
 | 용도 | 단독 개발자, CI/CD (권장) | 오케스트레이터, 팀 |
 | 빌드 요구 | CGO 활성화 (`beads_cgo.go`) | CGO 불필요 (`beads_nocgo.go`) |
 
-v1.0.0부터 macOS에서 네이티브 CGO 빌드로 임베디드 모드가 기본 활성화된다. Non-CGO 빌드에서는 서버 모드만 사용 가능하며 명확한 에러 메시지가 제공된다.
+v1.0.0부터 macOS에서 네이티브 CGO 빌드로 임베디드 모드가 기본 활성화됩니다. Non-CGO 빌드에서는 서버 모드만 사용 가능하며 명확한 에러 메시지가 제공됩니다.
 
 설정 우선순위: 환경변수 > metadata.json > config.yaml > 기본값
 
@@ -266,7 +266,7 @@ type HookFiringStore struct {
 // 트랜잭션 내에서는 커밋 후에만 훅 발화, 롤백 시 발화하지 않음
 ```
 
-구현체 `DoltStore`는 `*sql.DB` (MySQL 프로토콜 연결), 캐시 (blockedIDs, customStatus 등), 회로 차단기(circuit breaker — host:port 기반 키)를 포함한다.
+구현체 `DoltStore`는 `*sql.DB` (MySQL 프로토콜 연결), 캐시 (blockedIDs, customStatus 등), 회로 차단기(circuit breaker — host:port 기반 키)를 포함합니다.
 
 ### 4.6 공개 API (v1.0.0~)
 
@@ -383,7 +383,7 @@ CREATE TABLE dependencies (
 );
 ```
 
-**설계 결정 004 (Edge Schema Consolidation)**: 모든 관계 (replies-to, relates-to, duplicates 등)를 `dependencies` 테이블의 엣지로 통합. 스키마 변경 없이 유연한 엣지 타입을 추가할 수 있다.
+**설계 결정 004 (Edge Schema Consolidation)**: 모든 관계 (replies-to, relates-to, duplicates 등)를 `dependencies` 테이블의 엣지로 통합. 스키마 변경 없이 유연한 엣지 타입을 추가할 수 있습니다.
 
 ### 5.4 해시 기반 ID 시스템
 
@@ -432,7 +432,7 @@ func (i *Issue) ComputeContentHash() string {
 }
 ```
 
-동일 콘텐츠 = 동일 해시 → 중복 감지 및 변경 추적에 사용된다.
+동일 콘텐츠 = 동일 해시 → 중복 감지 및 변경 추적에 사용됩니다.
 
 ### 5.6 Status 흐름
 
@@ -534,7 +534,7 @@ v1.0.0 추가: spike     — 불확실성 해소를 위한 타임박스 조사
 5. 결과를 blockedIDsCacheMap에 저장 (O(1) 조회)
 ```
 
-캐시는 DoltStore 수명 동안 유효하며, 의존성 변경 시 무효화된다.
+캐시는 DoltStore 수명 동안 유효하며, 의존성 변경 시 무효화됩니다.
 
 **v1.0.0 추가:**
 - `bd ready --explain` — 왜 특정 이슈가 ready/not-ready인지 의존성 기반 설명
@@ -597,7 +597,7 @@ JSON 플랜으로 전체 의존성 그래프를 한 번에 생성:
 
 ### 7.1 개념
 
-오래된 닫힌 이슈를 AI로 요약하여 **DB 크기와 LLM 컨텍스트 윈도우를 절약**하는 기능이다.
+오래된 닫힌 이슈를 AI로 요약하여 **DB 크기와 LLM 컨텍스트 윈도우를 절약**하는 기능입니다.
 
 ### 7.2 2단계 전략
 
@@ -774,7 +774,7 @@ bd mol wisp (템플릿에서 생성)
 4. Project-level: .beads/molecules.jsonl
 ```
 
-각 레벨이 상위 레벨을 오버라이드할 수 있다.
+각 레벨이 상위 레벨을 오버라이드할 수 있습니다.
 
 ### 9.4 왜 Wisps는 동기화되지 않는가?
 
@@ -858,7 +858,7 @@ CloseIssue   → on_close 훅 발화
 // UnwrapStore(): 옵셔널 인터페이스 타입 어서션용
 ```
 
-**장점:** 향후 추가되는 모든 커맨드에서도 자동으로 훅이 일관되게 실행됨.
+**장점:** 향후 추가되는 모든 커맨드에서도 자동으로 훅이 일관되게 실행됩니다.
 
 ### 10.5 Slot API — Per-Issue 메타데이터
 
@@ -868,7 +868,7 @@ bd slot get bd-a1b2 delegation_state
 bd slot clear bd-a1b2 delegation_state
 ```
 
-이슈 필드를 오염시키지 않고 외부 도구가 위임 상태, 훅 상태 등을 저장할 수 있다.
+이슈 필드를 오염시키지 않고 외부 도구가 위임 상태, 훅 상태 등을 저장할 수 있습니다.
 
 ### 10.6 `bd config set-many` — 배치 설정
 
@@ -892,7 +892,7 @@ bd context --json
 # }
 ```
 
-DB 없이도 동작하여 열화 상태에서 진단에 유용하다.
+DB 없이도 동작하여 열화 상태에서 진단에 유용합니다.
 
 ### 10.8 CLI 개선
 
@@ -947,7 +947,7 @@ bd ado projects      # ADO 프로젝트 목록
 
 ### 11.1 바이브 코딩으로 탄생
 
-Beads는 **Steve Yegge**가 **Claude로 6일 만에** 초기 버전을 구축한 프로젝트이다.
+Beads는 **Steve Yegge**가 **Claude로 6일 만에** 초기 버전을 구축한 프로젝트입니다.
 
 | 항목 | 수치 |
 |------|------|
@@ -1086,7 +1086,7 @@ Beads는 **Steve Yegge**가 **Claude로 6일 만에** 초기 버전을 구축한
 
 ### 14.1 시나리오
 
-"사용자 인증 시스템"이라는 대형 에픽을 설계 → 구현 → 테스트 순서로 분해하고, AI 에이전트가 의존성 순서대로 작업을 수행하는 전체 과정이다.
+"사용자 인증 시스템"이라는 대형 에픽을 설계 → 구현 → 테스트 순서로 분해하고, AI 에이전트가 의존성 순서대로 작업을 수행하는 전체 과정입니다.
 
 ### 14.2 방법 A: 개별 생성 (`bd create --parent`)
 
@@ -1327,5 +1327,5 @@ bd dep add reduce-id bd-b2c3 --type waits-for
 
 ---
 
-*이 리포트는 beads v1.0.0 (2026-04-02) 기준 소스 코드, 문서, git 히스토리를 분석하여 작성되었다.*
+*이 리포트는 beads v1.0.0 (2026-04-02) 기준 소스 코드, 문서, git 히스토리를 분석하여 작성되었습니다.*
 *이전 버전 (v0.62.0) 대비 주요 변경사항은 [10. v1.0.0 신규 기능](#10-v100-신규-기능) 섹션을 참조.*

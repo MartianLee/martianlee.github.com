@@ -21,7 +21,7 @@ author: MartianLee
 
 ## 1. Executive Summary
 
-agent-browser는 Vercel Labs에서 개발한 **AI 에이전트를 위한 브라우저 자동화 CLI**이다. Rust로 작성된 네이티브 바이너리로, Chrome DevTools Protocol(CDP)을 통해 브라우저를 직접 제어한다. Node.js 런타임 없이 동작하며, LLM이 웹을 탐색하고 조작할 수 있도록 설계된 접근성 트리(Accessibility Tree) 기반의 요소 참조(Ref) 시스템이 핵심이다.
+agent-browser는 Vercel Labs에서 개발한 **AI 에이전트를 위한 브라우저 자동화 CLI**입니다. Rust로 작성된 네이티브 바이너리로, Chrome DevTools Protocol(CDP)을 통해 브라우저를 직접 제어합니다. Node.js 런타임 없이 동작하며, LLM이 웹을 탐색하고 조작할 수 있도록 설계된 접근성 트리(Accessibility Tree) 기반의 요소 참조(Ref) 시스템이 핵심입니다.
 
 **핵심 가치:**
 - AI 에이전트가 웹을 "읽고 조작"할 수 있는 표준 인터페이스 제공
@@ -199,7 +199,7 @@ agent-browser/
 
 ### 5.2 Ref-Based Element Selection (AI 최적화)
 
-이 프로젝트의 **가장 독특한 설계**. LLM이 DOM을 효율적으로 이해하고 조작하도록 설계되었다.
+이 프로젝트의 **가장 독특한 설계**입니다. LLM이 DOM을 효율적으로 이해하고 조작하도록 설계되었습니다.
 
 ```
 1. snapshot 명령 실행
@@ -236,7 +236,7 @@ Provider → connect() → CDP WebSocket URL 반환
 └── AgentCore       (AWS Bedrock SigV4 → CDP URL)
 ```
 
-모든 프로바이더가 CDP WebSocket URL을 반환하는 동일한 인터페이스를 따르므로, 로컬 Chrome과 클라우드 브라우저 간 전환이 플래그 하나(`-p <provider>`)로 가능하다.
+모든 프로바이더가 CDP WebSocket URL을 반환하는 동일한 인터페이스를 따르므로, 로컬 Chrome과 클라우드 브라우저 간 전환이 플래그 하나(`-p <provider>`)로 가능합니다.
 
 ### 5.4 Streaming & Observability
 
@@ -249,7 +249,7 @@ Provider → connect() → CDP WebSocket URL 반환
                               └── AI Chat (Vercel AI Gateway 프록시)
 ```
 
-대시보드 정적 에셋은 `rust-embed`로 Rust 바이너리에 임베딩되어, 별도 파일 없이 단일 바이너리로 서빙된다.
+대시보드 정적 에셋은 `rust-embed`로 Rust 바이너리에 임베딩되어, 별도 파일 없이 단일 바이너리로 서빙됩니다.
 
 ### 5.5 Security Model (Layered Defense)
 
@@ -376,7 +376,7 @@ agent-browser chat
 // Bash(agent-browser:*) 허용 패턴으로 안전한 실행
 ```
 
-SKILL.md 파일이 Claude Code의 시스템 프롬프트로 주입되어, Claude가 웹 자동화 방법을 "알고" 있는 상태에서 사용자 요청을 처리한다.
+SKILL.md 파일이 Claude Code의 시스템 프롬프트로 주입되어, Claude가 웹 자동화 방법을 "알고" 있는 상태에서 사용자 요청을 처리합니다.
 
 ---
 
@@ -531,29 +531,29 @@ agent-browser -p agentcore open https://example.com
 | **보안 정책** | 도메인/액션 정책 내장 | 없음 | 없음 | 없음 |
 | **실시간 대시보드** | 내장 (바이너리 임베딩) | Trace Viewer (사후) | 없음 | 없음 |
 
-**핵심 차별화:** agent-browser는 "AI 에이전트가 웹을 사용하는 도구"로서 설계된 반면, 기존 도구들은 "개발자가 테스트를 작성하는 도구"로 설계되었다. 이 관점 차이가 접근성 트리 기반 Ref 시스템, CLI 우선 인터페이스, 보안 정책 레이어 등의 설계 결정을 이끌었다.
+**핵심 차별화:** agent-browser는 "AI 에이전트가 웹을 사용하는 도구"로서 설계된 반면, 기존 도구들은 "개발자가 테스트를 작성하는 도구"로 설계되었습니다. 이 관점 차이가 접근성 트리 기반 Ref 시스템, CLI 우선 인터페이스, 보안 정책 레이어 등의 설계 결정을 이끌었습니다.
 
 ---
 
 ## 11. 기술적 인사이트
 
 ### 11.1 CDP 프로토콜 타입 자동 생성
-`build.rs`가 `cdp-protocol/*.json` 스펙 파일을 파싱하여 Rust 타입을 자동 생성한다. 이를 통해 CDP 프로토콜 업데이트 시 수동 타입 작성 없이 빌드 스크립트만 실행하면 된다.
+`build.rs`가 `cdp-protocol/*.json` 스펙 파일을 파싱하여 Rust 타입을 자동 생성합니다. 이를 통해 CDP 프로토콜 업데이트 시 수동 타입 작성 없이 빌드 스크립트만 실행하면 됩니다.
 
 ### 11.2 Dashboard Binary Embedding
-`rust-embed` 크레이트를 사용하여 빌드된 Next.js 정적 에셋을 Rust 바이너리에 직접 임베딩한다. 별도 파일 배포 없이 단일 바이너리로 대시보드를 서빙할 수 있다.
+`rust-embed` 크레이트를 사용하여 빌드된 Next.js 정적 에셋을 Rust 바이너리에 직접 임베딩합니다. 별도 파일 배포 없이 단일 바이너리로 대시보드를 서빙할 수 있습니다.
 
 ### 11.3 Cross-Frame Ref Resolution
-iframe 내부 요소도 `@eN` ref로 직접 접근 가능하다. 내부적으로 `Target.attachToTarget`으로 각 iframe에 대한 별도 CDP 세션을 생성하고, `iframe_sessions` HashMap으로 관리한다. 이를 통해 에이전트가 프레임 전환을 의식하지 않아도 된다.
+iframe 내부 요소도 `@eN` ref로 직접 접근 가능합니다. 내부적으로 `Target.attachToTarget`으로 각 iframe에 대한 별도 CDP 세션을 생성하고, `iframe_sessions` HashMap으로 관리합니다. 이를 통해 에이전트가 프레임 전환을 의식하지 않아도 됩니다.
 
 ### 11.4 Content Boundaries (Prompt Injection 방어)
-페이지 콘텐츠를 nonce가 포함된 마커로 감싸서 LLM이 "도구 출력"과 "페이지 콘텐츠"를 구분할 수 있게 한다. 악의적 웹사이트가 접근성 트리를 통해 LLM 프롬프트를 조작하려는 시도를 방어한다.
+페이지 콘텐츠를 nonce가 포함된 마커로 감싸서 LLM이 "도구 출력"과 "페이지 콘텐츠"를 구분할 수 있게 합니다. 악의적 웹사이트가 접근성 트리를 통해 LLM 프롬프트를 조작하려는 시도를 방어합니다.
 
 ---
 
 ## 12. 결론
 
-agent-browser는 **"AI 에이전트를 위한 웹 브라우저 인터페이스"** 라는 명확한 비전 아래, Rust의 성능과 안전성을 기반으로 구축된 프로덕션 수준의 도구이다.
+agent-browser는 **"AI 에이전트를 위한 웹 브라우저 인터페이스"** 라는 명확한 비전 아래, Rust의 성능과 안전성을 기반으로 구축된 프로덕션 수준의 도구입니다.
 
 **아키텍처적 강점:**
 1. **Client-Daemon 분리**로 세션 상태 유지와 명령 실행의 깔끔한 분리
