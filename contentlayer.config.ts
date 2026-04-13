@@ -19,11 +19,24 @@ import rehypeKatex from 'rehype-katex'
 import rehypeCitation from 'rehype-citation'
 import rehypePrismPlus from 'rehype-prism-plus'
 import rehypePresetMinify from 'rehype-preset-minify'
+import { readFileSync, readdirSync } from 'fs'
 import siteMetadata from './data/siteMetadata'
 import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer.js'
 
 const root = process.cwd()
 const isProduction = process.env.NODE_ENV === 'production'
+
+function hasMermaidBlocks(): boolean {
+  const postsDir = path.join(root, 'data', 'posts')
+  try {
+    return readdirSync(postsDir).some((file) => {
+      if (!file.endsWith('.mdx')) return false
+      return readFileSync(path.join(postsDir, file), 'utf-8').includes('```mermaid')
+    })
+  } catch {
+    return false
+  }
+}
 
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
@@ -128,6 +141,26 @@ export const Authors = defineDocumentType(() => ({
   computedFields,
 }))
 
+// Lazy-load rehype-mermaid: wraps the real plugin behind a function that
+// performs the dynamic import on first invocation, so we avoid top-level await
+// and skip the import entirely when no mermaid blocks exist in posts.
+function lazyRehypeMermaid() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let plugin: any = null
+  return () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return async (tree: any, file: any) => {
+      if (!plugin) {
+        const mod = await import('rehype-mermaid')
+        plugin = mod.default({ strategy: 'inline-svg' })
+      }
+      return plugin(tree, file)
+    }
+  }
+}
+
+const useMermaid = hasMermaidBlocks()
+
 export default makeSource({
   contentDirPath: 'data',
   documentTypes: [Blog, Authors],
@@ -146,6 +179,7 @@ export default makeSource({
       // rehypeKatex,
       // @ts-ignore
       [rehypeCitation, { path: path.join(root, 'data') }],
+      ...(useMermaid ? [lazyRehypeMermaid()] : []),
       [rehypePrismPlus, { defaultLanguage: 'js', ignoreMissing: true }],
       // rehypePresetMinify,
     ],
