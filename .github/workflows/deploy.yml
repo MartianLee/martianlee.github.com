@@ -67,6 +67,17 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Check for mermaid diagrams
+        id: check-mermaid
+        run: |
+          if grep -r '```mermaid' data/posts/ >/dev/null 2>&1; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Install Playwright Chromium (for mermaid rendering)
+        if: steps.check-mermaid.outputs.found == 'true'
+        run: npx playwright install --with-deps chromium
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build --turbopack
       - name: Upload artifact
