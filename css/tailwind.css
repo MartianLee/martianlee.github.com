@@ -385,6 +385,15 @@ input:-webkit-autofill:focus {
   color: var(--kb-accent);
   background: var(--kb-surface-alt);
 }
+.kb-theme .prose pre {
+  background: var(--kb-surface) !important;
+  border: 1px solid var(--kb-border);
+  border-radius: 6px;
+}
+.kb-theme .prose pre code {
+  color: var(--kb-text);
+  background: transparent;
+}
 .kb-theme .prose blockquote {
   border-color: var(--kb-accent);
   background: var(--kb-surface);
