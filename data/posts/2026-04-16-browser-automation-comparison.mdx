@@ -140,3 +140,23 @@ ws.close()
 ```
 
 CDP를 직접 다루므로 코드가 가장 저수준입니다. 대신 Chrome 없이 동작하며, 대량 병렬 실행 시 리소스 효율이 압도적입니다.
+
+## 결론
+
+세 도구는 경쟁 관계가 아니라, 브라우저 자동화 스택의 서로 다른 레이어에 위치합니다. 정리하면:
+
+- **E2E 테스트 / 범용 자동화** → Playwright
+- **AI 에이전트의 웹 탐색** → agent-browser
+- **대량 크롤링 / 스크래핑** → Lightpanda
+
+그리고 이들은 조합해서 사용할 수 있습니다. 실제로 agent-browser는 Lightpanda를 브라우저 프로바이더로 지원합니다.
+
+필자의 경우 회사에서 agent-browser를 활용해 E2E 테스트 작성을 자동화하고 있는데, Playwright로 수동 작성하는 것 대비 토큰 소모도 적고 속도도 빨라서 만족하고 있습니다. AI 기반 테스트 자동화를 고려하고 있다면 agent-browser를 추천합니다.
+
+---
+
+### 관련 글
+
+- [[2026-04-09-agent-browser-architecture|agent-browser 아키텍처 분석 보고서]]
+- [[2026-03-13-lightpanda-architecture|Lightpanda 브라우저 아키텍처 분석 보고서]]
+- Playwright 아키텍처 분석 — 추후 작성 예정
