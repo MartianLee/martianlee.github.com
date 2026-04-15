@@ -11,3 +11,18 @@ author: MartianLee
 _This article is mostly written by Claude Code with [superpowers](https://github.com/anthropics/claude-code-plugins/tree/main/superpowers) skill_
 
 브라우저 자동화 도구를 선택해야 할 때, 선택지가 너무 많아서 혼란스러울 수 있습니다. 이 글에서는 서로 다른 레이어에서 동작하는 세 가지 도구 — **Playwright**, **agent-browser**, **Lightpanda** — 를 비교합니다. 어떤 상황에서 어떤 도구를 선택해야 하는지, 같은 태스크를 각각 어떻게 구현하는지를 직접 보여드리겠습니다.
+
+## 어떤 도구를 선택해야 할까?
+
+아래 의사결정 트리를 따라가면 상황에 맞는 도구를 빠르게 찾을 수 있습니다.
+
+```mermaid
+flowchart TD
+    START["브라우저 자동화가 필요합니다"] --> Q1{"AI 에이전트가\n브라우저를 조작하나요?"}
+    Q1 -->|Yes| Q2{"E2E 테스트 자동 생성이\n주 목적인가요?"}
+    Q1 -->|No| Q3{"대량 크롤링/스크래핑이\n목적인가요?"}
+    Q2 -->|Yes| AB["✅ agent-browser\nAI 기반 E2E 자동화에 최적"]
+    Q2 -->|No| AB2["✅ agent-browser\n접근성 트리 기반 웹 탐색"]
+    Q3 -->|Yes| LP["✅ Lightpanda\n초경량 헤드리스 엔진"]
+    Q3 -->|No| PW["✅ Playwright\nE2E 테스트의 사실상 표준"]
+```
