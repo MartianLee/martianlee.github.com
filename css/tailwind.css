@@ -354,6 +354,24 @@ input:-webkit-autofill:focus {
   --kb-red: #dc2626;
 }
 
+/* KB Full-screen — hide blog chrome and take over the viewport */
+body.kb-active > section {
+  max-width: none !important;
+  padding: 0 !important;
+}
+body.kb-active > section > div {
+  height: auto !important;
+}
+body.kb-active header {
+  display: none !important;
+}
+body.kb-active footer {
+  display: none !important;
+}
+body.kb-active main {
+  margin-bottom: 0 !important;
+}
+
 /* KB Layout Breakout — escape SectionContainer and neutralise its padding */
 .kb-breakout {
   width: 100vw;

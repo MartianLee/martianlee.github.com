@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, ReactNode } from 'react'
+import Link from 'next/link'
 
 interface KBShellProps {
   sidebar: ReactNode
@@ -43,22 +44,35 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
         className="flex h-8 shrink-0 items-center justify-between px-3 text-xs"
         style={{ borderBottom: '1px solid var(--kb-border)', color: 'var(--kb-text-muted)' }}
       >
-        <button
-          onClick={() => {
-            setSidebarOpen(!sidebarOpen)
-            if (!sidebarOpen) setContextOpen(false)
-          }}
-          className="flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-colors hover:bg-[var(--kb-accent-dim)] hover:text-[var(--kb-accent)]"
-        >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M0 2.5A.5.5 0 0 1 .5 2h15a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5zm0 5A.5.5 0 0 1 .5 7h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5z" />
-          </svg>
-          <span className="hidden sm:inline">Explorer</span>
-        </button>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            className="flex items-center rounded px-1.5 py-0.5 transition-colors hover:bg-[var(--kb-accent-dim)] hover:text-[var(--kb-accent)]"
+            title="Blog Home"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L8.354 1.146z" />
+            </svg>
+          </Link>
+          <button
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen)
+              if (!sidebarOpen) setContextOpen(false)
+            }}
+            className="flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-colors hover:bg-[var(--kb-accent-dim)] hover:text-[var(--kb-accent)]"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M0 2.5A.5.5 0 0 1 .5 2h15a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5zm0 5A.5.5 0 0 1 .5 7h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1H.5a.5.5 0 0 1-.5-.5z" />
+            </svg>
+            <span className="hidden sm:inline">Explorer</span>
+          </button>
+        </div>
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 overflow-hidden">
-          <span style={{ color: 'var(--kb-accent)' }}>KB</span>
+          <Link href="/kb" className="hover:underline" style={{ color: 'var(--kb-accent)' }}>
+            KB
+          </Link>
           {breadcrumb && (
             <>
               <span>/</span>

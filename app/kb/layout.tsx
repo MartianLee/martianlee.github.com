@@ -1,4 +1,5 @@
 import { genPageMetadata } from 'app/seo'
+import KBBodyClass from './KBBodyClass'
 
 export const metadata = genPageMetadata({
   title: 'Knowledge Base',
@@ -7,5 +8,5 @@ export const metadata = genPageMetadata({
 })
 
 export default function KBLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <KBBodyClass>{children}</KBBodyClass>
 }

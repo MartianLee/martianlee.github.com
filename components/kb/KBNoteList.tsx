@@ -133,7 +133,7 @@ export default function KBNoteList() {
               </span>
               <div className="min-w-0 flex-1">
                 <span
-                  className="truncate font-medium group-hover:text-[var(--kb-accent)]"
+                  className="line-clamp-2 font-medium group-hover:text-[var(--kb-accent)]"
                   style={{ color: 'var(--kb-text-strong)' }}
                 >
                   {note.title}
