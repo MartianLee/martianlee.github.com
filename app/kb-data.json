@@ -49,8 +49,9 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 9,
+      "count": 10,
       "slugs": [
+        "2026-04-16-browser-automation-comparison",
         "2026-04-15-paperclip-architecture",
         "2026-04-13-beads-architecture",
         "2026-04-09-agent-browser-architecture",
@@ -93,8 +94,25 @@
       "slugs": ["2019-04-11-dart-game"]
     }
   ],
-  "backlinks": {},
+  "backlinks": {
+    "2026-04-09-agent-browser-architecture": [
+      {
+        "slug": "2026-04-16-browser-automation-comparison",
+        "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
+      }
+    ],
+    "2026-03-13-lightpanda-architecture": [
+      {
+        "slug": "2026-04-16-browser-automation-comparison",
+        "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
+      }
+    ]
+  },
   "forwardLinks": {
+    "2026-04-16-browser-automation-comparison": [
+      "2026-04-09-agent-browser-architecture",
+      "2026-03-13-lightpanda-architecture"
+    ],
     "2026-04-15-paperclip-architecture": [],
     "2026-04-13-adding-mermaid-to-nextjs-blog": [],
     "2026-04-13-beads-architecture": [],
@@ -149,6 +167,22 @@
     "2017-01-29-blogging-tools": []
   },
   "postIndex": [
+    {
+      "slug": "2026-04-16-browser-automation-comparison",
+      "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?",
+      "date": "2026-04-16T09:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "playwright",
+        "agent-browser",
+        "lightpanda",
+        "browser-automation",
+        "ai-agent",
+        "comparison"
+      ],
+      "summary": "Playwright, agent-browser, Lightpanda — 세 브라우저 자동화 도구의 포지셔닝과 핵심 차이를 비교하고, 동일한 태스크를 각각 구현하여 실용적인 선택 기준을 제시합니다."
+    },
     {
       "slug": "2026-04-15-paperclip-architecture",
       "title": "Paperclip 아키텍처 분석 - AI 에이전트 가상 회사 오케스트레이션",
@@ -634,5 +668,5 @@
       "summary": "Jekyll default page"
     }
   ],
-  "generatedAt": "2026-04-15T11:09:20.213Z"
+  "generatedAt": "2026-04-15T16:09:28.720Z"
 }

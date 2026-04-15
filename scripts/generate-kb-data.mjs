@@ -165,6 +165,11 @@ export function generateKBData(allBlogs) {
     })
   }
 
+  // Deduplicate forwardLinks
+  for (const slug of Object.keys(forwardLinks)) {
+    forwardLinks[slug] = [...new Set(forwardLinks[slug])]
+  }
+
   const topics = Object.entries(topicMap)
     .map(([id, slugs]) => ({
       id,
