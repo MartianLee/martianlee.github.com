@@ -147,7 +147,7 @@ export default async function KBNotePage(props: { params: Promise<{ slug: string
         context={
           <KBContextPanel
             slug={slug}
-            toc={post.toc as { value: string; url: string; depth: number }[]}
+            toc={post.toc as unknown as { value: string; url: string; depth: number }[]}
           />
         }
         statusBar={
