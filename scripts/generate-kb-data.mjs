@@ -153,6 +153,20 @@ export function generateKBData(allBlogs) {
         })
       }
     }
+
+    // Also match markdown links to /kb/SLUG, e.g. [text](/kb/some-slug)
+    const kbLinkRegex = /\]\(\/kb\/([^)]+)\)/g
+    while ((match = kbLinkRegex.exec(post.body)) !== null) {
+      const targetSlug = match[1].trim()
+      if (slugSet.has(targetSlug) && targetSlug !== post.slug) {
+        forwardLinks[post.slug].push(targetSlug)
+        if (!backlinks[targetSlug]) backlinks[targetSlug] = []
+        backlinks[targetSlug].push({
+          slug: post.slug,
+          title: post.title,
+        })
+      }
+    }
   }
 
   // Deduplicate backlinks
