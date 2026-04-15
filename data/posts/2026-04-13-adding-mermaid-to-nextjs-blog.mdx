@@ -85,7 +85,7 @@ flowchart TD
 
 ### contentlayer.config.ts 핵심 코드
 
-````typescript
+~~~typescript
 import { readFileSync, readdirSync } from 'fs'
 
 function hasMermaidBlocks(): boolean {
@@ -123,11 +123,11 @@ rehypePlugins: [
   ...(useMermaid ? [lazyRehypeMermaid()] : []),
   [rehypePrismPlus, { defaultLanguage: 'js', ignoreMissing: true }],
 ]
-````
+~~~
 
 ### GitHub Actions CI
 
-````yaml
+~~~yaml
 - name: Check for mermaid diagrams
   id: check-mermaid
   run: |
@@ -139,7 +139,7 @@ rehypePlugins: [
 - name: Install Playwright Chromium (for mermaid rendering)
   if: steps.check-mermaid.outputs.found == 'true'
   run: npx playwright install --with-deps chromium
-````
+~~~
 
 ## 결과
 
