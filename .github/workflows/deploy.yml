@@ -67,6 +67,8 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        env:
+          SKIP_CONTENTLAYER_BUILD: true
       - name: Check for mermaid diagrams
         id: check-mermaid
         run: |

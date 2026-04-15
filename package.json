@@ -12,7 +12,7 @@
     "serve": "next start",
     "analyze": "cross-env ANALYZE=true next build --turbopack",
     "lint": "eslint .",
-    "postinstall": "contentlayer2 build || true"
+    "postinstall": "test \"$SKIP_CONTENTLAYER_BUILD\" = 'true' || contentlayer2 build || true"
   },
   "dependencies": {
     "@next/bundle-analyzer": "latest",
