@@ -1,0 +1,638 @@
+{
+  "topics": [
+    {
+      "id": "web-frontend",
+      "label": "Web Frontend",
+      "count": 17,
+      "slugs": [
+        "2024-02-21-leetcode-201",
+        "2024-01-31-js-small-tricks-for-ps-1",
+        "2024-01-24-leetcode-1239",
+        "2024-01-21-firebase-functions-reference-problem",
+        "2023-06-01-pg-duplicate-key-voilates",
+        "2022-10-10-gatsby-migration",
+        "2022-07-29-aspect-ratio",
+        "2022-07-29-custom-dropdown",
+        "2022-07-17-link-manage-service-plan",
+        "2022-04-21-react-native-testing-library",
+        "2022-01-20-react-hook-form",
+        "2021-01-23-Angular-9-to-10",
+        "2020-04-06-react-native-kakao-login-ios",
+        "2019-07-25-react-architecture",
+        "2019-07-25-angular-architecture",
+        "2019-06-12-angular-form",
+        "2017-09-09-first-vue"
+      ]
+    },
+    {
+      "id": "dev-life",
+      "label": "Dev Life",
+      "count": 15,
+      "slugs": [
+        "2026-04-13-adding-mermaid-to-nextjs-blog",
+        "2023-06-08-open-gov-hacking",
+        "2022-03-13-TIL-css-grid",
+        "2021-06-14-jekyll-erro",
+        "2020-05-31-TIL-react-native",
+        "2020-05-25-TIL-first",
+        "2019-05-07-NDC-review",
+        "2019-04-22-kakao-interview-review",
+        "2019-04-22-naver-interview-review",
+        "2019-04-17-renwal-sccc-page",
+        "2019-04-15-jekyll-blog",
+        "2019-04-04-question",
+        "2018-01-29-parti-union",
+        "2017-04-28-book-review",
+        "2017-01-29-blogging-tools"
+      ]
+    },
+    {
+      "id": "ai-infrastructure",
+      "label": "AI Infrastructure",
+      "count": 9,
+      "slugs": [
+        "2026-04-15-paperclip-architecture",
+        "2026-04-13-beads-architecture",
+        "2026-04-09-agent-browser-architecture",
+        "2026-03-15-ollama-architecture",
+        "2026-03-13-langchain-architecture",
+        "2026-03-13-nanoclaw-architecture",
+        "2026-03-13-lightpanda-architecture",
+        "2026-03-11-openclaw-architecture",
+        "2020-06-28-manjum-result"
+      ]
+    },
+    {
+      "id": "backend",
+      "label": "Backend",
+      "count": 6,
+      "slugs": [
+        "2024-09-16-til-ruby-rails",
+        "2020-02-09-django-gae-deploy",
+        "2019-06-25-rails-remote",
+        "2019-04-09-JWT-springboot-login",
+        "2019-03-30-spring-tutorial",
+        "2017-04-28-django-template-for-loop"
+      ]
+    },
+    {
+      "id": "devops-cloud",
+      "label": "DevOps & Cloud",
+      "count": 4,
+      "slugs": [
+        "2023-03-02-gatsby-v5-to-v4",
+        "2023-02-25-github-author-problem",
+        "2023-01-30-aws-imweb-domain",
+        "2019-03-12-ssh-github"
+      ]
+    },
+    {
+      "id": "algorithms",
+      "label": "Algorithms",
+      "count": 1,
+      "slugs": ["2019-04-11-dart-game"]
+    }
+  ],
+  "backlinks": {},
+  "forwardLinks": {
+    "2026-04-15-paperclip-architecture": [],
+    "2026-04-13-adding-mermaid-to-nextjs-blog": [],
+    "2026-04-13-beads-architecture": [],
+    "2026-04-09-agent-browser-architecture": [],
+    "2026-03-15-ollama-architecture": [],
+    "2026-03-13-langchain-architecture": [],
+    "2026-03-13-nanoclaw-architecture": [],
+    "2026-03-13-lightpanda-architecture": [],
+    "2026-03-11-openclaw-architecture": [],
+    "2024-09-16-til-ruby-rails": [],
+    "2024-02-21-leetcode-201": [],
+    "2024-01-31-js-small-tricks-for-ps-1": [],
+    "2024-01-24-leetcode-1239": [],
+    "2024-01-21-firebase-functions-reference-problem": [],
+    "2023-06-08-open-gov-hacking": [],
+    "2023-06-01-pg-duplicate-key-voilates": [],
+    "2023-03-02-gatsby-v5-to-v4": [],
+    "2023-02-25-github-author-problem": [],
+    "2023-01-30-aws-imweb-domain": [],
+    "2022-10-10-gatsby-migration": [],
+    "2022-07-29-aspect-ratio": [],
+    "2022-07-29-custom-dropdown": [],
+    "2022-07-17-link-manage-service-plan": [],
+    "2022-04-21-react-native-testing-library": [],
+    "2022-03-13-TIL-css-grid": [],
+    "2022-01-20-react-hook-form": [],
+    "2021-06-14-jekyll-erro": [],
+    "2021-01-23-Angular-9-to-10": [],
+    "2020-06-28-manjum-result": [],
+    "2020-05-31-TIL-react-native": [],
+    "2020-05-25-TIL-first": [],
+    "2020-04-06-react-native-kakao-login-ios": [],
+    "2020-02-09-django-gae-deploy": [],
+    "2019-07-25-react-architecture": [],
+    "2019-07-25-angular-architecture": [],
+    "2019-06-25-rails-remote": [],
+    "2019-06-12-angular-form": [],
+    "2019-05-07-NDC-review": [],
+    "2019-04-22-kakao-interview-review": [],
+    "2019-04-22-naver-interview-review": [],
+    "2019-04-17-renwal-sccc-page": [],
+    "2019-04-15-jekyll-blog": [],
+    "2019-04-11-dart-game": [],
+    "2019-04-09-JWT-springboot-login": [],
+    "2019-04-04-question": [],
+    "2019-03-30-spring-tutorial": [],
+    "2019-03-12-ssh-github": [],
+    "2018-01-29-parti-union": [],
+    "2017-09-09-first-vue": [],
+    "2017-04-28-django-template-for-loop": [],
+    "2017-04-28-book-review": [],
+    "2017-01-29-blogging-tools": []
+  },
+  "postIndex": [
+    {
+      "slug": "2026-04-15-paperclip-architecture",
+      "title": "Paperclip 아키텍처 분석 - AI 에이전트 가상 회사 오케스트레이션",
+      "date": "2026-04-15T09:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["ai-agent", "orchestration", "architecture", "paperclip", "open-source"],
+      "summary": "AI 에이전트들을 조직도, 예산, 거버넌스 체계 아래에서 하나의 회사처럼 운영하는 오픈소스 컨트롤 플레인 Paperclip의 아키텍처를 분석합니다."
+    },
+    {
+      "slug": "2026-04-13-adding-mermaid-to-nextjs-blog",
+      "title": "Next.js 블로그에 Mermaid 다이어그램 지원 추가하기",
+      "date": "2026-04-13T09:00:00.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["nextjs", "mermaid", "contentlayer", "rehype", "blog"],
+      "summary": "Next.js + Contentlayer2 블로그에 rehype-mermaid를 활용한 빌드 타임 Mermaid 다이어그램 렌더링을 추가하는 방법. 조건부 로딩으로 CI 빌드 시간 최적화까지."
+    },
+    {
+      "slug": "2026-04-13-beads-architecture",
+      "title": "Beads (bd) 프로젝트 분석 리포트 / AI 에이전트를 위한 분산 그래프 이슈 트래커",
+      "date": "2026-04-12T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "beads",
+        "architecture",
+        "go",
+        "ai-agent",
+        "issue-tracker",
+        "distributed-system",
+        "dolt"
+      ],
+      "summary": "Steve Yegge의 Beads 프로젝트 분석. Dolt 기반 분산 그래프 이슈 트래커로 AI 에이전트의 구조화된 메모리, 의존성 관리, 장기 태스크 수행을 지원하는 아키텍처를 상세하게 다룹니다."
+    },
+    {
+      "slug": "2026-04-09-agent-browser-architecture",
+      "title": "agent-browser 아키텍처 분석 보고서 / AI 에이전트를 위한 브라우저 자동화 CLI",
+      "date": "2026-04-08T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "agent-browser",
+        "architecture",
+        "rust",
+        "browser-automation",
+        "ai-agent",
+        "cdp",
+        "vercel"
+      ],
+      "summary": "Vercel Labs의 Rust 기반 AI 에이전트용 브라우저 자동화 CLI agent-browser의 아키텍처 분석. CDP 기반 제어, 접근성 트리 Ref 시스템, Provider 추상화, 보안 모델 등을 상세하게 다룹니다."
+    },
+    {
+      "slug": "2026-03-15-ollama-architecture",
+      "title": "Ollama 아키텍처 분석 보고서 / 실사용 시나리오 Q&A",
+      "date": "2026-03-14T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["ollama", "architecture", "go", "llm", "llama.cpp", "local-ai"],
+      "summary": "Go 언어로 구현된 로컬 LLM 실행 플랫폼 Ollama의 전체 아키텍처 분석. 기술 스택, 스케줄러, 모델 관리, llama.cpp 통합, Runner 시스템 등을 상세하게 다룹니다."
+    },
+    {
+      "slug": "2026-03-13-langchain-architecture",
+      "title": "LangChain Python 모노레포 아키텍처 분석 보고서",
+      "date": "2026-03-12T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["langchain", "architecture", "python", "llm", "ai"],
+      "summary": "Python 기반 LLM 애플리케이션 프레임워크 LangChain의 전체 아키텍처 분석. 기술 스택, 핵심 모듈, Runnable 인터페이스, 콜백 시스템, 파트너 패키지 구조 등을 상세하게 다룹니다."
+    },
+    {
+      "slug": "2026-03-13-nanoclaw-architecture",
+      "title": "NanoClaw 아키텍처 분석 보고서 / 실사용 시나리오 Q&A",
+      "date": "2026-03-12T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["nanoclaw", "architecture", "typescript", "ai", "agent", "claude"],
+      "summary": "TypeScript 기반 Personal Claude Assistant NanoClaw의 전체 아키텍처 분석. 단일 프로세스 오케스트레이터, 컨테이너 격리 에이전트, 채널 스킬 시스템, 보안 설계 등을 상세하게 다룹니다."
+    },
+    {
+      "slug": "2026-03-13-lightpanda-architecture",
+      "title": "Lightpanda 브라우저 아키텍처 분석 보고서",
+      "date": "2026-03-11T15:29:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["lightpanda", "architecture", "zig", "browser", "headless", "cdp", "v8"],
+      "summary": "Zig 기반 초경량 헤드리스 브라우저 Lightpanda의 전체 아키텍처 분석. Chrome 대비 9배 낮은 메모리, 11배 빠른 속도의 비결인 기술 스택, DOM 엔진, JavaScript V8 통합, CDP 프로토콜, 네트워크 레이어를 상세히 다룹니다."
+    },
+    {
+      "slug": "2026-03-11-openclaw-architecture",
+      "title": "OpenClaw 아키텍처 분석 보고서 / 실사용 시나리오 Q&A",
+      "date": "2026-03-10T16:14:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["openclaw", "architecture", "typescript", "ai", "agent"],
+      "summary": "TypeScript 기반 Personal AI Assistant 프레임워크 OpenClaw의 전체 아키텍처 분석. 기술 스택, 핵심 모듈, 메시지 파이프라인, 채널 시스템 등을 상세하게 다룹니다."
+    },
+    {
+      "slug": "2024-09-16-til-ruby-rails",
+      "title": "TIL: Ruby and Rails knowledges 1",
+      "date": "2024-09-16T07:16:16.000Z",
+      "topic": "backend",
+      "stage": "budding",
+      "tags": ["ruby", "rails", "post", "TIL"],
+      "summary": "TIL: Ruby and Rails knowledges"
+    },
+    {
+      "slug": "2024-02-21-leetcode-201",
+      "title": "leetcode-201 solutions",
+      "date": "2024-02-21T07:16:16.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "leetcode", "post", "bit manipulation"],
+      "summary": "leetcode-201 solutions #bit manipulation #number theory"
+    },
+    {
+      "slug": "2024-01-31-js-small-tricks-for-ps-1",
+      "title": "JS Small tricks for Problem solving 1 - Iterating",
+      "date": "2024-01-31T08:52:15.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "problemsolving", "post"],
+      "summary": "JS Small tricks for Problem solving 1 - Iterating"
+    },
+    {
+      "slug": "2024-01-24-leetcode-1239",
+      "title": "leetcode-1239 solutions",
+      "date": "2024-01-24T02:37:15.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "leetcode", "post"],
+      "summary": "leetcode-1239 solutions"
+    },
+    {
+      "slug": "2024-01-21-firebase-functions-reference-problem",
+      "title": "Firebase function에서 객체 참조 문제",
+      "date": "2024-01-20T15:29:14.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "firebase", "post"],
+      "summary": "Firebase function에서 같은 객체를 참조해 에러가 난 상황을 해결합니다."
+    },
+    {
+      "slug": "2023-06-08-open-gov-hacking",
+      "title": "정보공개포털에서 특정 페이지를 조회할 수 없는 문제 해결하기",
+      "date": "2023-06-08T14:38:14.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["civic hacking", "post"],
+      "summary": "정보공개포털에서 특정 페이지를 조회할 수 없는 문제 해결합니다"
+    },
+    {
+      "slug": "2023-06-01-pg-duplicate-key-voilates",
+      "title": "postgresql duplicate key value violates unique constrain 에러 해결하기",
+      "date": "2023-06-01T13:46:51.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["postgresql", "orm", "react-native", "error"],
+      "summary": "postgresql duplicate key 에러를 해결합니다"
+    },
+    {
+      "slug": "2023-03-02-gatsby-v5-to-v4",
+      "title": "Gatsby v5 to v4와 mdx v1 to v2",
+      "date": "2023-03-02T14:22:57.000Z",
+      "topic": "devops-cloud",
+      "stage": "budding",
+      "tags": ["git", "github", "bash", "script"],
+      "summary": "Gatsby v5 to v4와 mdx v1 to v2 어떻게 해결하는 지 알아봅니다."
+    },
+    {
+      "slug": "2023-02-25-github-author-problem",
+      "title": "Gihtub에서 author가 잘못된 커밋이 많이 쌓였을 때",
+      "date": "2023-02-25T06:06:17.000Z",
+      "topic": "devops-cloud",
+      "stage": "budding",
+      "tags": ["git", "github", "bash", "script"],
+      "summary": "Gihtub에서 author가 잘못된 커밋이 많이 쌓였을 때 어떻게 해결하는 지 알아봅니다."
+    },
+    {
+      "slug": "2023-01-30-aws-imweb-domain",
+      "title": "아임웹 랜딩페이지에 내 도메인을 aws route53으로 붙이기",
+      "date": "2023-01-29T16:04:18.000Z",
+      "topic": "devops-cloud",
+      "stage": "budding",
+      "tags": ["infra", "domain", "aws", "route53", "아임웹"],
+      "summary": "아임웹 랜딩페이지에 내 도메인을 붙이는 방법을 알아봅니다"
+    },
+    {
+      "slug": "2022-10-10-gatsby-migration",
+      "title": "Github blog Jekyll에서 Gatsby로 마이그레이션하기",
+      "date": "2022-10-10T03:47:22.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "react", "gatsby", "jekyll", "github blog", "migration"],
+      "summary": "github Jekyll blog to Gatsby"
+    },
+    {
+      "slug": "2022-07-29-aspect-ratio",
+      "title": "css 이미지 가로 세로 비율 유지하기",
+      "date": "2022-07-29T08:26:45.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "react", "html", "css"],
+      "summary": "react-hook-form"
+    },
+    {
+      "slug": "2022-07-29-custom-dropdown",
+      "title": "selectbox 커스텀 dropdown",
+      "date": "2022-07-29T08:26:45.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "react", "html", "css"],
+      "summary": "react-hook-form"
+    },
+    {
+      "slug": "2022-07-17-link-manage-service-plan",
+      "title": "링크 관리 서비스 기획서",
+      "date": "2022-07-17T10:56:23.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "react", "product", "toy project"],
+      "summary": "react-hook-form"
+    },
+    {
+      "slug": "2022-04-21-react-native-testing-library",
+      "title": "react-native-testing-library 설치하기",
+      "date": "2022-04-21T14:42:15.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "react", "react-native", "test"],
+      "summary": "react-hook-form"
+    },
+    {
+      "slug": "2022-03-13-TIL-css-grid",
+      "title": "220313 TIL",
+      "date": "2022-03-13T11:16:45.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["question"],
+      "summary": "220313 TIL"
+    },
+    {
+      "slug": "2022-01-20-react-hook-form",
+      "title": "react-hook-form 시작하기 1",
+      "date": "2022-01-20T14:26:34.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["javascript", "form", "react", "hook"],
+      "summary": "react-hook-form"
+    },
+    {
+      "slug": "2021-06-14-jekyll-erro",
+      "title": "Ruby 3 버전업 이후 Jekyll openssl, webrick 관련 에러",
+      "date": "2021-06-14T10:20:12.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["지킬", "jekyll", "에러", "bundle"],
+      "summary": "Ruby 3 버전업 이후 Jekyll 에러"
+    },
+    {
+      "slug": "2021-01-23-Angular-9-to-10",
+      "title": "Angular 9 to 10",
+      "date": "2021-01-23T13:07:33.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["Angular", "frontend"],
+      "summary": "Angular 9 to 10"
+    },
+    {
+      "slug": "2020-06-28-manjum-result",
+      "title": "머신러닝을 활용한 뉴스 데이터 긍/부정 분석",
+      "date": "2020-06-28T12:20:12.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["ML", "keras", "뉴스 머신러닝", "뉴스 크롤링", "빅카인즈"],
+      "summary": "머신러닝을 활용한 뉴스 데이터 긍/부정 분석"
+    },
+    {
+      "slug": "2020-05-31-TIL-react-native",
+      "title": "200531 TIL",
+      "date": "2020-05-31T12:20:12.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["question"],
+      "summary": "200531 TIL"
+    },
+    {
+      "slug": "2020-05-25-TIL-first",
+      "title": "200525 TIL",
+      "date": "2020-05-25T13:46:51.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["question"],
+      "summary": "200525 TIL"
+    },
+    {
+      "slug": "2020-04-06-react-native-kakao-login-ios",
+      "title": "리엑트 네이티브 IOS에서 카카오 SDK를 적용하면서 겪은 문제와 해결",
+      "date": "2020-04-06T13:34:32.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["develop", "react-native", "iOS"],
+      "summary": "리엑트 네이티브 IOS 프로젝트에서 카카오 SDK를 적용하면서 겪은 문제와 해결 방법을 알아봅니다."
+    },
+    {
+      "slug": "2020-02-09-django-gae-deploy",
+      "title": "Django 프로젝트를 생성하고 Google App Engine에 배포하기 1",
+      "date": "2020-02-09T13:18:49.000Z",
+      "topic": "backend",
+      "stage": "budding",
+      "tags": ["develop", "django", "GCP"],
+      "summary": "Django 프로젝트를 생성하고 Google App Engine에 배포하는 방법을 알아봅니다."
+    },
+    {
+      "slug": "2019-07-25-react-architecture",
+      "title": "ReactJS 프로젝트 구성하기",
+      "date": "2019-09-10T09:22:34.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["develop", "ReactJS"],
+      "summary": "리엑트는 다양한 라이브러리가 장점입니다. 구현해야 할 기능 별로 다양한 라이브러리를 알아봅니다."
+    },
+    {
+      "slug": "2019-07-25-angular-architecture",
+      "title": "AngularJS 7의 아키텍쳐 알아보기",
+      "date": "2019-07-25T13:42:15.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["develop", "AngularJS"],
+      "summary": "두 프로젝트를 진행하면서 활용했던 AngularJS 7의 아키텍쳐를 알아봅니다."
+    },
+    {
+      "slug": "2019-06-25-rails-remote",
+      "title": "Rails remote를 사용해 비동기로 서버 응답 요청하기",
+      "date": "2019-06-25T11:16:32.000Z",
+      "topic": "backend",
+      "stage": "budding",
+      "tags": ["develop", "rails"],
+      "summary": "RubyOnRails remote 기능을 사용해 비동기로 서버의 응답을 요청해 봅니다."
+    },
+    {
+      "slug": "2019-06-12-angular-form",
+      "title": "AngularJS form binding Input에 기본값 설정하기",
+      "date": "2019-06-12T11:16:32.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["develop", "frontend"],
+      "summary": "AngularJS의 폼을 사용할 때 option 기본값을 설정합니다."
+    },
+    {
+      "slug": "2019-05-07-NDC-review",
+      "title": "NDC 2019 후기",
+      "date": "2019-05-07T11:20:12.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["develop", "conference"],
+      "summary": "NDC 2019에서 들은 강의와 생각을 정리합니다."
+    },
+    {
+      "slug": "2019-04-22-kakao-interview-review",
+      "title": "KAKAO 기술 면접 리뷰",
+      "date": "2019-04-22T07:08:45.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["develop", "interview"],
+      "summary": "KAKAO 기술 면접 질문과 답변을 정리합니다."
+    },
+    {
+      "slug": "2019-04-22-naver-interview-review",
+      "title": "NAVER 기술 면접 리뷰",
+      "date": "2019-04-22T07:08:45.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["develop", "interview"],
+      "summary": "NAVER 기술 면접 질문과 답변을 정리합니다."
+    },
+    {
+      "slug": "2019-04-17-renwal-sccc-page",
+      "title": "SCCC 홈페이지 리뉴얼",
+      "date": "2019-04-17T09:27:41.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["develop", "jekyll"],
+      "summary": "SCCC 소모임 홈페이지를 지킬 블로그로 리뉴얼합니다."
+    },
+    {
+      "slug": "2019-04-15-jekyll-blog",
+      "title": "Jekyll로 깃헙 블로그 멋대로 디자인하기",
+      "date": "2019-04-15T10:12:17.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["develop", "jekyll"],
+      "summary": "Jekyll로 깃헙 블로그를 생성하고 스타일을 멋대로 입혀봅니다"
+    },
+    {
+      "slug": "2019-04-11-dart-game",
+      "title": "삼성 codeground 연습문제 다트게임 풀이",
+      "date": "2019-04-11T10:03:48.000Z",
+      "topic": "algorithms",
+      "stage": "budding",
+      "tags": ["algorithm"],
+      "summary": "삼성 codeground 연습문제 다트게임을 풀어봅니다."
+    },
+    {
+      "slug": "2019-04-09-JWT-springboot-login",
+      "title": "JWT를 활용한 Spring Boot + Vue.js 로그인 구현하기",
+      "date": "2019-04-08T21:07:15.000Z",
+      "topic": "backend",
+      "stage": "budding",
+      "tags": ["develop"],
+      "summary": "Spring Boot Restful API와 토큰을 활용해 로그인 기능을 만들어 봅니다."
+    },
+    {
+      "slug": "2019-04-04-question",
+      "title": "190404",
+      "date": "2019-04-04T12:10:29.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["question"],
+      "summary": "Spring Boot를 설치하고 기본 기능을 사용해 봅니다"
+    },
+    {
+      "slug": "2019-03-30-spring-tutorial",
+      "title": "Spring Boot 입문하기",
+      "date": "2019-03-29T17:04:32.000Z",
+      "topic": "backend",
+      "stage": "budding",
+      "tags": ["develop"],
+      "summary": "Spring Boot를 설치하고 기본 기능을 사용해 봅니다"
+    },
+    {
+      "slug": "2019-03-12-ssh-github",
+      "title": "Github에 ssh-key 추가하기",
+      "date": "2019-03-12T06:13:19.000Z",
+      "topic": "devops-cloud",
+      "stage": "budding",
+      "tags": ["develop", "github"],
+      "summary": "Github에 ssh-key를 추가하고 push하는 과정을 설명합니다"
+    },
+    {
+      "slug": "2018-01-29-parti-union",
+      "title": "Parti 회사 적응하기",
+      "date": "2018-01-29T14:24:17.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["develop", "job", "daily"],
+      "summary": "새로운 회사에서"
+    },
+    {
+      "slug": "2017-09-09-first-vue",
+      "title": "프론트엔드 프레임워크 VueJS 시작하기",
+      "date": "2017-09-09T10:08:16.000Z",
+      "topic": "web-frontend",
+      "stage": "budding",
+      "tags": ["front-end"],
+      "summary": "React Book Recommend"
+    },
+    {
+      "slug": "2017-04-28-django-template-for-loop",
+      "title": "Django Template Numeric For Loop",
+      "date": "2017-04-27T17:38:15.000Z",
+      "topic": "backend",
+      "stage": "budding",
+      "tags": ["develop"],
+      "summary": "Django Template Numeric For Loop"
+    },
+    {
+      "slug": "2017-04-28-book-review",
+      "title": "리액트 책 리뷰",
+      "date": "2017-04-27T16:48:31.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["book"],
+      "summary": "React Book Recommend"
+    },
+    {
+      "slug": "2017-01-29-blogging-tools",
+      "title": "블로깅 툴 비교",
+      "date": "2017-01-28T17:28:31.000Z",
+      "topic": "dev-life",
+      "stage": "budding",
+      "tags": ["jekyll"],
+      "summary": "Jekyll default page"
+    }
+  ],
+  "generatedAt": "2026-04-15T11:09:20.213Z"
+}

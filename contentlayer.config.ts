@@ -104,6 +104,8 @@ export const Blog = defineDocumentType(() => ({
     layout: { type: 'string' },
     bibliography: { type: 'string' },
     canonicalUrl: { type: 'string' },
+    topic: { type: 'string' },
+    stage: { type: 'enum', options: ['seedling', 'budding', 'evergreen'], default: 'budding' },
   },
   computedFields: {
     ...computedFields,
@@ -146,15 +148,18 @@ export const Authors = defineDocumentType(() => ({
 // and skip the import entirely when no mermaid blocks exist in posts.
 function lazyRehypeMermaid() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let plugin: any = null
+  let transformer: any = null
   return () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return async (tree: any, file: any) => {
-      if (!plugin) {
+      if (!transformer) {
         const mod = await import('rehype-mermaid')
-        plugin = mod.default({ strategy: 'inline-svg' })
+        // rehype-mermaid exports a unified attacher; call with dummy context to get the transformer
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const attacher = mod.default as any
+        transformer = attacher({ strategy: 'inline-svg' })
       }
-      return plugin(tree, file)
+      return transformer(tree, file)
     }
   }
 }
@@ -188,5 +193,7 @@ export default makeSource({
     const { allDocuments } = await importData()
     createTagCount(allDocuments)
     createSearchIndex(allDocuments)
+    const { generateKBData } = await import('./scripts/generate-kb-data.mjs')
+    generateKBData(allDocuments)
   },
 })

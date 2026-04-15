@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge IDE Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --kb-bg: #0a0e1a;
+    --kb-surface: #0f1320;
+    --kb-surface-alt: #141825;
+    --kb-border: #1c2033;
+    --kb-text: #b8bcc8;
+    --kb-text-strong: #e2e4ea;
+    --kb-text-muted: #555b6e;
+    --kb-accent: #f59e0b;
+    --kb-accent-dim: rgba(245, 158, 11, 0.1);
+    --kb-accent-strong: #fbbf24;
+    --kb-green: #34d399;
+    --kb-yellow: #fbbf24;
+    --kb-red: #f87171;
+  }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--kb-bg);
+    color: var(--kb-text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ===== HEADER (Blog Header) ===== */
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--kb-border);
+    background: var(--kb-surface);
+  }
+  .site-header .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--kb-text-strong);
+  }
+  .site-header .logo-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+  }
+  .site-header nav {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+  }
+  .site-header nav a {
+    color: var(--kb-text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .site-header nav a:hover { color: var(--kb-text); }
+  .site-header nav a.active {
+    color: var(--kb-accent);
+    position: relative;
+  }
+  .site-header nav a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -13px;
+    left: 0; right: 0;
+    height: 1px;
+    background: var(--kb-accent);
+  }
+
+  /* ===== TOOLBAR ===== */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--kb-border);
+    font-size: 11px;
+    color: var(--kb-text-muted);
+    background: var(--kb-surface-alt);
+  }
+  .toolbar-section { display: flex; align-items: center; gap: 12px; }
+  .toolbar-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--kb-text-muted);
+    font-family: inherit; font-size: 11px; cursor: pointer;
+    padding: 2px 6px; border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .toolbar-btn:hover { color: var(--kb-accent); background: var(--kb-accent-dim); }
+  .toolbar-breadcrumb { color: var(--kb-accent); }
+
+  /* ===== THREE PANEL LAYOUT ===== */
+  .panels {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--kb-border);
+    background: var(--kb-surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-label {
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--kb-text-muted);
+  }
+  .sidebar-tree {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .tree-group {}
+  .tree-group-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .tree-group-header:hover { background: var(--kb-accent-dim); }
+  .tree-group-header .arrow {
+    font-size: 10px;
+    color: var(--kb-text-muted);
+    width: 14px;
+    text-align: center;
+    transition: transform 0.15s;
+  }
+  .tree-group-header .arrow.open { transform: rotate(90deg); }
+  .tree-group-header .icon { font-size: 13px; }
+  .tree-group-header .label { color: var(--kb-text-strong); font-weight: 500; flex: 1; }
+  .tree-group-header .count {
+    font-size: 10px;
+    color: var(--kb-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .tree-items { margin-left: 14px; }
+  .tree-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px 3px 14px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 0;
+  }
+  .tree-item:hover { background: var(--kb-accent-dim); }
+  .tree-item.active {
+    background: var(--kb-accent-dim);
+    color: var(--kb-accent);
+  }
+  .tree-item .stage { font-size: 10px; flex-shrink: 0; }
+  .tree-item .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar-footer {
+    padding: 8px 12px;
+    font-size: 10px;
+    color: var(--kb-text-muted);
+    border-top: 1px solid var(--kb-border);
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    background: var(--kb-bg);
+  }
+  .main-scroll { max-width: 720px; margin: 0 auto; padding: 40px 32px; }
+
+  /* Note Header */
+  .note-title {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--kb-text-strong);
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--kb-text-muted);
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--kb-border);
+  }
+  .note-meta .topic-badge {
+    color: var(--kb-accent);
+  }
+
+  /* Note Content */
+  .note-content h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--kb-text-strong);
+    margin: 32px 0 12px;
+  }
+  .note-content h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--kb-text-strong);
+    margin: 24px 0 8px;
+  }
+  .note-content p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--kb-text);
+    margin-bottom: 16px;
+  }
+  .note-content a {
+    color: var(--kb-accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(245, 158, 11, 0.3);
+    text-underline-offset: 3px;
+  }
+  .note-content a:hover { text-decoration-color: var(--kb-accent); }
+  .note-content code {
+    font-size: 12px;
+    background: var(--kb-surface-alt);
+    color: var(--kb-accent);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .note-content pre {
+    background: var(--kb-surface);
+    border: 1px solid var(--kb-border);
+    border-radius: 4px;
+    padding: 16px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .note-content pre code {
+    background: none;
+    padding: 0;
+    color: var(--kb-text);
+  }
+  .note-content blockquote {
+    border-left: 2px solid var(--kb-accent);
+    padding: 8px 16px;
+    margin: 16px 0;
+    background: var(--kb-surface);
+    font-style: italic;
+    color: var(--kb-text);
+  }
+  .note-content .wiki-link {
+    color: var(--kb-accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--kb-accent);
+    padding-bottom: 1px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .note-content .wiki-link:hover {
+    border-bottom-style: solid;
+    background: var(--kb-accent-dim);
+  }
+  .note-content ul {
+    margin: 8px 0 16px 20px;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .note-content li { margin-bottom: 4px; }
+
+  /* ===== CONTEXT PANEL ===== */
+  .context {
+    width: 260px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--kb-border);
+    background: var(--kb-surface);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .ctx-section {
+    padding: 12px;
+    border-bottom: 1px solid var(--kb-border);
+  }
+  .ctx-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--kb-text-muted);
+    margin-bottom: 8px;
+  }
+  .ctx-toc-item {
+    display: block;
+    padding: 3px 0;
+    font-size: 11px;
+    color: var(--kb-text);
+    text-decoration: none;
+    transition: color 0.15s;
+    cursor: pointer;
+  }
+  .ctx-toc-item:hover { color: var(--kb-accent); }
+  .ctx-toc-item.active { color: var(--kb-accent); }
+  .ctx-toc-item.depth-3 { padding-left: 14px; font-size: 10px; color: var(--kb-text-muted); }
+  .ctx-backlink {
+    display: block;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: var(--kb-text);
+    text-decoration: none;
+    border-radius: 3px;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .ctx-backlink:hover { background: var(--kb-accent-dim); color: var(--kb-accent); }
+  .ctx-backlink .preview {
+    font-size: 10px;
+    color: var(--kb-text-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .ctx-prop {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    padding: 3px 0;
+  }
+  .ctx-prop .key { color: var(--kb-text-muted); }
+  .ctx-prop .val { color: var(--kb-text); }
+
+  /* ===== STATUS BAR ===== */
+  .statusbar {
+    display: flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 12px;
+    border-top: 1px solid var(--kb-border);
+    background: var(--kb-surface-alt);
+    font-size: 11px;
+    color: var(--kb-text-muted);
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .statusbar .indicator {
+    color: var(--kb-accent);
+    font-size: 8px;
+  }
+  .statusbar .right { margin-left: auto; }
+  .statusbar .shortcut {
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--kb-surface);
+    border: 1px solid var(--kb-border);
+    font-size: 10px;
+  }
+
+  /* ===== MOBILE RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .sidebar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      width: 280px;
+      border-right: 1px solid var(--kb-border);
+    }
+    .sidebar.mobile-open {
+      display: flex;
+    }
+    .context {
+      display: none;
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      z-index: 50;
+      width: 280px;
+      border-left: 1px solid var(--kb-border);
+    }
+    .context.mobile-open {
+      display: flex;
+    }
+    .mobile-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 40;
+    }
+    .mobile-backdrop.visible {
+      display: block;
+    }
+    .main-scroll {
+      padding: 24px 16px;
+    }
+    .note-title {
+      font-size: 28px;
+    }
+    .toolbar {
+      font-size: 10px;
+      padding: 0 8px;
+    }
+    .toolbar .breadcrumb-full { display: none; }
+    .toolbar .breadcrumb-short { display: flex !important; }
+    .site-header nav { gap: 12px; font-size: 12px; }
+    .site-header .logo { font-size: 12px; }
+    .site-header .logo-icon { width: 24px; height: 24px; font-size: 12px; }
+  }
+  @media (min-width: 769px) {
+    .toolbar .breadcrumb-short { display: none; }
+    .mobile-backdrop { display: none !important; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--kb-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--kb-text-muted); }
+</style>
+</head>
+<body>
+
+<!-- Site Header -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-icon">M</div>
+    MartianLee's Dev Blog
+  </div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Posts</a>
+    <a href="#" class="active">KB</a>
+    <a href="#">Projects</a>
+    <a href="#">About</a>
+  </nav>
+</header>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="toolbar-section">
+    <button class="toolbar-btn" onclick="toggleSidebar()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M0 2.5A.5.5 0 01.5 2h15a.5.5 0 010 1H.5a.5.5 0 01-.5-.5zm0 5A.5.5 0 01.5 7h7a.5.5 0 010 1h-7A.5.5 0 010 7.5zm0 5a.5.5 0 01.5-.5h15a.5.5 0 010 1H.5a.5.5 0 01-.5-.5z"/></svg>
+      Explorer
+    </button>
+  </div>
+  <div class="toolbar-section breadcrumb-full">
+    <span class="toolbar-breadcrumb">KB</span>
+    <span>/</span>
+    <span>ai-infrastructure</span>
+    <span>/</span>
+    <span style="color: var(--kb-text-strong)">ollama-architecture</span>
+  </div>
+  <div class="toolbar-section breadcrumb-short" style="display:none">
+    <span style="color: var(--kb-text-strong)">ollama-architecture</span>
+  </div>
+  <div class="toolbar-section">
+    <button class="toolbar-btn" onclick="toggleContext()">
+      Context
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M0 2.5A.5.5 0 01.5 2h15a.5.5 0 010 1H.5a.5.5 0 01-.5-.5zm8 5a.5.5 0 01.5-.5h7a.5.5 0 010 1h-7a.5.5 0 01-.5-.5zm0 5a.5.5 0 01.5-.5h7a.5.5 0 010 1h-7a.5.5 0 01-.5-.5z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Mobile Backdrop -->
+<div class="mobile-backdrop" id="backdrop" onclick="closePanels()"></div>
+
+<!-- Three Panel Layout -->
+<div class="panels">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-label">Explorer</div>
+    <div class="sidebar-tree">
+
+      <!-- AI Infrastructure -->
+      <div class="tree-group">
+        <div class="tree-group-header">
+          <span class="arrow open">&#9654;</span>
+          <span class="icon">&#129302;</span>
+          <span class="label">AI Infrastructure</span>
+          <span class="count">7</span>
+        </div>
+        <div class="tree-items">
+          <a class="tree-item active">
+            <span class="stage">&#127795;</span>
+            <span class="name">Ollama Architecture Analysis</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127795;</span>
+            <span class="name">LangChain Architecture Analysis</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127793;</span>
+            <span class="name">agent-browser Architecture</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127793;</span>
+            <span class="name">beads Architecture Analysis</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127807;</span>
+            <span class="name">Lightpanda Architecture</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127807;</span>
+            <span class="name">NanoClaw Architecture</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127807;</span>
+            <span class="name">OpenClaw Architecture</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Web Frontend -->
+      <div class="tree-group">
+        <div class="tree-group-header">
+          <span class="arrow open">&#9654;</span>
+          <span class="icon">&#127760;</span>
+          <span class="label">Web Frontend</span>
+          <span class="count">15</span>
+        </div>
+        <div class="tree-items">
+          <a class="tree-item">
+            <span class="stage">&#127795;</span>
+            <span class="name">React Hook Form</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127795;</span>
+            <span class="name">React Architecture</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127807;</span>
+            <span class="name">Angular Architecture</span>
+          </a>
+          <a class="tree-item">
+            <span class="stage">&#127807;</span>
+            <span class="name">First Vue.js</span>
+          </a>
+          <a class="tree-item" style="color: var(--kb-text-muted); font-style: italic;">
+            <span class="stage"></span>
+            <span class="name">+ 11 more</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Backend -->
+      <div class="tree-group">
+        <div class="tree-group-header">
+          <span class="arrow">&#9654;</span>
+          <span class="icon">&#9881;&#65039;</span>
+          <span class="label">Backend</span>
+          <span class="count">10</span>
+        </div>
+      </div>
+
+      <!-- DevOps & Cloud -->
+      <div class="tree-group">
+        <div class="tree-group-header">
+          <span class="arrow">&#9654;</span>
+          <span class="icon">&#9729;&#65039;</span>
+          <span class="label">DevOps & Cloud</span>
+          <span class="count">5</span>
+        </div>
+      </div>
+
+      <!-- Dev Life -->
+      <div class="tree-group">
+        <div class="tree-group-header">
+          <span class="arrow">&#9654;</span>
+          <span class="icon">&#128221;</span>
+          <span class="label">Dev Life</span>
+          <span class="count">10</span>
+        </div>
+      </div>
+
+      <!-- Algorithms -->
+      <div class="tree-group">
+        <div class="tree-group-header">
+          <span class="arrow">&#9654;</span>
+          <span class="icon">&#129513;</span>
+          <span class="label">Algorithms</span>
+          <span class="count">3</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="sidebar-footer">
+      <span>51 notes</span>
+      <span>&middot;</span>
+      <span>6 topics</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="main-scroll">
+      <h1 class="note-title">Ollama Architecture Analysis Report</h1>
+      <div class="note-meta">
+        <span>2026-03-15</span>
+        <span>&middot;</span>
+        <span>12 min read</span>
+        <span>&middot;</span>
+        <span class="topic-badge">ai-infrastructure</span>
+        <span>&middot;</span>
+        <span>&#127795; evergreen</span>
+      </div>
+
+      <div class="note-content">
+        <blockquote>
+          <strong>Project:</strong> <a href="#">ollama/ollama</a> &nbsp;|&nbsp;
+          <strong>Version:</strong> 0.6.2 &nbsp;|&nbsp;
+          <strong>License:</strong> MIT
+        </blockquote>
+
+        <h2>1. Executive Summary</h2>
+        <p>
+          Ollama is a tool for running large language models locally. Built in Go, it provides
+          a simple CLI and REST API interface that abstracts away model management, quantization,
+          and GPU acceleration. The architecture follows a <strong>layered caching</strong> design
+          similar to Docker's image system.
+        </p>
+
+        <h2>2. Core Architecture</h2>
+        <p>
+          The system is structured around a <code>Provider</code> abstraction that supports
+          multiple backends. This pattern is also used in
+          <a class="wiki-link">LangChain Architecture Analysis</a> and
+          <a class="wiki-link">agent-browser Architecture</a>.
+        </p>
+
+        <pre><code><span style="color: rgb(127, 219, 202)">type</span> <span style="color: rgb(130, 170, 255)">Provider</span> <span style="color: rgb(127, 219, 202)">interface</span> {
+    <span style="color: rgb(130, 170, 255)">Generate</span>(ctx context.Context, req *GenerateRequest) (*GenerateResponse, error)
+    <span style="color: rgb(130, 170, 255)">Pull</span>(ctx context.Context, model string) error
+    <span style="color: rgb(130, 170, 255)">List</span>(ctx context.Context) ([]ModelInfo, error)
+}</code></pre>
+
+        <h3>2.1 Layer System</h3>
+        <p>
+          Models are stored as content-addressable layers, each identified by a SHA-256 digest.
+          This enables deduplication across models that share base weights. The
+          <code>Modelfile</code> declarative format is directly inspired by <code>Dockerfile</code>.
+        </p>
+        <ul>
+          <li><strong>Base layer</strong> &mdash; Pre-trained model weights (GGUF format)</li>
+          <li><strong>Adapter layer</strong> &mdash; LoRA or QLoRA fine-tuning weights</li>
+          <li><strong>Template layer</strong> &mdash; Chat template and system prompt</li>
+          <li><strong>Parameters layer</strong> &mdash; Runtime configuration (temperature, top_p)</li>
+        </ul>
+
+        <h2>3. Provider Abstraction</h2>
+        <p>
+          The Provider pattern enables pluggable backends. The default <code>llama.cpp</code> backend
+          handles CPU/GPU inference, while experimental backends support remote execution. This same
+          pattern appears in <a class="wiki-link">NanoClaw Architecture</a> for distributed inference.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEXT PANEL -->
+  <div class="context">
+
+    <!-- Outline -->
+    <div class="ctx-section">
+      <div class="ctx-label">Outline</div>
+      <a class="ctx-toc-item active">1. Executive Summary</a>
+      <a class="ctx-toc-item">2. Core Architecture</a>
+      <a class="ctx-toc-item depth-3">2.1 Layer System</a>
+      <a class="ctx-toc-item">3. Provider Abstraction</a>
+      <a class="ctx-toc-item">4. API Design</a>
+      <a class="ctx-toc-item">5. GPU Memory Management</a>
+      <a class="ctx-toc-item">6. Security Model</a>
+      <a class="ctx-toc-item">7. Performance</a>
+    </div>
+
+    <!-- Backlinks -->
+    <div class="ctx-section">
+      <div class="ctx-label">Backlinks (3)</div>
+      <a class="ctx-backlink">
+        agent-browser Architecture
+        <div class="preview">"...Ollama와 유사한 Provider 패턴..."</div>
+      </a>
+      <a class="ctx-backlink">
+        beads Architecture Analysis
+        <div class="preview">"...Ollama의 레이어 시스템을 참고..."</div>
+      </a>
+      <a class="ctx-backlink">
+        LangChain Architecture Analysis
+        <div class="preview">"...로컬 실행은 Ollama를 통해..."</div>
+      </a>
+    </div>
+
+    <!-- Links To -->
+    <div class="ctx-section">
+      <div class="ctx-label">Links To (2)</div>
+      <a class="ctx-backlink">LangChain Architecture Analysis</a>
+      <a class="ctx-backlink">NanoClaw Architecture</a>
+    </div>
+
+    <!-- Properties -->
+    <div class="ctx-section">
+      <div class="ctx-label">Properties</div>
+      <div class="ctx-prop">
+        <span class="key">Topic</span>
+        <span class="val">ai-infrastructure</span>
+      </div>
+      <div class="ctx-prop">
+        <span class="key">Stage</span>
+        <span class="val">&#127795; evergreen</span>
+      </div>
+      <div class="ctx-prop">
+        <span class="key">Created</span>
+        <span class="val">2026-03-15</span>
+      </div>
+      <div class="ctx-prop">
+        <span class="key">Tags</span>
+        <span class="val" style="font-size: 10px">ollama, architecture, go</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Status Bar -->
+<div class="statusbar">
+  <span class="indicator">&#9679;</span>
+  <span style="color: var(--kb-accent)">KB</span>
+  <span>ai-infrastructure</span>
+  <span>&middot;</span>
+  <span>ollama-architecture</span>
+  <span>&middot;</span>
+  <span>12 min read</span>
+  <span class="right">
+    <span class="shortcut">&#8984;K</span> Search
+  </span>
+</div>
+
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('mobile-open');
+  document.getElementById('backdrop').classList.toggle('visible');
+  document.querySelector('.context').classList.remove('mobile-open');
+}
+function toggleContext() {
+  document.querySelector('.context').classList.toggle('mobile-open');
+  document.getElementById('backdrop').classList.toggle('visible');
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+}
+function closePanels() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.querySelector('.context').classList.remove('mobile-open');
+  document.getElementById('backdrop').classList.remove('visible');
+}
+</script>
+</body>
+</html>

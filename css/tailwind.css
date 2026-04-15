@@ -1,7 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --font-family-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-family-serif: var(--font-instrument), Georgia, serif;
 
   /* Professional Blue Color Scheme */
   --color-primary-50: #eff6ff;
@@ -112,7 +114,7 @@ input:-webkit-autofill:focus {
 }
 
 .code-line {
-  @apply -mx-4 block border-l-4 border-transparent pl-4 pr-4;
+  @apply -mx-4 block border-l-4 border-transparent pr-4 pl-4;
 }
 
 .code-line.inserted {
@@ -128,7 +130,7 @@ input:-webkit-autofill:focus {
 }
 
 .line-number::before {
-  @apply -ml-2 mr-4 inline-block w-4 text-right text-gray-400;
+  @apply mr-4 -ml-2 inline-block w-4 text-right text-gray-400;
   content: attr(line);
 }
 
@@ -237,19 +239,19 @@ input:-webkit-autofill:focus {
 }
 
 .prose h1 {
-  @apply mb-6 mt-8 text-3xl font-bold text-gray-900 dark:text-gray-100;
+  @apply mt-8 mb-6 text-3xl font-bold text-gray-900 dark:text-gray-100;
 }
 
 .prose h2 {
-  @apply mb-4 mt-8 text-2xl font-bold text-gray-900 dark:text-gray-100;
+  @apply mt-8 mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100;
 }
 
 .prose h3 {
-  @apply mb-3 mt-6 text-xl font-semibold text-gray-900 dark:text-gray-100;
+  @apply mt-6 mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100;
 }
 
 .prose h4 {
-  @apply mb-2 mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100;
+  @apply mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100;
 }
 
 .prose p {
@@ -278,11 +280,11 @@ input:-webkit-autofill:focus {
 }
 
 .prose blockquote {
-  @apply my-6 border-l-4 border-blue-500 bg-gray-50 py-3 pl-4 pr-4 italic text-gray-700 dark:border-blue-400 dark:bg-gray-800 dark:text-gray-300;
+  @apply my-6 border-l-4 border-blue-500 bg-gray-50 py-3 pr-4 pl-4 text-gray-700 italic dark:border-blue-400 dark:bg-gray-800 dark:text-gray-300;
 }
 
 .prose code {
-  @apply rounded bg-gray-100 px-1.5 py-0.5 text-sm font-mono text-blue-600 dark:bg-gray-800 dark:text-blue-400;
+  @apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-blue-600 dark:bg-gray-800 dark:text-blue-400;
 }
 
 .prose pre {
@@ -315,6 +317,78 @@ input:-webkit-autofill:focus {
 
 .prose table {
   @apply my-6 w-full;
+}
+
+/* ========================================
+   Knowledge IDE Theme
+   ======================================== */
+.kb-theme {
+  --kb-bg: #0a0e1a;
+  --kb-surface: #0f1320;
+  --kb-surface-alt: #141825;
+  --kb-border: #1c2033;
+  --kb-text: #b8bcc8;
+  --kb-text-strong: #e2e4ea;
+  --kb-text-muted: #555b6e;
+  --kb-accent: #f59e0b;
+  --kb-accent-dim: rgba(245, 158, 11, 0.1);
+  --kb-accent-strong: #fbbf24;
+  --kb-green: #34d399;
+  --kb-yellow: #fbbf24;
+  --kb-red: #f87171;
+}
+
+:where(.light, .light *) .kb-theme {
+  --kb-bg: #f8f7f4;
+  --kb-surface: #ffffff;
+  --kb-surface-alt: #f0efec;
+  --kb-border: #e2e0db;
+  --kb-text: #3d3d3d;
+  --kb-text-strong: #1a1a1a;
+  --kb-text-muted: #8a8a8a;
+  --kb-accent: #d97706;
+  --kb-accent-dim: rgba(217, 119, 6, 0.08);
+  --kb-accent-strong: #b45309;
+  --kb-green: #059669;
+  --kb-yellow: #d97706;
+  --kb-red: #dc2626;
+}
+
+/* KB Layout Breakout — escape SectionContainer and neutralise its padding */
+.kb-breakout {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  overflow-x: hidden; /* prevent horizontal scroll from 100vw */
+}
+
+/* KB Prose Overrides */
+.kb-theme .prose {
+  color: var(--kb-text);
+}
+.kb-theme .prose h1,
+.kb-theme .prose h2,
+.kb-theme .prose h3,
+.kb-theme .prose h4 {
+  color: var(--kb-text-strong);
+}
+.kb-theme .prose a {
+  color: var(--kb-accent);
+  text-decoration-color: rgba(245, 158, 11, 0.3);
+}
+.kb-theme .prose a:hover {
+  color: var(--kb-accent-strong);
+}
+.kb-theme .prose strong {
+  color: var(--kb-text-strong);
+}
+.kb-theme .prose code {
+  color: var(--kb-accent);
+  background: var(--kb-surface-alt);
+}
+.kb-theme .prose blockquote {
+  border-color: var(--kb-accent);
+  background: var(--kb-surface);
+  color: var(--kb-text);
 }
 
 .prose thead {
