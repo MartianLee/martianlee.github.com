@@ -47,3 +47,96 @@ flowchart TD
 **agent-browser**는 AI 에이전트가 웹을 "눈으로 보고 손으로 조작"할 수 있게 해주는 미들웨어입니다. Vercel Labs에서 개발했으며, 접근성 트리 기반의 Ref 시스템으로 LLM이 웹 요소를 자연스럽게 참조할 수 있습니다. 상세 아키텍처는 [[2026-04-09-agent-browser-architecture|agent-browser 아키텍처 분석]]을 참고하세요.
 
 **Lightpanda**는 브라우저 자체를 AI/스크래핑 용도로 처음부터 재설계한 초경량 헤드리스 엔진입니다. Chrome 대비 9배 낮은 메모리, 11배 빠른 속도를 자랑합니다. 상세 아키텍처는 [[2026-03-13-lightpanda-architecture|Lightpanda 아키텍처 분석]]을 참고하세요.
+
+## 같은 태스크, 다른 접근 — Hacker News 상위 5개 글 추출
+
+세 도구의 차이를 체감하기 위해, 동일한 태스크를 각각 구현해 보겠습니다.
+
+**태스크:** Hacker News 첫 페이지에서 상위 5개 글의 제목과 URL을 추출합니다.
+
+### Playwright (TypeScript)
+
+CSS 셀렉터로 DOM 요소를 직접 지정하는 전통적인 방식입니다.
+
+```typescript
+import { chromium } from 'playwright'
+
+const browser = await chromium.launch()
+const page = await browser.newPage()
+await page.goto('https://news.ycombinator.com')
+
+const items = await page.locator('.titleline > a').evaluateAll((links) =>
+  links.slice(0, 5).map((a) => ({
+    title: a.textContent,
+    url: a.href,
+  }))
+)
+
+console.log(items)
+await browser.close()
+```
+
+개발자가 페이지 구조를 파악하고 CSS 셀렉터를 직접 작성해야 합니다. 셀렉터가 정확하면 빠르고 안정적입니다.
+
+### agent-browser (CLI)
+
+AI 에이전트가 접근성 트리를 통해 페이지를 "읽고" 데이터를 추출합니다.
+
+```bash
+# 브라우저를 열고 페이지 이동
+ab navigate https://news.ycombinator.com
+
+# 현재 페이지의 접근성 트리 스냅샷 확인
+ab snapshot
+
+# AI가 스냅샷을 해석하여 데이터 추출 (JSON 출력)
+ab execute --js "
+  const rows = document.querySelectorAll('.titleline > a');
+  JSON.stringify([...rows].slice(0, 5).map(a => ({
+    title: a.textContent,
+    url: a.href
+  })));
+"
+```
+
+CSS 셀렉터를 몰라도 `ab snapshot`으로 페이지 구조를 파악할 수 있습니다. AI 에이전트가 스냅샷을 보고 다음 액션을 결정하는 워크플로우에 최적화되어 있습니다.
+
+### Lightpanda (CDP 직접 호출)
+
+Playwright 호환 모드로도 사용할 수 있지만, 핵심 가치인 경량성을 살리려면 CDP를 직접 호출합니다.
+
+```python
+import json
+import websocket
+
+# Lightpanda CDP 서버에 연결 (기본 포트 9222)
+ws = websocket.create_connection("ws://127.0.0.1:9222")
+
+# 페이지 이동
+ws.send(json.dumps({
+    "id": 1,
+    "method": "Page.navigate",
+    "params": {"url": "https://news.ycombinator.com"}
+}))
+ws.recv()
+
+# JavaScript로 데이터 추출
+ws.send(json.dumps({
+    "id": 2,
+    "method": "Runtime.evaluate",
+    "params": {
+        "expression": """
+            JSON.stringify(
+                [...document.querySelectorAll('.titleline > a')]
+                    .slice(0, 5)
+                    .map(a => ({ title: a.textContent, url: a.href }))
+            )
+        """
+    }
+}))
+result = json.loads(ws.recv())
+print(result["result"]["result"]["value"])
+ws.close()
+```
+
+CDP를 직접 다루므로 코드가 가장 저수준입니다. 대신 Chrome 없이 동작하며, 대량 병렬 실행 시 리소스 효율이 압도적입니다.
