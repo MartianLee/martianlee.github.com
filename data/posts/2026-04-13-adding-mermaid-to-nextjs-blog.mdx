@@ -136,16 +136,31 @@ rehypePlugins: [
     else
       echo "found=false" >> $GITHUB_OUTPUT
     fi
-- name: Install Playwright Chromium (for mermaid rendering)
+- name: Get Playwright version
   if: steps.check-mermaid.outputs.found == 'true'
+  id: playwright-version
+  run: echo "version=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+- name: Cache Playwright browsers
+  if: steps.check-mermaid.outputs.found == 'true'
+  uses: actions/cache@v4
+  id: playwright-cache
+  with:
+    path: ~/.cache/ms-playwright
+    key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+- name: Install Playwright Chromium (for mermaid rendering)
+  if: steps.check-mermaid.outputs.found == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
   run: npx playwright install --with-deps chromium
+- name: Install Playwright deps only (cached browsers)
+  if: steps.check-mermaid.outputs.found == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+  run: npx playwright install-deps chromium
 ~~~
 
 ## 결과
 
-| 상황                  | CI 동작                                          |
-| --------------------- | ------------------------------------------------ |
-| mermaid 블록 **없음** | playwright 스킵 → 빌드 시간 변화 없음            |
-| mermaid 블록 **있음** | playwright 설치 (+30~40초 첫 빌드, 캐시 후 ~5초) |
+| 상황                                     | CI 동작                                                        |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| mermaid 블록 **없음**                    | playwright 스킵 → 빌드 시간 변화 없음                          |
+| mermaid 블록 **있음** (캐시 미스)        | playwright + chromium 전체 설치 (+30~40초)                      |
+| mermaid 블록 **있음** (캐시 히트)        | 브라우저 바이너리(112MB) 캐시 사용, OS 의존성만 설치 (~5초)     |
 
 이제 포스트에서 ` ```mermaid ` 코드 블록만 쓰면 빌드 타임에 자동으로 SVG 다이어그램이 생성됩니다.
