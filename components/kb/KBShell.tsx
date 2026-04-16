@@ -12,8 +12,9 @@ interface KBShellProps {
 }
 
 export default function KBShell({ sidebar, main, context, statusBar, breadcrumb }: KBShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [contextOpen, setContextOpen] = useState(false)
+  // null = not yet hydrated, use CSS to control visibility
+  const [sidebarOpen, setSidebarOpen] = useState<boolean | null>(null)
+  const [contextOpen, setContextOpen] = useState<boolean | null>(null)
 
   useEffect(() => {
     const isDesktop = window.matchMedia('(min-width: 768px)').matches
@@ -26,6 +27,8 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
       document.body.style.overflow = ''
     }
   }, [])
+
+  const hydrated = sidebarOpen !== null
 
   const closePanels = () => {
     if (window.matchMedia('(max-width: 767px)').matches) {
@@ -96,7 +99,7 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
       </div>
 
       {/* Mobile backdrop */}
-      {(sidebarOpen || contextOpen) && (
+      {hydrated && (sidebarOpen || contextOpen) && (
         <button
           type="button"
           aria-label="Close panels"
@@ -108,9 +111,13 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
       {/* 3-Panel Body */}
       <div className="flex min-h-0 flex-1">
         {/* Sidebar */}
-        {sidebarOpen && (
+        {(hydrated ? sidebarOpen : true) && (
           <aside
-            className="fixed top-0 left-0 z-50 h-full w-[280px] shrink-0 overflow-y-auto md:relative md:z-auto md:h-auto md:w-[260px]"
+            className={`shrink-0 overflow-y-auto ${
+              !hydrated
+                ? 'hidden w-[260px] md:relative md:block'
+                : 'fixed top-0 left-0 z-50 h-full w-[280px] md:relative md:z-auto md:h-auto md:w-[260px]'
+            }`}
             style={{
               borderRight: '1px solid var(--kb-border)',
               background: 'var(--kb-surface)',
@@ -126,9 +133,13 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
         </main>
 
         {/* Context Panel */}
-        {contextOpen && context && (
+        {(hydrated ? contextOpen : true) && context && (
           <aside
-            className="fixed top-0 right-0 z-50 h-full w-[280px] shrink-0 overflow-y-auto md:relative md:z-auto md:h-auto md:w-[240px]"
+            className={`shrink-0 overflow-y-auto ${
+              !hydrated
+                ? 'hidden w-[240px] md:relative md:block'
+                : 'fixed top-0 right-0 z-50 h-full w-[280px] md:relative md:z-auto md:h-auto md:w-[240px]'
+            }`}
             style={{
               borderLeft: '1px solid var(--kb-border)',
               background: 'var(--kb-surface)',

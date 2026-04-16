@@ -366,10 +366,10 @@ body.kb-active > section {
 body.kb-active > section > div {
   height: auto !important;
 }
-body.kb-active header {
+body.kb-active .site-chrome-header {
   display: none !important;
 }
-body.kb-active footer {
+body.kb-active .site-chrome-footer {
   display: none !important;
 }
 body.kb-active main {
