@@ -1,30 +1,6 @@
 {
   "topics": [
     {
-      "id": "web-frontend",
-      "label": "Web Frontend",
-      "count": 17,
-      "slugs": [
-        "2024-02-21-leetcode-201",
-        "2024-01-31-js-small-tricks-for-ps-1",
-        "2024-01-24-leetcode-1239",
-        "2024-01-21-firebase-functions-reference-problem",
-        "2023-06-01-pg-duplicate-key-voilates",
-        "2022-10-10-gatsby-migration",
-        "2022-07-29-aspect-ratio",
-        "2022-07-29-custom-dropdown",
-        "2022-07-17-link-manage-service-plan",
-        "2022-04-21-react-native-testing-library",
-        "2022-01-20-react-hook-form",
-        "2021-01-23-Angular-9-to-10",
-        "2020-04-06-react-native-kakao-login-ios",
-        "2019-07-25-react-architecture",
-        "2019-07-25-angular-architecture",
-        "2019-06-12-angular-form",
-        "2017-09-09-first-vue"
-      ]
-    },
-    {
       "id": "dev-life",
       "label": "Dev Life",
       "count": 15,
@@ -47,10 +23,32 @@
       ]
     },
     {
+      "id": "web-frontend",
+      "label": "Web Frontend",
+      "count": 14,
+      "slugs": [
+        "2024-01-21-firebase-functions-reference-problem",
+        "2023-03-02-gatsby-v5-to-v4",
+        "2022-10-10-gatsby-migration",
+        "2022-07-29-aspect-ratio",
+        "2022-07-29-custom-dropdown",
+        "2022-07-17-link-manage-service-plan",
+        "2022-04-21-react-native-testing-library",
+        "2022-01-20-react-hook-form",
+        "2021-01-23-Angular-9-to-10",
+        "2020-04-06-react-native-kakao-login-ios",
+        "2019-07-25-react-architecture",
+        "2019-07-25-angular-architecture",
+        "2019-06-12-angular-form",
+        "2017-09-09-first-vue"
+      ]
+    },
+    {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 10,
+      "count": 11,
       "slugs": [
+        "2026-04-17-playwright-architecture",
         "2026-04-16-browser-automation-comparison",
         "2026-04-15-paperclip-architecture",
         "2026-04-13-beads-architecture",
@@ -64,11 +62,26 @@
       ]
     },
     {
+      "id": "llm-research",
+      "label": "LLM Research",
+      "count": 7,
+      "slugs": [
+        "2026-04-17-attention-is-all-you-need-paper-note",
+        "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+        "2026-04-17-llm-math-basics-softmax",
+        "2026-04-17-llm-math-basics-vector-dot-product",
+        "2026-04-17-llm-paper-evolution-moc",
+        "2026-04-17-transformer-basics-qkv-intuition",
+        "2026-04-17-transformer-basics-residual-layernorm-ffn"
+      ]
+    },
+    {
       "id": "backend",
       "label": "Backend",
-      "count": 6,
+      "count": 7,
       "slugs": [
         "2024-09-16-til-ruby-rails",
+        "2023-06-01-pg-duplicate-key-voilates",
         "2020-02-09-django-gae-deploy",
         "2019-06-25-rails-remote",
         "2019-04-09-JWT-springboot-login",
@@ -77,25 +90,81 @@
       ]
     },
     {
-      "id": "devops-cloud",
-      "label": "DevOps & Cloud",
+      "id": "algorithms",
+      "label": "Algorithms",
       "count": 4,
       "slugs": [
-        "2023-03-02-gatsby-v5-to-v4",
+        "2024-02-21-leetcode-201",
+        "2024-01-31-js-small-tricks-for-ps-1",
+        "2024-01-24-leetcode-1239",
+        "2019-04-11-dart-game"
+      ]
+    },
+    {
+      "id": "devops-cloud",
+      "label": "DevOps & Cloud",
+      "count": 3,
+      "slugs": [
         "2023-02-25-github-author-problem",
         "2023-01-30-aws-imweb-domain",
         "2019-03-12-ssh-github"
       ]
-    },
-    {
-      "id": "algorithms",
-      "label": "Algorithms",
-      "count": 1,
-      "slugs": ["2019-04-11-dart-game"]
     }
   ],
   "backlinks": {
+    "2026-04-16-browser-automation-comparison": [
+      {
+        "slug": "2026-04-17-playwright-architecture",
+        "title": "Playwright 아키텍처 해설 / 왜 E2E 테스트의 표준이 되었을까?"
+      }
+    ],
     "2026-04-09-agent-browser-architecture": [
+      {
+        "slug": "2026-04-17-playwright-architecture",
+        "title": "Playwright 아키텍처 해설 / 왜 E2E 테스트의 표준이 되었을까?"
+      },
+      {
+        "slug": "2026-04-16-browser-automation-comparison",
+        "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
+      }
+    ],
+    "2026-04-17-llm-math-basics-vector-dot-product": [
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      }
+    ],
+    "2026-04-17-llm-math-basics-softmax": [
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      }
+    ],
+    "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      }
+    ],
+    "2026-04-17-transformer-basics-qkv-intuition": [
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      }
+    ],
+    "2026-04-17-transformer-basics-residual-layernorm-ffn": [
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      }
+    ],
+    "2026-04-17-attention-is-all-you-need-paper-note": [
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-17-playwright-architecture": [
       {
         "slug": "2026-04-16-browser-automation-comparison",
         "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
@@ -109,7 +178,25 @@
     ]
   },
   "forwardLinks": {
+    "2026-04-17-playwright-architecture": [
+      "2026-04-16-browser-automation-comparison",
+      "2026-04-09-agent-browser-architecture"
+    ],
+    "2026-04-17-attention-is-all-you-need-paper-note": [
+      "2026-04-17-llm-math-basics-vector-dot-product",
+      "2026-04-17-llm-math-basics-softmax",
+      "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+      "2026-04-17-transformer-basics-qkv-intuition",
+      "2026-04-17-transformer-basics-residual-layernorm-ffn"
+    ],
+    "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [],
+    "2026-04-17-llm-math-basics-softmax": [],
+    "2026-04-17-llm-math-basics-vector-dot-product": [],
+    "2026-04-17-llm-paper-evolution-moc": ["2026-04-17-attention-is-all-you-need-paper-note"],
+    "2026-04-17-transformer-basics-qkv-intuition": [],
+    "2026-04-17-transformer-basics-residual-layernorm-ffn": [],
     "2026-04-16-browser-automation-comparison": [
+      "2026-04-17-playwright-architecture",
       "2026-04-09-agent-browser-architecture",
       "2026-03-13-lightpanda-architecture"
     ],
@@ -167,6 +254,78 @@
     "2017-01-29-blogging-tools": []
   },
   "postIndex": [
+    {
+      "slug": "2026-04-17-playwright-architecture",
+      "title": "Playwright 아키텍처 해설 / 왜 E2E 테스트의 표준이 되었을까?",
+      "date": "2026-04-17T09:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["playwright", "architecture", "browser-automation", "e2e", "testing", "ai-agent"],
+      "summary": "Playwright 저장소를 직접 분석해 core engine, client/server protocol, fixture 기반 테스트 러너, 왜 각광받는지, LLM과 함께 쓸 때 왜 느린지, 어떤 대안이 있는지까지 정리합니다."
+    },
+    {
+      "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+      "title": "Attention Is All You Need (2017) 논문 노트",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "paper-reading", "transformer", "arxiv"],
+      "summary": "Transformer 논문의 핵심 아이디어, 왜 중요했는지, 다음에 읽을 논문까지 연결하는 시작 노트."
+    },
+    {
+      "slug": "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+      "title": "LLM 학습 기초: cross-entropy와 perplexity",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "loss", "cross-entropy", "perplexity", "paper-reading"],
+      "summary": "모델이 얼마나 틀렸는지 측정하는 cross-entropy와 perplexity를 쉬운 비유로 설명합니다."
+    },
+    {
+      "slug": "2026-04-17-llm-math-basics-softmax",
+      "title": "LLM 수학 기초 2: softmax와 확률 해석",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "math", "softmax", "probability", "paper-reading"],
+      "summary": "softmax가 점수를 확률처럼 바꾸는 원리와 Attention에서의 역할을 정리합니다."
+    },
+    {
+      "slug": "2026-04-17-llm-math-basics-vector-dot-product",
+      "title": "LLM 수학 기초 1: 벡터와 내적",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "math", "vector", "dot-product", "paper-reading"],
+      "summary": "LLM 논문을 읽기 전에 꼭 알아두면 좋은 벡터와 내적의 의미를 직관적으로 정리합니다."
+    },
+    {
+      "slug": "2026-04-17-llm-paper-evolution-moc",
+      "title": "LLM 논문 진화 지도 (MOC)",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "budding",
+      "tags": ["llm", "paper-reading", "moc", "research"],
+      "summary": "Transformer부터 시작해 LLM 핵심 논문을 순서대로 읽기 위한 Map of Content 페이지입니다."
+    },
+    {
+      "slug": "2026-04-17-transformer-basics-qkv-intuition",
+      "title": "Transformer 기초: Q, K, V 직관",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "transformer", "attention", "qkv", "paper-reading"],
+      "summary": "Q, K, V가 각각 어떤 역할을 하는지 문장 기반 비유로 빠르게 이해합니다."
+    },
+    {
+      "slug": "2026-04-17-transformer-basics-residual-layernorm-ffn",
+      "title": "Transformer 기초: Residual, LayerNorm, FFN",
+      "date": "2026-04-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "transformer", "residual", "layernorm", "ffn", "paper-reading"],
+      "summary": "Transformer 블록에서 Residual, LayerNorm, FFN이 각각 왜 필요한지 직관적으로 설명합니다."
+    },
     {
       "slug": "2026-04-16-browser-automation-comparison",
       "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?",
@@ -293,7 +452,7 @@
       "slug": "2024-02-21-leetcode-201",
       "title": "leetcode-201 solutions",
       "date": "2024-02-21T07:16:16.000Z",
-      "topic": "web-frontend",
+      "topic": "algorithms",
       "stage": "budding",
       "tags": ["javascript", "leetcode", "post", "bit manipulation"],
       "summary": "leetcode-201 solutions #bit manipulation #number theory"
@@ -302,7 +461,7 @@
       "slug": "2024-01-31-js-small-tricks-for-ps-1",
       "title": "JS Small tricks for Problem solving 1 - Iterating",
       "date": "2024-01-31T08:52:15.000Z",
-      "topic": "web-frontend",
+      "topic": "algorithms",
       "stage": "budding",
       "tags": ["javascript", "problemsolving", "post"],
       "summary": "JS Small tricks for Problem solving 1 - Iterating"
@@ -311,7 +470,7 @@
       "slug": "2024-01-24-leetcode-1239",
       "title": "leetcode-1239 solutions",
       "date": "2024-01-24T02:37:15.000Z",
-      "topic": "web-frontend",
+      "topic": "algorithms",
       "stage": "budding",
       "tags": ["javascript", "leetcode", "post"],
       "summary": "leetcode-1239 solutions"
@@ -338,7 +497,7 @@
       "slug": "2023-06-01-pg-duplicate-key-voilates",
       "title": "postgresql duplicate key value violates unique constrain 에러 해결하기",
       "date": "2023-06-01T13:46:51.000Z",
-      "topic": "web-frontend",
+      "topic": "backend",
       "stage": "budding",
       "tags": ["postgresql", "orm", "react-native", "error"],
       "summary": "postgresql duplicate key 에러를 해결합니다"
@@ -347,7 +506,7 @@
       "slug": "2023-03-02-gatsby-v5-to-v4",
       "title": "Gatsby v5 to v4와 mdx v1 to v2",
       "date": "2023-03-02T14:22:57.000Z",
-      "topic": "devops-cloud",
+      "topic": "web-frontend",
       "stage": "budding",
       "tags": ["git", "github", "bash", "script"],
       "summary": "Gatsby v5 to v4와 mdx v1 to v2 어떻게 해결하는 지 알아봅니다."
@@ -668,5 +827,5 @@
       "summary": "Jekyll default page"
     }
   ],
-  "generatedAt": "2026-04-15T16:30:33.116Z"
+  "generatedAt": "2026-04-16T16:47:10.707Z"
 }
