@@ -9,6 +9,7 @@ import siteMetadata from '@/data/siteMetadata'
 import KBShell from '@/components/kb/KBShell'
 import KBSidebar from '@/components/kb/KBSidebar'
 import KBContextPanel from '@/components/kb/KBContextPanel'
+import KBLinkStackPreview from '@/components/kb/KBLinkStackPreview'
 import kbData from 'app/kb-data.json'
 import Link from '@/components/Link'
 import type { KBData } from '@/components/kb/types'
@@ -111,7 +112,9 @@ export default async function KBNotePage(props: { params: Promise<{ slug: string
 
             {/* Note Content */}
             <div className="prose dark:prose-invert max-w-none break-words">
-              <MDXLayoutRenderer code={post.body.code} components={components} toc={post.toc} />
+              <KBLinkStackPreview currentSlug={slug}>
+                <MDXLayoutRenderer code={post.body.code} components={components} toc={post.toc} />
+              </KBLinkStackPreview>
             </div>
 
             {/* Prev/Next in topic */}

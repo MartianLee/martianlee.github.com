@@ -161,7 +161,7 @@ function lazyRehypeMermaid() {
           const attacher = mod.default as any
           transformer = attacher({ strategy: 'inline-svg' })
         }
-        return transformer(tree, file)
+        return await transformer(tree, file)
       } catch (error) {
         const source = file?.path || 'unknown-file'
         const message = error instanceof Error ? error.message : String(error)
