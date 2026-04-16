@@ -1,0 +1,44 @@
+---
+title: 'Transformer 기초: Residual, LayerNorm, FFN'
+date: '2026-04-17'
+tags: ['llm', 'transformer', 'residual', 'layernorm', 'ffn', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Transformer 블록에서 Residual, LayerNorm, FFN이 각각 왜 필요한지 직관적으로 설명합니다.'
+---
+
+## 왜 필요한가요
+
+Attention만 이해하면 Transformer를 다 이해한 것처럼 느껴지지만,  
+실제로 모델을 안정적으로 학습시키는 핵심은 Residual과 LayerNorm, FFN입니다.
+
+## Residual Connection
+
+Residual은 "입력을 출력에 더해주는 지름길"입니다.
+
+- 깊은 네트워크에서 정보 손실을 줄입니다.
+- 학습이 불안정해지는 문제를 완화합니다.
+- 기존 정보를 유지하면서 새 변환을 조금씩 더할 수 있습니다.
+
+## Layer Normalization
+
+LayerNorm은 각 토큰 표현의 스케일을 정리해 주는 정규화입니다.
+
+- 학습 중 값이 너무 커지거나 작아지는 문제를 줄입니다.
+- 학습을 더 안정적으로 만듭니다.
+- 다양한 길이/문맥에서도 일관된 학습을 돕습니다.
+
+## FFN (Position-wise Feed-Forward Network)
+
+FFN은 attention 뒤에 오는 토큰별 MLP입니다.
+
+- attention: 토큰 간 관계를 섞습니다.
+- FFN: 각 토큰 표현을 비선형으로 가공합니다.
+
+두 단계가 함께 있어야 "관계 파악 + 표현 변환"이 모두 가능합니다.
+
+## 최소 체크포인트
+
+- Residual: 정보 지름길입니다.
+- LayerNorm: 학습 안정화 장치입니다.
+- FFN: 토큰 표현을 더 풍부하게 만드는 단계입니다.

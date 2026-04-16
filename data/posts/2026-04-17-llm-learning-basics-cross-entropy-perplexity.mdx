@@ -1,0 +1,40 @@
+---
+title: 'LLM 학습 기초: cross-entropy와 perplexity'
+date: '2026-04-17'
+tags: ['llm', 'loss', 'cross-entropy', 'perplexity', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: '모델이 얼마나 틀렸는지 측정하는 cross-entropy와 perplexity를 쉬운 비유로 설명합니다.'
+---
+
+## 왜 필요한가요
+
+논문에서 성능을 비교할 때 loss나 perplexity가 자주 등장합니다.  
+이 값을 읽을 수 있어야 실험 결과를 해석할 수 있습니다.
+
+## cross-entropy를 한 문장으로
+
+cross-entropy는 "모델이 정답에 얼마나 낮은 확률을 줬는지"를 벌점으로 측정하는 값입니다.
+
+- 정답 확률을 높게 주면 loss가 작아집니다.
+- 정답 확률을 낮게 주면 loss가 커집니다.
+
+## perplexity를 한 문장으로
+
+perplexity는 "모델이 다음 토큰을 고를 때 얼마나 헷갈리는지"를 나타내는 지표입니다.
+
+- 값이 낮을수록 덜 헷갈립니다.
+- 값이 높을수록 더 헷갈립니다.
+
+## 직관 비유
+
+문제 4지선다를 푼다고 가정하면,
+
+- 확신이 있을수록(정답 확률 높음) 점수가 좋습니다.
+- 매번 랜덤에 가까우면 perplexity가 높아집니다.
+
+## 최소 체크포인트
+
+- cross-entropy는 학습 중 최적화 대상입니다.
+- perplexity는 해석용 지표로 자주 사용됩니다.
+- 둘 다 낮을수록 일반적으로 모델 품질이 좋습니다.
