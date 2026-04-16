@@ -2,6 +2,15 @@ import { writeFileSync } from 'fs'
 
 const TOPIC_RULES = [
   {
+    topic: 'llm-research',
+    match: (post) =>
+      post.tags?.some((t) =>
+        ['paper', 'paper-reading', 'arxiv', 'transformer', 'research'].includes(t.toLowerCase())
+      ) ||
+      post.title?.toLowerCase().includes('논문') ||
+      /\bpaper\b/i.test(post.title || ''),
+  },
+  {
     topic: 'ai-infrastructure',
     match: (post) =>
       post.tags?.some((t) =>
@@ -76,6 +85,7 @@ const TOPIC_RULES = [
 ]
 
 const TOPIC_LABELS = {
+  'llm-research': 'LLM Research',
   'ai-infrastructure': 'AI Infrastructure',
   'web-frontend': 'Web Frontend',
   backend: 'Backend',

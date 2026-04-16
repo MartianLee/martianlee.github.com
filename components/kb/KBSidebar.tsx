@@ -14,6 +14,7 @@ const STAGE_ICON: Record<string, string> = {
 }
 
 const TOPIC_ICON: Record<string, string> = {
+  'llm-research': '\u{1F4DA}',
   'ai-infrastructure': '\u{1F916}',
   'web-frontend': '\u{1F310}',
   backend: '\u{2699}\u{FE0F}',
@@ -21,6 +22,11 @@ const TOPIC_ICON: Record<string, string> = {
   'dev-life': '\u{1F4DD}',
   algorithms: '\u{1F9E9}',
   uncategorized: '\u{1F4C1}',
+}
+
+const TOPIC_PRIORITY: Record<string, number> = {
+  'llm-research': 0,
+  'ai-infrastructure': 1,
 }
 
 interface KBSidebarProps {
@@ -64,9 +70,10 @@ export default function KBSidebar({ activeSlug }: KBSidebarProps) {
       <nav className="flex-1 overflow-y-auto">
         {[...data.topics]
           .sort((a, b) => {
-            if (a.label === 'AI Infrastructure') return -1
-            if (b.label === 'AI Infrastructure') return 1
-            return 0
+            const pa = TOPIC_PRIORITY[a.id] ?? 99
+            const pb = TOPIC_PRIORITY[b.id] ?? 99
+            if (pa !== pb) return pa - pb
+            return a.label.localeCompare(b.label)
           })
           .map((topic) => {
             const isExpanded = expandedTopics.has(topic.id)

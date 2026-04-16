@@ -13,6 +13,11 @@ const STAGE_ICON: Record<string, string> = {
   evergreen: '\u{1F333}',
 }
 
+const TOPIC_PRIORITY: Record<string, number> = {
+  'llm-research': 0,
+  'ai-infrastructure': 1,
+}
+
 function relativeDate(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
@@ -72,9 +77,10 @@ export default function KBNoteList() {
           </button>
           {[...data.topics]
             .sort((a, b) => {
-              if (a.label === 'AI Infrastructure') return -1
-              if (b.label === 'AI Infrastructure') return 1
-              return 0
+              const pa = TOPIC_PRIORITY[a.id] ?? 99
+              const pb = TOPIC_PRIORITY[b.id] ?? 99
+              if (pa !== pb) return pa - pb
+              return a.label.localeCompare(b.label)
             })
             .map((t) => (
               <button

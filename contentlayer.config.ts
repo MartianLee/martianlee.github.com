@@ -25,6 +25,7 @@ import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer.js'
 
 const root = process.cwd()
 const isProduction = process.env.NODE_ENV === 'production'
+const disableMermaid = process.env.DISABLE_REHYPE_MERMAID === 'true'
 
 function hasMermaidBlocks(): boolean {
   const postsDir = path.join(root, 'data', 'posts')
@@ -152,19 +153,26 @@ function lazyRehypeMermaid() {
   return () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return async (tree: any, file: any) => {
-      if (!transformer) {
-        const mod = await import('rehype-mermaid')
-        // rehype-mermaid exports a unified attacher; call with dummy context to get the transformer
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const attacher = mod.default as any
-        transformer = attacher({ strategy: 'inline-svg' })
+      try {
+        if (!transformer) {
+          const mod = await import('rehype-mermaid')
+          // rehype-mermaid exports a unified attacher; call with dummy context to get the transformer
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const attacher = mod.default as any
+          transformer = attacher({ strategy: 'inline-svg' })
+        }
+        return transformer(tree, file)
+      } catch (error) {
+        const source = file?.path || 'unknown-file'
+        const message = error instanceof Error ? error.message : String(error)
+        console.warn(`[contentlayer] rehype-mermaid skipped for ${source}: ${message}`)
+        return tree
       }
-      return transformer(tree, file)
     }
   }
 }
 
-const useMermaid = hasMermaidBlocks()
+const useMermaid = !disableMermaid && hasMermaidBlocks()
 
 export default makeSource({
   contentDirPath: 'data',
