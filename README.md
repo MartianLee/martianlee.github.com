@@ -1,11 +1,11 @@
 # MartianLee's Dev Blog
 
-개인 개발 기록과 지식 아카이브를 위한 Next.js 기반 블로그입니다.
+A Next.js-based personal blog and knowledge archive for engineering notes, projects, and long-form writing.
 
-- Blog: 기술 글/회고
-- KB: 짧은 노트와 정리
-- Projects: 개인 프로젝트 소개
-- About: 경력 및 소개
+- Blog: technical articles and retrospectives
+- KB: short notes and knowledge snippets
+- Projects: personal project showcase
+- About: background and career profile
 
 ## Tech Stack
 
@@ -34,7 +34,7 @@ yarn install
 yarn dev
 ```
 
-기본 개발 서버 포트는 `3456`입니다.
+The default local development port is `3456`.
 
 ## Build
 
@@ -50,12 +50,12 @@ yarn serve
 
 ## Attribution
 
-이 프로젝트는 [timlrx/tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog)에서 시작했습니다.
-초기 템플릿 기반 위에서 현재 저장소는 독립적으로 유지보수되며, 구조/콘텐츠/기능을 지속적으로 확장했습니다.
+This project was originally started from [timlrx/tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog).
+It is now independently maintained and has been significantly extended in structure, content, and features.
 
-원본 프로젝트의 후원/스폰서 정보는 원본 저장소를 참고해 주세요.
+For sponsorship or funding information related to the upstream project, please refer to the original repository.
 
 ## License
 
-이 저장소는 [MIT](./LICENSE) 라이선스를 따릅니다.
-원본 템플릿의 저작권 및 라이선스 고지는 `LICENSE` 파일에 명시되어 있습니다.
+This repository is licensed under [MIT](./LICENSE).
+Original template copyright and license notices are preserved in the `LICENSE` file.
