@@ -46,8 +46,9 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 11,
+      "count": 12,
       "slugs": [
+        "2026-04-18-superpowers-architecture",
         "2026-04-17-playwright-architecture",
         "2026-04-16-browser-automation-comparison",
         "2026-04-15-paperclip-architecture",
@@ -112,10 +113,32 @@
     }
   ],
   "backlinks": {
+    "2026-04-13-beads-architecture": [
+      {
+        "slug": "2026-04-18-superpowers-architecture",
+        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
+      }
+    ],
     "2026-04-16-browser-automation-comparison": [
+      {
+        "slug": "2026-04-18-superpowers-architecture",
+        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
+      },
       {
         "slug": "2026-04-17-playwright-architecture",
         "title": "Playwright 아키텍처 해설 / 왜 E2E 테스트의 표준이 되었을까?"
+      }
+    ],
+    "2026-03-11-openclaw-architecture": [
+      {
+        "slug": "2026-04-18-superpowers-architecture",
+        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
+      }
+    ],
+    "2026-04-15-paperclip-architecture": [
+      {
+        "slug": "2026-04-18-superpowers-architecture",
+        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
       }
     ],
     "2026-04-09-agent-browser-architecture": [
@@ -175,9 +198,21 @@
         "slug": "2026-04-16-browser-automation-comparison",
         "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
       }
+    ],
+    "2026-04-18-superpowers-architecture": [
+      {
+        "slug": "2026-04-16-browser-automation-comparison",
+        "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
+      }
     ]
   },
   "forwardLinks": {
+    "2026-04-18-superpowers-architecture": [
+      "2026-04-13-beads-architecture",
+      "2026-04-16-browser-automation-comparison",
+      "2026-03-11-openclaw-architecture",
+      "2026-04-15-paperclip-architecture"
+    ],
     "2026-04-17-playwright-architecture": [
       "2026-04-16-browser-automation-comparison",
       "2026-04-09-agent-browser-architecture"
@@ -198,7 +233,8 @@
     "2026-04-16-browser-automation-comparison": [
       "2026-04-17-playwright-architecture",
       "2026-04-09-agent-browser-architecture",
-      "2026-03-13-lightpanda-architecture"
+      "2026-03-13-lightpanda-architecture",
+      "2026-04-18-superpowers-architecture"
     ],
     "2026-04-15-paperclip-architecture": [],
     "2026-04-13-adding-mermaid-to-nextjs-blog": [],
@@ -254,6 +290,15 @@
     "2017-01-29-blogging-tools": []
   },
   "postIndex": [
+    {
+      "slug": "2026-04-18-superpowers-architecture",
+      "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!",
+      "date": "2026-04-17T16:30:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["superpowers", "skills", "agent", "codex", "claude-code", "ai"],
+      "summary": "AI 코딩 에이전트에 TDD, 디버깅, 브레인스토밍, 코드 리뷰 같은 개발 절차를 주입하는 Superpowers의 구조와 설계 철학을 분석합니다."
+    },
     {
       "slug": "2026-04-17-playwright-architecture",
       "title": "Playwright 아키텍처 해설 / 왜 E2E 테스트의 표준이 되었을까?",
@@ -827,5 +872,5 @@
       "summary": "Jekyll default page"
     }
   ],
-  "generatedAt": "2026-04-16T16:47:10.707Z"
+  "generatedAt": "2026-04-17T16:26:58.295Z"
 }
