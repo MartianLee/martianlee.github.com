@@ -175,16 +175,18 @@ To port over larger components or pages, I recommend first specificing it as a c
 
 ## Conclusion
 
-I hope you enjoy the new features and improvements in V2. If you have any feedback or suggestions, feel free to open an issue or reach out to me on [Twitter](https://twitter.com/timlrx).
+I hope you enjoy the new features and improvements in V2. If you have feedback or suggestions, feel free to open an issue.
 
-## Support
+## Attribution
 
-Using the template? Support this effort by giving a star on GitHub, sharing your own blog and giving a shoutout on Twitter or be a project [sponsor](https://github.com/sponsors/timlrx).
+This sample post is preserved for historical context from the upstream starter template.
 
-## Licence
+## License
 
-[MIT](https://github.com/timlrx/tailwind-nextjs-starter-blog/blob/main/LICENSE) © [Timothy Lin](https://www.timrlx.com)
+This repository uses the MIT License. See `/LICENSE`.
 
 [^1]: The previous version injects Preact into the production build. However, this is no longer possible as it does not support React Server Components. While overall bundle size has increased to about 85kB, most of the content can be pre-rendered on the server side, resulting in a low first contentful paint and time to interactive. Using React throughtout also leads to more consistent behavior with external libraries and components.
+
 [^2]: This is different from Next.js App Directory layouts and are best thought of as reusable React containers.
+
 [^3]: This takes advantage of Server Components by making it simple to specify the layout of choice in the markdown file and match against the `layouts` object which is then used to render the appropriate layout component.
