@@ -1,0 +1,125 @@
+---
+title: 'RedisBloom 실전 아키텍처: 회원가입 ID 중복 체크를 빠르게, 안전하게'
+date: '2026-04-18'
+tags: ['redisbloom', 'redis', 'signup', 'backend', 'architecture']
+topic: backend-architecture
+stage: budding
+summary: 'RedisBloom을 회원가입 중복 체크에 적용할 때 필요한 요청 플로우, 샤딩, 동기화, 재빌드, 모니터링 전략을 정리합니다.'
+---
+
+이 글은 "블룸 필터는 알겠는데, 운영에서는 어떻게 붙이느냐"에 초점을 맞춥니다.
+목표는 하나입니다. DB 정합성은 지키면서, 중복 체크 트래픽을 줄이는 것입니다.
+
+## 전제
+
+- 블룸 필터는 최종 판정기가 아닙니다.
+- 최종 진실은 RDB의 `UNIQUE` 인덱스입니다.
+- RedisBloom은 1차 필터 역할만 맡깁니다.
+
+## 권장 아키텍처
+
+```text
+[Client]
+   -> [API 서버]
+       -> [RedisBloom] --(might exist)--> [User DB 조회]
+       -> [User DB INSERT (UNIQUE)]
+       -> [성공 시 BF.ADD]
+```
+
+운영에서는 아래 구성을 함께 둡니다.
+
+- Redis Cluster + RedisBloom
+- 동기화 워커(CDC/이벤트 기반)
+- 재빌드 배치
+- 오탐률/지연 모니터링
+
+## 가입 요청 처리 플로우
+
+1. API가 `BF.EXISTS username:<normalized_id>` 호출
+2. 결과가 `0`이면 "없음"으로 판단하고 가입 진행
+3. 결과가 `1`이면 DB 조회로 최종 확인
+4. 최종 `INSERT`는 DB `UNIQUE` 제약으로 보장
+5. 성공한 ID는 `BF.ADD` 또는 이벤트 워커로 반영
+
+핵심 규칙:
+
+- `EXISTS=1`이면 즉시 "이미 사용 중"으로 확정하지 말고 DB 확인
+- 동시성 경쟁은 DB `UNIQUE`가 해결
+- Bloom은 성능 최적화 계층
+
+## 키/버전 설계
+
+- 키 예시: `bf:usernames:v1`
+- 입력값: 정규화된 ID (`trim`, `lowercase`, 정책 적용)
+- 버전 전환: `v1 -> v2` 교체가 가능하도록 설계
+
+초기 생성 예시:
+
+```redis
+BF.RESERVE bf:usernames:v1 0.01 1000000000
+```
+
+## 샤딩 전략
+
+대규모에서는 단일 키에 몰지 않고 분산합니다.
+
+- 샤드 예: `bf:usernames:{00}` ~ `bf:usernames:{ff}`
+- 라우팅: `sha256(username)` 앞 1바이트로 샤드 선택
+- 장점: 메모리/CPU 부하 분산, 재빌드 영향 축소
+
+## 동기화 전략
+
+안전한 패턴은 아래와 같습니다.
+
+1. 가입 성공 시 DB 커밋
+2. DB 이벤트(CDC/outbox) 발행
+3. 워커가 RedisBloom에 `BF.ADD`
+
+이 방식은 API 경로에서 Redis 장애가 있어도 DB 진실을 유지하고, 이벤트 재처리로 유실 복구가 가능합니다.
+
+## 장애/예외 처리
+
+- RedisBloom 장애 시: DB 직접 조회로 fallback
+- 워커 지연 시: DB fallback 비율 상승(정합성 영향 없음)
+- 잘못된 대량 반영 시: 새 버전 키 재생성 후 스위치
+
+## 재빌드/교체 패턴
+
+1. 새 키 생성 `bf:usernames:v2`
+2. DB 스냅샷으로 `v2` 대량 적재
+3. API 읽기를 `v2`로 전환
+4. 안정화 후 `v1` 제거
+
+운영 중 덮어쓰기보다 교체형(blue/green)이 안전합니다.
+
+## 최소 모니터링 지표
+
+- `bloom_exists_true_rate`
+- `db_fallback_rate`
+- `false_positive_rate_est`
+- `signup_p95_latency`
+
+## 간단 의사코드
+
+```python
+def can_use_username(username):
+    u = normalize(username)
+    shard = pick_shard(u)
+    maybe = redis.bf_exists(f"bf:usernames:{shard}:v1", u)
+
+    if maybe == 0:
+        return True
+
+    return not db.exists_username(u)
+
+def create_user(username, ...):
+    u = normalize(username)
+    user_id = db.insert_user_with_unique(username=u, ...)
+    event_bus.publish("user_created", {"username": u})
+    return user_id
+```
+
+## 마무리
+
+RedisBloom 실전의 핵심은 한 줄입니다.
+"Bloom으로 빠르게 거르고, DB UNIQUE로 반드시 확정한다."
