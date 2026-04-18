@@ -14,6 +14,24 @@ interface Project {
 
 const projectsData: Project[] = [
   {
+    title: 'More Munch',
+    description:
+      '직장인을 위한 점심 추천 서비스. OpenClaw로 조회 가능한 주변 식당 자동 수집과 방문 기록/평점을 기반으로 매일 새로운 점심 메뉴를 추천합니다.',
+    category: 'non-game',
+    techStack: [
+      'NestJS 11',
+      'TypeScript',
+      'SQLite',
+      'Kakao/Naver API Integration',
+      'OpenClaw Skill-Optimized API',
+      'Docker Compose',
+    ],
+    workflow: ['Docker Compose Deploy', 'API-First + Swagger'],
+    aiTools: ['Claude CLI (Primary Build)', 'OpenClaw Skill Integration'],
+    github: 'https://github.com/MartianLee/project-more-munch',
+    featured: true,
+  },
+  {
     title: '칭찬할고양',
     description:
       '매일 자신을 칭찬하는 습관을 만들어주는 칭찬 일기 앱. 긍정적인 마인드셋을 위한 일상 기록 서비스입니다.',
