@@ -85,6 +85,7 @@ const projectsData: Project[] = [
     aiTools: ['Gemini CLI (Primary Build)', 'Claude CLI (Follow-up Improvements)'],
     demo: 'https://martianlee.github.io/godot-first-defense/',
     github: 'https://github.com/MartianLee/godot-first-defense',
+    imgSrc: '/static/projects/first-defense-thumbnail.png',
     featured: true,
   },
 ]
