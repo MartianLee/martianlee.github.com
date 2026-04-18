@@ -83,6 +83,23 @@ BF.RESERVE bf:usernames:v1 0.01 1000000000
 - 워커 지연 시: DB fallback 비율 상승(정합성 영향 없음)
 - 잘못된 대량 반영 시: 새 버전 키 재생성 후 스위치
 
+## 실제로 자주 나는 실패 사례 1개
+
+다음 실수는 생각보다 흔합니다.
+
+1. `BF.EXISTS=1`이면 즉시 "이미 사용 중"으로 응답
+2. DB 최종 확인을 생략
+3. 오탐 사용자가 실제로 가입 가능한 ID인데 차단됨
+
+증상은 "간헐적으로 가입이 안 된다"는 CS로 나타납니다.
+로그를 보면 RedisBloom hit인데 DB에는 없는 username이 반복됩니다.
+
+해결은 단순합니다.
+
+- `EXISTS=1` 경로는 반드시 DB 확인
+- 최종 성공/실패는 DB `UNIQUE` 결과를 기준으로 판단
+- `db_fallback_rate`와 `false_positive_rate_est`를 같이 모니터링
+
 ## 재빌드/교체 패턴
 
 1. 새 키 생성 `bf:usernames:v2`
