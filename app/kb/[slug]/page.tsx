@@ -23,16 +23,29 @@ export async function generateMetadata(props: {
   const slug = decodeURI(params.slug)
   const post = allBlogs.find((p) => p.slug === slug)
   if (!post) return
+  const canonicalPostUrl = `${siteMetadata.siteUrl.replace(/\/+$/, '')}/posts/${slug}`
 
   return {
     title: `${post.title} — KB`,
     description: post.summary,
+    alternates: {
+      canonical: canonicalPostUrl,
+    },
+    robots: {
+      index: false,
+      follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
+    },
     openGraph: {
       title: post.title,
       description: post.summary,
       siteName: siteMetadata.title,
       locale: 'ko_KR',
       type: 'article',
+      url: canonicalPostUrl,
     },
   }
 }
