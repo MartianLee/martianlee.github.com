@@ -1,0 +1,95 @@
+---
+title: 'LLM 학습 기초: Pre-training과 Fine-tuning'
+date: '2026-04-18'
+tags: ['llm', 'pre-training', 'fine-tuning', 'training', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: '대규모 사전학습과 태스크별 fine-tuning이 무엇인지 BERT 흐름에 맞춰 설명합니다.'
+---
+
+## 왜 필요한가요
+
+BERT 논문의 핵심은 모델 구조보다 학습 방식에 있습니다.  
+먼저 라벨 없는 대규모 텍스트로 모델을 학습하고, 이후 작은 라벨 데이터로 특정 태스크에 맞춥니다.
+
+이 노트를 읽으면 아래 문장을 만났을 때 덜 막힙니다.
+
+```txt
+The pre-trained model is fine-tuned on downstream tasks with minimal task-specific parameters.
+```
+
+## 원본 개념과 수식
+
+전체 흐름은 두 단계입니다.
+
+```txt
+1. Pre-training:
+   minimize L_pretrain(theta; unlabeled_text)
+
+2. Fine-tuning:
+   initialize theta from pre-training
+   minimize L_task(theta, phi; labeled_task_data)
+```
+
+여기서 의미는 다음과 같습니다.
+
+- `theta`: 사전학습 모델의 파라미터입니다.
+- `phi`: 태스크별 출력층 같은 새 파라미터입니다.
+- `L_pretrain`: 사전학습 손실입니다.
+- `L_task`: 특정 태스크의 손실입니다.
+
+## 1차 해설: 수식이 말하는 것
+
+Pre-training은 모델에게 언어의 일반적인 패턴을 먼저 배우게 하는 단계입니다.
+
+예를 들어 다음을 배웁니다.
+
+- 단어와 단어가 함께 등장하는 패턴
+- 문장 구조
+- 문맥에 따라 단어 의미가 달라지는 방식
+- 문장 사이 관계
+
+Fine-tuning은 이미 배운 지식을 특정 문제에 맞게 조정하는 단계입니다.
+
+예를 들어 BERT에 감정 분류를 시키려면, `[CLS]` 표현 위에 분류층을 붙이고 감정 라벨 데이터로 다시 학습합니다.
+
+## 쉬운 예시
+
+의대 교육을 떠올리면 됩니다.
+
+- Pre-training: 의대에서 해부학, 생리학, 병리학을 폭넓게 배웁니다.
+- Fine-tuning: 이후 피부과, 내과, 외과처럼 특정 전문 분야에 맞춰 훈련합니다.
+
+처음부터 피부과 증례 몇 개만 보고 의사가 되기는 어렵습니다.  
+먼저 넓은 배경지식을 배우고, 나중에 특정 업무에 맞추는 편이 훨씬 효율적입니다.
+
+LLM도 비슷합니다.  
+라벨 데이터는 비싸고 적지만, 일반 텍스트는 많습니다.  
+그래서 일반 텍스트로 먼저 크게 배우고, 작은 라벨 데이터로 목적에 맞춥니다.
+
+## 논문에서 다시 만났을 때 읽는 법
+
+BERT 논문에서 fine-tuning을 말하면 보통 다음 의미입니다.
+
+```txt
+사전학습된 BERT 전체 파라미터를 downstream task 데이터로 다시 업데이트한다.
+```
+
+이는 feature extraction과 다릅니다.
+
+```txt
+Feature extraction: 사전학습 모델은 고정하고, 그 출력만 특징으로 사용합니다.
+Fine-tuning: 사전학습 모델 자체도 함께 업데이트합니다.
+```
+
+## 자주 하는 오해
+
+- Fine-tuning은 출력층만 학습한다는 뜻이 아닙니다. BERT 논문에서는 전체 파라미터를 fine-tuning합니다.
+- Pre-training 데이터가 많다고 downstream task 성능이 자동으로 보장되지는 않습니다.
+- Fine-tuning 데이터가 너무 작으면 불안정하거나 과적합될 수 있습니다.
+
+## 최소 체크포인트
+
+- Pre-training은 일반 언어 지식을 먼저 배우는 단계입니다.
+- Fine-tuning은 특정 태스크에 맞게 모델을 조정하는 단계입니다.
+- BERT의 강점은 같은 사전학습 모델을 여러 태스크에 거의 같은 방식으로 재사용한 데 있습니다.

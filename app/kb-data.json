@@ -44,6 +44,26 @@
       ]
     },
     {
+      "id": "llm-research",
+      "label": "LLM Research",
+      "count": 13,
+      "slugs": [
+        "2026-04-18-bert-paper-note",
+        "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+        "2026-04-18-llm-basics-rnn-sequential-processing",
+        "2026-04-18-llm-learning-basics-masked-language-model",
+        "2026-04-18-llm-learning-basics-pretraining-finetuning",
+        "2026-04-18-transformer-basics-encoder-decoder",
+        "2026-04-17-attention-is-all-you-need-paper-note",
+        "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+        "2026-04-17-llm-math-basics-softmax",
+        "2026-04-17-llm-math-basics-vector-dot-product",
+        "2026-04-17-llm-paper-evolution-moc",
+        "2026-04-17-transformer-basics-qkv-intuition",
+        "2026-04-17-transformer-basics-residual-layernorm-ffn"
+      ]
+    },
+    {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
       "count": 12,
@@ -60,20 +80,6 @@
         "2026-03-13-lightpanda-architecture",
         "2026-03-11-openclaw-architecture",
         "2020-06-28-manjum-result"
-      ]
-    },
-    {
-      "id": "llm-research",
-      "label": "LLM Research",
-      "count": 7,
-      "slugs": [
-        "2026-04-17-attention-is-all-you-need-paper-note",
-        "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
-        "2026-04-17-llm-math-basics-softmax",
-        "2026-04-17-llm-math-basics-vector-dot-product",
-        "2026-04-17-llm-paper-evolution-moc",
-        "2026-04-17-transformer-basics-qkv-intuition",
-        "2026-04-17-transformer-basics-residual-layernorm-ffn"
       ]
     },
     {
@@ -113,6 +119,102 @@
     }
   ],
   "backlinks": {
+    "2026-04-17-attention-is-all-you-need-paper-note": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-basics-rnn-sequential-processing": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-transformer-basics-encoder-decoder": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-learning-basics-pretraining-finetuning": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-architecture-basics-encoder-only-decoder-only": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-17-transformer-basics-residual-layernorm-ffn": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-learning-basics-masked-language-model": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
     "2026-04-13-beads-architecture": [
       {
         "slug": "2026-04-18-superpowers-architecture",
@@ -151,37 +253,41 @@
         "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
       }
     ],
+    "2026-04-17-transformer-basics-qkv-intuition": [
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
     "2026-04-17-llm-math-basics-vector-dot-product": [
       {
         "slug": "2026-04-17-attention-is-all-you-need-paper-note",
         "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
       }
     ],
     "2026-04-17-llm-math-basics-softmax": [
       {
         "slug": "2026-04-17-attention-is-all-you-need-paper-note",
         "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
       }
     ],
-    "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
+    "2026-04-18-bert-paper-note": [
       {
         "slug": "2026-04-17-attention-is-all-you-need-paper-note",
         "title": "Attention Is All You Need (2017) 논문 노트"
-      }
-    ],
-    "2026-04-17-transformer-basics-qkv-intuition": [
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      }
-    ],
-    "2026-04-17-transformer-basics-residual-layernorm-ffn": [
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      }
-    ],
-    "2026-04-17-attention-is-all-you-need-paper-note": [
+      },
       {
         "slug": "2026-04-17-llm-paper-evolution-moc",
         "title": "LLM 논문 진화 지도 (MOC)"
@@ -207,6 +313,21 @@
     ]
   },
   "forwardLinks": {
+    "2026-04-18-bert-paper-note": [
+      "2026-04-17-attention-is-all-you-need-paper-note",
+      "2026-04-18-llm-basics-rnn-sequential-processing",
+      "2026-04-18-transformer-basics-encoder-decoder",
+      "2026-04-18-llm-learning-basics-pretraining-finetuning",
+      "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+      "2026-04-17-transformer-basics-residual-layernorm-ffn",
+      "2026-04-18-llm-learning-basics-masked-language-model",
+      "2026-04-17-llm-learning-basics-cross-entropy-perplexity"
+    ],
+    "2026-04-18-llm-architecture-basics-encoder-only-decoder-only": [],
+    "2026-04-18-llm-basics-rnn-sequential-processing": [],
+    "2026-04-18-llm-learning-basics-masked-language-model": [],
+    "2026-04-18-llm-learning-basics-pretraining-finetuning": [],
+    "2026-04-18-transformer-basics-encoder-decoder": [],
     "2026-04-18-superpowers-architecture": [
       "2026-04-13-beads-architecture",
       "2026-04-16-browser-automation-comparison",
@@ -218,16 +339,32 @@
       "2026-04-09-agent-browser-architecture"
     ],
     "2026-04-17-attention-is-all-you-need-paper-note": [
+      "2026-04-18-llm-basics-rnn-sequential-processing",
+      "2026-04-17-transformer-basics-qkv-intuition",
       "2026-04-17-llm-math-basics-vector-dot-product",
       "2026-04-17-llm-math-basics-softmax",
-      "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
-      "2026-04-17-transformer-basics-qkv-intuition",
-      "2026-04-17-transformer-basics-residual-layernorm-ffn"
+      "2026-04-18-transformer-basics-encoder-decoder",
+      "2026-04-17-transformer-basics-residual-layernorm-ffn",
+      "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+      "2026-04-18-bert-paper-note"
     ],
     "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [],
     "2026-04-17-llm-math-basics-softmax": [],
     "2026-04-17-llm-math-basics-vector-dot-product": [],
-    "2026-04-17-llm-paper-evolution-moc": ["2026-04-17-attention-is-all-you-need-paper-note"],
+    "2026-04-17-llm-paper-evolution-moc": [
+      "2026-04-17-attention-is-all-you-need-paper-note",
+      "2026-04-18-bert-paper-note",
+      "2026-04-17-llm-math-basics-vector-dot-product",
+      "2026-04-17-llm-math-basics-softmax",
+      "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+      "2026-04-18-llm-basics-rnn-sequential-processing",
+      "2026-04-18-transformer-basics-encoder-decoder",
+      "2026-04-17-transformer-basics-qkv-intuition",
+      "2026-04-17-transformer-basics-residual-layernorm-ffn",
+      "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+      "2026-04-18-llm-learning-basics-pretraining-finetuning",
+      "2026-04-18-llm-learning-basics-masked-language-model"
+    ],
     "2026-04-17-transformer-basics-qkv-intuition": [],
     "2026-04-17-transformer-basics-residual-layernorm-ffn": [],
     "2026-04-16-browser-automation-comparison": [
@@ -291,6 +428,60 @@
   },
   "postIndex": [
     {
+      "slug": "2026-04-18-bert-paper-note",
+      "title": "BERT (2018) 논문 노트",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "paper-reading", "transformer", "bert", "arxiv"],
+      "summary": "BERT 논문의 핵심 아이디어인 양방향 Transformer encoder, masked language model, next sentence prediction, fine-tuning 패러다임을 정리한 논문 노트."
+    },
+    {
+      "slug": "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+      "title": "LLM 구조 기초: Encoder-only와 Decoder-only",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "transformer", "encoder-only", "decoder-only", "paper-reading"],
+      "summary": "BERT와 GPT 계열을 구분하는 encoder-only, decoder-only 구조를 비교합니다."
+    },
+    {
+      "slug": "2026-04-18-llm-basics-rnn-sequential-processing",
+      "title": "LLM 기초: RNN과 순차 처리",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "rnn", "sequence-modeling", "paper-reading"],
+      "summary": "Transformer 이전의 대표 구조인 RNN이 문장을 순서대로 처리하는 방식과 한계를 설명합니다."
+    },
+    {
+      "slug": "2026-04-18-llm-learning-basics-masked-language-model",
+      "title": "LLM 학습 기초: Masked Language Model",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "masked-language-model", "mlm", "bert", "paper-reading"],
+      "summary": "BERT의 핵심 학습 목표인 Masked Language Model을 수식, 해설, 예시로 설명합니다."
+    },
+    {
+      "slug": "2026-04-18-llm-learning-basics-pretraining-finetuning",
+      "title": "LLM 학습 기초: Pre-training과 Fine-tuning",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "pre-training", "fine-tuning", "training", "paper-reading"],
+      "summary": "대규모 사전학습과 태스크별 fine-tuning이 무엇인지 BERT 흐름에 맞춰 설명합니다."
+    },
+    {
+      "slug": "2026-04-18-transformer-basics-encoder-decoder",
+      "title": "Transformer 기초: Encoder와 Decoder",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "transformer", "encoder", "decoder", "paper-reading"],
+      "summary": "Transformer encoder와 decoder가 각각 어떤 역할을 하는지 원래 구조와 쉬운 예시로 설명합니다."
+    },
+    {
       "slug": "2026-04-18-superpowers-architecture",
       "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!",
       "date": "2026-04-17T16:30:00.000Z",
@@ -324,7 +515,7 @@
       "topic": "llm-research",
       "stage": "seedling",
       "tags": ["llm", "loss", "cross-entropy", "perplexity", "paper-reading"],
-      "summary": "모델이 얼마나 틀렸는지 측정하는 cross-entropy와 perplexity를 쉬운 비유로 설명합니다."
+      "summary": "모델이 얼마나 틀렸는지 측정하는 cross-entropy와 perplexity를 수식, 해설, 예시로 설명합니다."
     },
     {
       "slug": "2026-04-17-llm-math-basics-softmax",
@@ -333,7 +524,7 @@
       "topic": "llm-research",
       "stage": "seedling",
       "tags": ["llm", "math", "softmax", "probability", "paper-reading"],
-      "summary": "softmax가 점수를 확률처럼 바꾸는 원리와 Attention에서의 역할을 정리합니다."
+      "summary": "softmax가 점수를 확률처럼 바꾸는 원리를 수식, 해설, 예시로 정리합니다."
     },
     {
       "slug": "2026-04-17-llm-math-basics-vector-dot-product",
@@ -342,7 +533,7 @@
       "topic": "llm-research",
       "stage": "seedling",
       "tags": ["llm", "math", "vector", "dot-product", "paper-reading"],
-      "summary": "LLM 논문을 읽기 전에 꼭 알아두면 좋은 벡터와 내적의 의미를 직관적으로 정리합니다."
+      "summary": "LLM 논문을 읽기 전에 꼭 알아두면 좋은 벡터와 내적의 의미를 수식, 해설, 예시로 정리합니다."
     },
     {
       "slug": "2026-04-17-llm-paper-evolution-moc",
@@ -360,7 +551,7 @@
       "topic": "llm-research",
       "stage": "seedling",
       "tags": ["llm", "transformer", "attention", "qkv", "paper-reading"],
-      "summary": "Q, K, V가 각각 어떤 역할을 하는지 문장 기반 비유로 빠르게 이해합니다."
+      "summary": "Q, K, V가 각각 어떤 역할을 하는지 attention 수식, 해설, 예시로 설명합니다."
     },
     {
       "slug": "2026-04-17-transformer-basics-residual-layernorm-ffn",
@@ -369,7 +560,7 @@
       "topic": "llm-research",
       "stage": "seedling",
       "tags": ["llm", "transformer", "residual", "layernorm", "ffn", "paper-reading"],
-      "summary": "Transformer 블록에서 Residual, LayerNorm, FFN이 각각 왜 필요한지 직관적으로 설명합니다."
+      "summary": "Transformer 블록에서 Residual, LayerNorm, FFN이 왜 필요한지 수식, 해설, 예시로 설명합니다."
     },
     {
       "slug": "2026-04-16-browser-automation-comparison",
@@ -872,5 +1063,5 @@
       "summary": "Jekyll default page"
     }
   ],
-  "generatedAt": "2026-04-17T16:26:58.295Z"
+  "generatedAt": "2026-04-18T02:53:37.591Z"
 }

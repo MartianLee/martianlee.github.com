@@ -4,37 +4,105 @@ date: '2026-04-17'
 tags: ['llm', 'loss', 'cross-entropy', 'perplexity', 'paper-reading']
 topic: llm-research
 stage: seedling
-summary: '모델이 얼마나 틀렸는지 측정하는 cross-entropy와 perplexity를 쉬운 비유로 설명합니다.'
+summary: '모델이 얼마나 틀렸는지 측정하는 cross-entropy와 perplexity를 수식, 해설, 예시로 설명합니다.'
 ---
 
 ## 왜 필요한가요
 
-논문에서 성능을 비교할 때 loss나 perplexity가 자주 등장합니다.  
-이 값을 읽을 수 있어야 실험 결과를 해석할 수 있습니다.
+논문에서 모델 성능을 비교할 때 loss, cross-entropy, perplexity가 자주 등장합니다.  
+이 값을 읽을 수 있어야 학습 곡선과 실험 결과를 해석할 수 있습니다.
 
-## cross-entropy를 한 문장으로
+이 노트를 읽으면 아래 문장을 만났을 때 덜 막힙니다.
 
-cross-entropy는 "모델이 정답에 얼마나 낮은 확률을 줬는지"를 벌점으로 측정하는 값입니다.
+```txt
+We minimize the cross-entropy loss and report perplexity on the validation set.
+```
 
-- 정답 확률을 높게 주면 loss가 작아집니다.
-- 정답 확률을 낮게 주면 loss가 커집니다.
+## 원본 개념과 수식
 
-## perplexity를 한 문장으로
+정답 토큰에 모델이 준 확률을 `p(correct)`라고 하겠습니다.
 
-perplexity는 "모델이 다음 토큰을 고를 때 얼마나 헷갈리는지"를 나타내는 지표입니다.
+한 토큰에 대한 cross-entropy loss는 단순화하면 다음과 같습니다.
 
-- 값이 낮을수록 덜 헷갈립니다.
-- 값이 높을수록 더 헷갈립니다.
+```txt
+loss = -log p(correct)
+```
 
-## 직관 비유
+여러 토큰에 대해서는 평균을 냅니다.
 
-문제 4지선다를 푼다고 가정하면,
+```txt
+cross_entropy = average(-log p(correct_token))
+```
 
-- 확신이 있을수록(정답 확률 높음) 점수가 좋습니다.
-- 매번 랜덤에 가까우면 perplexity가 높아집니다.
+perplexity는 cross-entropy를 다시 해석하기 쉽게 바꾼 값입니다.
+
+```txt
+perplexity = exp(cross_entropy)
+```
+
+## 1차 해설: 수식이 말하는 것
+
+cross-entropy는 모델이 정답에 낮은 확률을 줄수록 큰 벌점을 줍니다.
+
+- 정답 확률이 높으면 `-log p`가 작아집니다.
+- 정답 확률이 낮으면 `-log p`가 커집니다.
+
+perplexity는 모델이 평균적으로 몇 개 후보 사이에서 헷갈리는지에 가까운 감각을 줍니다.  
+정확한 후보 개수라고 보면 안 되지만, 낮을수록 덜 헷갈린다고 읽으면 됩니다.
+
+## 쉬운 예시
+
+다음 단어를 맞히는 문제라고 하겠습니다.
+
+```txt
+나는 아침에 ___ 을 마셨습니다.
+```
+
+정답이 `커피`인데 모델이 이렇게 예측했다고 하겠습니다.
+
+```txt
+커피: 0.80
+우유: 0.15
+자동차: 0.05
+```
+
+정답 `커피`에 0.80을 줬으므로 loss는 작습니다.
+
+반대로 이렇게 예측하면 loss가 커집니다.
+
+```txt
+커피: 0.05
+우유: 0.15
+자동차: 0.80
+```
+
+정답에 낮은 확률을 줬기 때문입니다.
+
+## 논문에서 다시 만났을 때 읽는 법
+
+논문에서 validation loss가 내려간다는 말은 이렇게 읽으면 됩니다.
+
+```txt
+모델이 정답 토큰에 점점 더 높은 확률을 주고 있다.
+```
+
+perplexity가 낮아졌다는 말은 이렇게 읽으면 됩니다.
+
+```txt
+다음 토큰을 고를 때 모델의 혼란이 줄었다.
+```
+
+다만 perplexity는 주로 language modeling에서 유용합니다.  
+분류, 질의응답, instruction following 성능을 perplexity 하나로 판단하면 부족합니다.
+
+## 자주 하는 오해
+
+- loss가 낮다고 항상 사용자 경험이 좋은 것은 아닙니다.
+- perplexity가 낮다고 항상 지시를 잘 따르는 모델은 아닙니다.
+- 학습 데이터에 과적합하면 validation/test 성능은 좋아지지 않을 수 있습니다.
 
 ## 최소 체크포인트
 
-- cross-entropy는 학습 중 최적화 대상입니다.
-- perplexity는 해석용 지표로 자주 사용됩니다.
-- 둘 다 낮을수록 일반적으로 모델 품질이 좋습니다.
+- cross-entropy는 정답에 낮은 확률을 준 정도를 벌점으로 만듭니다.
+- perplexity는 cross-entropy를 "헷갈림 정도"처럼 바꾼 지표입니다.
+- 둘 다 낮을수록 일반적으로 좋지만, 모든 능력을 대표하지는 않습니다.

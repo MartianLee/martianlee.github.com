@@ -1,0 +1,90 @@
+---
+title: 'Transformer 기초: Encoder와 Decoder'
+date: '2026-04-18'
+tags: ['llm', 'transformer', 'encoder', 'decoder', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Transformer encoder와 decoder가 각각 어떤 역할을 하는지 원래 구조와 쉬운 예시로 설명합니다.'
+---
+
+## 왜 필요한가요
+
+Transformer 논문은 encoder-decoder 구조를 사용합니다.  
+BERT는 encoder만 사용하고, GPT 계열은 decoder만 사용합니다.
+
+따라서 encoder와 decoder의 역할을 구분하면 이후 논문 흐름이 훨씬 잘 보입니다.
+
+## 원본 개념과 구조
+
+원래 Transformer는 기계번역을 위한 encoder-decoder 모델입니다.
+
+```txt
+source sentence -> Encoder -> memory -> Decoder -> target sentence
+```
+
+예를 들어 영어를 한국어로 번역한다면 다음과 같습니다.
+
+```txt
+I love coffee -> Encoder -> 의미 표현 -> Decoder -> 나는 커피를 좋아합니다
+```
+
+큰 차이는 attention mask입니다.
+
+```txt
+Encoder self-attention: 모든 입력 토큰을 서로 볼 수 있음
+Decoder masked self-attention: 아직 생성하지 않은 미래 토큰은 볼 수 없음
+Decoder cross-attention: encoder 출력(memory)을 참고함
+```
+
+## 1차 해설: 구조가 말하는 것
+
+Encoder는 입력 문장을 읽고 이해용 표현을 만듭니다.  
+Decoder는 그 표현을 참고하면서 출력 문장을 한 토큰씩 생성합니다.
+
+Encoder는 입력 전체를 이미 알고 있으므로 양방향으로 볼 수 있습니다.  
+Decoder는 생성 중인 문장의 미래 단어를 미리 보면 안 됩니다.  
+그래서 masked self-attention을 사용합니다.
+
+## 쉬운 예시
+
+통역사를 떠올리면 됩니다.
+
+- Encoder: 원문을 읽고 의미를 정리하는 단계입니다.
+- Decoder: 정리된 의미를 바탕으로 번역문을 말하는 단계입니다.
+
+원문을 읽는 사람은 문장 전체를 볼 수 있습니다.  
+하지만 번역문을 말하는 사람은 아직 말하지 않은 미래 단어를 미리 말할 수 없습니다.
+
+그래서 decoder는 "지금까지 말한 단어"만 보고 다음 단어를 고릅니다.
+
+## 논문에서 다시 만났을 때 읽는 법
+
+논문에서 `encoder-only`를 보면 이렇게 읽으면 됩니다.
+
+```txt
+입력을 이해하고 표현하는 쪽에 집중한 모델입니다.
+```
+
+논문에서 `decoder-only`를 보면 이렇게 읽으면 됩니다.
+
+```txt
+지금까지의 토큰을 바탕으로 다음 토큰을 생성하는 쪽에 집중한 모델입니다.
+```
+
+논문에서 `encoder-decoder`를 보면 이렇게 읽으면 됩니다.
+
+```txt
+입력을 이해한 뒤, 별도 생성기가 출력을 만들어내는 구조입니다.
+```
+
+## 자주 하는 오해
+
+- Encoder가 항상 더 좋고 decoder가 항상 더 나쁜 것이 아닙니다.
+- 목적이 다릅니다. 이해 중심이면 encoder가 유리하고, 생성 중심이면 decoder가 자연스럽습니다.
+- T5처럼 encoder-decoder 구조를 대규모 사전학습에 활용한 모델도 있습니다.
+
+## 최소 체크포인트
+
+- Encoder는 입력 전체를 읽고 표현을 만듭니다.
+- Decoder는 지금까지 생성한 토큰을 보고 다음 토큰을 만듭니다.
+- BERT는 encoder-only, GPT는 decoder-only 계열로 이해하면 됩니다.
