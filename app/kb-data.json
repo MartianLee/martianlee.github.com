@@ -66,8 +66,9 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 12,
+      "count": 13,
       "slugs": [
+        "2026-05-13-agentmemory-architecture",
         "2026-04-18-superpowers-architecture",
         "2026-04-17-playwright-architecture",
         "2026-04-16-browser-automation-comparison",
@@ -424,9 +425,28 @@
     "2017-09-09-first-vue": [],
     "2017-04-28-django-template-for-loop": [],
     "2017-04-28-book-review": [],
-    "2017-01-29-blogging-tools": []
+    "2017-01-29-blogging-tools": [],
+    "2026-05-13-agentmemory-architecture": []
   },
   "postIndex": [
+    {
+      "slug": "2026-05-13-agentmemory-architecture",
+      "title": "agentmemory 프로젝트 분석: 코딩 에이전트는 왜 이제 메모리 계층을 따로 두는가",
+      "date": "2026-05-12T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "agentmemory",
+        "architecture",
+        "typescript",
+        "mcp",
+        "ai-agent",
+        "memory",
+        "iii",
+        "openclaw"
+      ],
+      "summary": "Claude Code, Codex, Gemini CLI, OpenClaw를 따로 기억시키는 방식은 한계가 분명합니다. agentmemory는 hooks로 관측을 수집하고, BM25·vector·graph 검색으로 재구성한 뒤, MCP·REST·viewer로 여러 에이전트가 공유하는 장기 기억 계층을 만듭니다."
+    },
     {
       "slug": "2026-04-18-bert-paper-note",
       "title": "BERT (2018) 논문 노트",
