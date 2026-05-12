@@ -1555,6 +1555,8 @@ LLM이 gh-issues 스킬 지침에 따라:
 
 이 스킬은 OpenClaw가 복잡한 코딩 작업을 **외부 AI 코딩 에이전트에 위임**하는 방법을 가르칩니다:
 
+이 점에서 [Hermes](/kb/2026-05-13-hermes-agent-architecture)와 방향이 갈립니다. OpenClaw는 Claude Code나 Codex 같은 외부 코딩 에이전트를 호출하는 절차를 스킬로 가르치는 쪽에 가깝고, Hermes는 `delegate_task`로 Hermes 내부의 서브에이전트를 직접 띄우는 구조를 함께 갖고 있습니다.
+
 ```markdown
 ## 코딩 에이전트 위임 지침
 

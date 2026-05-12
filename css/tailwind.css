@@ -319,6 +319,38 @@ input:-webkit-autofill:focus {
   @apply my-8 border-gray-200 dark:border-gray-700;
 }
 
+/* Mermaid diagrams are rendered as inline SVG at build time, so they do not
+   inherit Mermaid's theme from next-themes. Keep the light node fills, but
+   lift edges and edge labels on dark backgrounds. */
+.dark .prose svg[id^='mermaid-'] .flowchart-link:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .messageLine0:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .messageLine1:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .actor-line:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .loopLine:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .note-line:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] marker path:not(#mermaid-dark-override) {
+  stroke: #94a3b8 !important;
+}
+
+.dark .prose svg[id^='mermaid-'] marker path:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .arrowMarkerPath:not(#mermaid-dark-override) {
+  fill: #94a3b8 !important;
+}
+
+.dark .prose svg[id^='mermaid-'] .edgeLabel:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .edgeLabel span:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .messageText:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .loopText:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .noteText:not(#mermaid-dark-override) {
+  color: #cbd5e1 !important;
+  fill: #cbd5e1 !important;
+}
+
+.dark .prose svg[id^='mermaid-'] .nodeLabel:not(#mermaid-dark-override),
+.dark .prose svg[id^='mermaid-'] .nodeLabel span:not(#mermaid-dark-override) {
+  color: #111827 !important;
+}
+
 .prose table {
   @apply my-6 w-full;
 }
