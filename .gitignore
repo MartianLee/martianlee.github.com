@@ -30,6 +30,8 @@ public/sitemap.xml
 
 # misc
 .DS_Store
+.superpowers/
+.worktrees/
 
 # debug
 *.log
