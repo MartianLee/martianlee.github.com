@@ -4,7 +4,8 @@ const siteMetadata: PlinyConfig = {
   title: "MartianLee's Dev Blog",
   author: 'MartianLee',
   headerTitle: "MartianLee's Dev Blog",
-  description: "MartianLee's tech blog exploring web development, software architecture, and AI/LLM technologies.",
+  description:
+    "MartianLee's tech blog exploring web development, software architecture, and AI/LLM technologies.",
   language: 'ko-KR',
   theme: 'system', // system, dark or light
   siteUrl: 'https://martianlee.github.io/',

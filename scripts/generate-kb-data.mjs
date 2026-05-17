@@ -14,9 +14,16 @@ const TOPIC_RULES = [
     topic: 'ai-infrastructure',
     match: (post) =>
       post.tags?.some((t) =>
-        ['architecture', 'ai-agent', 'llm', 'langchain', 'ollama', 'rust', 'cdp', 'browser-automation'].includes(
-          t.toLowerCase()
-        )
+        [
+          'architecture',
+          'ai-agent',
+          'llm',
+          'langchain',
+          'ollama',
+          'rust',
+          'cdp',
+          'browser-automation',
+        ].includes(t.toLowerCase())
       ) || post.title?.toLowerCase().includes('아키텍처 분석'),
   },
   {
@@ -24,9 +31,20 @@ const TOPIC_RULES = [
     match: (post) =>
       post.tags?.some((t) =>
         [
-          'react', 'reactjs', 'angular', 'angularjs', 'vue', 'vue.js', 'next.js',
-          'css', 'react-native', 'frontend', 'front-end', 'gatsby',
-          'javascript', 'typescript',
+          'react',
+          'reactjs',
+          'angular',
+          'angularjs',
+          'vue',
+          'vue.js',
+          'next.js',
+          'css',
+          'react-native',
+          'frontend',
+          'front-end',
+          'gatsby',
+          'javascript',
+          'typescript',
         ].includes(t.toLowerCase())
       ),
   },
@@ -35,8 +53,15 @@ const TOPIC_RULES = [
     match: (post) =>
       post.tags?.some((t) =>
         [
-          'rails', 'django', 'spring', 'spring-boot', 'postgresql',
-          'node.js', 'ruby', 'java', 'jwt',
+          'rails',
+          'django',
+          'spring',
+          'spring-boot',
+          'postgresql',
+          'node.js',
+          'ruby',
+          'java',
+          'jwt',
         ].includes(t.toLowerCase())
       ) ||
       post.title?.toLowerCase().includes('spring') ||
@@ -48,8 +73,17 @@ const TOPIC_RULES = [
     match: (post) =>
       post.tags?.some((t) =>
         [
-          'docker', 'kubernetes', 'gcp', 'aws', 'firebase', 'deploy', 'gae',
-          'git', 'github', 'bash', 'ssh',
+          'docker',
+          'kubernetes',
+          'gcp',
+          'aws',
+          'firebase',
+          'deploy',
+          'gae',
+          'git',
+          'github',
+          'bash',
+          'ssh',
         ].includes(t.toLowerCase())
       ),
   },
@@ -58,9 +92,20 @@ const TOPIC_RULES = [
     match: (post) =>
       post.tags?.some((t) =>
         [
-          'interview', 'review', 'til', 'blog', 'career', 'ndc',
-          'conference', 'job', 'daily', 'book', 'question',
-          'jekyll', '지킬', 'civic hacking',
+          'interview',
+          'review',
+          'til',
+          'blog',
+          'career',
+          'ndc',
+          'conference',
+          'job',
+          'daily',
+          'book',
+          'question',
+          'jekyll',
+          '지킬',
+          'civic hacking',
         ].includes(t.toLowerCase())
       ) ||
       post.title?.toLowerCase().includes('면접') ||

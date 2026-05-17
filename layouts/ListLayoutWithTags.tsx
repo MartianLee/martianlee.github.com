@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 'use client'
 
 import { useState } from 'react'
@@ -37,9 +36,9 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           <Link
             href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
             rel="prev"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transform hover:scale-105 transition-all duration-300"
+            className="inline-flex transform items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-blue-700 hover:shadow-lg"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -52,9 +51,9 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
         ) : (
           <button
             disabled
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-400 rounded-lg font-semibold cursor-not-allowed dark:bg-gray-800 dark:text-gray-600"
+            className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-gray-200 px-6 py-3 font-semibold text-gray-400 dark:bg-gray-800 dark:text-gray-600"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -76,31 +75,21 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           <Link
             href={`/${basePath}/page/${currentPage + 1}`}
             rel="next"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transform hover:scale-105 transition-all duration-300"
+            className="inline-flex transform items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-blue-700 hover:shadow-lg"
           >
             Next
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
         ) : (
           <button
             disabled
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-400 rounded-lg font-semibold cursor-not-allowed dark:bg-gray-800 dark:text-gray-600"
+            className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-gray-200 px-6 py-3 font-semibold text-gray-400 dark:bg-gray-800 dark:text-gray-600"
           >
             Next
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         )}
@@ -127,8 +116,8 @@ export default function ListLayoutWithTags({
     <>
       <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="pb-8 pt-6">
-          <h1 className="text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14">
+        <div className="pt-6 pb-8">
+          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
             {title}
           </h1>
         </div>
@@ -166,10 +155,10 @@ export default function ListLayoutWithTags({
               isTagsOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
-            <div className="mt-4 flex flex-wrap gap-2 rounded-lg bg-white p-4 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+            <div className="mt-4 flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
               <Link
                 href="/posts"
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   pathname.startsWith('/posts') && !pathname.includes('/tags/')
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
@@ -181,7 +170,7 @@ export default function ListLayoutWithTags({
                 <Link
                   key={t}
                   href={`/tags/${slug(t)}`}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     pathname.split('/tags/')[1] === slug(t)
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
@@ -201,23 +190,18 @@ export default function ListLayoutWithTags({
             return (
               <article
                 key={path}
-                className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
               >
                 {/* Hover gradient effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-slate-600/0 group-hover:from-blue-500/5 group-hover:to-slate-600/5 transition-all duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-slate-600/0 transition-all duration-300 group-hover:from-blue-500/5 group-hover:to-slate-600/5" />
 
                 <div className="relative z-10">
                   {/* Date */}
                   <time
                     dateTime={date}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3"
+                    className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -229,33 +213,33 @@ export default function ListLayoutWithTags({
                   </time>
 
                   {/* Title */}
-                  <h2 className="text-2xl font-bold leading-8 tracking-tight mb-3">
+                  <h2 className="mb-3 text-2xl leading-8 font-bold tracking-tight">
                     <Link
                       href={`/${path}`}
-                      className="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      className="text-gray-900 transition-colors hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
                     >
                       {title}
                     </Link>
                   </h2>
 
                   {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {tags?.map((tag) => <Tag key={tag} text={tag} />)}
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {tags?.map((tag) => (
+                      <Tag key={tag} text={tag} />
+                    ))}
                   </div>
 
                   {/* Summary */}
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-                    {summary}
-                  </p>
+                  <p className="mb-4 leading-relaxed text-gray-600 dark:text-gray-400">{summary}</p>
 
                   {/* Read More Link */}
                   <Link
                     href={`/${path}`}
-                    className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors duration-300 group/link"
+                    className="group/link inline-flex items-center gap-2 font-semibold text-blue-600 transition-colors duration-300 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     Read More
                     <svg
-                      className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform duration-300"
+                      className="h-4 w-4 transform transition-transform duration-300 group-hover/link:translate-x-1"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

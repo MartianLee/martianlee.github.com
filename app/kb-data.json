@@ -1,6 +1,31 @@
 {
   "topics": [
     {
+      "id": "ai-infrastructure",
+      "label": "AI Infrastructure",
+      "count": 18,
+      "slugs": [
+        "2026-05-17-dify-architecture",
+        "2026-05-17-openhands-architecture",
+        "2026-05-17-ruflo-architecture",
+        "2026-05-13-agentmemory-architecture",
+        "2026-05-13-hermes-agent-architecture",
+        "2026-04-18-claude-code-game-studios-architecture",
+        "2026-04-18-superpowers-architecture",
+        "2026-04-17-playwright-architecture",
+        "2026-04-16-browser-automation-comparison",
+        "2026-04-15-paperclip-architecture",
+        "2026-04-13-beads-architecture",
+        "2026-04-09-agent-browser-architecture",
+        "2026-03-15-ollama-architecture",
+        "2026-03-13-langchain-architecture",
+        "2026-03-13-nanoclaw-architecture",
+        "2026-03-13-lightpanda-architecture",
+        "2026-03-11-openclaw-architecture",
+        "2020-06-28-manjum-result"
+      ]
+    },
+    {
       "id": "dev-life",
       "label": "Dev Life",
       "count": 15,
@@ -23,6 +48,27 @@
       ]
     },
     {
+      "id": "llm-research",
+      "label": "LLM Research",
+      "count": 14,
+      "slugs": [
+        "2026-05-17-gpt-2-paper-note",
+        "2026-04-18-bert-paper-note",
+        "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+        "2026-04-18-llm-basics-rnn-sequential-processing",
+        "2026-04-18-llm-learning-basics-masked-language-model",
+        "2026-04-18-llm-learning-basics-pretraining-finetuning",
+        "2026-04-18-transformer-basics-encoder-decoder",
+        "2026-04-17-attention-is-all-you-need-paper-note",
+        "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+        "2026-04-17-llm-math-basics-softmax",
+        "2026-04-17-llm-math-basics-vector-dot-product",
+        "2026-04-17-llm-paper-evolution-moc",
+        "2026-04-17-transformer-basics-qkv-intuition",
+        "2026-04-17-transformer-basics-residual-layernorm-ffn"
+      ]
+    },
+    {
       "id": "web-frontend",
       "label": "Web Frontend",
       "count": 14,
@@ -41,46 +87,6 @@
         "2019-07-25-angular-architecture",
         "2019-06-12-angular-form",
         "2017-09-09-first-vue"
-      ]
-    },
-    {
-      "id": "llm-research",
-      "label": "LLM Research",
-      "count": 13,
-      "slugs": [
-        "2026-04-18-bert-paper-note",
-        "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
-        "2026-04-18-llm-basics-rnn-sequential-processing",
-        "2026-04-18-llm-learning-basics-masked-language-model",
-        "2026-04-18-llm-learning-basics-pretraining-finetuning",
-        "2026-04-18-transformer-basics-encoder-decoder",
-        "2026-04-17-attention-is-all-you-need-paper-note",
-        "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
-        "2026-04-17-llm-math-basics-softmax",
-        "2026-04-17-llm-math-basics-vector-dot-product",
-        "2026-04-17-llm-paper-evolution-moc",
-        "2026-04-17-transformer-basics-qkv-intuition",
-        "2026-04-17-transformer-basics-residual-layernorm-ffn"
-      ]
-    },
-    {
-      "id": "ai-infrastructure",
-      "label": "AI Infrastructure",
-      "count": 13,
-      "slugs": [
-        "2026-05-13-agentmemory-architecture",
-        "2026-04-18-superpowers-architecture",
-        "2026-04-17-playwright-architecture",
-        "2026-04-16-browser-automation-comparison",
-        "2026-04-15-paperclip-architecture",
-        "2026-04-13-beads-architecture",
-        "2026-04-09-agent-browser-architecture",
-        "2026-03-15-ollama-architecture",
-        "2026-03-13-langchain-architecture",
-        "2026-03-13-nanoclaw-architecture",
-        "2026-03-13-lightpanda-architecture",
-        "2026-03-11-openclaw-architecture",
-        "2020-06-28-manjum-result"
       ]
     },
     {
@@ -117,9 +123,242 @@
         "2023-01-30-aws-imweb-domain",
         "2019-03-12-ssh-github"
       ]
+    },
+    {
+      "id": "backend-architecture",
+      "label": "backend-architecture",
+      "count": 2,
+      "slugs": [
+        "2026-04-18-bloom-filter-membership-check-at-scale",
+        "2026-04-18-redisbloom-signup-architecture"
+      ]
     }
   ],
   "backlinks": {
+    "2026-04-17-llm-math-basics-softmax": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-17-transformer-basics-qkv-intuition": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-17-transformer-basics-residual-layernorm-ffn": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-transformer-basics-encoder-decoder": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-architecture-basics-encoder-only-decoder-only": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-learning-basics-pretraining-finetuning": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-bert-paper-note": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
+        "title": "Attention Is All You Need (2017) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-04-18-llm-learning-basics-masked-language-model": [
+      {
+        "slug": "2026-05-17-gpt-2-paper-note",
+        "title": "GPT-2 (2019) 논문 노트"
+      },
+      {
+        "slug": "2026-04-18-bert-paper-note",
+        "title": "BERT (2018) 논문 노트"
+      },
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM 논문 진화 지도 (MOC)"
+      }
+    ],
+    "2026-03-13-langchain-architecture": [
+      {
+        "slug": "2026-05-17-dify-architecture",
+        "title": "Dify 프로젝트 분석: LLM 앱 플랫폼은 어디까지 제품화되어 있나요?"
+      }
+    ],
+    "2026-03-15-ollama-architecture": [
+      {
+        "slug": "2026-05-17-dify-architecture",
+        "title": "Dify 프로젝트 분석: LLM 앱 플랫폼은 어디까지 제품화되어 있나요?"
+      }
+    ],
+    "2026-05-17-ruflo-architecture": [
+      {
+        "slug": "2026-05-17-dify-architecture",
+        "title": "Dify 프로젝트 분석: LLM 앱 플랫폼은 어디까지 제품화되어 있나요?"
+      },
+      {
+        "slug": "2026-05-17-openhands-architecture",
+        "title": "OpenHands 프로젝트 분석: 코딩 에이전트를 제품으로 운영하는 경계"
+      }
+    ],
+    "2026-05-13-agentmemory-architecture": [
+      {
+        "slug": "2026-05-17-dify-architecture",
+        "title": "Dify 프로젝트 분석: LLM 앱 플랫폼은 어디까지 제품화되어 있나요?"
+      },
+      {
+        "slug": "2026-05-17-openhands-architecture",
+        "title": "OpenHands 프로젝트 분석: 코딩 에이전트를 제품으로 운영하는 경계"
+      },
+      {
+        "slug": "2026-05-17-ruflo-architecture",
+        "title": "Ruflo 프로젝트 분석: Claude Code에 에이전트 운영체제를 붙이는 방법"
+      }
+    ],
+    "2026-04-18-superpowers-architecture": [
+      {
+        "slug": "2026-05-17-openhands-architecture",
+        "title": "OpenHands 프로젝트 분석: 코딩 에이전트를 제품으로 운영하는 경계"
+      },
+      {
+        "slug": "2026-05-17-ruflo-architecture",
+        "title": "Ruflo 프로젝트 분석: Claude Code에 에이전트 운영체제를 붙이는 방법"
+      },
+      {
+        "slug": "2026-05-13-hermes-agent-architecture",
+        "title": "Hermes Agent 프로젝트 분석: 스스로 배우고, 메신저에 살고, 도구를 쓰는 AI 에이전트"
+      },
+      {
+        "slug": "2026-04-16-browser-automation-comparison",
+        "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
+      }
+    ],
+    "2026-05-13-hermes-agent-architecture": [
+      {
+        "slug": "2026-05-17-openhands-architecture",
+        "title": "OpenHands 프로젝트 분석: 코딩 에이전트를 제품으로 운영하는 경계"
+      },
+      {
+        "slug": "2026-05-17-ruflo-architecture",
+        "title": "Ruflo 프로젝트 분석: Claude Code에 에이전트 운영체제를 붙이는 방법"
+      },
+      {
+        "slug": "2026-04-18-superpowers-architecture",
+        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
+      },
+      {
+        "slug": "2026-03-11-openclaw-architecture",
+        "title": "OpenClaw 아키텍처 분석 보고서 / 실사용 시나리오 Q&A"
+      }
+    ],
+    "2026-03-11-openclaw-architecture": [
+      {
+        "slug": "2026-05-17-ruflo-architecture",
+        "title": "Ruflo 프로젝트 분석: Claude Code에 에이전트 운영체제를 붙이는 방법"
+      },
+      {
+        "slug": "2026-05-13-hermes-agent-architecture",
+        "title": "Hermes Agent 프로젝트 분석: 스스로 배우고, 메신저에 살고, 도구를 쓰는 AI 에이전트"
+      },
+      {
+        "slug": "2026-04-18-superpowers-architecture",
+        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
+      }
+    ],
     "2026-04-17-attention-is-all-you-need-paper-note": [
       {
         "slug": "2026-04-18-bert-paper-note",
@@ -144,78 +383,6 @@
         "title": "LLM 논문 진화 지도 (MOC)"
       }
     ],
-    "2026-04-18-transformer-basics-encoder-decoder": [
-      {
-        "slug": "2026-04-18-bert-paper-note",
-        "title": "BERT (2018) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
-    "2026-04-18-llm-learning-basics-pretraining-finetuning": [
-      {
-        "slug": "2026-04-18-bert-paper-note",
-        "title": "BERT (2018) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
-    "2026-04-18-llm-architecture-basics-encoder-only-decoder-only": [
-      {
-        "slug": "2026-04-18-bert-paper-note",
-        "title": "BERT (2018) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
-    "2026-04-17-transformer-basics-residual-layernorm-ffn": [
-      {
-        "slug": "2026-04-18-bert-paper-note",
-        "title": "BERT (2018) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
-    "2026-04-18-llm-learning-basics-masked-language-model": [
-      {
-        "slug": "2026-04-18-bert-paper-note",
-        "title": "BERT (2018) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
-    "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
-      {
-        "slug": "2026-04-18-bert-paper-note",
-        "title": "BERT (2018) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
     "2026-04-13-beads-architecture": [
       {
         "slug": "2026-04-18-superpowers-architecture",
@@ -230,12 +397,6 @@
       {
         "slug": "2026-04-17-playwright-architecture",
         "title": "Playwright 아키텍처 해설 / 왜 E2E 테스트의 표준이 되었을까?"
-      }
-    ],
-    "2026-03-11-openclaw-architecture": [
-      {
-        "slug": "2026-04-18-superpowers-architecture",
-        "title": "Superpowers 사용기: agent를 사용하는 습관을 바꾸다!"
       }
     ],
     "2026-04-15-paperclip-architecture": [
@@ -254,16 +415,6 @@
         "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
       }
     ],
-    "2026-04-17-transformer-basics-qkv-intuition": [
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
     "2026-04-17-llm-math-basics-vector-dot-product": [
       {
         "slug": "2026-04-17-attention-is-all-you-need-paper-note",
@@ -274,21 +425,7 @@
         "title": "LLM 논문 진화 지도 (MOC)"
       }
     ],
-    "2026-04-17-llm-math-basics-softmax": [
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      },
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      }
-    ],
-    "2026-04-18-bert-paper-note": [
-      {
-        "slug": "2026-04-17-attention-is-all-you-need-paper-note",
-        "title": "Attention Is All You Need (2017) 논문 노트"
-      },
+    "2026-05-17-gpt-2-paper-note": [
       {
         "slug": "2026-04-17-llm-paper-evolution-moc",
         "title": "LLM 논문 진화 지도 (MOC)"
@@ -305,15 +442,44 @@
         "slug": "2026-04-16-browser-automation-comparison",
         "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
       }
-    ],
-    "2026-04-18-superpowers-architecture": [
-      {
-        "slug": "2026-04-16-browser-automation-comparison",
-        "title": "Playwright vs agent-browser vs Lightpanda — 브라우저 자동화 도구, 어떤 걸 써야 할까?"
-      }
     ]
   },
   "forwardLinks": {
+    "2026-05-17-gpt-2-paper-note": [
+      "2026-04-17-llm-math-basics-softmax",
+      "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
+      "2026-04-17-transformer-basics-qkv-intuition",
+      "2026-04-17-transformer-basics-residual-layernorm-ffn",
+      "2026-04-18-transformer-basics-encoder-decoder",
+      "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
+      "2026-04-18-llm-learning-basics-pretraining-finetuning",
+      "2026-04-18-bert-paper-note",
+      "2026-04-18-llm-learning-basics-masked-language-model"
+    ],
+    "2026-05-17-dify-architecture": [
+      "2026-03-13-langchain-architecture",
+      "2026-03-15-ollama-architecture",
+      "2026-05-17-ruflo-architecture",
+      "2026-05-13-agentmemory-architecture"
+    ],
+    "2026-05-17-openhands-architecture": [
+      "2026-05-17-ruflo-architecture",
+      "2026-04-18-superpowers-architecture",
+      "2026-05-13-hermes-agent-architecture",
+      "2026-05-13-agentmemory-architecture"
+    ],
+    "2026-05-17-ruflo-architecture": [
+      "2026-04-18-superpowers-architecture",
+      "2026-05-13-agentmemory-architecture",
+      "2026-05-13-hermes-agent-architecture",
+      "2026-03-11-openclaw-architecture"
+    ],
+    "2026-05-13-agentmemory-architecture": [],
+    "2026-05-13-hermes-agent-architecture": [
+      "2026-03-11-openclaw-architecture",
+      "2026-04-18-superpowers-architecture"
+    ],
+    "2026-04-18-claude-code-game-studios-architecture": [],
     "2026-04-18-bert-paper-note": [
       "2026-04-17-attention-is-all-you-need-paper-note",
       "2026-04-18-llm-basics-rnn-sequential-processing",
@@ -324,13 +490,16 @@
       "2026-04-18-llm-learning-basics-masked-language-model",
       "2026-04-17-llm-learning-basics-cross-entropy-perplexity"
     ],
+    "2026-04-18-bloom-filter-membership-check-at-scale": [],
     "2026-04-18-llm-architecture-basics-encoder-only-decoder-only": [],
     "2026-04-18-llm-basics-rnn-sequential-processing": [],
     "2026-04-18-llm-learning-basics-masked-language-model": [],
     "2026-04-18-llm-learning-basics-pretraining-finetuning": [],
+    "2026-04-18-redisbloom-signup-architecture": [],
     "2026-04-18-transformer-basics-encoder-decoder": [],
     "2026-04-18-superpowers-architecture": [
       "2026-04-13-beads-architecture",
+      "2026-05-13-hermes-agent-architecture",
       "2026-04-16-browser-automation-comparison",
       "2026-03-11-openclaw-architecture",
       "2026-04-15-paperclip-architecture"
@@ -355,6 +524,7 @@
     "2026-04-17-llm-paper-evolution-moc": [
       "2026-04-17-attention-is-all-you-need-paper-note",
       "2026-04-18-bert-paper-note",
+      "2026-05-17-gpt-2-paper-note",
       "2026-04-17-llm-math-basics-vector-dot-product",
       "2026-04-17-llm-math-basics-softmax",
       "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
@@ -382,7 +552,7 @@
     "2026-03-13-langchain-architecture": [],
     "2026-03-13-nanoclaw-architecture": [],
     "2026-03-13-lightpanda-architecture": [],
-    "2026-03-11-openclaw-architecture": [],
+    "2026-03-11-openclaw-architecture": ["2026-05-13-hermes-agent-architecture"],
     "2024-09-16-til-ruby-rails": [],
     "2024-02-21-leetcode-201": [],
     "2024-01-31-js-small-tricks-for-ps-1": [],
@@ -425,10 +595,75 @@
     "2017-09-09-first-vue": [],
     "2017-04-28-django-template-for-loop": [],
     "2017-04-28-book-review": [],
-    "2017-01-29-blogging-tools": [],
-    "2026-05-13-agentmemory-architecture": []
+    "2017-01-29-blogging-tools": []
   },
   "postIndex": [
+    {
+      "slug": "2026-05-17-gpt-2-paper-note",
+      "title": "GPT-2 (2019) 논문 노트",
+      "date": "2026-05-17T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": ["llm", "paper-reading", "transformer", "gpt-2", "zero-shot", "openai"],
+      "summary": "GPT-2 논문의 핵심 아이디어인 decoder-only Transformer scaling, WebText, next-token prediction, zero-shot task transfer, staged release 논쟁을 정리한 논문 노트."
+    },
+    {
+      "slug": "2026-05-17-dify-architecture",
+      "title": "Dify 프로젝트 분석: LLM 앱 플랫폼은 어디까지 제품화되어 있나요?",
+      "date": "2026-05-16T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "dify",
+        "llm-app",
+        "ai-agent",
+        "rag",
+        "workflow",
+        "mcp",
+        "plugin",
+        "flask",
+        "nextjs",
+        "architecture"
+      ],
+      "summary": "Dify는 LLM 앱 개발, 워크플로 캔버스, RAG 파이프라인, 모델/도구 플러그인, MCP, 운영 관측성을 하나의 제품형 플랫폼으로 묶는 오픈소스 프로젝트입니다. Flask API, Graphon workflow runtime, Celery worker, Next.js 콘솔, plugin daemon, vector backend 구조를 중심으로 분석합니다."
+    },
+    {
+      "slug": "2026-05-17-openhands-architecture",
+      "title": "OpenHands 프로젝트 분석: 코딩 에이전트를 제품으로 운영하는 경계",
+      "date": "2026-05-16T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "openhands",
+        "ai-agent",
+        "coding-agent",
+        "sandbox",
+        "fastapi",
+        "mcp",
+        "software-agent-sdk",
+        "architecture"
+      ],
+      "summary": "OpenHands는 AI 코딩 에이전트를 로컬 GUI, FastAPI app server, sandbox, agent-server, SDK, event store, MCP, skill system으로 제품화하는 프로젝트입니다. 현재 OpenHands 저장소가 담당하는 app server와 GUI 경계를 중심으로 분석합니다."
+    },
+    {
+      "slug": "2026-05-17-ruflo-architecture",
+      "title": "Ruflo 프로젝트 분석: Claude Code에 에이전트 운영체제를 붙이는 방법",
+      "date": "2026-05-16T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "ruflo",
+        "claude-flow",
+        "claude-code",
+        "ai-agent",
+        "architecture",
+        "mcp",
+        "agentdb",
+        "swarm",
+        "typescript"
+      ],
+      "summary": "Ruflo는 Claude Code 위에 CLI, MCP 서버, swarm coordination, AgentDB 메모리, hooks, background worker, plugin marketplace, Web UI를 얹어 다중 에이전트 운영 계층을 만드는 프로젝트입니다. Claude Flow에서 Ruflo로 확장된 구조를 기존 agentmemory, Superpowers, Hermes Agent 글과 이어서 분석합니다."
+    },
     {
       "slug": "2026-05-13-agentmemory-architecture",
       "title": "agentmemory 프로젝트 분석: 코딩 에이전트는 왜 이제 메모리 계층을 따로 두는가",
@@ -448,6 +683,33 @@
       "summary": "Claude Code, Codex, Gemini CLI, OpenClaw를 따로 기억시키는 방식은 한계가 분명합니다. agentmemory는 hooks로 관측을 수집하고, BM25·vector·graph 검색으로 재구성한 뒤, MCP·REST·viewer로 여러 에이전트가 공유하는 장기 기억 계층을 만듭니다."
     },
     {
+      "slug": "2026-05-13-hermes-agent-architecture",
+      "title": "Hermes Agent 프로젝트 분석: 스스로 배우고, 메신저에 살고, 도구를 쓰는 AI 에이전트",
+      "date": "2026-05-12T15:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "hermes-agent",
+        "nousresearch",
+        "ai-agent",
+        "architecture",
+        "python",
+        "llm",
+        "tools",
+        "gateway"
+      ],
+      "summary": "Nous Research의 Hermes Agent를 사용자 관점에서 이해하기 위한 아키텍처 분석입니다. CLI, 메신저 게이트웨이, ACP, 도구 레지스트리, 스킬, 메모리, 플러그인, 서브에이전트 구조를 쉬운 흐름으로 정리합니다."
+    },
+    {
+      "slug": "2026-04-18-claude-code-game-studios-architecture",
+      "title": "Claude Code Game Studios 아키텍처 분석: Claude Code를 게임 개발 스튜디오처럼 쓰기",
+      "date": "2026-04-18T12:40:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": ["claude-code", "game-dev", "agent", "skills", "ai", "architecture"],
+      "summary": "Claude Code Game Studios가 49개 에이전트, 72개 스킬, 훅, 룰, 템플릿을 조합해 단일 Claude Code 세션을 게임 개발 스튜디오처럼 운영하는 방식을 분석합니다."
+    },
+    {
       "slug": "2026-04-18-bert-paper-note",
       "title": "BERT (2018) 논문 노트",
       "date": "2026-04-18T00:00:00.000Z",
@@ -455,6 +717,15 @@
       "stage": "seedling",
       "tags": ["llm", "paper-reading", "transformer", "bert", "arxiv"],
       "summary": "BERT 논문의 핵심 아이디어인 양방향 Transformer encoder, masked language model, next sentence prediction, fine-tuning 패러다임을 정리한 논문 노트."
+    },
+    {
+      "slug": "2026-04-18-bloom-filter-membership-check-at-scale",
+      "title": "수십억 ID 중복 체크, 정말 블룸 필터가 정답일까?",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "backend-architecture",
+      "stage": "seedling",
+      "tags": ["bloom-filter", "redis", "database", "backend", "scaling"],
+      "summary": "블룸 필터의 핵심 개념과 회원가입 중복 체크에서의 올바른 사용법, 그리고 간단한 구현 예시를 정리합니다."
     },
     {
       "slug": "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
@@ -491,6 +762,15 @@
       "stage": "seedling",
       "tags": ["llm", "pre-training", "fine-tuning", "training", "paper-reading"],
       "summary": "대규모 사전학습과 태스크별 fine-tuning이 무엇인지 BERT 흐름에 맞춰 설명합니다."
+    },
+    {
+      "slug": "2026-04-18-redisbloom-signup-architecture",
+      "title": "RedisBloom 실전 아키텍처: 회원가입 ID 중복 체크를 빠르게, 안전하게",
+      "date": "2026-04-18T00:00:00.000Z",
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "tags": ["redisbloom", "redis", "signup", "backend", "architecture"],
+      "summary": "RedisBloom을 회원가입 중복 체크에 적용할 때 필요한 요청 플로우, 샤딩, 동기화, 재빌드, 모니터링 전략을 정리합니다."
     },
     {
       "slug": "2026-04-18-transformer-basics-encoder-decoder",
@@ -1083,5 +1363,5 @@
       "summary": "Jekyll default page"
     }
   ],
-  "generatedAt": "2026-04-18T02:53:37.591Z"
+  "generatedAt": "2026-05-17T14:14:39.091Z"
 }

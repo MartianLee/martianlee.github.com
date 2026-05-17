@@ -17,17 +17,17 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
   const recentPosts = posts.slice(0, 3)
 
   return (
-    <section ref={ref} className="py-20 bg-gray-50 dark:bg-gray-900/50">
+    <section ref={ref} className="bg-gray-50 py-20 dark:bg-gray-900/50">
       <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto max-w-6xl">
           {/* Section Header */}
           <div
-            className={`flex justify-between items-center mb-12 transition-all duration-1000 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`mb-12 flex items-center justify-between transition-all duration-1000 ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="mb-2 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
                 Recent Posts
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -36,11 +36,11 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
             </div>
             <Link
               href="/posts"
-              className="hidden md:flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors duration-300 group"
+              className="group hidden items-center gap-2 font-semibold text-blue-600 transition-colors duration-300 hover:text-blue-700 md:flex dark:text-blue-400 dark:hover:text-blue-300"
             >
               View All Posts
               <svg
-                className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
+                className="h-5 w-5 transform transition-transform duration-300 group-hover:translate-x-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -56,36 +56,36 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
           </div>
 
           {/* Posts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {recentPosts.map((post, index) => (
               <article
                 key={post.slug}
                 className={`group transition-all duration-700 ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                 }`}
                 style={{ transitionDelay: `${index * 150}ms` }}
               >
-                <div className="h-full p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+                <div className="h-full transform rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800">
                   {/* Date */}
                   <time
                     dateTime={post.date}
-                    className="text-sm text-blue-600 dark:text-blue-400 font-medium"
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400"
                   >
                     {formatDate(post.date, siteMetadata.locale)}
                   </time>
 
                   {/* Title */}
-                  <h3 className="mt-3 text-xl font-bold line-clamp-2">
+                  <h3 className="mt-3 line-clamp-2 text-xl font-bold">
                     <Link
                       href={`/posts/${post.slug}`}
-                      className="text-gray-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300"
+                      className="text-gray-900 transition-colors duration-300 group-hover:text-pink-600 dark:text-white dark:group-hover:text-pink-400"
                     >
                       {post.title}
                     </Link>
                   </h3>
 
                   {/* Summary */}
-                  <p className="mt-3 text-gray-600 dark:text-gray-400 line-clamp-3 text-sm leading-relaxed">
+                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                     {post.summary}
                   </p>
 
@@ -100,11 +100,11 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
                   <div className="mt-4">
                     <Link
                       href={`/posts/${post.slug}`}
-                      className="inline-flex items-center text-pink-600 dark:text-pink-400 font-medium text-sm hover:gap-2 transition-all duration-300"
+                      className="inline-flex items-center text-sm font-medium text-pink-600 transition-all duration-300 hover:gap-2 dark:text-pink-400"
                     >
                       <span>Read more</span>
                       <svg
-                        className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-300"
+                        className="ml-1 h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -125,16 +125,16 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
 
           {/* Mobile "View All" Button */}
           <div
-            className={`mt-12 text-center md:hidden transition-all duration-1000 delay-700 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`mt-12 text-center transition-all delay-700 duration-1000 md:hidden ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
             <Link
               href="/posts"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-slate-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              className="inline-flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-slate-700 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
             >
               View All Posts
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -149,4 +149,3 @@ export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
     </section>
   )
 }
-

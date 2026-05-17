@@ -62,96 +62,94 @@ export default function ImpactMetricsSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-24 bg-gray-50 dark:bg-gray-900/50">
+    <section ref={sectionRef} className="bg-gray-50 py-16 md:py-24 dark:bg-gray-900/50">
       <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto max-w-6xl">
           {/* Section Header */}
           <div
-            className={`text-center mb-12 md:mb-16 transition-all duration-1000 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`mb-12 text-center transition-all duration-1000 md:mb-16 ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
               Impact & Achievements
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400">
               Delivering measurable results through technical excellence and leadership
             </p>
           </div>
 
           {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
             {metrics.map((metric, index) => (
               <div
                 key={index}
-                className={`group relative bg-white dark:bg-gray-800 rounded-xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                className={`group relative rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-500 hover:border-blue-500 hover:shadow-xl md:p-8 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-500 ${
+                  isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                 }`}
                 style={{
                   transitionDelay: `${index * 150}ms`,
                 }}
               >
                 {/* Icon */}
-                <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                <div className="mb-4 transform text-5xl transition-transform duration-300 group-hover:scale-110">
                   {metric.icon}
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                <h3 className="mb-3 text-xl font-bold text-gray-900 md:text-2xl dark:text-white">
                   {metric.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-base leading-relaxed text-gray-600 md:text-lg dark:text-gray-400">
                   {metric.description}{' '}
                   {metric.highlight && (
-                    <span className="font-bold text-blue-600 dark:text-blue-400 block mt-2">
+                    <span className="mt-2 block font-bold text-blue-600 dark:text-blue-400">
                       {metric.highlight}
                     </span>
                   )}
                 </p>
 
                 {/* Hover Effect Border */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-slate-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none" />
+                <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-slate-600 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
               </div>
             ))}
           </div>
 
           {/* Additional Stats */}
           <div
-            className={`mt-12 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-1000 delay-500 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`mt-12 grid grid-cols-2 gap-6 transition-all delay-500 duration-1000 md:mt-16 md:grid-cols-4 ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+              <div className="mb-2 text-3xl font-bold text-blue-600 md:text-4xl dark:text-blue-400">
                 6+
               </div>
-              <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+              <div className="text-sm text-gray-600 md:text-base dark:text-gray-400">
                 Years Experience
               </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+              <div className="mb-2 text-3xl font-bold text-blue-600 md:text-4xl dark:text-blue-400">
                 3
               </div>
-              <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-                Companies
-              </div>
+              <div className="text-sm text-gray-600 md:text-base dark:text-gray-400">Companies</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+              <div className="mb-2 text-3xl font-bold text-blue-600 md:text-4xl dark:text-blue-400">
                 10M+
               </div>
-              <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+              <div className="text-sm text-gray-600 md:text-base dark:text-gray-400">
                 Users Served
               </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+              <div className="mb-2 text-3xl font-bold text-blue-600 md:text-4xl dark:text-blue-400">
                 5+
               </div>
-              <div className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+              <div className="text-sm text-gray-600 md:text-base dark:text-gray-400">
                 Engineers Mentored
               </div>
             </div>
@@ -161,4 +159,3 @@ export default function ImpactMetricsSection() {
     </section>
   )
 }
-

@@ -52,16 +52,16 @@ export default function TechStackSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="py-20 bg-white dark:bg-gray-950">
+    <section ref={sectionRef} className="bg-white py-20 dark:bg-gray-950">
       <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto max-w-6xl">
           {/* Section Header */}
           <div
-            className={`text-center mb-16 transition-all duration-1000 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`mb-16 text-center transition-all duration-1000 ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
               Tech Stack
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -71,8 +71,8 @@ export default function TechStackSection() {
 
           {/* Tech Stack Grid */}
           <div
-            className={`transition-all duration-1000 delay-300 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`transition-all delay-300 duration-1000 ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
             <div className="flex flex-wrap justify-center gap-4">
@@ -86,13 +86,13 @@ export default function TechStackSection() {
                       : 'none',
                   }}
                 >
-                  <div className="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-blue-50 to-slate-50 dark:from-gray-800 dark:to-gray-800 rounded-full border border-blue-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg cursor-default">
-                    <span className="text-sm md:text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  <div className="transform cursor-default rounded-full border border-blue-200 bg-gradient-to-r from-blue-50 to-slate-50 px-4 py-2 transition-all duration-300 hover:scale-110 hover:border-blue-400 hover:shadow-lg md:px-6 md:py-3 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 dark:hover:border-blue-500">
+                    <span className="text-sm font-semibold text-gray-800 transition-colors duration-300 group-hover:text-blue-600 md:text-sm dark:text-gray-200 dark:group-hover:text-blue-400">
                       {tech.name}
                     </span>
                   </div>
                   {/* Tooltip */}
-                  <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 transform rounded bg-gray-900 px-3 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gray-700">
                     {tech.category}
                   </div>
                 </div>
@@ -102,8 +102,8 @@ export default function TechStackSection() {
 
           {/* Stats Section */}
           <div
-            className={`mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 transition-all duration-1000 delay-500 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`mt-20 grid grid-cols-2 gap-8 transition-all delay-500 duration-1000 md:grid-cols-4 ${
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
             {[
@@ -114,12 +114,12 @@ export default function TechStackSection() {
             ].map((stat, index) => (
               <div
                 key={stat.label}
-                className="text-center p-6 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 dark:from-gray-800 dark:to-gray-800 border border-blue-100 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300 transform hover:scale-105"
+                className="transform rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-slate-50 p-6 text-center transition-all duration-300 hover:scale-105 hover:border-blue-300 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 dark:hover:border-blue-500"
               >
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-slate-700 bg-clip-text text-transparent mb-2">
+                <div className="mb-2 bg-gradient-to-r from-blue-600 to-slate-700 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
                   {stat.number}
                 </div>
-                <div className="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">
+                <div className="text-sm font-medium text-gray-600 md:text-base dark:text-gray-400">
                   {stat.label}
                 </div>
               </div>
@@ -130,4 +130,3 @@ export default function TechStackSection() {
     </section>
   )
 }
-

@@ -9,7 +9,25 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['node_modules', '.eslintrc.js'],
+    ignores: [
+      'node_modules',
+      '.eslintrc.js',
+      '.next/**',
+      '.worktrees/**',
+      'out/**',
+      '.contentlayer/**',
+      '.yarn/**',
+      '**/*.md',
+      '**/*.mdx',
+      '**/*.tsbuildinfo',
+      'app/tag-data.json',
+      'next-env.d.ts',
+      'public/search.json',
+      'eslint.config.cjs',
+      'next.config.js',
+      'postcss.config.js',
+      'prettier.config.js',
+    ],
   },
   ...compat.config({
     root: true,
@@ -48,4 +66,3 @@ module.exports = [
     },
   }),
 ]
-

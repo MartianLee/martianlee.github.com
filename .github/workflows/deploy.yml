@@ -69,6 +69,8 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
         env:
           SKIP_CONTENTLAYER_BUILD: true
+      - name: Run lint
+        run: ${{ steps.detect-package-manager.outputs.manager }} lint
       - name: Check for mermaid diagrams
         id: check-mermaid
         run: |

@@ -10,6 +10,20 @@
 
 ---
 
+## Execution Note
+
+Baseline `yarn lint` currently fails before homepage implementation work because repo-wide lint includes generated/cache files such as `.contentlayer`, tracked Yarn release files, and existing files that are out of sync with the current Prettier/Tailwind ordering rules. Do not treat that baseline failure as caused by this feature.
+
+For implementation tasks, verify changed source files with targeted ESLint commands such as:
+
+```bash
+yarn eslint app/page.tsx components/home/HeroSection.tsx components/home/HomeConstellationThumbnail.tsx
+```
+
+Final verification still includes `yarn build` and Playwright screenshot checks. If repo-wide lint is repaired separately later, this feature should also pass `yarn lint`.
+
+---
+
 ## File Structure
 
 - Modify: `app/page.tsx`
