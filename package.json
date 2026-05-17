@@ -23,7 +23,7 @@
     "esbuild": "^0.25.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
-    "image-size": "1.2.0",
+    "image-size": "1.2.1",
     "next": "latest",
     "next-contentlayer2": "latest",
     "next-themes": "^0.4.4",
@@ -65,14 +65,34 @@
     "prettier-plugin-tailwindcss": "latest",
     "typescript": "latest"
   },
+  "dependencyResolutionNotes": {
+    "security-overrides": "Temporary Yarn resolutions for transitive dependency advisories reported by GitHub Dependabot/npm audit. Remove entries one by one after upstream packages update, keeping `yarn npm audit --all --recursive` at 0 advisories."
+  },
   "resolutions": {
+    "@babel/runtime": "7.26.10",
+    "@protobufjs/utf8": "1.1.1",
     "@opentelemetry/api": "1.4.1",
     "@opentelemetry/core": "1.13.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "0.39.1",
     "@opentelemetry/resources": "1.13.0",
     "@opentelemetry/sdk-trace-base": "1.13.0",
     "@opentelemetry/sdk-trace-node": "1.13.0",
-    "@opentelemetry/semantic-conventions": "1.13.0"
+    "@opentelemetry/semantic-conventions": "1.13.0",
+    "ajv": "6.14.0",
+    "brace-expansion@^1.1.7": "1.1.12",
+    "brace-expansion@^2.0.1": "2.0.3",
+    "dompurify": "3.4.0",
+    "flatted": "3.4.2",
+    "form-data": "2.5.5",
+    "ip-address": "10.1.1",
+    "js-yaml": "4.1.1",
+    "minimatch@^9.0.4": "9.0.7",
+    "picomatch@^4.0.2": "4.0.4",
+    "postcss@8.4.31": "8.5.10",
+    "protobufjs": "7.5.6",
+    "svgo": "3.3.3",
+    "tar": "7.5.11",
+    "yaml": "2.8.3"
   },
   "lint-staged": {
     "*.+(js|jsx|ts|tsx)": [
