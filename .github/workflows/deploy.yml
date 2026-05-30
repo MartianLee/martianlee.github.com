@@ -95,30 +95,47 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
       - name: Install Playwright Chromium (for mermaid rendering)
         if: steps.check-mermaid.outputs.found == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        # Non-fatal: the Chromium download has been deterministically hanging
+        # after reaching 100% on the runners. Mermaid SSR is optional — if the
+        # browser can't be installed we skip it (see "Decide mermaid" below) and
+        # still ship the site. Fail fast instead of burning the job timeout.
+        continue-on-error: true
         env:
           DEBIAN_FRONTEND: noninteractive
           NEEDRESTART_MODE: a
-        # The browser download can stall indefinitely on a flaky network. Cap
-        # each attempt and retry so a hang can't burn the whole job timeout.
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2; do
             echo "::group::Playwright install attempt $attempt"
-            if timeout 300 npx playwright install --with-deps chromium; then
+            if timeout 240 npx playwright install --with-deps chromium; then
               echo "::endgroup::"
               exit 0
             fi
             echo "::endgroup::"
-            echo "Attempt $attempt stalled or failed; retrying in 10s..."
-            sleep 10
+            echo "Attempt $attempt stalled or failed; retrying in 5s..."
+            sleep 5
           done
-          echo "Playwright install failed after 3 attempts"
-          exit 1
+          echo "Playwright install did not succeed; mermaid SSR will be skipped"
       - name: Install Playwright deps only (cached browsers)
         if: steps.check-mermaid.outputs.found == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+        continue-on-error: true
         env:
           DEBIAN_FRONTEND: noninteractive
           NEEDRESTART_MODE: a
-        run: timeout 300 npx playwright install-deps chromium
+        run: timeout 240 npx playwright install-deps chromium
+      - name: Decide mermaid rendering availability
+        if: steps.check-mermaid.outputs.found == 'true'
+        # Enable mermaid SSR only when a Chromium browser is actually present.
+        # Otherwise disable rehype-mermaid for this build so contentlayer renders
+        # the rest of the site cleanly (diagrams degrade to code blocks). The
+        # SSR path auto-recovers once the browser cache repopulates.
+        run: |
+          if ls ~/.cache/ms-playwright/chromium-*/ >/dev/null 2>&1 \
+            || ls ~/.cache/ms-playwright/chromium_headless_shell-*/ >/dev/null 2>&1; then
+            echo "Chromium present: mermaid SSR enabled"
+          else
+            echo "Chromium missing: disabling mermaid SSR for this build"
+            echo "DISABLE_REHYPE_MERMAID=true" >> "$GITHUB_ENV"
+          fi
       - name: Run contentlayer build
         run: npx contentlayer2 build
       - name: Build with Next.js
