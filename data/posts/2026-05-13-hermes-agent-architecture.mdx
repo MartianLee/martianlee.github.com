@@ -15,6 +15,8 @@ author: MartianLee
 > 대상 커밋: `dd0923bb89ed2dd56f82cb63656a1323f6f42e6f`
 > 저장소: https://github.com/NousResearch/hermes-agent
 > 로컬 분석 경로: `~/workspace/opensources/hermes-agent`
+>
+> 업데이트(2026-06-01): 본문은 `0.13.0` 기준이지만, 이후 출시된 `0.14.0`(v2026.5.16), `0.15.0`(v2026.5.28), `0.15.1`(v2026.5.29)의 주요 변경점을 [18. 부록: 0.13 → 0.15 변경점](#18-부록-013--015-변경점)에 정리했습니다.
 
 ---
 
@@ -40,6 +42,7 @@ _This article is partially written by Codex_
 15. [인상적인 설계 포인트](#15-인상적인-설계-포인트)
 16. [주의해서 볼 지점](#16-주의해서-볼-지점)
 17. [결론](#17-결론)
+18. [부록: 0.13 → 0.15 변경점](#18-부록-013--015-변경점)
 
 ---
 
@@ -830,3 +833,93 @@ Hermes Agent는 "AI 에이전트 앱"이라기보다 **AI 에이전트 운영체
 > Hermes는 여러 채널에서 들어온 사용자 요청을 `AIAgent`로 모으고, `AIAgent`는 모델에게 도구 목록을 보여준 뒤, 모델의 tool call을 실제 세계의 작업으로 바꾸는 시스템입니다.
 
 이 관점으로 보면 거대한 저장소도 조금 친근해집니다. `run_agent.py`는 심장, `tools/registry.py`는 손발의 신경망, `gateway/`는 외부 세계와의 귀와 입, `memory/skills/plugins`는 오래 쓰면서 쌓이는 습관과 확장 장치라고 볼 수 있습니다.
+
+---
+
+## 18. 부록: 0.13 → 0.15 변경점
+
+이 글의 본문은 `0.13.0`(v2026.5.7)을 기준으로 작성했습니다. 그 사이 Hermes는 꽤 빠르게 움직여서 `0.14.0`, `0.15.0`, `0.15.1`이 연달아 나왔습니다. 변화의 양이 상당하지만, 한 줄로 요약하면 이렇습니다.
+
+> **0.14는 "어디서나 설치되고 가볍게 도는" 토대를 다졌고, 0.15는 "더 빠르고 더 깔끔한 구조"로 코어를 다시 썼습니다.**
+
+본문의 아키텍처 그림(중심의 `AIAgent`, self-registering tool registry, provider plugin, gateway adapter)은 여전히 유효합니다. 큰 그림은 바뀌지 않았고, 그 위에서 살이 붙고 무게중심이 정리되었다고 보면 됩니다.
+
+| 버전     | 코드네임               | 출시일     | 한 줄 요약                                                           |
+| -------- | ---------------------- | ---------- | -------------------------------------------------------------------- |
+| `0.13.0` | The Tenacity Release   | 2026-05-07 | (본문 기준) 시작한 일을 끝내는 에이전트 — Kanban, `/goal`, 세션 복구 |
+| `0.14.0` | The Foundation Release | 2026-05-16 | 어디서나 설치/실행, 가벼운 설치, PyPI 배포, 콜드스타트 단축          |
+| `0.15.0` | The Velocity Release   | 2026-05-28 | `run_agent.py` 대수술(-76%), Kanban 멀티에이전트 플랫폼화, 속도 향상 |
+| `0.15.1` | The Patch Release      | 2026-05-29 | 0.15.0 당일 핫픽스 (대시보드 무한 리로드 등)                         |
+
+### 18.1 0.14.0 — "어디서나 설치되고 가볍게 도는" 토대
+
+0.14의 주제는 **설치와 배포, 그리고 가벼움**입니다. 본문 16.5에서 "공급망 보안을 강하게 의식한다"고 적었는데, 0.14는 그 의식을 설치 경험 전반으로 확장했습니다.
+
+| 영역          | 변경점                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| 배포          | `pip install hermes-agent && hermes` — 정식 PyPI 패키지가 되었습니다(Ink TUI 번들 + 셸 런처 포함)       |
+| 설치 경량화   | 무거운 백엔드(메신저 SDK, 이미지/음성 provider 등)를 **첫 사용 시 lazy-install**, 공급망 advisory 검사  |
+| 콜드스타트    | `hermes` 실행에서 약 **19초 단축**, `hermes tools` 화면은 14초 → 1.5초 미만                             |
+| 런타임 속도   | `browser_console` 평가가 영속 CDP 연결 재사용으로 **약 180배** 빨라졌습니다                             |
+| 프롬프트 캐시 | Claude의 prefix(시스템 프롬프트·스킬·메모리)를 **세션 간 1시간** 캐시(Anthropic/OpenRouter/Nous Portal) |
+
+기능 표면도 넓어졌습니다.
+
+- **xAI Grok가 SuperGrok OAuth로 진입**하고 grok-4.3가 1M 컨텍스트로 확장되었습니다. API 키 없이 구독 로그인만으로 Grok을 쓸 수 있습니다.
+- **`hermes proxy`** — OAuth provider(Claude Pro, ChatGPT Pro, SuperGrok)를 OpenAI 호환 로컬 엔드포인트로 노출합니다. Codex/Aider/Cline 같은 도구가 기존 구독을 그대로 활용합니다.
+- **`x_search`** — X(Twitter) 검색이 일급 도구로 들어왔습니다.
+- **Microsoft Teams end-to-end**(Graph 인증 + 웹훅 + 파이프라인 + 발신)와 새 메신저 **LINE, SimpleX Chat**이 추가되어 총 22개 플랫폼이 되었습니다.
+- **`/handoff`**가 진행 중인 세션(메시지·도구 호출·컨텍스트 전부)을 다른 모델/페르소나로 라이브 이전합니다.
+- **LSP 시맨틱 진단** — `write_file`/`patch` 시 실제 language server를 돌려 타입 오류·미정의 심볼·누락 import를 즉시 잡아 줍니다. 본문에서 언급한 0.13의 Python/JSON/YAML/TOML 기본 린팅보다 한 단계 깊어졌습니다.
+- **per-turn 파일 변경 검증 footer**, **`computer_use` cua-driver 백엔드**(비-Anthropic provider 지원), **네이티브 Windows 베타**도 들어왔습니다.
+
+보안 쪽에서는 `sudo -S` 무차별 대입 차단, dangerous-command 탐지 우회 3건 차단, **tool error 문자열을 모델 컨텍스트에 재주입하기 전 새니타이즈**(악성 파일·원격 서비스가 에러 출력으로 에이전트에 지시를 주입하는 것을 차단)가 추가되었습니다.
+
+### 18.2 0.15.0 — 코어 대수술과 속도
+
+0.15는 이 글을 쓰는 입장에서 가장 반가운 릴리스입니다. 본문 **16.1에서 "`run_agent.py`, `cli.py`, `gateway/run.py`는 매우 크다"**고 지적했는데, 0.15가 바로 그 지점을 정면으로 손봤기 때문입니다.
+
+```mermaid
+flowchart LR
+    OLD["run_agent.py<br/>16,083 lines"] -->|The Big Refactor<br/>-76%| NEW["run_agent.py<br/>3,821 lines"]
+    NEW --> M["+ 14 cohesive<br/>agent/* modules"]
+    M --> COMPAT["thin forwarder 유지<br/>test-patch 경로·외부 caller 호환"]
+```
+
+- **The Big Refactor** — `run_agent.py`가 16,083줄에서 3,821줄로 줄고(-76%), 빠진 코드는 `agent/` 아래 14개 응집 모듈로 재배치되었습니다. 동작은 그대로 유지(`AIAgent`에 얇은 forwarder를 남겨 테스트 patch 경로·외부 caller 모두 호환)이지만, 본문 14장의 "코드를 읽는 추천 순서"는 이제 훨씬 수월해졌습니다. 한 파일에 몰려 있던 edge case가 모듈로 흩어졌기 때문입니다.
+
+나머지 큰 줄기는 다음과 같습니다.
+
+| 영역           | 변경점                                                                                                                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kanban         | 멀티에이전트 **플랫폼**으로 성장(104 PR). triage 자동 분해, `hermes kanban swarm` 토폴로지(root·병렬 워커·게이트 검증/합성·공유 blackboard), per-task 모델 오버라이드, task별 worktree/브랜치, 예약 시작 |
+| session_search | aux-LLM을 제거하고 재작성 — 호출당 약 $0.30·30초 걸리던 것이 **무료·약 20ms**로(약 4,500배)                                                                                                              |
+| 콜드스타트     | 추가 최적화 — 31턴 대화 기준 per-turn 함수 호출 **47% 감소**(399k→213k), `hermes --version` 63% 단축                                                                                                     |
+| 보안           | **Promptware 방어**(Brainworm급 프롬프트 인젝션) — 공유 위협 패턴, 메모리 로드 시 스캔, tool 결과 delimiter                                                                                              |
+| 시크릿         | **Bitwarden Secrets Manager** — bootstrap 토큰 하나로 provider별 API 키를 대체                                                                                                                           |
+| 메신저         | **ntfy**가 23번째 플랫폼으로 추가(계정·키 없이 푸시 알림)                                                                                                                                                |
+| 스킬           | **Skill bundles** — `/<이름>` 하나로 여러 스킬을 한 번에 로드. `openhands`/`code-wiki`/`web-pentest` 스킬 추가                                                                                           |
+| 이미지/도구    | Krea 2 이미지 provider, FAL 백엔드 플러그인화, **Nous 승인 MCP 카탈로그**(`hermes mcp` 대화형 picker), mTLS MCP                                                                                          |
+| TUI            | **세션 오케스트레이터** — 한 TUI 창에서 여러 라이브 세션을 전환/관리                                                                                                                                     |
+| Provider       | OpenAI API가 Codex 런타임과 별개의 일급 provider로, Microsoft Entra ID(Azure Foundry), xAI 통합 강화                                                                                                     |
+
+특히 본문 16.5에서 짚은 공급망 의식은 0.15에서 **`hermes audit`(OSV.dev 기반 온디맨드 점검)**과 `hermes update`의 post-pull 문법 검증 + 자동 롤백으로 더 구체화되었습니다.
+
+### 18.3 0.15.1 — 당일 핫픽스
+
+0.15.0 당일에 나온 패치 릴리스입니다(21 PR). 핵심은 loopback 모드(Docker, 호스팅, 신규 설치)에서 대시보드가 무한 리로드되던 **401 reload 루프 수정**입니다. 그 외에 Docker의 `--insecure`를 bind host 추론이 아닌 **명시적 env opt-in**(`HERMES_DASHBOARD_INSECURE=1`)으로 분리, Docker에서 MCP bare command(`npx`/`npm`/`node`)의 PATH 해결, kanban 워커 `SIGTERM` 종료 복구, skills.sh 카탈로그 전체 노출(858 → 19,932개) 등이 포함되었습니다.
+
+### 18.4 한 장으로 보는 변화
+
+본문의 구조 관점에서 0.13 → 0.15의 변화를 정리하면 이렇습니다.
+
+| 본문에서 언급한 지점           | 0.15까지의 변화                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
+| 16.1 큰 파일이 많습니다        | `run_agent.py` 16k → 3.8k줄(-76%), `agent/` 14개 모듈로 분리                         |
+| 11. 플러그인과 모델 프로바이더 | image_gen·browser·video·web 백엔드까지 플러그인화로 정렬, OpenAI API 일급 provider화 |
+| 7. 도구 시스템                 | `x_search`·`video_generate`·`computer_use`(non-Anthropic) 등 도구 표면 확장          |
+| 9. 스킬/메모리/압축            | session_search 무LLM 재작성, Skill bundles, 메모리 로드 시 promptware 스캔           |
+| 10. 서브에이전트와 병렬 작업   | Kanban이 swarm 토폴로지·per-task 모델·worktree까지 갖춘 멀티에이전트 플랫폼으로 확장 |
+| 16.5 공급망 보안               | `hermes audit`(OSV.dev), update post-pull 검증·롤백, Bitwarden 시크릿                |
+
+정리하면, **본문에서 그린 큰 그림은 그대로 유효하되, "읽기 어려웠던 코어"는 가벼워졌고 "확장 표면"은 더 일관되게 플러그인화되었다**고 보면 됩니다. 0.13으로 구조를 이해했다면, 0.15는 같은 구조를 더 빠르고 깔끔하게 다시 만난다는 느낌에 가깝습니다.
