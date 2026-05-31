@@ -1,6 +1,7 @@
 import KBShell from '@/components/kb/KBShell'
 import KBSidebar from '@/components/kb/KBSidebar'
 import KBNoteList from '@/components/kb/KBNoteList'
+import KBSearchTrigger from '@/components/kb/KBSearchTrigger'
 import kbData from 'app/kb-data.json'
 import type { KBData } from '@/components/kb/types'
 
@@ -19,7 +20,9 @@ export default function KBPage() {
             <span>{data.postIndex.length} notes</span>
             <span>&middot;</span>
             <span>{data.topics.length} topics</span>
-            <span className="ml-auto">Cmd+K to search</span>
+            <KBSearchTrigger className="ml-auto transition-colors hover:text-[var(--kb-accent)]">
+              Cmd+K to search
+            </KBSearchTrigger>
           </div>
         }
       />

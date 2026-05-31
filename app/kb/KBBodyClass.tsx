@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Script from 'next/script'
+import KBSearchPalette from '@/components/kb/KBSearchPalette'
 
 export default function KBBodyClass({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -18,6 +19,7 @@ export default function KBBodyClass({ children }: { children: React.ReactNode })
         strategy="beforeInteractive"
       >{`document.body.classList.add('kb-active')`}</Script>
       {children}
+      <KBSearchPalette />
     </>
   )
 }
