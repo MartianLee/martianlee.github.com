@@ -1,0 +1,380 @@
+---
+slug: '2026-06-04-semble-architecture'
+title: 'Semble 프로젝트 분석: 코드 검색을 정적 임베딩으로 푼 에이전트용 RAG는 어떻게 만들어졌나요?'
+crawlertitle: 'Semble 프로젝트 분석: 코드 검색을 정적 임베딩으로 푼 에이전트용 RAG는 어떻게 만들어졌나요?'
+summary: 'Semble은 tree-sitter로 코드를 청크로 자르고, Model2Vec 정적 임베딩과 BM25를 RRF로 융합한 뒤 코드 인지 리랭킹을 얹어, CPU에서 밀리초 만에 코드 검색을 돌리는 Python 라이브러리입니다. CodeGraph가 AST 지식 그래프로 같은 문제를 풀었다면, Semble은 검색(retrieval)으로 풉니다. 두 접근을 대조하며 구조를 분석합니다.'
+date: 2026-06-04 01:00:00 +0900
+categories: posts
+tags:
+  [
+    'semble',
+    'code-search',
+    'hybrid-search',
+    'semantic-search',
+    'model2vec',
+    'static-embeddings',
+    'bm25',
+    'rag',
+    'tree-sitter',
+    'mcp',
+    'architecture',
+  ]
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+> 분석 일자: 2026-06-04
+> 대상 패키지: `semble` (PyPI)
+> 대상 커밋: `512142ea84b652dd937ec4a41a0da9c8b921c9c3` (2026-06-03)
+> 저장소: https://github.com/MinishLab/semble
+> 로컬 분석 경로: `~/workspace/opensources/semble`
+
+---
+
+_This article is mostly written by Claude Code_
+
+## 목차
+
+1. [왜 Semble인가요?](#1-왜-semble인가요)
+2. [기존 글들과 어디에 놓이나요?](#2-기존-글들과-어디에-놓이나요)
+3. [프로젝트를 한 문장으로 이해하기](#3-프로젝트를-한-문장으로-이해하기)
+4. [기술 스택과 규모](#4-기술-스택과-규모)
+5. [전체 그림: 4단계 검색 파이프라인](#5-전체-그림-4단계-검색-파이프라인)
+6. [코드베이스 지도](#6-코드베이스-지도)
+7. [코드 인지 청킹: AST 경계를 따라 자릅니다](#7-코드-인지-청킹-ast-경계를-따라-자릅니다)
+8. [정적 임베딩: 왜 CPU에서 밀리초인가요?](#8-정적-임베딩-왜-cpu에서-밀리초인가요)
+9. [하이브리드 검색: semantic과 BM25를 RRF로 융합합니다](#9-하이브리드-검색-semantic과-bm25를-rrf로-융합합니다)
+10. [코드 인지 리랭킹: 정의 부스트, 파일 응집, 경로 페널티](#10-코드-인지-리랭킹-정의-부스트-파일-응집-경로-페널티)
+11. [MCP 서버: 온디맨드 인덱싱과 캐시](#11-mcp-서버-온디맨드-인덱싱과-캐시)
+12. [캐시와 신선도: 변경 시 전체 재빌드](#12-캐시와-신선도-변경-시-전체-재빌드)
+13. [CodeGraph vs Semble: 그래프인가 검색인가](#13-codegraph-vs-semble-그래프인가-검색인가)
+14. [벤치마크가 말하는 것](#14-벤치마크가-말하는-것)
+15. [코드를 읽는 추천 순서](#15-코드를-읽는-추천-순서)
+16. [인상적인 설계 포인트](#16-인상적인-설계-포인트)
+17. [주의해서 볼 지점](#17-주의해서-볼-지점)
+18. [결론](#18-결론)
+
+---
+
+## 1. 왜 Semble인가요?
+
+바로 직전에 [CodeGraph](/kb/2026-06-04-codegraph-architecture)를 분석했습니다. CodeGraph는 "코딩 에이전트가 grep/Read로 코드베이스를 탐색하며 토큰을 태우는 문제"를 **AST 지식 그래프**로 풀었습니다. Semble은 *똑같은 문제*를 정반대 방법으로 풉니다 — **검색(retrieval)**으로요.
+
+README의 한 줄이 야심을 압축합니다.
+
+> Fast and Accurate Code Search for Agents — Uses ~98% fewer tokens than grep+read
+
+문제 의식은 CodeGraph와 동일합니다. 에이전트가 "인증은 어떻게 처리되나요?" 같은 질문을 받으면 파일을 grep하고 통째로 Read하며 토큰을 태웁니다. Semble의 해법은 이렇습니다.
+
+첫째, **코드를 청크로 잘라 검색 인덱스를 만듭니다.** tree-sitter로 AST 경계를 따라 자른 뒤, 각 청크를 임베딩(semantic)과 BM25(lexical) 두 갈래로 색인합니다.
+
+둘째, **자연어 질의에 관련 청크만 돌려줍니다.** 에이전트는 파일을 읽는 대신 "딱 필요한 코드 조각"만 받습니다. README 기준 grep+read 대비 토큰 98% 절감입니다.
+
+셋째, **전부 CPU에서, API 키·GPU·외부 서비스 없이 밀리초 만에 돕니다.** 평균 저장소 인덱싱 ~250ms, 질의 ~1.5ms. 이게 가능한 핵심이 **정적 임베딩(static embeddings)**인데, 뒤에서 자세히 봅니다.
+
+그래서 Semble을 "코드용 RAG"라고만 보면 절반만 본 것입니다. 더 정확하게는 **transformer forward pass 없이 정적 임베딩 + BM25 + 코드 인지 리랭킹으로 검색 품질을 끌어올린, CPU-first 코드 검색 엔진**입니다.
+
+## 2. 기존 글들과 어디에 놓이나요?
+
+Semble은 그동안 본 두 갈래의 글과 정확히 교차하는 지점에 있습니다.
+
+| 글                                                       | 중심 문제                                 | Semble과의 관계                                                                                                                             |
+| -------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| [CodeGraph](/kb/2026-06-04-codegraph-architecture)       | 에이전트 코드 탐색을 AST 그래프로 절약    | **직접 경쟁자이자 거울상.** 같은 문제(98% 토큰 절감, MCP, tree-sitter, 로컬/CPU)를 그래프 대신 검색으로 풉니다. 13장에서 정면 비교합니다.   |
+| [WeKnora](/kb/2026-05-30-weknora-architecture)           | 문서를 RAG로 검색하는 지식 베이스         | WeKnora가 *문서*를 무거운 임베딩 모델로 검색한다면, Semble은 *코드*를 정적 임베딩으로 검색합니다. 같은 RAG 계열이지만 비용 구조가 다릅니다. |
+| [Hermes Agent](/kb/2026-05-13-hermes-agent-architecture) | 자체 코딩 에이전트 런타임                 | Semble이 MCP 도구로 꽂혀 들어가는 소비자입니다. Hermes가 코드를 읽는 주체라면, Semble은 그 주체에게 검색을 대신해 줍니다.                   |
+| [Qwen Code](/kb/2026-05-17-qwen-code-architecture)       | 터미널 코딩 에이전트가 플랫폼이 되는 과정 | Qwen Code의 tool registry 안에 꽂히는 MCP 도구입니다. CodeGraph와 같은 자리를 노립니다.                                                     |
+| [Playwright](/kb/2026-04-17-playwright-architecture)     | 브라우저를 프로토콜로 추상화              | Playwright가 브라우저를 도구로 노출하듯, Semble은 코드 검색을 MCP 도구 2개(`search`, `find_related`)로 노출합니다.                          |
+
+이 표의 핵심은 **CodeGraph와 WeKnora 사이**라는 위치입니다.
+
+[WeKnora 글](/kb/2026-05-30-weknora-architecture)에서 본 RAG는 문서를 임베딩으로 검색했습니다. [CodeGraph 글](/kb/2026-06-04-codegraph-architecture)에서 본 접근은 코드를 AST 그래프로 만들었습니다. Semble은 그 둘의 교집합입니다 — **RAG의 검색 패러다임을, 코드라는 도메인에, 정적 임베딩이라는 비용 절감 기법으로** 가져왔습니다.
+
+그래서 Semble을 읽는 가장 흥미로운 방법은 CodeGraph와 나란히 두고 "같은 문제를 그래프로 풀 때와 검색으로 풀 때 무엇이 달라지나"를 보는 것입니다.
+
+## 3. 프로젝트를 한 문장으로 이해하기
+
+> Semble은 **tree-sitter로 코드를 AST 경계 청크로 자르고, Model2Vec 정적 임베딩(semantic)과 BM25(lexical)를 Reciprocal Rank Fusion으로 융합한 뒤, 정의 부스트·파일 응집·경로 페널티 같은 코드 인지 리랭킹을 얹어, CPU에서 밀리초 만에 관련 청크만 돌려주는 하이브리드 코드 검색 라이브러리**입니다.
+
+이 한 문장에 네 단계가 들어 있습니다.
+
+- **Chunking** — tree-sitter AST를 따라 코드를 청크로 자릅니다.
+- **Indexing** — 정적 임베딩 + BM25 두 인덱스를 만듭니다.
+- **Hybrid search** — 두 점수를 RRF로 융합합니다.
+- **Reranking** — 코드 특화 신호로 순위를 재조정합니다.
+
+## 4. 기술 스택과 규모
+
+가장 먼저 눈에 띄는 건 **규모의 대비**입니다.
+
+| 항목      | 내용                                                                  |
+| --------- | --------------------------------------------------------------------- |
+| 언어      | Python (`src/` 약 **2,930 LOC**) — CodeGraph(~42,800 LOC)의 1/14 수준 |
+| 임베딩    | `model2vec` (정적 임베딩), 기본 모델 `minishlab/potion-code-16M`      |
+| 벡터 검색 | `vicinity` (MinishLab 자체 라이브러리, brute-force 코사인 백엔드)     |
+| 어휘 검색 | `bm25s` (빠른 BM25 구현)                                              |
+| 파싱      | `tree-sitter` + `tree-sitter-language-pack`                           |
+| 파일 필터 | `pathspec` (`.gitignore` + `.sembleignore`)                           |
+| 직렬화    | `orjson`                                                              |
+| MCP       | `mcp` (FastMCP) + `watchfiles` (파일 워처) — `mcp` extra              |
+| 런타임    | Python `>=3.10`, CPU only                                             |
+| 라이선스  | MIT (저자: Thomas van Dongen, Stéphan Tulkens — MinishLab)            |
+
+규모가 작은 이유는 분명합니다. Semble은 **무거운 부품을 직접 만들지 않고 조합**합니다. 임베딩은 model2vec, 벡터 검색은 vicinity, 어휘 검색은 bm25s, 청킹은 tree-sitter. 이들 다수가 같은 팀(MinishLab — Model2Vec의 제작사)의 산출물이라는 점이 흥미롭습니다. Semble은 "우리가 만든 정적 임베딩 생태계로 코드 검색을 조립하면 어떻게 되나"의 쇼케이스에 가깝습니다.
+
+반대로 CodeGraph는 추출·해소·그래프·MCP를 거의 다 직접 구현했습니다(그래서 ~42,800 LOC). 같은 문제, 다른 빌드-vs-바이 결정입니다.
+
+## 5. 전체 그림: 4단계 검색 파이프라인
+
+```
+[1] Chunking              [2] Indexing                [3] Hybrid search          [4] Reranking
+ chunking/core.py          index/dense.py + sparse.py   search.py                  ranking/
+ ───────────────           ────────────────────────     ─────────                  ────────
+ tree-sitter AST           Model2Vec 임베딩 →           semantic + BM25            정의 부스트
+ 노드 병합/분할            vicinity 코사인 백엔드        각각 top_k*5 후보          파일 응집 부스트
+ desired_length=1500       BM25 (bm25s)                 → RRF(k=60) 점수           경로 페널티
+ (실패 시 line chunking)                                → alpha 가중 융합          파일 saturation decay
+   │                         │                            │                          │
+   └────────────────────────►└───────────────────────────►└─────────────────────────►└──────►
+                                                                                       관련 청크 top_k
+```
+
+핵심은 **두 retriever를 병렬로 돌린 뒤 융합**한다는 점입니다. semantic(임베딩 코사인)은 "의미가 비슷한 코드"를, BM25는 "식별자·API 이름이 그대로 일치하는 코드"를 잡습니다. 자연어 질의는 전자가, `getUserById` 같은 심볼 질의는 후자가 강합니다. 둘을 RRF로 합치고, 코드 특화 리랭킹으로 마무리합니다.
+
+## 6. 코드베이스 지도
+
+처음 읽을 때 길잡이입니다.
+
+- `src/semble/index/index.py` — `SembleIndex` 파사드. `from_path`/`from_git`, `search`, `find_related`, `save`/`load_from_disk`.
+- `src/semble/index/create.py` — 파일 워크 → 청킹 → 임베딩/BM25 인덱스 생성.
+- `src/semble/chunking/core.py` — tree-sitter AST를 청크 경계로 자르는 알고리즘.
+- `src/semble/index/dense.py` — Model2Vec 로딩 + vicinity 코사인 백엔드(`SelectableBasicBackend`).
+- `src/semble/index/sparse.py` — BM25 인덱스와 selector 마스크.
+- `src/semble/search.py` — 하이브리드 검색 + RRF 융합.
+- `src/semble/ranking/weighting.py` / `boosting.py` / `penalties.py` — alpha 결정, 부스트, 페널티.
+- `src/semble/mcp.py` — FastMCP 서버, 온디맨드 인덱싱, 캐시, 파일 워처.
+- `src/semble/cache.py` — 디스크 캐시와 신선도 검증.
+- `src/semble/cli.py` — `semble search` / `find-related` / `init` / `savings` CLI.
+
+## 7. 코드 인지 청킹: AST 경계를 따라 자릅니다
+
+검색 품질의 출발점은 "무엇을 한 단위로 색인하느냐"입니다. Semble은 줄 단위나 고정 길이로 자르지 않고, **tree-sitter AST 노드 경계를 존중하며** 자릅니다(`chunking/core.py`).
+
+핵심 알고리즘 `_merge_node_inner`는 재귀적으로 동작합니다.
+
+- 목표 길이는 `_DESIRED_CHUNK_LENGTH_CHARS = 1500`자.
+- 한 노드가 목표보다 길면 자식으로 내려가 다시 자릅니다(함수가 너무 크면 내부 블록으로 분할).
+- 짧은 인접 노드들은 목표 길이까지 합칩니다(작은 함수 여러 개를 한 청크로).
+- 재귀 깊이는 `_RECURSION_DEPTH = 500`, 최소 청크 크기는 `_MIN_CHUNK_SIZE = 50`자로 가드합니다.
+- 파서가 없는 언어는 `chunk_lines`로 줄 단위 폴백합니다.
+
+이 방식의 장점은 **청크가 의미 단위(함수, 클래스, 블록)와 정렬**된다는 것입니다. 함수 중간이 잘려 임베딩되면 의미가 흐려지는데, AST 경계를 따르면 "한 함수 = 한 청크"에 가까워집니다. 바이트 오프셋으로 자른 뒤 다시 문자 오프셋으로 변환해 멀티바이트(UTF-8) 문자 경계도 안전하게 처리합니다.
+
+여기서 CodeGraph와의 첫 갈림길이 보입니다. **둘 다 tree-sitter를 쓰지만 목적이 다릅니다.** CodeGraph는 AST에서 *심볼과 관계(엣지)*를 뽑아 그래프를 만듭니다. Semble은 AST를 *청크 경계*로만 씁니다 — 관계는 추출하지 않고, 청크를 검색 가능한 텍스트 단위로 만드는 데 그칩니다.
+
+## 8. 정적 임베딩: 왜 CPU에서 밀리초인가요?
+
+Semble의 속도 비밀은 **Model2Vec 정적 임베딩**입니다(`index/dense.py`, 기본 모델 `minishlab/potion-code-16M`).
+
+일반적인 임베딩 모델(BERT류 transformer)은 질의가 들어올 때마다 **forward pass**를 돌려야 합니다 — 토큰을 attention 레이어에 통과시켜 문맥 임베딩을 계산합니다. 이게 GPU를 요구하고 지연을 만듭니다.
+
+정적 임베딩은 다릅니다. transformer를 미리 distill해서 **토큰 → 벡터 lookup table**로 만들어 둡니다. 질의 시점에는 토큰별 벡터를 찾아 평균 내는 것이 거의 전부입니다. forward pass가 없으니 CPU에서 밀리초 만에 끝납니다. README의 표현대로 "embedding model is static with no transformer forward pass at query time."
+
+이 선택이 만드는 trade-off가 Semble 설계 전체를 지배합니다.
+
+- **얻는 것:** 인덱싱 ~250ms, 질의 ~1.5ms, GPU·API 키 불필요, 평균 저장소를 1초 안에 end-to-end 처리. 코드 특화 transformer(CodeRankEmbed, 137M) 대비 218배 빠른 인덱싱.
+- **치르는 것:** 문맥 임베딩이 아니라 bag-of-token 평균에 가까우므로 의미 변별력이 transformer보다 낮습니다. 벤치마크상 품질은 그 transformer의 **99%** 수준 — 즉 거의 따라잡지만 미세하게 낮습니다.
+
+벡터 검색 백엔드도 단순함의 미학을 보여 줍니다. `SelectableBasicBackend`는 vicinity의 `CosineBasicBackend`를 상속한 **brute-force 코사인**입니다 — ANN 인덱스(HNSW 등)조차 쓰지 않고 전체 청크와의 코사인을 행렬곱으로 계산합니다. 정적 임베딩은 가볍고 청크 수도 한 저장소 규모에선 크지 않아서, full scan이 이미 밀리초입니다. **품질이 낮은 retriever를 빠르게 여러 번 돌리고 융합·리랭킹으로 보정한다**는 게 일관된 철학입니다.
+
+선택적 `selector`도 영리합니다. 언어나 파일 경로로 후보를 미리 좁히면, brute-force 코사인이 그 부분집합 위에서만 돕니다. `find_related`는 이 selector로 같은 언어 청크만 비교합니다.
+
+## 9. 하이브리드 검색: semantic과 BM25를 RRF로 융합합니다
+
+`search.py`가 두 retriever를 합치는 방식은 깔끔합니다.
+
+```python
+_RRF_K = 60
+
+def _rrf_scores(scores):
+    ranked = sorted(scores, key=lambda c: -scores[c])
+    return {chunk: 1.0 / (_RRF_K + rank) for rank, chunk in enumerate(ranked, 1)}
+```
+
+핵심은 **Reciprocal Rank Fusion(RRF)**입니다. semantic 점수(코사인 유사도)와 BM25 점수(어휘 매칭)는 스케일이 완전히 다릅니다. 그대로 더하면 한쪽이 압도합니다. RRF는 두 점수를 **순위(rank)**로 환산한 뒤 `1/(60+rank)`로 변환해, 스케일과 무관하게 합칠 수 있게 합니다.
+
+융합 가중치 `alpha`는 질의 종류에 따라 자동 결정됩니다(`ranking/weighting.py`).
+
+```python
+_ALPHA_SYMBOL = 0.3  # 심볼 질의 → BM25 쪽으로 기울임
+_ALPHA_NL = 0.5      # 자연어 질의 → 균형
+```
+
+`getUserById`, `Foo::bar`, `_private` 같은 **심볼 질의**는 정규식으로 감지해 BM25 가중을 높입니다(정확한 식별자 일치가 중요하니까). 자연어 질의는 semantic과 BM25를 반반 섞습니다. 두 retriever 모두 `top_k * 5`개 후보를 over-fetch해서, 융합과 리랭킹 후에도 풀이 충분하도록 합니다.
+
+[CodeGraph 글](/kb/2026-06-04-codegraph-architecture)의 `codegraph_explore`가 "한 번에 관련 심볼 소스를 묶어 돌려주는" 단일 도구였다면, Semble의 검색은 "두 약한 신호를 융합해 정밀도를 끌어올리는" 앙상블입니다. 그래프는 정답 경로를 _알고_, 검색은 정답 후보를 *추정*합니다.
+
+## 10. 코드 인지 리랭킹: 정의 부스트, 파일 응집, 경로 페널티
+
+융합만으로는 부족합니다. Semble은 코드라는 도메인에 특화된 리랭킹 신호를 얹습니다(`ranking/boosting.py`, `penalties.py`). 이 부분이 "99% 품질"을 만드는 디테일입니다.
+
+**정의 부스트(definition boost).** 질의한 심볼을 *정의*하는 청크를, 단순히 *참조*하는 청크보다 위로 올립니다. `class`, `def`, `func`, `struct`, `interface`, `defmodule`(Elixir), `fn`(Rust) 등 20여 개 언어 키워드를 케이스 민감하게 매칭하고, SQL DDL(`CREATE TABLE` 등)은 케이스 무시로 매칭합니다. 배수는 `_DEFINITION_BOOST_MULTIPLIER = 3.0`, 파일 이름 stem이 심볼과 일치하면 추가로 1.5배.
+
+**파일 응집(file coherence).** 같은 파일에서 여러 청크가 매칭되면, 그 파일의 대표 청크를 부스트합니다(`_FILE_COHERENCE_BOOST_FRAC = 0.2`). 한 청크가 우연히 튀는 것보다, 파일 전체가 질의와 관련 있을 때를 더 신뢰합니다.
+
+**식별자 stem 매칭.** `parse config` 질의가 `parseConfig`, `ConfigParser`, `config_parser`를 담은 청크를 부스트합니다. snake/camel/복수형 변형까지 정규화해 비교합니다.
+
+**임베딩된 심볼 부스트.** 자연어 질의 안에 `StateManager` 같은 CamelCase가 섞이면, 그 심볼을 정의하는 청크를 절반 강도(`0.5`)로 부스트합니다.
+
+**경로 페널티(`penalties.py`).** 정답이 아닐 가능성이 큰 파일을 곱셈 페널티로 끌어내립니다.
+
+| 대상                                  | 페널티 |
+| ------------------------------------- | ------ |
+| 테스트 파일/디렉터리 (19개 언어 패턴) | 0.3    |
+| `compat/`, `legacy/` 심               | 0.3    |
+| `examples/`, `docs_src/`              | 0.3    |
+| re-export barrel (`__init__.py` 등)   | 0.5    |
+| `.d.ts` 선언 스텁                     | 0.7    |
+
+여기에 **파일 saturation decay**까지 더합니다. 한 파일에서 청크가 임계치(1개)를 넘게 선택되면 `0.5^excess`로 점수를 깎아, 결과가 한 파일에 쏠리지 않고 여러 파일에 분산되게 합니다.
+
+흥미로운 건 이 리랭킹이 **CodeGraph가 그래프 구조로 공짜로 얻는 정보를, Semble은 휴리스틱으로 재구성**한다는 점입니다. "정의 vs 참조"는 CodeGraph에선 엣지 종류로 명확하지만, Semble에선 정규식으로 정의 키워드를 찾아 추정합니다. "테스트 파일 down-rank"는 CodeGraph도 explore 사이징에서 하던 일입니다. 같은 직관을, 한쪽은 그래프로, 한쪽은 정규식 신호로 구현합니다.
+
+## 11. MCP 서버: 온디맨드 인덱싱과 캐시
+
+`mcp.py`는 FastMCP 위에 도구 2개를 노출합니다.
+
+| 도구           | 용도                                                             |
+| -------------- | ---------------------------------------------------------------- |
+| `search`       | 자연어/코드 질의로 코드베이스 검색. `repo`로 로컬 경로나 git URL |
+| `find_related` | 특정 파일·라인의 코드와 의미적으로 유사한 청크 탐색              |
+
+운영 설계가 야무집니다.
+
+- **온디맨드 인덱싱.** `repo`로 로컬 경로 또는 `https://` git URL을 받습니다. git URL이면 `--depth 1`로 임시 디렉터리에 클론(타임아웃 60초)해 인덱싱하고 정리합니다. `git@`/`ssh://` 같은 위험한 transport는 거부합니다.
+- **모델 prewarm.** 서버 시작과 동시에 임베딩 모델 로딩과 기본 소스 인덱싱을 백그라운드 task로 병렬 진행합니다. 첫 질의가 모델 로딩을 기다리되, 서버 자체는 즉시 뜹니다.
+- **인메모리 LRU 캐시.** 인덱스를 최대 `_CACHE_MAX_SIZE = 10`개까지 `OrderedDict`로 들고 LRU 축출합니다. 동시 요청이 같은 소스를 인덱싱하지 않도록 `asyncio.Task`로 묶고 `asyncio.shield`로 보호합니다.
+- **파일 워처.** 로컬 경로는 `watchfiles.awatch`로 감시하다가, 변경이 감지되면 캐시를 evict하고 재인덱싱합니다.
+
+이 구조는 [CodeGraph 글](/kb/2026-06-04-codegraph-architecture)에서 본 다중 세션 데몬보다 단순합니다. CodeGraph는 프로세스 간 공유 데몬(Unix 소켓 + 락파일 + refcount)까지 갔지만, Semble은 **MCP 서버 프로세스 하나의 수명** 동안만 인메모리 캐시를 유지합니다. 재빌드가 빠르니(~250ms) 정교한 공유 데몬이 덜 필요하다는 판단으로 보입니다.
+
+## 12. 캐시와 신선도: 변경 시 전체 재빌드
+
+인덱스는 OS 캐시 폴더(`~/Library/Caches/semble/` 등, `SEMBLE_CACHE_LOCATION`으로 변경)에 디스크 영속화됩니다. BM25 인덱스, 임베딩 벡터, 청크, 메타데이터를 따로 저장합니다.
+
+신선도 검증(`cache.py`의 `get_validated_cache`)이 CodeGraph와 결정적으로 다릅니다.
+
+- 모델·콘텐츠 타입이 캐시와 다르면 무효화.
+- 로컬 경로면 파일을 walk하며 mtime을 캐시 작성 시각과 비교 — **하나라도 NEWER면 무효화**.
+- 현재 파일 집합이 저장된 집합과 다르면(추가/삭제) 무효화.
+
+그리고 무효화되면 **증분 갱신이 아니라 전체 재인덱싱**입니다. CodeGraph가 변경된 파일만 증분 sync하던 것과 대조됩니다. Semble은 "어차피 전체 재빌드가 250ms니 증분 로직의 복잡도를 질 필요가 없다"는 쪽을 택했습니다. 작은 LOC(~2,930)의 상당 부분이 이 결정 덕입니다.
+
+토큰 절약 추적(`semble savings`)도 정직합니다. 호출마다 "반환 청크가 속한 파일들의 전체 문자 수 − 반환 스니펫 문자 수"를 `/4`해서 절약 토큰을 추정합니다. baseline을 "매칭 파일을 통째로 읽는 것"으로 잡은 보수적 추정입니다.
+
+## 13. CodeGraph vs Semble: 그래프인가 검색인가
+
+같은 날 분석한 두 프로젝트를 정면으로 놓으면 설계 철학의 분기가 선명합니다.
+
+| 축                        | [CodeGraph](/kb/2026-06-04-codegraph-architecture)   | Semble                                              |
+| ------------------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| 핵심 자료구조             | AST 지식 그래프 (노드 + 엣지)                        | 청크 + 임베딩/BM25 인덱스                           |
+| 검색 패러다임             | 구조적·관계적 (그래프 순회)                          | 검색적 (semantic + lexical 융합)                    |
+| "X가 Y에 어떻게 도달하나" | 엣지를 따라간다 (callers/callees/impact)             | 의미 유사 청크를 가져온다 (관계 추론은 에이전트 몫) |
+| 언어 / 규모               | TypeScript / ~42,800 LOC (직접 구현 多)              | Python / ~2,930 LOC (라이브러리 조합)               |
+| 저장                      | SQLite + FTS5                                        | 임베딩 행렬 + BM25 (디스크 캐시)                    |
+| 임베딩                    | 없음 (순수 정적 분석)                                | Model2Vec 정적 임베딩 (potion-code-16M)             |
+| 갱신                      | 증분 sync (파일 단위)                                | 변경 시 전체 재빌드                                 |
+| MCP 도구                  | 7개 (explore/search/callers/callees/impact/node/...) | 2개 (search/find_related)                           |
+| 동시성                    | 다중 세션 공유 데몬                                  | 프로세스 수명 인메모리 LRU 캐시                     |
+| 강점                      | 정확한 호출 관계, blast radius, 흐름 추적            | 빠른 의미 검색, "이게 어디서 처리되나"              |
+| 약점                      | 그래프 구축 복잡, 동적 디스패치는 휴리스틱           | 관계를 모름, 청크 단위라 긴 흐름 추적이 약함        |
+
+요점은 **"같은 토큰 절감 목표를 향하는 두 갈래"**라는 것입니다.
+
+- 질문이 **관계형**("이 함수를 바꾸면 뭐가 깨지나", "요청이 어떤 경로로 DB까지 가나")이면 그래프(CodeGraph)가 직접 답합니다. 검색(Semble)은 관련 청크를 줄 뿐, 경로 연결은 에이전트가 추론해야 합니다.
+- 질문이 **위치/의미형**("인증은 어디서 처리되나", "이 개념을 구현한 코드 어디 있나")이면 검색(Semble)이 빠르고 가볍게 답합니다. 그래프(CodeGraph)도 답하지만 인덱스 구축이 무겁습니다.
+
+흥미롭게도 두 프로젝트 모두 같은 결론에 독립적으로 도달했습니다 — **에이전트의 토큰을 탐색이 아니라 답에 쓰게 하라.** 단지 한쪽은 *코드의 구조*를 미리 계산했고, 다른 쪽은 *코드의 의미*를 미리 색인했습니다. 그리고 [WeKnora](/kb/2026-05-30-weknora-architecture)가 보여 준 문서 RAG까지 합치면, "에이전트에게 검색 가능한 지식을 미리 만들어 주는" 흐름의 세 꼭짓점이 모입니다 — 문서(WeKnora), 코드 의미(Semble), 코드 구조(CodeGraph).
+
+## 14. 벤치마크가 말하는 것
+
+README의 벤치마크는 19개 언어, 63개 저장소, 약 1,250개 질의로 측정합니다.
+
+- **품질:** NDCG@10 **0.854**. 코드 특화 transformer CodeRankEmbed(137M) Hybrid의 **99%** 품질을, **218배 빠른 인덱싱**으로 달성.
+- **속도:** 평균 저장소 인덱싱 ~250ms, 질의 ~1.5ms (전부 CPU).
+- **토큰 효율:** grep+read 대비 평균 **98% 적은 토큰**. 2k 토큰만으로 recall 94% 도달하는 반면, grep+read는 100k 컨텍스트를 다 써야 85%.
+
+여기서 읽을 점은 두 가지입니다.
+
+첫째, **"99% 품질, 218배 속도"가 정적 임베딩의 가치 명제**입니다. 마지막 1%의 품질을 포기하는 대신 GPU를 버리고 CPU 밀리초를 얻습니다. 에이전트 루프 안에서 검색이 수십 번 일어난다면, 이 trade는 대부분 남는 장사입니다.
+
+둘째, **토큰 효율 숫자(98%)는 CodeGraph의 주장과 거의 같습니다.** 두 프로젝트가 독립적으로 "grep+read 대비 압도적 토큰 절감"을 같은 자릿수로 보고한다는 건, 문제(에이전트의 무차별 파일 읽기)가 그만큼 크고 실재한다는 방증입니다. 단, [CodeGraph 글](/kb/2026-06-04-codegraph-architecture)에서 봤듯 _비용_ 절감은 모델이 강해질수록 baseline이 따라오므로, 토큰·tool call 절감만큼 크지 않을 수 있다는 점은 Semble에도 동일하게 적용될 가능성이 큽니다.
+
+## 15. 코드를 읽는 추천 순서
+
+1. `README.md` — 가치 명제, "How it works", 벤치마크.
+2. `src/semble/index/index.py` — `SembleIndex` 파사드. 전체 흐름의 진입점.
+3. `src/semble/chunking/core.py` — AST 경계 청킹 알고리즘.
+4. `src/semble/index/dense.py` — Model2Vec 로딩 + brute-force 코사인 백엔드.
+5. `src/semble/search.py` — RRF 융합과 alpha 가중.
+6. `src/semble/ranking/boosting.py` + `penalties.py` — 코드 인지 리랭킹(품질의 핵심).
+7. `src/semble/mcp.py` — MCP 서버, 온디맨드 인덱싱, 캐시, 워처.
+8. `src/semble/cache.py` — 디스크 캐시와 신선도 검증.
+
+## 16. 인상적인 설계 포인트
+
+### 1. 정적 임베딩으로 "충분히 좋고 압도적으로 빠른" 지점을 노립니다
+
+transformer forward pass를 버리고 lookup table로 바꿔, 품질 99%에 속도 218배를 얻습니다. 에이전트 루프처럼 검색이 잦은 환경에 정확히 맞는 trade-off입니다.
+
+### 2. 약한 신호를 융합·리랭킹으로 보정합니다
+
+낮은 변별력의 정적 임베딩과 BM25를 RRF로 합치고, 정의 부스트·파일 응집·경로 페널티로 끌어올립니다. "강한 retriever 하나"가 아니라 "약한 retriever 여럿 + 코드 도메인 지식"으로 품질을 만듭니다.
+
+### 3. AST를 관계가 아니라 청크 경계로 씁니다
+
+같은 tree-sitter를 CodeGraph는 그래프 추출에, Semble은 청킹에 씁니다. 의미 단위로 정렬된 청크가 임베딩 품질을 높입니다.
+
+### 4. 라이브러리 조합으로 14배 작은 코드베이스
+
+model2vec·vicinity·bm25s·tree-sitter를 조합해 ~2,930 LOC로 끝냅니다. 같은 문제를 직접 구현한 CodeGraph(~42,800)와 정반대의 빌드-vs-바이 선택입니다.
+
+### 5. "전체 재빌드"라는 단순함의 선택
+
+증분 sync 대신 변경 시 전체 재인덱싱을 택해, 재빌드가 250ms라는 사실로 복잡도를 상쇄합니다. 빠른 인덱싱이 아키텍처 단순화를 정당화합니다.
+
+## 17. 주의해서 볼 지점
+
+### 1. 관계형 질문에는 약합니다
+
+Semble은 청크를 검색할 뿐, 호출 관계·impact·blast radius를 모릅니다. "이 함수를 바꾸면 뭐가 깨지나" 같은 질문은 CodeGraph의 영역이고, Semble은 관련 청크만 주고 연결은 에이전트에 맡깁니다.
+
+### 2. 청크 경계를 넘는 긴 흐름 추적이 어렵습니다
+
+한 청크는 ~1500자 단위입니다. 여러 파일·여러 함수를 가로지르는 긴 데이터 흐름은 검색만으로 재구성하기 어렵습니다. `find_related`로 일부 보완하지만 그래프 순회와는 다릅니다.
+
+### 3. 정적 임베딩의 의미 변별력 한계
+
+품질 99%는 인상적이지만 100%는 아닙니다. 미묘한 의미 차이가 중요한 질의에서는 transformer 임베딩 대비 미세한 손실이 있을 수 있습니다. 그래서 BM25 융합과 리랭킹이 필수입니다.
+
+### 4. 전체 재빌드의 비용은 저장소 크기에 비례
+
+평균 저장소 250ms는 빠르지만, 매우 큰 모노레포에서는 "한 파일만 바뀌어도 전체 재빌드"가 부담이 될 수 있습니다. 증분 sync가 없다는 점은 규모에 따라 trade-off가 달라집니다.
+
+### 5. 인메모리 캐시는 프로세스 수명까지
+
+CodeGraph의 공유 데몬과 달리, 여러 에이전트가 같은 저장소를 동시에 쓰면 각자 인덱싱·캐시를 가질 수 있습니다(디스크 캐시는 공유되지만 인메모리는 프로세스별). 다만 재빌드가 빨라 체감 비용은 작습니다.
+
+## 18. 결론
+
+Semble은 "코드용 RAG"보다 더 구체적인 프로젝트입니다. 실제 정체성은 **정적 임베딩 + BM25 + 코드 인지 리랭킹으로, transformer 없이 CPU 밀리초 만에 검색 품질을 끌어올린 에이전트용 코드 검색 엔진**입니다.
+
+[CodeGraph](/kb/2026-06-04-codegraph-architecture)와 나란히 보면 둘은 같은 문제의 두 해법입니다. 에이전트가 낯선 코드베이스를 이해하는 비용을, CodeGraph는 _구조_(AST 그래프)를 미리 계산해 줄이고, Semble은 _의미_(임베딩 색인)를 미리 색인해 줄입니다. [WeKnora](/kb/2026-05-30-weknora-architecture)의 문서 RAG까지 더하면, "에이전트에게 검색 가능한 지식을 미리 만들어 준다"는 한 흐름의 세 변주가 완성됩니다.
+
+Semble을 볼 때 가장 중요한 질문은 "어떤 임베딩 모델을 쓰나요?"가 아닙니다. 더 중요한 질문은 다음입니다.
+
+> 검색 품질의 마지막 1%를 포기하고 GPU를 버리는 대신 CPU 밀리초를 얻는 trade가, 검색이 수십 번 일어나는 에이전트 루프에서 정말 남는 장사인가요? 그리고 그렇게 얻은 _빠른-하지만-약한_ retriever를, 융합과 코드 인지 리랭킹으로 어디까지 끌어올릴 수 있나요?
+
+Semble의 답은 정적 임베딩, RRF 융합, 정의 부스트·파일 응집·경로 페널티, 그리고 "전체 재빌드도 250ms면 괜찮다"는 단순함입니다. 이 선택들을 이해하면, Semble이 단순 코드 검색 라이브러리가 아니라 **정적 임베딩 생태계로 에이전트 시대의 검색 비용을 재설계하려는 시도**임을 볼 수 있습니다.
