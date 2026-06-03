@@ -88,6 +88,18 @@ const projectsData: Project[] = [
     imgSrc: '/static/projects/first-defense-thumbnail.png',
     featured: true,
   },
+  {
+    title: 'Side Project Tracker',
+    description:
+      '여러 사이드 프로젝트를 한 창에서 추적하는 macOS 데스크톱 앱입니다. GitHub 레포의 출시 단계·방치 감지·흥미 태그·기분 매칭을 지원하며, 인증된 gh CLI와 로컬 git을 데이터 소스로 사용합니다. 영어/한국어 UI를 지원합니다.',
+    category: 'non-game',
+    techStack: ['Tauri v2', 'React', 'TypeScript', 'Vite', 'Rust'],
+    workflow: ['npm run tauri build (.app)'],
+    aiTools: ['Claude Code (Opus, Subagent-Driven TDD)'],
+    github: 'https://github.com/MartianLee/side-project-tracker',
+    imgSrc: '/static/projects/side-project-tracker.png',
+    featured: true,
+  },
 ]
 
 export default projectsData
