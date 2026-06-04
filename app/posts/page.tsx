@@ -1,6 +1,5 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { allCoreContent } from 'pliny/utils/contentlayer'
-import { canonicalBlogs } from '@/lib/posts'
+import { canonicalBlogs, localizedList } from '@/lib/posts'
 import { genPageMetadata } from 'app/seo'
 
 const POSTS_PER_PAGE = 5
@@ -8,7 +7,7 @@ const POSTS_PER_PAGE = 5
 export const metadata = genPageMetadata({ title: 'Posts' })
 
 export default function BlogPage() {
-  const posts = allCoreContent(canonicalBlogs())
+  const posts = localizedList(canonicalBlogs())
   const pageNumber = 1
   const initialDisplayPosts = posts.slice(
     POSTS_PER_PAGE * (pageNumber - 1),
@@ -25,6 +24,7 @@ export default function BlogPage() {
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
       title="All Posts"
+      titleKo="전체 글"
     />
   )
 }

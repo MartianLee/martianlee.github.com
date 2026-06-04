@@ -3,27 +3,30 @@
 import { usePathname } from 'next/navigation'
 import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
-import { CoreContent } from 'pliny/utils/contentlayer'
-import type { Blog } from '.contentlayer/generated'
 import Link from '@/components/Link'
 import PostLink from '@/components/PostLink'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import tagData from 'app/tag-data.json'
+import type { LocalizedListItem } from '@/lib/posts'
+import { useUI } from '@/components/useUI'
+import { useLanguage } from '@/components/LanguageProvider'
 
 interface PaginationProps {
   totalPages: number
   currentPage: number
 }
 interface ListLayoutProps {
-  posts: CoreContent<Blog>[]
+  posts: LocalizedListItem[]
   title: string
-  initialDisplayPosts?: CoreContent<Blog>[]
+  titleKo?: string
+  initialDisplayPosts?: LocalizedListItem[]
   pagination?: PaginationProps
 }
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
   const pathname = usePathname()
+  const ui = useUI()
   const basePath = pathname.split('/')[1]
   const prevPage = currentPage - 1 > 0
   const nextPage = currentPage + 1 <= totalPages
@@ -35,10 +38,10 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           rel="prev"
           className="hover:text-accent"
         >
-          ← Newer
+          {ui.list.newer}
         </Link>
       ) : (
-        <span className="text-muted/40">← Newer</span>
+        <span className="text-muted/40">{ui.list.newer}</span>
       )}
       <span className="text-muted">
         {currentPage} / {totalPages}
@@ -49,10 +52,10 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           rel="next"
           className="hover:text-accent"
         >
-          Older →
+          {ui.list.older}
         </Link>
       ) : (
-        <span className="text-muted/40">Older →</span>
+        <span className="text-muted/40">{ui.list.older}</span>
       )}
     </nav>
   )
@@ -61,10 +64,14 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
 export default function ListLayoutWithTags({
   posts,
   title,
+  titleKo,
   initialDisplayPosts = [],
   pagination,
 }: ListLayoutProps) {
   const pathname = usePathname()
+  const ui = useUI()
+  const { lang } = useLanguage()
+  const pick = (en: string, ko?: string) => (lang === 'ko' && ko ? ko : en)
   const tagCounts = tagData as Record<string, number>
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
@@ -74,11 +81,13 @@ export default function ListLayoutWithTags({
   return (
     <div>
       <div className="pt-2 pb-8">
-        <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">{title}</h1>
+        <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">
+          {pick(title, titleKo)}
+        </h1>
       </div>
       <div className="grid gap-10 md:grid-cols-[180px_1fr]">
         <aside className="hidden md:block">
-          <div className="sec-num mb-3">Tags</div>
+          <div className="sec-num mb-3">{ui.list.tags}</div>
           <div className="flex flex-col gap-1.5 font-mono text-sm">
             <Link
               href="/posts"
@@ -88,7 +97,7 @@ export default function ListLayoutWithTags({
                   : 'text-muted hover:text-accent'
               }
             >
-              All
+              {ui.list.all}
             </Link>
             {sortedTags.map((t) => (
               <Link
@@ -107,7 +116,7 @@ export default function ListLayoutWithTags({
         </aside>
         <div>
           {displayPosts.map((post) => {
-            const { path, date, title, summary, tags } = post
+            const { path, date, summary, tags } = post
             return (
               <article
                 key={path}
@@ -116,11 +125,13 @@ export default function ListLayoutWithTags({
                 <div className="sm:pr-8">
                   <h2 className="text-xl font-bold tracking-tight">
                     <PostLink slug={post.slug} className="hover:text-accent transition-colors">
-                      {title}
+                      {pick(post.title, post.titleKo)}
                     </PostLink>
                   </h2>
                   {summary && (
-                    <p className="text-muted mt-1.5 max-w-[60ch] font-serif">{summary}</p>
+                    <p className="text-muted mt-1.5 max-w-[60ch] font-serif">
+                      {pick(summary, post.summaryKo)}
+                    </p>
                   )}
                   {tags && (
                     <div className="mt-2 flex flex-wrap gap-1.5">

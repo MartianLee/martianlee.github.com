@@ -1,3 +1,5 @@
+'use client'
+
 import siteMetadata from '@/data/siteMetadata'
 import headerNavLinks from '@/data/headerNavLinks'
 import Link from './Link'
@@ -5,8 +7,19 @@ import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
 import SearchButton from './SearchButton'
 import LanguageToggle from './LanguageToggle'
+import { useUI } from './useUI'
+import type { UIStrings } from '@/lib/ui-strings'
+
+const navLabel = (ui: UIStrings, href: string, fallback: string): string => {
+  if (href === '/projects') return ui.nav.projects
+  if (href === '/posts') return ui.nav.writing
+  if (href === '/kb') return ui.nav.notes
+  if (href === '/about') return ui.nav.about
+  return fallback
+}
 
 const Header = () => {
+  const ui = useUI()
   return (
     <header className="site-chrome-header flex items-center justify-between py-7">
       <Link
@@ -24,11 +37,11 @@ const Header = () => {
               href={link.href}
               className="text-ink hover:text-accent transition-colors"
             >
-              {link.title}
+              {navLabel(ui, link.href, link.title)}
             </Link>
           ))}
           <a href={siteMetadata.linkedin} className="text-accent">
-            CV ↗
+            {ui.cv}
           </a>
         </nav>
         <LanguageToggle />

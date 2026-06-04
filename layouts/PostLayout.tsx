@@ -9,6 +9,7 @@ import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
 import { formatDate } from 'pliny/utils/formatDate'
+import { ui } from '@/lib/ui-strings'
 
 const editUrl = (path: string) => `${siteMetadata.siteRepo}/blob/main/data/${path}`
 
@@ -23,6 +24,7 @@ interface LayoutProps {
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
   const { filePath, path, slug, date, title, tags, readingTime } = content
   const basePath = path.split('/')[0]
+  const t = ui[(content as { language?: string }).language === 'ko' ? 'ko' : 'en'].post
   const author = authorDetails[0]
   const toc: { value: string; url: string; depth: number }[] = Array.isArray(content.toc)
     ? (content.toc as { value: string; url: string; depth: number }[])
@@ -41,7 +43,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
       <article>
         <header className="pt-6">
           <Link href={`/${basePath}`} className="text-muted hover:text-accent font-mono text-xs">
-            ← Writing
+            {t.backToWriting}
           </Link>
           {tags && (
             <div className="mt-7 flex flex-wrap gap-2">
@@ -77,7 +79,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
           {toc.length > 2 && (
             <nav className="border-line mb-9 rounded-lg border p-4 font-mono text-[12.5px] leading-relaxed">
               <div className="text-muted mb-1.5 text-[10px] tracking-[0.1em] uppercase">
-                On this page
+                {t.onThisPage}
               </div>
               {toc
                 .filter((h) => h.depth <= 3)
@@ -103,7 +105,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               ))}
             </div>
             <Link href={editUrl(filePath)} className="text-accent whitespace-nowrap">
-              Edit on GitHub ↗
+              {t.editOnGitHub}
             </Link>
           </div>
 
@@ -112,7 +114,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               <div>
                 {prev?.slug && (
                   <>
-                    <div className="text-muted font-mono text-[11px]">← PREVIOUS</div>
+                    <div className="text-muted font-mono text-[11px]">{t.previous}</div>
                     <PostLink slug={prev.slug} className="hover:text-accent font-semibold">
                       {prev.title}
                     </PostLink>
@@ -122,7 +124,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               <div className="text-right">
                 {next?.slug && (
                   <>
-                    <div className="text-muted font-mono text-[11px]">NEXT →</div>
+                    <div className="text-muted font-mono text-[11px]">{t.next}</div>
                     <PostLink slug={next.slug} className="hover:text-accent font-semibold">
                       {next.title}
                     </PostLink>

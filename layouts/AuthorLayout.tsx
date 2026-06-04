@@ -1,9 +1,14 @@
+'use client'
+
 import { ReactNode } from 'react'
 import type { Authors } from '.contentlayer/generated'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import careerData from '@/data/careerData'
 import siteMetadata from '@/data/siteMetadata'
 import SocialIcon from '@/components/social-icons'
+import { useUI } from '@/components/useUI'
+import { useLanguage } from '@/components/LanguageProvider'
+import AboutBioKo from '@/components/about/AboutBioKo'
 
 interface Props {
   children: ReactNode
@@ -12,30 +17,34 @@ interface Props {
 
 export default function AuthorLayout({ children, content }: Props) {
   const { name, occupation, email, linkedin, github } = content
+  const ui = useUI()
+  const { lang } = useLanguage()
+  const pick = (en: string, ko?: string) => (lang === 'ko' && ko ? ko : en)
   return (
     <div className="pt-6">
-      {occupation && <p className="eyebrow mb-4">{occupation}</p>}
+      {occupation && <p className="eyebrow mb-4">{pick(occupation, ui.about.occupation)}</p>}
       <h1 className="text-5xl font-bold tracking-[-0.03em] sm:text-6xl">{name}</h1>
 
       <div className="reading-measure mt-8">
-        <div className="prose max-w-none">{children}</div>
+        <div className="prose max-w-none">{lang === 'ko' ? <AboutBioKo /> : children}</div>
       </div>
 
       <div className="mt-12">
         <div className="sec-head">
-          <span className="sec-num">Experience</span>
+          <span className="sec-num">{ui.about.experience}</span>
           <a href={siteMetadata.linkedin} className="text-accent font-mono text-xs">
-            CV ↗
+            {ui.cv}
           </a>
         </div>
         {careerData.map((c) => (
           <div key={c.company} className="list-row">
             <div>
               <h3 className="text-xl font-bold">
-                {c.company} <span className="text-muted text-base font-medium">— {c.role}</span>
+                {c.company}{' '}
+                <span className="text-muted text-base font-medium">— {pick(c.role, c.roleKo)}</span>
               </h3>
               <p className="text-muted mt-1 font-serif text-base">
-                {c.description}
+                {pick(c.description, c.descriptionKo)}
                 {c.techStack ? ` · ${c.techStack.join(' · ')}` : ''}
               </p>
             </div>
@@ -49,7 +58,7 @@ export default function AuthorLayout({ children, content }: Props) {
       <div className="border-ink mt-10 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5 font-mono text-sm">
           <span className="inline-block h-2 w-2 rounded-full bg-green-600" />
-          <span>Open to senior / staff engineering roles — globally.</span>
+          <span>{ui.contact.open}</span>
         </div>
         <div className="flex items-center gap-4">
           {email && <SocialIcon kind="mail" href={`mailto:${email}`} size={5} />}

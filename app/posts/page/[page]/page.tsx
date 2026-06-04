@@ -1,6 +1,5 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { allCoreContent } from 'pliny/utils/contentlayer'
-import { canonicalBlogs } from '@/lib/posts'
+import { canonicalBlogs, localizedList } from '@/lib/posts'
 
 const POSTS_PER_PAGE = 5
 
@@ -13,7 +12,7 @@ export const generateStaticParams = async () => {
 
 export default async function Page(props: { params: Promise<{ page: string }> }) {
   const params = await props.params
-  const posts = allCoreContent(canonicalBlogs())
+  const posts = localizedList(canonicalBlogs())
   const pageNumber = parseInt(params.page as string)
   const initialDisplayPosts = posts.slice(
     POSTS_PER_PAGE * (pageNumber - 1),
@@ -30,6 +29,7 @@ export default async function Page(props: { params: Promise<{ page: string }> })
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
       title="All Posts"
+      titleKo="전체 글"
     />
   )
 }
