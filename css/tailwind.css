@@ -1,42 +1,52 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-family-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-family-sans: var(--font-space-grotesk), 'Pretendard', ui-sans-serif, system-ui, sans-serif;
   --font-family-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-family-serif: var(--font-instrument), Georgia, serif;
+  --font-family-serif: var(--font-newsreader), Georgia, serif;
 
-  /* Professional Blue Color Scheme */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  /* Rust accent ramp (replaces Professional Blue) */
+  --color-primary-50: #fef6f0;
+  --color-primary-100: #fde8da;
+  --color-primary-200: #fbcfb4;
+  --color-primary-300: #f6ab83;
+  --color-primary-400: #f07c4e;
+  --color-primary-500: #ea580c;
+  --color-primary-600: #c2410c;
+  --color-primary-700: #9a3412;
+  --color-primary-800: #7c2d12;
+  --color-primary-900: #6b2613;
+  --color-primary-950: #3a1206;
+
+  /* Semantic tokens — values flip in .dark via the vars below */
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+}
+
+:root {
+  --paper: #f4efe4;
+  --surface: #fbf9f3;
+  --ink: #1a1712;
+  --muted: #8c8475;
+  --line: #ddd6c7;
+  --accent: #c2410c;
+}
+:where(.dark) {
+  --paper: #14110b;
+  --surface: #1d1a12;
+  --ink: #e9e3d5;
+  --muted: #8c8475;
+  --line: #2b2720;
+  --accent: #ea580c;
 }
 
 @variant dark (&:where(.dark, .dark *));
 
 /* Custom Animations */
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
 @keyframes fadeInScale {
   0% {
     opacity: 0;
@@ -46,18 +56,6 @@
     opacity: 1;
     transform: scale(1);
   }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
 }
 
 .task-list-item::before {
