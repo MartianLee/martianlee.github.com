@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import type { Authors } from '.contentlayer/generated'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import careerData from '@/data/careerData'
+import siteMetadata from '@/data/siteMetadata'
 import SocialIcon from '@/components/social-icons'
 
 interface Props {
@@ -23,8 +24,8 @@ export default function AuthorLayout({ children, content }: Props) {
       <div className="mt-12">
         <div className="sec-head">
           <span className="sec-num">Experience</span>
-          <a href="/static/cv.pdf" className="text-accent font-mono text-xs">
-            Download CV (PDF) ↗
+          <a href={siteMetadata.linkedin} className="text-accent font-mono text-xs">
+            CV ↗
           </a>
         </div>
         {careerData.map((c) => (

@@ -1,12 +1,13 @@
 import careerData from '@/data/careerData'
+import siteMetadata from '@/data/siteMetadata'
 
 export default function ExperienceSection() {
   return (
     <section className="py-12">
       <div className="sec-head">
         <span className="sec-num">03 — Experience</span>
-        <a href="/static/cv.pdf" className="text-accent font-mono text-xs">
-          Download CV (PDF) ↗
+        <a href={siteMetadata.linkedin} className="text-accent font-mono text-xs">
+          CV ↗
         </a>
       </div>
       <div>

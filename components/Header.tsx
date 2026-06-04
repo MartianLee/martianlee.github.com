@@ -27,7 +27,7 @@ const Header = () => {
               {link.title}
             </Link>
           ))}
-          <a href="/static/cv.pdf" className="text-accent">
+          <a href={siteMetadata.linkedin} className="text-accent">
             CV ↗
           </a>
         </nav>

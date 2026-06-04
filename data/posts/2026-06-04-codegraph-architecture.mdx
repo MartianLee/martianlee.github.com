@@ -32,29 +32,6 @@ author: MartianLee
 
 _This article is mostly written by Claude Code_
 
-## 목차
-
-1. [왜 CodeGraph인가요?](#1-왜-codegraph인가요)
-2. [기존 글들과 어디에 놓이나요?](#2-기존-글들과-어디에-놓이나요)
-3. [프로젝트를 한 문장으로 이해하기](#3-프로젝트를-한-문장으로-이해하기)
-4. [기술 스택과 규모](#4-기술-스택과-규모)
-5. [전체 그림: 4단계 파이프라인](#5-전체-그림-4단계-파이프라인)
-6. [코드베이스 지도](#6-코드베이스-지도)
-7. [Extraction: tree-sitter를 worker thread에서 돌립니다](#7-extraction-tree-sitter를-worker-thread에서-돌립니다)
-8. [Storage: SQLite 지식 그래프와 FTS5](#8-storage-sqlite-지식-그래프와-fts5)
-9. [Resolution: 참조를 정의로 잇습니다](#9-resolution-참조를-정의로-잇습니다)
-10. [동적 디스패치: grep이 못 따라가는 hop을 합성합니다](#10-동적-디스패치-grep이-못-따라가는-hop을-합성합니다)
-11. [그래프 순회와 impact 분석](#11-그래프-순회와-impact-분석)
-12. [codegraph_explore: 답을 파일이 아니라 답 크기로 돌려줍니다](#12-codegraph_explore-답을-파일이-아니라-답-크기로-돌려줍니다)
-13. [MCP 계층: engine, session, daemon, proxy](#13-mcp-계층-engine-session-daemon-proxy)
-14. [Auto-sync: 그래프를 코드와 같은 호흡으로 유지합니다](#14-auto-sync-그래프를-코드와-같은-호흡으로-유지합니다)
-15. [교차 언어 브리징: iOS, React Native, Expo](#15-교차-언어-브리징-ios-react-native-expo)
-16. [토큰 경제학: 벤치마크가 말하는 것](#16-토큰-경제학-벤치마크가-말하는-것)
-17. [코드를 읽는 추천 순서](#17-코드를-읽는-추천-순서)
-18. [인상적인 설계 포인트](#18-인상적인-설계-포인트)
-19. [주의해서 볼 지점](#19-주의해서-볼-지점)
-20. [결론](#20-결론)
-
 ---
 
 ## 1. 왜 CodeGraph인가요?
