@@ -1,0 +1,94 @@
+---
+title: 'Async Server Requests with Rails remote'
+crawlertitle: 'Async Server Requests with Rails remote'
+slug: '2019-06-25-rails-remote'
+summary: 'Using the RubyOnRails remote feature to make asynchronous requests to the server and handle the response.'
+date: 2019-06-25 20:16:32 +0900
+categories: posts
+tags: ['develop', 'rails']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img1](/static/post-images/190625_rails_remote/example.png)
+
+- Table of Contents
+
+## Problem
+
+When developing features for a web service, there are times when you need to receive and handle a response from the server asynchronously. A classic example is a "like" button. The goal is to toggle a like and reflect it on the server — all without refreshing the page.
+
+Development environment
+
+- Ruby 2.6.3
+- Rails 6.0.0.rc1
+- haml + sass
+
+## Solution
+
+1. The first thing that comes to mind when you hear "asynchronous" is probably Ajax.
+2. This time, however, we will use Rails' built-in `remote` feature to implement the async like functionality.
+
+`likes/_buttons.html.haml`
+
+```
+.buttons
+  - if current_user.present? and letter.likes.pluck(:user_id).include?(current_user.id)
+    = link_to image_tag("buttons/liked@3x.png", class: "btn-like"), likes_path(letter: letter), remote: true , method: :post , class: "btn", id: 'js-like-touch-' + letter.id.to_s, "data-turbolinks": "false"
+  - else
+    = link_to image_tag("buttons/fill-36@3x.png", class: "btn-like"), likes_path(letter: letter), remote: true , method: :post , class: "btn", id: 'js-like-touch-' + letter.id.to_s, "data-turbolinks": "false"
+```
+
+This is the partial that renders the like button. Note that it is written in HAML syntax (if you use ERB, feel free to use a converter). The key part here is `remote: true`. Setting `remote` on a link tells Rails to handle the response in place without navigating away from the page. An `id` is generated dynamically so we can target the correct element when handling the response later.
+
+`routes.rb`
+
+```
+Rails.application.routes.draw do
+  post '/likes', to: 'likes#create'
+end
+```
+
+Wire the POST route to the controller.
+
+`controllers/likes_controller.rb`
+
+```
+  def create
+    unless current_user.present?
+      redirect_to user_session_path
+      return
+    end
+    liked = Like.find_by(user_id: current_user.id, letter_id: params[:letter])
+    @letter = Letter.find_by(id: params[:letter])
+    if liked.present?
+      liked.destroy
+      return
+    end
+
+    like = Like.new
+    like.user_id = current_user.id
+    like.letter_id = params[:letter]
+    like.save
+end
+```
+
+This is the controller action that handles the create request. If no explicit `.js` response is defined, Rails will automatically look for the corresponding template file for the `create` action. If you want to respond differently based on format, you can configure the response per `|format|`.
+
+`create.js.erb`
+
+```
+$('#js-like-touch-<%= @letter.id %>').replaceWith("<%= j render partial: 'likes/button', locals: {letter: @letter} %>");
+```
+
+This is the JavaScript file corresponding to the `create` action. It runs whenever the like button is clicked. As the `.erb` extension suggests, Rails template helpers are available here as well. Because the link's `id` was pre-set to `letter.id`, we select the element matching the input we received and replace it. The partial already handles the conditional logic — it renders a different image depending on whether the letter has been liked — so we just need to tell it to re-render.
+
+## Conclusion
+
+Development with RubyOnRails and Rails Templates can be a bit confusing at first because the boundary between backend and frontend is less clear than in modern separated architectures. It also crossed my mind whether depending entirely on Rails' built-in functionality instead of writing Ajax manually was over-relying on the framework. But as you can see, it is `concise and powerful`! No manual Ajax configuration is needed. If you need server-push functionality, Rails Action Cable covers that too. Welcome to the fast and easy world of Rails!
+
+For more details, please refer to the [Working with JavaScript in Rails guide](https://guides.rorlab.org/working_with_javascript_in_rails.html).
+
+(Promo) Please show lots of love to [Hearim — Letters Written for Yourself](http://hearim.me)!

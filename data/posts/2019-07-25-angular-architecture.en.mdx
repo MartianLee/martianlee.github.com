@@ -1,0 +1,53 @@
+---
+title: 'Understanding the Architecture of AngularJS 7'
+crawlertitle: 'Understanding the Architecture of AngularJS 7'
+slug: '2019-07-25-angular-architecture'
+summary: 'An overview of the AngularJS 7 architecture I applied while working on two projects.'
+date: 2019-07-25 22:42:15 +0900
+categories: posts
+tags: ['develop', 'AngularJS']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img](/static/post-images/190725_angular_architecture/overview.png)
+
+- Table of Contents
+
+## Problem
+
+I was building a moderately sized application using AngularJS version 7, featuring user registration, a bulletin board, and an event attendance function.
+
+Development environment
+
+- Angular 7.2.11
+- Rxjs 6.4
+- Node v12.4.0
+
+## Solution
+
+![img1](/static/post-images/190725_angular_architecture/1.png)
+
+### 1. view-service-model
+
+This is the architecture recommended in the official Angular tutorial, making use of the view-service-model pattern. Coding in the traditional style causes the very problem that the redux pattern was designed to solve: view and model becoming hopelessly entangled. However, this problem is easily resolved by leveraging Angular's RxJS. The flow of the data model differs from state-management approaches, so it took a little time to get comfortable with it.
+
+![img2](/static/post-images/190725_angular_architecture/2.png)
+
+### 2. view-service-repository-model
+
+In this variant, the service layer no longer calls the API directly; all API calls go through a repository layer. The request model received from the server and the UI model actually used in the view are kept separate. A helper class is required to map between the two models. Looking at this structure, something immediately comes to mind — Spring. It is a more effective structure for projects that are somewhat larger than what pattern 1 handles well.
+
+## Conclusion
+
+Somewhat ironically, I applied the first structure (view-service-repository-model) to the smaller of the two applications, and the architecture turned out to be more complex than the application warranted — a distinct feeling of over-engineering. Splitting the model into a UI model and a request model in particular meant that even simple features required creating two models every time, which was cumbersome.
+
+The more the application grew, the more clearly I felt the limits of the MVC model. Angular does use RxJS by default, so propagating data changes after asynchronous processing triggered by server events or user input can be quite elegant depending on the design. That said, when I found myself binding and calling around three different models, rendering the results, and then handling actions on top of that, things genuinely got complicated in my head — though that may partly be because I was still not fully comfortable with RxJS at the time.
+
+![img](/static/post-images/190725_angular_architecture/4.png)
+
+The more complex the code became, the more I thought of the [Flux architecture](https://taegon.kim/archives/5288) that React and Vue.js had been adopting aggressively. Multiple streams were open in each component, and the propagation logic tied to them felt excessively complex. I kept getting the urge to just dump everything into state lol.
+
+For more details, please refer to the [Angular official tutorial](https://angular.io/tutorial) and the [Angular architecture guide](https://v2.angular.io/docs/ts/latest/guide/architecture.html).

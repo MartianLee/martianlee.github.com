@@ -1,0 +1,262 @@
+---
+title: 'Customizing Your GitHub Blog with Jekyll'
+crawlertitle: 'Customizing Your GitHub Blog with Jekyll'
+slug: '2019-04-15-jekyll-blog'
+summary: 'Build a GitHub Pages blog with Jekyll and style it however you like'
+date: 2019-04-15 19:12:17 +0900
+categories: posts
+tags: ['develop', 'jekyll']
+author: MartianLee
+---
+
+## Problem Summary
+
+Today I want to walk through creating a GitHub Pages site using Jekyll (pronounced "jekyll"), a Ruby-based static site generator. With so many options out there — Naver Blog, Tistory, WordPress, and more — what is the actual advantage of hosting a blog on GitHub? Based on my own experience, first of all, having all your files publicly visible on GitHub is a real plus. If I want to demonstrate a JavaScript library I just built, I can include it directly in a GitHub blog post and show it running live. Writing and editing in Markdown is also very convenient. And finally, every post you publish creates a commit log on GitHub — which means more green squares on your contribution graph (lol). Oh, and one more thing: Google indexes GitHub Pages sites surprisingly well. If you search for technical content, you will frequently stumble across posts hosted at `*.github.io`.
+
+## What You Can Do with a Jekyll GitHub Blog
+
+- Publish posts by pushing files to GitHub.
+- Freely use JavaScript, HTML, and CSS to customize the main page.
+- Implement simple features like pagination using Liquid template syntax.
+
+## Installation
+
+Jekyll requires Ruby. See the [official Ruby site](https://www.ruby-lang.org/ko/) for installation instructions — both Windows and macOS are supported. I have spent a little time with Ruby myself, and it was a great fit for me. The language truly lives up to its tagline "a programmer''s best friend": you really can write surprisingly compact code to get things done.
+
+Back to Jekyll. Jekyll is a Ruby gem, so you can install it from the command line. A gem is essentially a Ruby library, and installing gems is wonderfully easy — if you have used `npm install` before, you will feel right at home.
+
+For detailed installation steps, refer to the [Jekyll homepage](https://jekyllrb.com/). In practice, one line is all you need:
+
+```
+gem install bundler jekyll
+```
+
+Because we are going to tear apart and rebuild the blog to our liking, we start from the **minima** theme.
+
+```
+jekyll new my-blog
+```
+
+Running that command generates the following files (you can name the project anything you like):
+
+```
+my-blog
+├── Gemfile
+├── LICENSE.txt
+├── README.md
+├── _includes
+├── _layouts
+│   ├── default.html
+│   ├── page.html
+│   └── post.html
+├── _sass
+├── assets
+└── minima.gemspec
+```
+
+Now run `jekyll serve` from the command line and your brand-new blog will appear in the browser.
+
+## Development
+
+Minima is, as the name suggests, a theme that provides only the bare minimum configuration. Let us go through the project structure piece by piece.
+
+Directories only:
+
+```
+├── _includes : Stores HTML component files needed by the site (e.g. header, footer)
+├── _layouts  : Stores per-page layout files
+├── _posts    : Stores your blog posts
+└── assets    : Stores other resources such as CSS, JavaScript, and images
+    ├── _sass
+    ├── css
+    ├── images
+    └── js
+```
+
+From here I will use my own [GitHub blog](https://github.com/MartianLee/martianlee.github.com) as a reference.
+
+### Detailed File Structure
+
+```
+├── LICENSE
+├── README.md
+├── _config.yml
+├── _includes
+│   ├── aside.html
+│   ├── footer.html
+│   ├── head.html
+│   ├── header.html
+│   ├── home-footer.html
+│   └── main-header.html
+├── _layouts
+│   ├── compress.html
+│   ├── default.html
+│   ├── home.html
+│   ├── page.html
+│   └── post.html
+├── _posts
+│   ├── (posts go here)
+├── about.md
+├── archive.md
+├── assets
+│   ├── _sass
+│   │   ├── _base.scss
+│   │   ├── _home.scss
+│   │   ├── _layout.scss
+│   │   ├── _media-queries.scss
+│   │   ├── _normalize.scss
+│   │   ├── _syntax-highlighting.scss
+│   │   └── _variables.scss
+│   ├── css
+│   │   ├── main.scss
+│   │   └── syntax.css
+│   ├── images
+│   │   ├── 190312_ssh_key_github
+│   │   │   ├── img1.png
+│   │   ├── background1.jpg
+│   └── js
+│       └── scripts.js
+├── feed.xml
+├── index.html
+├── posts.html
+├── posts.md
+├── problem_solving.md
+├── question.md
+├── sitemap.xml
+└── tags.html
+```
+
+highlighter: rouge
+relative_permalinks: false
+permalink: /:categories/:title/
+
+`permalinks` controls the URL structure that appears after `https://martianlee.github.io/posts/` — segments like `posts` that represent pages, posts, and collections. For more details on permalink configuration, see the [official Jekyll docs](https://jekyllrb-ko.github.io/docs/permalinks/).
+
+### Customizing the Styles and Main Page
+
+- First, delete the auto-generated `index.md` file. When both `index.html` and `index.md` exist, Jekyll gives `index.md` priority, so we need to remove it.
+- Create `index.html`. Now you have full control over the main page layout. I pulled in a Bootstrap theme and tweaked it a bit — feel free to use my `index.html` as a starting point. (Pay attention to the `background` setting in `home.scss`!)
+- Create `assets/css/main.scss`. This file will hold all the styles you want to apply across the site, including the main page.
+
+The contents of `main.scss` look like this. The triple-dash front matter at the top marks it as the main Sass entry point. Next, we define the `$baseurl` variable. Then we use `@import` to pull in the partial files. If you are designing from scratch, add imports one by one as you create each partial. If you want to start from a style similar to mine, just copy the files from my repository.
+
+```
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+$baseurl: "{{ site.baseurl }}";
+
+@charset "utf-8";
+
+
+// Import partials from `sass_dir` (defaults to `assets/_sass`)
+@import
+  "normalize",
+  "variables",
+  "base",
+  "layout",
+  "media-queries",
+  "syntax-highlighting"
+;
+
+@import "home"
+```
+
+- Edit `assets/_sass/home.scss`.
+
+- Check `_includes/head.html`. I use the Bootstrap CSS framework. Swap it out for a different framework if you prefer.
+
+```
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Set the viewport. width=device-width makes the page scale correctly on mobile. -->
+
+  <!-- Title -->
+  <title>
+    {% if page.crawlertitle %}
+      {{ page.crawlertitle | escape }}
+    {% elsif page.title %}
+      {{ page.title | escape }}
+    {% else %}
+      {{ site.title | escape }}
+    {% endif %}
+  </title>
+
+  <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
+
+  <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
+  <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ "/feed.xml" | prepend: site.baseurl | prepend: site.url }}">
+
+  <link href='https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700|Roboto+Condensed:700&subset=latin' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="{{ "/assets/css/main.css" | relative_url }}">
+
+  <!-- Web font -->
+  <link rel="stylesheet"
+  href="https://fonts.googleapis.com/earlyaccess/nanumgothic.css">
+
+  <!-- Bootstrap & Fonts-->
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" >
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic' rel='stylesheet' type='text/css'>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="http://code.jquery.com/jquery-3.3.1.slim.js" integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA=" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+
+  <!-- syntax.css -->
+  // meta tag configuration
+
+  {% if page.bg %}
+    // meta tag background configuration
+  {% endif %}
+
+  <script>
+    <!--  Google Analytics -->
+  </script>
+  <script id="dsq-count-scr" src="//http-martianlee-github-io.disqus.com/count.js" async></script>
+  <!--  Disqus: comment service -->
+</head>
+
+```
+
+### Adding New Pages
+
+The `about.md` file at the root of the project serves as the About page. Similarly, you can add any file to the root directory and set `active: about` in its front matter to have it appear in the navigation menu.
+
+Let us look at `_includes/header.html`:
+
+```
+for my_page in site.pages
+      if my_page.active
+        <a href="my_page.url | prepend: site.baseurl "> my_page.title </a>
+      endif
+    endfor
+```
+
+Here you can see that `site.pages` includes every page we registered with `active`. (I removed the `%` characters because Jekyll kept interpreting them as template syntax.)
+
+### Adding Comment Functionality
+
+I implemented comments by following [this post](https://xho95.github.io/blog/jekyll/disqus/migration/2017/01/20/Add-Disqus-to-Jekyll.html) and [this other post](https://17billion.github.io/jekyll/disqus/reply/2017/06/01/jekyll_disqus.html).
+
+#### Trial and Error
+
+- The guides say you should set `page.comments: true` on any page that should display comments, but that did not work for me. I have not resolved this yet, so for now I am simply embedding the Disqus JavaScript snippet directly on each page that needs a comment section.
+
+## Connecting to GitHub
+
+You can configure GitHub Pages under **repository → Settings → Options → GitHub Pages**.
+
+![img1](/static/post-images/190415_jekyll-blog/image1.png)
+
+## Wrapping Up
+
+My GitHub blog repository is available at https://github.com/MartianLee/martianlee.github.com.
+
+If you want a place to document what you are learning about programming but find it hard to get a Tistory invitation and too tedious to handle your own hosting from scratch, a GitHub blog is a great option. For another example of a Jekyll blog in action, check out the [Soongsil University SCCC page](https://ssu-sccc.github.io/sccc-homepage/)!

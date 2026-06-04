@@ -1,0 +1,122 @@
+---
+title: 'KAKAO Technical Interview Review'
+crawlertitle: 'KAKAO Technical Interview Review'
+slug: '2019-04-22-kakao-interview-review'
+summary: 'A summary of technical interview questions and answers from a KAKAO interview.'
+date: 2019-04-22 16:08:45 +0900
+categories: posts
+tags: ['develop', 'interview']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img1](/static/post-images/190422_interviews/kakao.png)
+
+- Table of Contents
+
+## Background
+
+In March I applied to KAKAO through their open recruitment process. I passed through résumé screening, a coding test, a phone interview, and an in-person technical interview — but ultimately did not receive an offer. Failing was disappointing, but recognizing where I fell short felt like a meaningful gain. I want to write up the technical questions that came up during the interview, based on what I had written in my application.
+
+## Questions & Answers
+
+- You have one year of work experience — can you describe what you contributed to the most memorable project you worked on?
+  - I explained the [Townhall](https://townhall.kr) 1.0 renewal project. We used Ruby on Rails.
+- How did you handle models in Rails?
+  - When adding a relationship with a new model, what did you do?
+    - Used `has_many` and `belongs_to` on Active Record models, and added columns via migrations.
+  - Do you know how the Rails ORM works internally?
+    - Me: No answer. (I only knew it does a `SELECT` followed by `LIMIT 1`.)
+  - What is a connection pool?
+    - Me: When connecting to a DB, opening a new connection each time is expensive, so there is something that stays alive and keeps connections open.
+  - How does the connection pool signal to the DB that it is still connected?
+    - Me: It sends a signal.
+  - If you fetched 100 records from a model that belongs to another model, how does the ORM actually issue the queries?
+    - Me: It queries all 100 records one at a time with `LIMIT 1`.
+  - Is there a way to improve that by sending a single query instead?
+    - Me: No answer. → I had never thought about performance issues before. 😔
+- You mentioned working with Oracle DB — can you explain the rules for creating indexes?
+  - Me: No answer. I think I just tried a few options and went with whichever was faster.
+- JavaScript
+  - Please explain what a callback function is, and what Callback Hell means.
+    - Me: Is a callback the function that runs when a user clicks Submit on a login form, for example?
+    - Interviewer: Imagine a user clicks a button, an asynchronous response comes back from the server, you process that response, and then send another request back to the server. Walk me through that.
+    - Me: No answer.
+  - What is the difference between `var` and `let` in JavaScript?
+  - What is scope?
+    - Me: It is the range in which a variable can be used — for example, the range enclosed by the opening and closing braces of a `for` loop.
+  - What is an arrow function, and how does it differ from a traditional anonymous function? (The interviewer mentioned having seen it on my blog…)
+  - Me: No answer.
+  - What is the difference between synchronous and asynchronous programming?
+  - Me: No answer.
+- Explain the core concepts of Spring: AOP, DI, and POJO.
+  - Me: No answer. I confused the property pattern with DI.
+- My questions to the interviewers:
+  - After a designer finishes a design, how does it actually get applied to the live service?
+    - There is a dedicated publishing team. They publish the design, and then that output is converted into Vue.js components.
+  - What IDE do you use?
+    - IntelliJ
+  - Do you have any feedback for me?
+    - It seems like you have studied broadly but shallowly. Going forward, it would be great to become both broad and deep.
+
+## Post-Interview Reflection
+
+I was able to give some kind of answer for most first-level concepts, even if vaguely, but as soon as the questions went one or two levels deeper I found myself at a complete loss for words. I felt embarrassed, and I strongly realized that my usual attitude toward knowledge had been far too casual. I also came to understand that I did not actually know the things I had written in my application at a level where I could answer interview questions about them. Going forward, I plan to write only about experiences I can explain clearly and confidently in an interview.
+
+## Things to Study Going Forward
+
+- Rails Active Record performance tuning
+  - Summary of [this resource](http://beyond.daesan.com/pages/rails-performance-tuning):
+    - Query optimization
+      - `:select` — query only the fields you need
+      - `:include` — handle joins
+    - Table-level caching
+    - Fragment caching
+    - Page caching
+- Rules for creating database indexes
+  - Use hint clauses recommended by the query optimizer
+  - [Index application principles](http://wiki.gurubee.net/pages/viewpage.action?pageId=688163)
+- What is a connection pool?
+  - A database connection cache implementation
+  - It typically has a minimum pool size and a maximum pool size. If the maximum pool size is reached and no connections are available, callers wait until one is returned to the pool. If no connection is returned within the timeout period, an error is raised.
+  - How does a connection pool keep signaling to the database that it is still in use?
+    - Connections are checked periodically via heartbeat or health checks.
+    - You can configure aged timeout, unused timeout, etc. to refresh connections periodically.
+- Explaining asynchronous programming and Callback Hell
+  - [Related link](https://joshua1988.github.io/web-development/javascript/javascript-asynchronous-operation/#%EB%B9%84%EB%8F%99%EA%B8%B0-%EC%B2%98%EB%A6%AC-%EA%B7%B8%EA%B2%8C-%EB%AD%94%EA%B0%80%EC%9A%94)
+  - What is asynchronous programming?
+    - Rather than executing code sequentially and waiting for a particular piece of logic to finish before moving on, asynchronous programming proceeds to the next line of code without waiting. This is a fundamental characteristic of JavaScript.
+    - Examples: Ajax calls, `setTimeout`
+  - What is a callback function?
+    - A function that can be accessed by another function
+    - A function that executes when another function has finished executing
+  - Why can callback functions solve the problems of asynchronous programming?
+    - In an asynchronous programming context where code does not wait, you can define a function that should run only after a specific function has completed.
+    - Ex) Restaurant reservation analogy
+  - What is Callback Hell?
+    - A situation where callback functions are nested inside callback functions inside callback functions.
+    - Ex) ajax call → encoding → user authentication → render to screen
+    - When logic that must run sequentially keeps nesting, the code becomes difficult to read and very hard to modify.
+  - How do you fix it?
+    - Extract each anonymous callback function into its own named function.
+    - Use Promises or `async`/`await`.
+  - What is a Promise?
+    - An object used for asynchronous processing in JavaScript.
+    - States:
+      - Pending: the state when the Promise is first created
+      - Fulfilled: the state after the `resolve` callback has been called. You can retrieve the result using `.then()`.
+      - Rejected: the state when `resolve` has failed.
+    - See the [MDN Promise reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) for more detail.
+  - How do you handle multiple sequential operations — the same problem as Callback Hell?
+    - A Promise returns a Promise object after the operation completes.
+    - You can chain additional operations onto the returned Promise object using `.then()`.
+  - How do you handle errors?
+    - It is better to use `.then().catch()` rather than registering a separate `reject` handler.
+  - Synchronous/Asynchronous vs. Blocking/Non-Blocking
+    - [This link](https://hamait.tistory.com/930) explains it well. I can grasp the concepts, but I think a deeper understanding and explanation will require more practical experience.
+  - What is a Closure?
+    - A closure is an inner function that has access to the variables of its outer (enclosing) function. It is also expressed as a scope chain. A closure has three scope chains: access to its own scope (variables defined within its own block), access to the outer function's variables, and access to global variables — three levels in total.
+    - While an inner variable is being referenced through a closure, the garbage collector will not reclaim the memory occupied by that variable. Therefore, it is good practice to remove the reference once you are done using the closure.
+    - [This link](https://hyunseob.github.io/2016/08/30/javascript-closure/) has a solid explanation.
