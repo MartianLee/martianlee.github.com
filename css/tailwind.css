@@ -35,7 +35,7 @@
   --line: #ddd6c7;
   --accent: #c2410c;
 }
-:where(.dark) {
+html.dark {
   --paper: #14110b;
   --surface: #1d1a12;
   --ink: #e9e3d5;
