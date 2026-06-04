@@ -99,7 +99,9 @@ input:-webkit-autofill:focus {
 
 /* Code title styles */
 .remark-code-title {
-  @apply rounded-t bg-gray-700 px-5 py-3 font-mono text-sm font-bold text-gray-200 dark:bg-gray-800;
+  @apply rounded-t px-5 py-3 font-mono text-sm font-bold;
+  background: #241f15;
+  color: #cbbf9f;
 }
 
 .remark-code-title + div > pre {
@@ -124,7 +126,7 @@ input:-webkit-autofill:focus {
 }
 
 .highlight-line {
-  @apply -mx-4 border-l-4 border-blue-500 bg-gray-700/50;
+  @apply -mx-4 border-l-4 border-[color:var(--accent)] bg-[#241f15];
 }
 
 .line-number::before {
@@ -143,16 +145,16 @@ input:-webkit-autofill:focus {
 .token.comment,
 .token.prolog,
 .token.cdata {
-  color: rgb(99, 119, 119);
+  color: #6b6354;
   font-style: italic;
 }
 
 .token.punctuation {
-  color: rgb(199, 146, 234);
+  color: #8c8475;
 }
 
 .namespace {
-  color: rgb(178, 204, 214);
+  color: #cbbf9f;
 }
 
 .token.deleted {
@@ -162,39 +164,37 @@ input:-webkit-autofill:focus {
 
 .token.symbol,
 .token.property {
-  color: rgb(128, 203, 196);
+  color: #e9e3d5;
 }
 
 .token.tag,
 .token.operator,
-.token.keyword {
-  color: rgb(127, 219, 202);
+.token.keyword,
+.token.selector,
+.token.doctype {
+  color: #ea580c;
 }
 
-.token.boolean {
-  color: rgb(255, 88, 116);
+.token.selector,
+.token.doctype {
+  font-style: italic;
 }
 
+.token.boolean,
 .token.number {
-  color: rgb(247, 140, 108);
+  color: #e0a458;
 }
 
 .token.constant,
 .token.function,
 .token.builtin,
 .token.char {
-  color: rgb(130, 170, 255);
-}
-
-.token.selector,
-.token.doctype {
-  color: rgb(199, 146, 234);
-  font-style: italic;
+  color: #e9e3d5;
 }
 
 .token.attr-name,
 .token.inserted {
-  color: rgb(173, 219, 103);
+  color: #9bb069;
   font-style: italic;
 }
 
@@ -203,19 +203,19 @@ input:-webkit-autofill:focus {
 .token.entity,
 .language-css .token.string,
 .style .token.string {
-  color: rgb(173, 219, 103);
+  color: #9bb069;
 }
 
 .token.class-name,
 .token.atrule,
 .token.attr-value {
-  color: rgb(255, 203, 139);
+  color: #e0a458;
 }
 
 .token.regex,
 .token.important,
 .token.variable {
-  color: rgb(214, 222, 235);
+  color: #cbbf9f;
 }
 
 .token.important,
@@ -282,15 +282,17 @@ input:-webkit-autofill:focus {
 }
 
 .prose code {
-  @apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-blue-600 dark:bg-gray-800 dark:text-blue-400;
+  @apply bg-surface text-accent rounded px-1.5 py-0.5 font-mono text-sm;
 }
 
 .prose pre {
-  @apply my-6 overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm dark:bg-gray-950;
+  @apply border-line my-6 overflow-x-auto rounded-lg border p-4 text-sm;
+  background: #16130d;
 }
 
 .prose pre code {
-  @apply bg-transparent p-0 text-gray-100;
+  @apply bg-transparent p-0;
+  color: #e9e3d5;
 }
 
 .prose a {
