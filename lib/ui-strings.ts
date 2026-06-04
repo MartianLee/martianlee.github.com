@@ -49,18 +49,18 @@ export interface UIStrings {
 
 export const ui: Record<Lang, UIStrings> = {
   en: {
-    nav: { projects: 'Projects', writing: 'Writing', notes: 'Notes', about: 'About' },
+    nav: { projects: 'Projects', writing: 'Posts', notes: 'Notes', about: 'About' },
     cv: 'CV ↗',
     footer: { location: 'Seoul · UTC+9' },
     masthead: {
       eyebrow: 'Software Engineer @ UJET · ex-Founder/CTO · Seoul, open to global roles',
       tagline: 'I move fast with AI — and keep the decisions that matter human.',
       viewProjects: '↓ View projects',
-      writing: 'Writing',
+      writing: 'Posts',
     },
     sections: {
       projects: '01 — Projects',
-      writing: '02 — Selected writing',
+      writing: '02 — Recent posts',
       experience: '03 — Experience',
       allProjects: 'All projects →',
       allPosts: 'All posts →',
@@ -72,7 +72,7 @@ export const ui: Record<Lang, UIStrings> = {
     },
     list: { tags: 'Tags', all: 'All', newer: '← Newer', older: 'Older →' },
     post: {
-      backToWriting: '← Writing',
+      backToWriting: '← Posts',
       onThisPage: 'On this page',
       previous: '← PREVIOUS',
       next: 'NEXT →',
@@ -105,7 +105,7 @@ export const ui: Record<Lang, UIStrings> = {
     },
     sections: {
       projects: '01 — 프로젝트',
-      writing: '02 — 선별한 글',
+      writing: '02 — 최근 글',
       experience: '03 — 경력',
       allProjects: '전체 프로젝트 →',
       allPosts: '전체 글 →',
