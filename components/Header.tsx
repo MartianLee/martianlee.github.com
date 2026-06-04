@@ -4,47 +4,36 @@ import Link from './Link'
 import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
 import SearchButton from './SearchButton'
-import Image from './Image'
+import LanguageToggle from './LanguageToggle'
 
 const Header = () => {
   return (
-    <header className="site-chrome-header flex items-center justify-between py-10">
-      <div>
-        <Link href="/" aria-label={siteMetadata.headerTitle}>
-          <div className="flex items-center justify-between">
-            <div className="mr-3">
-              <Image
-                src="/static/favicons/favicon.png"
-                alt="Logo"
-                width={40}
-                height={40}
-                className="rounded-lg"
-              />
-            </div>
-            {typeof siteMetadata.headerTitle === 'string' ? (
-              <div className="hidden h-6 text-2xl font-semibold sm:block">
-                {siteMetadata.headerTitle}
-              </div>
-            ) : (
-              siteMetadata.headerTitle
-            )}
-          </div>
-        </Link>
-      </div>
-      <div className="flex items-center space-x-4 leading-5 sm:space-x-6">
-        {headerNavLinks
-          .filter((link) => link.href !== '/')
-          .map((link) => (
+    <header className="site-chrome-header flex items-center justify-between py-7">
+      <Link
+        href="/"
+        aria-label={siteMetadata.headerTitle}
+        className="text-xl font-bold tracking-tight"
+      >
+        ML<span className="text-accent">.</span>
+      </Link>
+      <div className="flex items-center gap-4 font-mono text-xs sm:gap-5">
+        <nav className="hidden items-center gap-5 sm:flex">
+          {headerNavLinks.map((link) => (
             <Link
               key={link.title}
               href={link.href}
-              className="hidden font-medium text-gray-900 sm:block dark:text-gray-100"
+              className="text-ink hover:text-accent transition-colors"
             >
               {link.title}
             </Link>
           ))}
-        <SearchButton />
+          <a href="/static/cv.pdf" className="text-accent">
+            CV ↗
+          </a>
+        </nav>
+        <LanguageToggle />
         <ThemeSwitch />
+        <SearchButton />
         <MobileNav />
       </div>
     </header>

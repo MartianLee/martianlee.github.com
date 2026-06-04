@@ -1,42 +1,52 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-family-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-family-sans: var(--font-space-grotesk), 'Pretendard', ui-sans-serif, system-ui, sans-serif;
   --font-family-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-family-serif: var(--font-instrument), Georgia, serif;
+  --font-family-serif: var(--font-newsreader), Georgia, serif;
 
-  /* Professional Blue Color Scheme */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  /* Rust accent ramp (replaces Professional Blue) */
+  --color-primary-50: #fef6f0;
+  --color-primary-100: #fde8da;
+  --color-primary-200: #fbcfb4;
+  --color-primary-300: #f6ab83;
+  --color-primary-400: #f07c4e;
+  --color-primary-500: #ea580c;
+  --color-primary-600: #c2410c;
+  --color-primary-700: #9a3412;
+  --color-primary-800: #7c2d12;
+  --color-primary-900: #6b2613;
+  --color-primary-950: #3a1206;
+
+  /* Semantic tokens — values flip in .dark via the vars below */
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+}
+
+:root {
+  --paper: #f4efe4;
+  --surface: #fbf9f3;
+  --ink: #1a1712;
+  --muted: #8c8475;
+  --line: #ddd6c7;
+  --accent: #c2410c;
+}
+html.dark {
+  --paper: #14110b;
+  --surface: #1d1a12;
+  --ink: #e9e3d5;
+  --muted: #8c8475;
+  --line: #2b2720;
+  --accent: #ea580c;
 }
 
 @variant dark (&:where(.dark, .dark *));
 
 /* Custom Animations */
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
 @keyframes fadeInScale {
   0% {
     opacity: 0;
@@ -48,18 +58,6 @@
   }
 }
 
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
 .task-list-item::before {
   @apply hidden;
 }
@@ -69,7 +67,7 @@
 }
 
 .footnotes {
-  @apply mt-12 border-t border-gray-200 pt-8 dark:border-gray-700;
+  @apply border-line mt-12 border-t pt-8;
 }
 
 .data-footnote-backref {
@@ -101,7 +99,9 @@ input:-webkit-autofill:focus {
 
 /* Code title styles */
 .remark-code-title {
-  @apply rounded-t bg-gray-700 px-5 py-3 font-mono text-sm font-bold text-gray-200 dark:bg-gray-800;
+  @apply rounded-t px-5 py-3 font-mono text-sm font-bold;
+  background: #241f15;
+  color: #cbbf9f;
 }
 
 .remark-code-title + div > pre {
@@ -126,7 +126,7 @@ input:-webkit-autofill:focus {
 }
 
 .highlight-line {
-  @apply -mx-4 border-l-4 border-blue-500 bg-gray-700/50;
+  @apply -mx-4 border-l-4 border-[color:var(--accent)] bg-[#241f15];
 }
 
 .line-number::before {
@@ -145,16 +145,16 @@ input:-webkit-autofill:focus {
 .token.comment,
 .token.prolog,
 .token.cdata {
-  color: rgb(99, 119, 119);
+  color: #6b6354;
   font-style: italic;
 }
 
 .token.punctuation {
-  color: rgb(199, 146, 234);
+  color: #8c8475;
 }
 
 .namespace {
-  color: rgb(178, 204, 214);
+  color: #cbbf9f;
 }
 
 .token.deleted {
@@ -164,39 +164,37 @@ input:-webkit-autofill:focus {
 
 .token.symbol,
 .token.property {
-  color: rgb(128, 203, 196);
+  color: #e9e3d5;
 }
 
 .token.tag,
 .token.operator,
-.token.keyword {
-  color: rgb(127, 219, 202);
+.token.keyword,
+.token.selector,
+.token.doctype {
+  color: #ea580c;
 }
 
-.token.boolean {
-  color: rgb(255, 88, 116);
+.token.selector,
+.token.doctype {
+  font-style: italic;
 }
 
+.token.boolean,
 .token.number {
-  color: rgb(247, 140, 108);
+  color: #e0a458;
 }
 
 .token.constant,
 .token.function,
 .token.builtin,
 .token.char {
-  color: rgb(130, 170, 255);
-}
-
-.token.selector,
-.token.doctype {
-  color: rgb(199, 146, 234);
-  font-style: italic;
+  color: #e9e3d5;
 }
 
 .token.attr-name,
 .token.inserted {
-  color: rgb(173, 219, 103);
+  color: #9bb069;
   font-style: italic;
 }
 
@@ -205,19 +203,19 @@ input:-webkit-autofill:focus {
 .token.entity,
 .language-css .token.string,
 .style .token.string {
-  color: rgb(173, 219, 103);
+  color: #9bb069;
 }
 
 .token.class-name,
 .token.atrule,
 .token.attr-value {
-  color: rgb(255, 203, 139);
+  color: #e0a458;
 }
 
 .token.regex,
 .token.important,
 .token.variable {
-  color: rgb(214, 222, 235);
+  color: #cbbf9f;
 }
 
 .token.important,
@@ -235,23 +233,23 @@ input:-webkit-autofill:focus {
 
 /* Prose (MDX Content) Styling Improvements */
 .prose {
-  @apply text-gray-700 dark:text-gray-300;
+  @apply text-ink/85;
 }
 
 .prose h1 {
-  @apply mt-8 mb-6 text-3xl font-bold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-8 mb-6 text-3xl font-bold;
 }
 
 .prose h2 {
-  @apply mt-8 mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-8 mb-4 text-2xl font-bold;
 }
 
 .prose h3 {
-  @apply mt-6 mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-6 mb-3 text-xl font-semibold;
 }
 
 .prose h4 {
-  @apply mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-4 mb-2 text-lg font-semibold;
 }
 
 .prose p {
@@ -280,27 +278,34 @@ input:-webkit-autofill:focus {
 }
 
 .prose blockquote {
-  @apply my-6 border-l-4 border-blue-500 bg-gray-50 py-3 pr-4 pl-4 text-gray-700 italic dark:border-blue-400 dark:bg-gray-800 dark:text-gray-300;
+  @apply border-accent bg-surface text-ink/80 my-6 border-l-[3px] py-3 pr-4 pl-5 italic;
 }
 
 .prose code {
-  @apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-blue-600 dark:bg-gray-800 dark:text-blue-400;
+  @apply bg-surface text-accent rounded px-1.5 py-0.5 font-mono text-sm;
 }
 
 .prose pre {
-  @apply my-6 overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm dark:bg-gray-950;
+  @apply border-line my-6 overflow-x-auto rounded-lg border p-4 text-sm;
+  background: #16130d;
 }
 
 .prose pre code {
-  @apply bg-transparent p-0 text-gray-100;
+  @apply bg-transparent p-0;
+  color: #e9e3d5;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
 }
 
 .prose a {
-  @apply font-medium text-blue-600 underline decoration-blue-600/30 underline-offset-2 transition-colors hover:text-blue-700 hover:decoration-blue-700/50 dark:text-blue-400 dark:decoration-blue-400/30 dark:hover:text-blue-300 dark:hover:decoration-blue-300/50;
+  @apply text-accent font-medium underline decoration-[color:var(--accent)]/30 underline-offset-2 transition-colors hover:decoration-[color:var(--accent)]/60;
 }
 
 .prose strong {
-  @apply font-bold text-gray-900 dark:text-gray-100;
+  @apply text-ink font-bold;
 }
 
 .prose strong a {
@@ -316,7 +321,7 @@ input:-webkit-autofill:focus {
 }
 
 .prose hr {
-  @apply my-8 border-gray-200 dark:border-gray-700;
+  @apply border-line my-8;
 }
 
 /* Mermaid diagrams are rendered as inline SVG at build time, so they do not
@@ -353,6 +358,24 @@ input:-webkit-autofill:focus {
 
 .prose table {
   @apply my-6 w-full;
+}
+
+.reading-measure {
+  @apply mx-auto max-w-[820px];
+}
+.reading-measure .prose {
+  font-family: var(--font-family-serif);
+  font-size: 20px;
+}
+.reading-measure .prose p,
+.reading-measure .prose li {
+  @apply leading-[1.72];
+}
+.reading-measure .prose h1,
+.reading-measure .prose h2,
+.reading-measure .prose h3,
+.reading-measure .prose h4 {
+  font-family: var(--font-family-sans);
 }
 
 /* ========================================
@@ -455,17 +478,42 @@ body.kb-active main {
 }
 
 .prose thead {
-  @apply border-b-2 border-gray-300 dark:border-gray-600;
+  @apply border-line border-b-2;
 }
 
 .prose th {
-  @apply px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-ink px-4 py-2 text-left font-semibold;
 }
 
 .prose td {
-  @apply border-b border-gray-200 px-4 py-2 dark:border-gray-700;
+  @apply border-line border-b px-4 py-2;
 }
 
 .prose tbody tr:last-child td {
   @apply border-b-0;
+}
+
+/* ========================================
+   Bold Editorial — Kit of parts
+   ======================================== */
+.eyebrow {
+  @apply text-accent font-mono text-[11px] tracking-[0.16em] uppercase;
+}
+.sec-head {
+  @apply border-ink mb-7 flex items-baseline justify-between border-t-[1.5px] pt-3;
+}
+.sec-num {
+  @apply text-muted font-mono text-xs tracking-[0.12em] uppercase;
+}
+.list-row {
+  @apply border-line flex items-start justify-between gap-6 border-b py-3.5;
+}
+.chip {
+  @apply border-line text-muted rounded-full border px-2.5 py-0.5 font-mono text-[11px];
+}
+.ghost-btn {
+  @apply border-ink hover:bg-ink hover:text-paper rounded-md border-[1.5px] px-4 py-2 font-semibold transition-colors;
+}
+.editorial-link {
+  @apply text-accent underline underline-offset-[3px] transition-colors;
 }

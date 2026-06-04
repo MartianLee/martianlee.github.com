@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from './Link'
 import headerNavLinks from '@/data/headerNavLinks'
+import LanguageToggle from './LanguageToggle'
 
 const MobileNav = () => {
   const [navShow, setNavShow] = useState(false)
@@ -26,7 +27,7 @@ const MobileNav = () => {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="h-8 w-8 text-gray-900 dark:text-gray-100"
+          className="text-ink h-8 w-8"
         >
           <path
             fillRule="evenodd"
@@ -36,7 +37,7 @@ const MobileNav = () => {
         </svg>
       </button>
       <div
-        className={`fixed top-0 left-0 z-10 h-full w-full transform bg-white opacity-95 duration-300 ease-in-out dark:bg-gray-950 dark:opacity-[0.98] ${
+        className={`bg-paper fixed top-0 left-0 z-10 h-full w-full transform opacity-95 duration-300 ease-in-out dark:opacity-[0.98] ${
           navShow ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -46,7 +47,7 @@ const MobileNav = () => {
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="text-gray-900 dark:text-gray-100"
+              className="text-ink"
             >
               <path
                 fillRule="evenodd"
@@ -61,13 +62,21 @@ const MobileNav = () => {
             <div key={link.title} className="px-12 py-4">
               <Link
                 href={link.href}
-                className="text-2xl font-bold tracking-widest text-gray-900 dark:text-gray-100"
+                className="text-ink hover:text-accent font-mono text-lg"
                 onClick={onToggleNav}
               >
                 {link.title}
               </Link>
             </div>
           ))}
+          <div className="px-12 py-4">
+            <a href="/static/cv.pdf" className="text-accent font-mono text-lg">
+              CV ↗
+            </a>
+          </div>
+          <div className="px-12 py-4">
+            <LanguageToggle />
+          </div>
         </nav>
       </div>
     </>

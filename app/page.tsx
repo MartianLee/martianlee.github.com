@@ -1,22 +1,20 @@
 import { sortPosts, allCoreContent } from 'pliny/utils/contentlayer'
 import { allBlogs } from '.contentlayer/generated'
-import HeroSection from '@/components/home/HeroSection'
-import ImpactMetricsSection from '@/components/home/ImpactMetricsSection'
-import FeaturedSection from '@/components/home/FeaturedSection'
-import TechStackSection from '@/components/home/TechStackSection'
-import RecentPostsSection from '@/components/home/RecentPostsSection'
+import Masthead from '@/components/home/Masthead'
+import ProjectsSection from '@/components/home/ProjectsSection'
+import WritingSection from '@/components/home/WritingSection'
+import ExperienceSection from '@/components/home/ExperienceSection'
+import ContactSection from '@/components/home/ContactSection'
 
 export default async function Page() {
-  const sortedPosts = sortPosts(allBlogs)
-  const posts = allCoreContent(sortedPosts)
-
+  const posts = allCoreContent(sortPosts(allBlogs))
   return (
     <>
-      <HeroSection />
-      {/* <ImpactMetricsSection /> */} {/* TODO: update metrics */}
-      <FeaturedSection />
-      <TechStackSection />
-      <RecentPostsSection posts={posts} />
+      <Masthead />
+      <ProjectsSection />
+      <WritingSection posts={posts} />
+      <ExperienceSection />
+      <ContactSection />
     </>
   )
 }
