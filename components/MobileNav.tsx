@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from './Link'
 import headerNavLinks from '@/data/headerNavLinks'
 import LanguageToggle from './LanguageToggle'
+import siteMetadata from '@/data/siteMetadata'
 
 const MobileNav = () => {
   const [navShow, setNavShow] = useState(false)
@@ -70,7 +71,7 @@ const MobileNav = () => {
             </div>
           ))}
           <div className="px-12 py-4">
-            <a href="/static/cv.pdf" className="text-accent font-mono text-lg">
+            <a href={siteMetadata.linkedin} className="text-accent font-mono text-lg">
               CV ↗
             </a>
           </div>

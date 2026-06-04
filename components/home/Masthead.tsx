@@ -21,7 +21,7 @@ export default function Masthead() {
         <a href="/posts" className="text-muted hover:text-accent">
           Writing
         </a>
-        <a href="/static/cv.pdf" className="text-muted hover:text-accent">
+        <a href={siteMetadata.linkedin} className="text-muted hover:text-accent">
           CV ↗
         </a>
         <a href={siteMetadata.github} className="text-muted hover:text-accent">

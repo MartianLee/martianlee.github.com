@@ -16,7 +16,7 @@ const projectsData: Project[] = [
   {
     title: 'More Munch',
     description:
-      '직장인을 위한 점심 추천 서비스. OpenClaw로 조회 가능한 주변 식당 자동 수집과 방문 기록/평점을 기반으로 매일 새로운 점심 메뉴를 추천합니다.',
+      'A lunch-recommendation service for office workers. It auto-collects nearby restaurants (discoverable via the OpenClaw skill-optimized API) and suggests a fresh lunch every day based on your visit history and ratings.',
     category: 'non-game',
     techStack: [
       'NestJS 11',
@@ -32,9 +32,9 @@ const projectsData: Project[] = [
     featured: true,
   },
   {
-    title: '칭찬할고양',
+    title: 'CheerCat',
     description:
-      '매일 자신을 칭찬하는 습관을 만들어주는 칭찬 일기 앱. 긍정적인 마인드셋을 위한 일상 기록 서비스입니다.',
+      'A daily journaling app that builds the habit of praising yourself every day — a small ritual for a positive mindset.',
     category: 'non-game',
     techStack: ['React Native', 'Firebase', 'TypeScript'],
     demo: 'https://play.google.com/store/apps/details?id=com.teiroleema.cheercat3',
@@ -42,9 +42,9 @@ const projectsData: Project[] = [
     featured: true,
   },
   {
-    title: '지구침략자',
+    title: 'Earth Invaders',
     description:
-      'Phaser3 기반 슈팅 게임. 지구를 침략하는 외계인을 물리치는 클래식 아케이드 스타일 게임입니다.',
+      'A Phaser3 arcade shooter. Fend off the aliens invading Earth, classic arcade style.',
     category: 'game',
     techStack: ['Phaser3', 'TypeScript', 'Rollup', 'Vercel'],
     workflow: ['Vercel Git Deploy'],
@@ -54,9 +54,9 @@ const projectsData: Project[] = [
     featured: true,
   },
   {
-    title: 'Fish Tank Simulator (수족관 시뮬레이터)',
+    title: 'Fish Tank Simulator',
     description:
-      '뽀모도로 타이머와 수족관 시뮬레이션이 결합된 도트 그래픽 방치형 생산성 도구. 집중 세션을 완료하여 물고기 알을 획득하고, 12종 이상의 다양한 물고기를 수집하며 자신만의 수족관을 성장시킵니다.',
+      'A pixel-art idle productivity tool that blends a Pomodoro timer with an aquarium sim. Complete focus sessions to earn fish eggs, collect 12+ species, and grow your own tank.',
     category: 'game',
     techStack: ['Phaser3', 'TypeScript', 'Vercel'],
     workflow: ['Vercel Git Deploy'],
@@ -68,7 +68,7 @@ const projectsData: Project[] = [
   {
     title: 'Shoulder Check',
     description:
-      '가방 무게를 계산하고 관리할 수 있는 웹 애플리케이션. 건강한 어깨를 위한 스마트한 가방 무게 체크 서비스입니다.',
+      'A web app to calculate and track bag weight — a smart bag-weight checker for healthier shoulders.',
     category: 'non-game',
     techStack: ['React', 'TypeScript', 'Next.js'],
     demo: 'https://www.shoulder-check.cloud/',
@@ -78,7 +78,7 @@ const projectsData: Project[] = [
   {
     title: 'First Defense',
     description:
-      'Godot 4.6 기반 2.5D 로그라이크 타워 디펜스 프로토타입. 유닛 조합, 태그 시너지, 실시간 배치, 메타 성장을 중심으로 설계했습니다.',
+      'A 2.5D roguelite tower-defense prototype built in Godot 4.6, designed around unit combos, tag synergies, real-time placement, and meta-progression.',
     category: 'game',
     techStack: ['Godot 4.6', 'GDScript', 'GitHub Pages'],
     workflow: ['GitHub Actions: Godot Web Export', 'GitHub Pages Auto Deploy'],
@@ -91,7 +91,7 @@ const projectsData: Project[] = [
   {
     title: 'Side Project Tracker',
     description:
-      '여러 사이드 프로젝트를 한 창에서 추적하는 macOS 데스크톱 앱입니다. GitHub 레포의 출시 단계·방치 감지·흥미 태그·기분 매칭을 지원하며, 인증된 gh CLI와 로컬 git을 데이터 소스로 사용합니다. 영어/한국어 UI를 지원합니다.',
+      'A macOS desktop app that tracks all your side projects in one window. For each GitHub repo it surfaces release stage, staleness detection, interest tags, and mood-matching, using the authenticated gh CLI and local git as data sources. Ships with an English/Korean UI.',
     category: 'non-game',
     techStack: ['Tauri v2', 'React', 'TypeScript', 'Vite', 'Rust'],
     workflow: ['npm run tauri build (.app)'],
