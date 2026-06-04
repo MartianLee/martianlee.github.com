@@ -8,6 +8,7 @@ import { hasBothLanguages } from './posts'
 export function buildPostMetadata(post: Blog): Metadata {
   const slug = post.slug
   const both = hasBothLanguages(slug)
+  const base = siteMetadata.siteUrl.replace(/\/+$/, '')
   const authorList = post.authors || ['default']
   const authors = authorList
     .map((a) => coreContent(allAuthors.find((p) => p.slug === a) as Authors)?.name)
@@ -17,7 +18,7 @@ export function buildPostMetadata(post: Blog): Metadata {
   let imageList = [siteMetadata.socialBanner]
   if (post.images) imageList = typeof post.images === 'string' ? [post.images] : post.images
   const ogImages = imageList.map((img) => ({
-    url: img.includes('http') ? img : siteMetadata.siteUrl + img,
+    url: img.includes('http') ? img : base + img,
   }))
   return {
     title: post.title,
@@ -26,9 +27,9 @@ export function buildPostMetadata(post: Blog): Metadata {
     alternates: both
       ? {
           languages: {
-            en: `${siteMetadata.siteUrl}/posts/${slug}`,
-            ko: `${siteMetadata.siteUrl}/ko/posts/${slug}`,
-            'x-default': `${siteMetadata.siteUrl}/posts/${slug}`,
+            en: `${base}/posts/${slug}`,
+            ko: `${base}/ko/posts/${slug}`,
+            'x-default': `${base}/posts/${slug}`,
           },
         }
       : undefined,
