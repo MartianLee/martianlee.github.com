@@ -1,0 +1,142 @@
+---
+title: 'RedisBloom in Production: Fast, Safe Duplicate-ID Checking for User Signup'
+date: '2026-04-18'
+tags: ['redisbloom', 'redis', 'signup', 'backend', 'architecture']
+topic: backend-architecture
+stage: budding
+summary: 'A practical guide to integrating RedisBloom into a signup duplicate-check flow, covering request routing, sharding, synchronization, rebuild strategies, and monitoring.'
+---
+
+This post focuses on the question: "Bloom filters make sense in theory — but how do you actually wire one into production?"
+The goal is straightforward: reduce duplicate-check traffic to the database while keeping the DB as the authoritative source of truth.
+
+## Assumptions
+
+- The Bloom filter is not the final arbiter.
+- The ground truth is the `UNIQUE` index in the relational database.
+- RedisBloom acts only as a first-pass filter.
+
+## Recommended Architecture
+
+```text
+[Client]
+   -> [API Server]
+       -> [RedisBloom] --(might exist)--> [User DB lookup]
+       -> [User DB INSERT (UNIQUE)]
+       -> [BF.ADD on success]
+```
+
+In production, deploy these components together:
+
+- Redis Cluster + RedisBloom
+- Sync worker (CDC / event-driven)
+- Rebuild batch job
+- False-positive rate / latency monitoring
+
+## Signup Request Flow
+
+1. The API calls `BF.EXISTS username:<normalized_id>`
+2. If the result is `0`, treat the ID as available and proceed with signup
+3. If the result is `1`, fall back to a DB lookup for final confirmation
+4. The final `INSERT` is guaranteed by the DB `UNIQUE` constraint
+5. Successfully created IDs are added via `BF.ADD` or an event worker
+
+Key rules:
+
+- When `EXISTS=1`, do **not** immediately return "already taken" — always confirm with the DB
+- Race conditions are handled by the DB `UNIQUE` constraint
+- Bloom is a performance optimization layer, not a correctness layer
+
+## Key / Version Design
+
+- Key naming: `bf:usernames:v1`
+- Input: normalized ID (`trim`, `lowercase`, policy applied)
+- Version rotation: design for a clean `v1 -> v2` swap
+
+Initial key creation example:
+
+```redis
+BF.RESERVE bf:usernames:v1 0.01 1000000000
+```
+
+## Sharding Strategy
+
+At large scale, avoid concentrating everything in a single key.
+
+- Shards: `bf:usernames:{00}` through `bf:usernames:{ff}`
+- Routing: select the shard using the first byte of `sha256(username)`
+- Benefits: distributes memory and CPU load, reduces blast radius of a rebuild
+
+## Synchronization Strategy
+
+The safe pattern is:
+
+1. Commit the user record to the DB on successful signup
+2. Emit a DB event (CDC / outbox pattern)
+3. A worker applies `BF.ADD` to RedisBloom
+
+This approach preserves DB correctness even when Redis is unavailable, and lost updates can be recovered by replaying events.
+
+## Failure / Exception Handling
+
+- RedisBloom outage: fall back to direct DB lookup
+- Worker lag: DB fallback rate rises (no correctness impact)
+- Mass incorrect writes: recreate with a new version key and switch traffic
+
+## One Common Real-World Failure
+
+The following mistake is more common than it looks:
+
+1. `BF.EXISTS=1` → immediately respond "already taken"
+2. Skip the DB confirmation step
+3. A user is blocked from an ID they could legitimately register
+
+The symptom surfaces as customer support tickets: "signup randomly fails."
+In the logs you'll see repeated cases where RedisBloom returns a hit but the username doesn't exist in the DB.
+
+The fix is simple:
+
+- The `EXISTS=1` path must always consult the DB
+- Final success or failure must be determined by the DB `UNIQUE` result
+- Monitor `db_fallback_rate` and `false_positive_rate_est` together
+
+## Rebuild / Rotation Pattern
+
+1. Create a new key: `bf:usernames:v2`
+2. Bulk-load `v2` from a DB snapshot
+3. Switch API reads to `v2`
+4. Delete `v1` after confirming stability
+
+A blue/green swap is safer than overwriting in place while traffic is live.
+
+## Minimum Monitoring Metrics
+
+- `bloom_exists_true_rate`
+- `db_fallback_rate`
+- `false_positive_rate_est`
+- `signup_p95_latency`
+
+## Quick Pseudocode
+
+```python
+def can_use_username(username):
+    u = normalize(username)
+    shard = pick_shard(u)
+    maybe = redis.bf_exists(f"bf:usernames:{shard}:v1", u)
+
+    if maybe == 0:
+        return True
+
+    return not db.exists_username(u)
+
+def create_user(username, ...):
+    u = normalize(username)
+    user_id = db.insert_user_with_unique(username=u, ...)
+    event_bus.publish("user_created", {"username": u})
+    return user_id
+```
+
+## Closing
+
+The core lesson of running RedisBloom in production fits in one line:
+"Filter fast with Bloom, confirm with DB UNIQUE."
