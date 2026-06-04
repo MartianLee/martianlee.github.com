@@ -1,7 +1,7 @@
 # Blog Redesign — "Bold Editorial"
 
 - **Date:** 2026-06-04
-- **Status:** Design approved (brainstorming), pending implementation plan
+- **Status:** Implemented on branch `redesign/bold-editorial` (2026-06-04). Verified light/dark + post/about/kb in-browser.
 - **Supersedes:** `2026-05-13-homepage-ai-portfolio-redesign-design.md` (the "AI portfolio" home — the very look this redesign moves away from)
 - **Scope of this spec:** Visual redesign only, built i18n-ready. The i18n framework and post translation are **separate follow-up specs.**
 
