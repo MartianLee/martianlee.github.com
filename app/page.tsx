@@ -1,5 +1,5 @@
-import { sortPosts, allCoreContent } from 'pliny/utils/contentlayer'
-import { allBlogs } from '.contentlayer/generated'
+import { allCoreContent } from 'pliny/utils/contentlayer'
+import { canonicalBlogs } from '@/lib/posts'
 import Masthead from '@/components/home/Masthead'
 import ProjectsSection from '@/components/home/ProjectsSection'
 import WritingSection from '@/components/home/WritingSection'
@@ -7,7 +7,7 @@ import ExperienceSection from '@/components/home/ExperienceSection'
 import ContactSection from '@/components/home/ContactSection'
 
 export default async function Page() {
-  const posts = allCoreContent(sortPosts(allBlogs))
+  const posts = allCoreContent(canonicalBlogs())
   return (
     <>
       <Masthead />

@@ -6,6 +6,7 @@ import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from '.contentlayer/generated'
 import Link from '@/components/Link'
+import PostLink from '@/components/PostLink'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import tagData from 'app/tag-data.json'
@@ -114,9 +115,9 @@ export default function ListLayoutWithTags({
               >
                 <div className="sm:pr-8">
                   <h2 className="text-xl font-bold tracking-tight">
-                    <Link href={`/${path}`} className="hover:text-accent transition-colors">
+                    <PostLink slug={post.slug} className="hover:text-accent transition-colors">
                       {title}
-                    </Link>
+                    </PostLink>
                   </h2>
                   {summary && (
                     <p className="text-muted mt-1.5 max-w-[60ch] font-serif">{summary}</p>

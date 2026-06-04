@@ -41,18 +41,19 @@ function hasMermaidBlocks(): boolean {
 
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  language: {
+    type: 'string',
+    resolve: (doc) => (/\.en\.mdx$/.test(doc._raw.sourceFileName) ? 'en' : 'ko'),
+  },
   slug: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, '').replace(/\.en$/, ''),
   },
   path: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath,
+    resolve: (doc) => doc._raw.flattenedPath.replace(/\.en$/, ''),
   },
-  filePath: {
-    type: 'string',
-    resolve: (doc) => doc._raw.sourceFilePath,
-  },
+  filePath: { type: 'string', resolve: (doc) => doc._raw.sourceFilePath },
   toc: { type: 'string', resolve: (doc) => extractTocHeadings(doc.body.raw) },
 }
 
@@ -61,15 +62,17 @@ const computedFields: ComputedFields = {
  */
 function createTagCount(allBlogs) {
   const tagCount: Record<string, number> = {}
-  allBlogs.forEach((file) => {
+  const bySlug = new Map<string, (typeof allBlogs)[number]>()
+  for (const p of allBlogs) {
+    const existing = bySlug.get(p.slug)
+    if (!existing || p.language === 'en') bySlug.set(p.slug, p)
+  }
+  const canonical = [...bySlug.values()]
+  canonical.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
       file.tags.forEach((tag: string) => {
         const formattedTag = slug(tag)
-        if (formattedTag in tagCount) {
-          tagCount[formattedTag] += 1
-        } else {
-          tagCount[formattedTag] = 1
-        }
+        tagCount[formattedTag] = (tagCount[formattedTag] || 0) + 1
       })
     }
   })
@@ -81,9 +84,14 @@ function createSearchIndex(allBlogs) {
     siteMetadata?.search?.provider === 'kbar' &&
     siteMetadata.search.kbarConfig.searchDocumentsPath
   ) {
+    const bySlug = new Map<string, (typeof allBlogs)[number]>()
+    for (const p of allBlogs) {
+      const existing = bySlug.get(p.slug)
+      if (!existing || p.language === 'en') bySlug.set(p.slug, p)
+    }
     writeFileSync(
       `public/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
-      JSON.stringify(allCoreContent(sortPosts(allBlogs)))
+      JSON.stringify(allCoreContent(sortPosts([...bySlug.values()])))
     )
     console.log('Local search index generated...')
   }
@@ -120,7 +128,7 @@ export const Blog = defineDocumentType(() => ({
         dateModified: doc.lastmod || doc.date,
         description: doc.summary,
         image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
-        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
+        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath.replace(/\.en$/, '')}`,
       }),
     },
   },
