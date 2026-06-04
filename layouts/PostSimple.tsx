@@ -4,7 +4,6 @@ import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from '.contentlayer/generated'
 import Comments from '@/components/Comments'
 import Link from '@/components/Link'
-import PageTitle from '@/components/PageTitle'
 import SectionContainer from '@/components/SectionContainer'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
@@ -23,58 +22,50 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
     <SectionContainer>
       <ScrollTopAndComment />
       <article>
-        <div>
-          <header>
-            <div className="space-y-1 border-b border-gray-200 pb-10 text-center dark:border-gray-700">
-              <dl>
+        <header className="border-line border-b pt-6 pb-8">
+          <dl>
+            <dt className="sr-only">Published on</dt>
+            <dd className="text-muted font-mono text-xs">
+              <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+            </dd>
+          </dl>
+          <h1 className="mt-3 text-4xl font-bold tracking-[-0.03em] sm:text-5xl">{title}</h1>
+        </header>
+        <div className="reading-measure pt-9">
+          <div className="prose max-w-none">{children}</div>
+          {siteMetadata.comments && (
+            <div className="pt-10" id="comment">
+              <Comments slug={slug} />
+            </div>
+          )}
+          <footer className="border-line mt-10 border-t pt-6">
+            <div className="flex flex-col gap-3 font-mono text-sm sm:flex-row sm:justify-between">
+              {prev && prev.path && (
                 <div>
-                  <dt className="sr-only">Published on</dt>
-                  <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                    <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
-                  </dd>
+                  <div className="text-muted text-[11px]">← PREVIOUS</div>
+                  <Link
+                    href={`/${prev.path}`}
+                    className="hover:text-accent font-semibold"
+                    aria-label={`Previous post: ${prev.title}`}
+                  >
+                    {prev.title}
+                  </Link>
                 </div>
-              </dl>
-              <div>
-                <PageTitle>{title}</PageTitle>
-              </div>
+              )}
+              {next && next.path && (
+                <div className="sm:text-right">
+                  <div className="text-muted text-[11px]">NEXT →</div>
+                  <Link
+                    href={`/${next.path}`}
+                    className="hover:text-accent font-semibold"
+                    aria-label={`Next post: ${next.title}`}
+                  >
+                    {next.title}
+                  </Link>
+                </div>
+              )}
             </div>
-          </header>
-          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200 pb-8 xl:divide-y-0 dark:divide-gray-700">
-            <div className="divide-y divide-gray-200 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-700">
-              <div className="prose dark:prose-invert max-w-none pt-10 pb-8">{children}</div>
-            </div>
-            {siteMetadata.comments && (
-              <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">
-                <Comments slug={slug} />
-              </div>
-            )}
-            <footer>
-              <div className="flex flex-col text-sm font-medium sm:flex-row sm:justify-between sm:text-base">
-                {prev && prev.path && (
-                  <div className="pt-4 xl:pt-8">
-                    <Link
-                      href={`/${prev.path}`}
-                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                      aria-label={`Previous post: ${prev.title}`}
-                    >
-                      &larr; {prev.title}
-                    </Link>
-                  </div>
-                )}
-                {next && next.path && (
-                  <div className="pt-4 xl:pt-8">
-                    <Link
-                      href={`/${next.path}`}
-                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                      aria-label={`Next post: ${next.title}`}
-                    >
-                      {next.title} &rarr;
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </footer>
-          </div>
+          </footer>
         </div>
       </article>
     </SectionContainer>

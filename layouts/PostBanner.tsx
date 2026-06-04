@@ -5,7 +5,6 @@ import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from '.contentlayer/generated'
 import Comments from '@/components/Comments'
 import Link from '@/components/Link'
-import PageTitle from '@/components/PageTitle'
 import SectionContainer from '@/components/SectionContainer'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
@@ -26,46 +25,46 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
     <SectionContainer>
       <ScrollTopAndComment />
       <article>
-        <div>
-          <div className="space-y-1 pb-10 text-center dark:border-gray-700">
-            <div className="w-full">
-              <Bleed>
-                <div className="relative aspect-[2/1] w-full">
-                  <Image src={displayImage} alt={title} fill className="object-cover" />
-                </div>
-              </Bleed>
-            </div>
-            <div className="relative pt-10">
-              <PageTitle>{title}</PageTitle>
-            </div>
+        <div className="pb-8">
+          <div className="w-full">
+            <Bleed>
+              <div className="relative aspect-[2/1] w-full">
+                <Image src={displayImage} alt={title} fill className="object-cover" />
+              </div>
+            </Bleed>
           </div>
-          <div className="prose dark:prose-invert max-w-none py-4">{children}</div>
+          <h1 className="mt-8 text-4xl font-bold tracking-[-0.03em] sm:text-5xl">{title}</h1>
+        </div>
+        <div className="reading-measure">
+          <div className="prose max-w-none py-4">{children}</div>
           {siteMetadata.comments && (
-            <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">
+            <div className="pt-10" id="comment">
               <Comments slug={slug} />
             </div>
           )}
-          <footer>
-            <div className="flex flex-col text-sm font-medium sm:flex-row sm:justify-between sm:text-base">
+          <footer className="border-line mt-10 border-t pt-6">
+            <div className="flex flex-col gap-3 font-mono text-sm sm:flex-row sm:justify-between">
               {prev && prev.path && (
-                <div className="pt-4 xl:pt-8">
+                <div>
+                  <div className="text-muted text-[11px]">← PREVIOUS</div>
                   <Link
                     href={`/${prev.path}`}
-                    className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                    className="hover:text-accent font-semibold"
                     aria-label={`Previous post: ${prev.title}`}
                   >
-                    &larr; {prev.title}
+                    {prev.title}
                   </Link>
                 </div>
               )}
               {next && next.path && (
-                <div className="pt-4 xl:pt-8">
+                <div className="sm:text-right">
+                  <div className="text-muted text-[11px]">NEXT →</div>
                   <Link
                     href={`/${next.path}`}
-                    className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                    className="hover:text-accent font-semibold"
                     aria-label={`Next post: ${next.title}`}
                   >
-                    {next.title} &rarr;
+                    {next.title}
                   </Link>
                 </div>
               )}
