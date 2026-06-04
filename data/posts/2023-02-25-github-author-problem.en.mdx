@@ -1,0 +1,76 @@
+---
+title: 'When You Have a Large Number of Commits with the Wrong Author on GitHub'
+crawlertitle: 'When You Have a Large Number of Commits with the Wrong Author on GitHub'
+slug: '2023-02-25-github-author-problem'
+summary: 'Learn how to fix a large number of commits that have the wrong author on GitHub.'
+date: 2023-02-25 15:06:17 +0900
+categories: posts
+tags: ['git', 'github', 'bash', 'script']
+author: MartianLee
+draft: false
+---
+
+**When You Have a Large Number of Commits with the Wrong Author on GitHub**
+
+I make a lot of commits at work, and at some point I noticed that the green contribution squares on GitHub had stopped appearing. I figured something must be wrong and eventually got curious enough to investigate.
+
+The cause, simply put, is that GitHub had no idea those commits were written by me. I assumed that because the SSH key was authenticated, GitHub would use that to identify me — but it turns out GitHub identifies you by email and name.
+
+So I had to rewrite several hundred already-pushed commits. What now...
+
+Fortunately, there was a way.
+
+## Navigate to the repository whose commits you want to fix.
+
+```bash
+git log
+```
+
+![glg](/static/post-images/images/230225_github_author-problem/glg.png)
+
+Running this shows your past commits. Find the incorrect email address here.
+In my case, a single character was wrong at the beginning and end of the email.
+
+## Run the script below.
+
+Looking at the script below, you need to fill in three parts yourself:
+
+- `WRONG_EMAIL="{incorrectly-written@email}"`
+- `NEW_NAME="{name-to-set}"`
+- `NEW_EMAIL="{correct@email}"`
+
+```bash
+git filter-branch --env-filter '
+WRONG_EMAIL="{틀리게작성된@이메일}"
+NEW_NAME="{새롭게작성할이름}"
+NEW_EMAIL="{새롭게설정한@이메일}"
+
+if [ "$GIT_COMMITTER_EMAIL" = "$WRONG_EMAIL" ]
+then
+    export GIT_COMMITTER_NAME="$NEW_NAME"
+    export GIT_COMMITTER_EMAIL="$NEW_EMAIL"
+fi
+if [ "$GIT_AUTHOR_EMAIL" = "$WRONG_EMAIL" ]
+then
+    export GIT_AUTHOR_NAME="$NEW_NAME"
+    export GIT_AUTHOR_EMAIL="$NEW_EMAIL"
+fi
+' --tag-name-filter cat -- --branches --tags
+```
+
+Running this command produces output like the following:
+![overwritten]("/static/post-images/images/230225_github_author-problem/overwritten.png")
+
+## Caveats
+
+As noted in the source blog, this command should be used **"with extreme caution."** Various Stack Overflow threads also flag it as a discouraged approach. Because it rewrites every past commit at once, if the repository has not been pushed yet you should clone it beforehand, or only attempt this once the work has reached a stable stopping point.
+(Note: the command will not run if there are uncommitted changes in the working tree.)
+
+Result:
+![my-commits]("/static/post-images/images/230225_github_author-problem/my-commits.png")
+
+Thanks to this, literally hundreds of commits came back as green squares — what a relief. I barely noticed when they were gone, but seeing them fill up again feels genuinely satisfying. Time to plant even more!
+
+## Source
+
+[https://madplay.github.io/post/change-git-author-name](https://madplay.github.io/post/change-git-author-name)

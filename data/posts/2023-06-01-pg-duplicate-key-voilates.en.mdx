@@ -1,0 +1,64 @@
+---
+slug: '2023-06-01-pg-duplicate-key-voilates'
+title: 'How to Fix the postgresql duplicate key value violates unique constraint Error'
+crawlertitle: 'How to Fix the postgresql duplicate key value violates unique constraint Error'
+summary: 'How to resolve the postgresql duplicate key error'
+date: 2023-06-01 22:46:51 +0900
+categories: posts
+tags: ['postgresql', 'orm', 'react-native', 'error']
+topic: backend
+author: MartianLee
+---
+
+## Background
+
+While working with a PostgreSQL database, I ran into a problem when the backend tried to execute a `create` command via ORM. I did not catch on immediately and had to search for a solution, so I am writing this up to remember it going forward.
+
+## Problem
+
+When trying to insert a row into a pg table, the error `duplicate key value violates unique constraint PK_324238724` is thrown.
+
+In plain terms, this means that when you try to create one more row, the key that the table attempts to assign automatically is already taken. Fortunately, I was able to infer the cause fairly quickly because I had manually manipulated rows in that table before — so I suspected the internal sequence key had fallen out of sync. A quick search confirmed this was the most likely culprit, and I was able to fix it by running PostgreSQL's sequence manipulation function.
+
+## Sequence Manipulation Functions
+
+What is a Sequence?
+
+```
+Sequence objects are special single-row tables created with CREATE SEQUENCE.
+```
+
+[9.17. Sequence Manipulation Functions — official docs](https://www.postgresql.org/docs/current/functions-sequence.html)
+
+## Solution
+
+1. Find the sequence name.
+
+   ```sql
+
+   -- Sequence and defined type
+   CREATE SEQUENCE IF NOT EXISTS table_id_seq;
+
+   -- Table Definition
+   CREATE TABLE "public"."table" (
+       "id" int4 NOT NULL DEFAULT nextval('table_id_seq'::regclass),
+       "slug" varchar NOT NULL DEFAULT 'noname'::character varying,
+       "description" text,
+       "create_datetime" timestamp NOT NULL DEFAULT now(),
+       PRIMARY KEY ("id")
+   );
+   ```
+
+   Inspecting the `CREATE` query like this lets you identify the sequence name — in this case `table_id_seq`.
+
+2. Run `select lastval() from <table name>;` to see the current sequence value set on the table. When this error occurs, it is usually because rows were previously inserted into the table through some special operation, causing the internal `table_id_seq` value to fall below `max(id)` — meaning a row with that ID already exists.
+
+3. Run the query `select setval('table_id_seq', (select max(id) from table));` to reset the sequence to the current maximum ID.
+
+4. After that, try the insert query that failed before — it should now execute successfully.
+
+Done!
+
+## Takeaways
+
+I learned that a column declared with `@PrimaryGeneratedColumn()` in TypeORM actually creates a Sequence under the hood. When you rely too heavily on an ORM, errors like this can be tricky to diagnose. The best approach is to study the underlying mechanism each time you encounter something like this.

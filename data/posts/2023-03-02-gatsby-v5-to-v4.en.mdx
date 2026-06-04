@@ -1,0 +1,58 @@
+---
+slug: '2023-03-02-gatsby-v5-to-v4'
+title: 'Gatsby v5 to v4 and MDX v1 to v2'
+crawlertitle: 'Gatsby v5 to v4 and MDX v1 to v2'
+summary: 'A walkthrough of issues encountered when migrating Gatsby v4 to v5 and MDX v1 to v2, and how to resolve them.'
+date: 2023-03-02 23:22:57 +0900
+categories: posts
+tags: ['git', 'github', 'bash', 'script']
+topic: web-frontend
+author: MartianLee
+---
+
+## Migration
+
+When migrating a Gatsby project from v4 to v5, the `@mdx-js/react` library also needs to be upgraded to v2.
+Multiple issues surfaced all at once during this process, and it was quite painful. I'm writing this down for anyone who runs into the same situation.
+
+## Problem 1
+
+Some MDX files contained strings that had been carried over from Jekyll, such as `{:toc}`.
+The parser threw errors that were hard to trace back to the actual cause.
+
+The errors were consistently things like `Invalid left-hand side in prefix operation. (1:2)` or `Could not parse expression with acorn`.
+At first I assumed the MDX parser wasn't reading the frontmatter correctly, since the error appeared in nearly every file.
+After searching around and tweaking the MDX files, I eventually discovered that using syntax that doesn't conform to MDX format simply causes an error at the very top of the file.
+
+[Reference post](https://paulie.dev/posts/2022/08/mdx-2-breaking-changes-and-gatsby-plugin-mdx-v4/)
+
+That article was a huge help in the end.
+
+It points out that curly braces `{` used in JSX syntax cannot be used as bare characters in MDX v2.
+
+Looking through the MDX files carefully, I found that was exactly the problem.
+Because the content had been migrated from Jekyll, strings like `{:toc}` or `{{ site.url }}` were embedded in almost every document.
+
+Once I removed all of those, the build completed without any errors.
+
+## Problem 2
+
+The `slug` field was no longer being picked up. Since page creation relied entirely on `slug`, this caused immediate errors.
+After weighing the options, I decided to manually add a `slug` frontmatter value to each file in order to preserve compatibility with existing URLs (SEO).
+
+```
+---
+...
+slug: '2023-03-02-gatsby-v5-to-v4'
+...
+---
+```
+
+I went through every file and added the original filename as the slug value, as shown above.
+It adds a bit of overhead when writing new posts, but I decided to stick with the existing format for now.
+
+## Closing Thoughts
+
+While troubleshooting, I went down all sorts of rabbit holes wondering whether the ESLint parser was at fault or whether I needed to dig into Babel.
+Fortunately I found the right lead and got everything resolved — the blog is deployed and running now. When you depend on tooling but don't fully understand it, upgrading versions can hit you like this.
+On the bright side, I feel like I know Gatsby a bit better now. After going through the pain once, I even started thinking: maybe it would be easier to just migrate the static site to Next.js instead. Ha.

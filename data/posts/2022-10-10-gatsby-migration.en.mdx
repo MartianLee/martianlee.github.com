@@ -1,0 +1,137 @@
+---
+title: 'Migrating My GitHub Blog from Jekyll to Gatsby'
+crawlertitle: 'Migrating My GitHub Blog from Jekyll to Gatsby'
+slug: '2022-10-10-gatsby-migration'
+summary: 'github Jekyll blog to Gatsby'
+date: 2022-10-10 12:47:22 +0900
+categories: posts
+tags: ['javascript', 'react', 'gatsby', 'jekyll', 'github blog', 'migration']
+author: MartianLee
+---
+
+# Blog Migration
+
+## Why Migrate?
+
+- I originally used Jekyll because it is the static site generator natively supported by GitHub, and it was easy to customize since I had been working with Ruby at the time. After the initial setup, though, I kept putting off any redesign or structural changes because the scope felt too large.
+- These days JavaScript is my primary language, so it felt natural to try a JavaScript-based CMS tool for the blog as well. Since I was already going to make changes, I decided to go all-in and switch both the language and the static generator itself. My choice was Gatsby.
+
+## Process
+
+→ Detailed installation steps are well-covered by others, so I will skip that here. This post focuses on my experience during the migration.
+
+### Installing and Configuring Gatsby
+
+```bash
+npm init gatsby
+```
+
+Referring to the [Gatsby official docs](<[https://www.gatsbyjs.com/docs/quick-start/](https://www.gatsbyjs.com/docs/quick-start/)>) makes the initial setup straightforward. I prefer TypeScript over vanilla JS, so I added the `-ts` option. Beyond that, you need to decide on the folder structure, various Gatsby plugins, and a styling library. For those decisions I recommend looking at this blog's repository or other setup posts.
+
+### Migrating the Files
+
+This is the core part. You need to understand Gatsby's architecture: you define the paths you want and add code to `gatsby-node` that creates pages for each file at those paths.
+
+```jsx
+const { data } = await graphql(`
+  query Posts {
+    allMdx(sort: { fields: frontmatter___date, order: DESC }) {
+      nodes {
+        slug
+        frontmatter {
+          title
+          author
+          categories
+          crawlertitle
+          date
+          layout
+          summary
+          tags
+        }
+      }
+    }
+  }
+`)
+const posts = data.allMdx.nodes
+posts.forEach(async (node, index) => {
+  const pagetitle = node.slug?.split('-').splice(3).join('-')
+  createPage({
+    path: `/posts/${pagetitle}`,
+    component: path.resolve('./src/templates/post-details.tsx'),
+    context: {
+      title: node.frontmatter.title,
+      prev: index == 0 ? null : posts[index - 1],
+      next: index == posts.length - 1 ? null : posts[index + 1],
+    },
+  })
+})
+```
+
+This is what that section looks like. For first-time Gatsby users, it can be tricky to figure out which values to pull, what to put in the template page, and what to pass into `createPage`'s context. Personally, I recommend following the Gatsby tutorial or copying a working blog example to get content loading first, then going back to the docs to understand what each value means.
+
+### Styling
+
+I chose emotion's styled components for styling. Tailwind and MUI were the main alternatives, but I personally dislike the look of long chains of utility classes in Tailwind, and my proficiency with it was not high enough. MUI's API style does not suit me either — the `sx={}` prop pattern in particular feels off. MUI does have the advantage of providing ready-made components, but once customization is needed, the developer experience ends up worse than building from scratch. That said, emotion also has its own friction: you have to create and name a new component for every styled element. Styling is subjective and every approach has trade-offs, so pick whatever fits your taste.
+
+### Deployment — Configuring GitHub Actions
+
+The moment we have all been waiting for. Easy Gatsby deployment is made possible by GitHub Actions, and I leaned heavily on action workflows that others had already built.
+
+`.github/workflows` file
+
+```yaml
+name: Gatsby Publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Gatsby Publish
+        uses: enriikke/gatsby-gh-pages-action@v2.2.0
+        with:
+          access-token: ${{ secrets.ACCESS_TOKEN }}
+          deploy-branch: gh-pages
+          gatsby-args: --prefix-paths
+```
+
+This is my deployment setup.
+
+The GitHub Actions trigger fires on a push to `main` or when a PR is merged into `main`.
+
+The job simply runs the `enriikke/gatsby-gh-pages-action@v2.2.0` action in an `ubuntu-latest` / Node 16 environment. Big thanks to enriikke for that action. The deployment output is pushed as a new commit to the `gh-pages` branch. All we need to do is set `gh-pages` as the deployment branch for the GitHub Pages site (configurable under repository Settings → Pages → Build and deployment → Branch).
+
+## Result
+
+The result is the blog you are reading right now. (This blog may change in the future, so consider this a snapshot as of October 9.)
+
+I did not capture any metrics from the old blog before migrating, so I have no baseline, but the old one had many images and hand-crafted HTML that was not great for accessibility. The new blog currently scores a perfect 100 on Lighthouse (which is not surprising given how little is on it yet). Data transferred on load is small and page speed is fast, which is good from a sustainability perspective as well. (The home page weighs under 1 MB!) I will inevitably add more features and visual polish over time, but I intend to keep the Lighthouse score high throughout.
+
+## Pain Points
+
+1. Learning Gatsby: Gatsby is more approachable than some other frameworks, but understanding its page-generation model still takes a fair amount of time. Even if you are comfortable with React, you might stumble if you have no experience with server-side rendering. On top of that, Gatsby uses GraphQL to query static assets, so you need at least a basic familiarity with GraphQL. Writing this out, the barrier to entry is higher than I initially thought.
+2. The Gatsby Plugin Ecosystem: This is an extension of the learning curve. To use features in Gatsby you generally reach for existing plugins — `gatsby-plugin-mdx` and similar — and getting those installed and configured in Gatsby is not always smooth. You add them to the `plugins` array in `gatsby-config`, and once you are used to it the level of customization is impressive, but it is genuinely confusing at first.
+3. Design: Designing a blog from scratch is hard. Even aiming for the bare minimum, I kept second-guessing myself — does this button belong here? The post readability is not great either. There are plenty of things I am not happy with, but at least the new codebase makes iteration far easier than before, so I take comfort in that.
+4. I was not able to fix the image paths from the old Jekyll posts, so images are currently broken. A regex-based `replace` should handle it well enough.
+
+## Closing Thoughts
+
+Looking back at everything, the barrier to entry really is high. I would hesitate to recommend this path to anyone who does not use JavaScript as their primary language. That said, the broad ecosystem of React and frontend libraries that you can bring into a personal blog is a compelling reason to try it, and above all — it is a lot of fun 🤣
+
+## Reference Links
+
+Detailed installation guide
+https://devfoxstar.github.io/web/github-pages-gatsby/
+
+https://hislogs.com/make-gatsby-blog/
+
+[Official Docs — How Gatsby Works with GitHub Pages](https://www.gatsbyjs.com/docs/how-to/previews-deploys-hosting/how-gatsby-works-with-github-pages/)

@@ -1,0 +1,69 @@
+---
+slug: '2024-01-21-firebase-functions-reference-problem'
+title: 'Object Reference Problem in Firebase Functions'
+crawlertitle: 'Object Reference Problem in Firebase Functions'
+summary: 'How I tracked down and fixed a bug caused by sharing the same object reference inside a Firebase Function.'
+date: 2024-01-21 00:29:14 +0900
+categories: posts
+tags: ['javascript', 'firebase', 'post']
+author: MartianLee
+---
+
+## Background
+
+I am currently building a side project on top of Firebase, delegating the entire backend — Firestore, Functions, Storage, and everything else — to the platform.
+
+While writing one of the Functions, I started running into a puzzling error.
+
+## The Problem
+
+The code below is part of a Firebase Function that updates a user's equipped-item data whenever they equip an item from their inventory. Can you spot what's wrong?
+
+```tsx
+export const EmptyEqquipedItems: EquippedItems = {
+  [ItemCategory.top]: null,
+  [ItemCategory.hat]: null,
+  [ItemCategory.shoes]: null,
+  [ItemCategory.hand]: null,
+  [ItemCategory.acc]: null,
+}
+
+const newEquippedItems: EquippedItems = EmptyEqquipedItems
+
+itemsQuery.forEach((doc) => {
+  const item: Item = doc.data() as any
+  newEquippedItems[item.category] = {
+    ...item,
+    id: doc.id,
+  }
+})
+console.log('4. equippedItems', newEquippedItems)
+```
+
+Looking at the code alone, nothing seems off. But the runtime behavior told a different story.
+
+Once equipped, items simply refused to go away. What was going on?
+
+**Symptom 1)** I equipped exactly one hat, yet the previously equipped items were still present — they never cleared.
+
+**Symptom 2)** Even after calling the "unequip all" path, `newEquippedItems` still contained the items I had equipped in an earlier invocation.
+
+The variable `newEquippedItems` was supposed to be empty and freshly initialized, yet it already held data. I had assigned `EmptyEqquipedItems` to it — so why were the old items still hanging around?
+
+## The Fix
+
+That was exactly what was happening.
+
+I don't know the precise details of which instance Firebase Functions runs on, but the behavior made it clear: the module-level `EmptyEqquipedItems` object was being mutated across invocations. The fix was to change one line:
+
+```tsx
+const newEquippedItems: EquippedItems = { ...EmptyEqquipedItems }
+```
+
+By spreading into a brand-new object instead of assigning the reference directly, the problem vanished instantly.
+
+`EmptyEqquipedItems` is declared separately in `models.ts` as what I assumed was a harmless constant. It never occurred to me that anything would ever be written into it. What was apparently happening is that a function instance, once built and loaded into memory, kept the same `EmptyEqquipedItems` object alive across calls — so every subsequent invocation was mutating and reading back the same shared object. The name said "Empty", but it was silently accumulating updates.
+
+## Takeaway
+
+Writing naive, imperative code on the server side can lead to completely unexpected behavior. From now on, I'll be careful about object reference bugs — thankfully, the affected logic was short enough that I could debug it quickly.

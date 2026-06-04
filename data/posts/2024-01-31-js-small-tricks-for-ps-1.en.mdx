@@ -1,0 +1,39 @@
+---
+slug: '2024-01-31-js-small-tricks-for-ps-1'
+title: 'JS Small Tricks for Problem Solving 1 - Iterating'
+crawlertitle: 'JS Small Tricks for Problem Solving 1 - Iterating'
+summary: 'Practical JavaScript iteration tricks for competitive programming — arrays, Set, Map, and for...of.'
+date: 2024-01-31 17:52:15 +0900
+categories: posts
+tags: ['javascript', 'problemsolving', 'post']
+topic: algorithms
+author: MartianLee
+---
+
+## Iteration in Array, Set, Map
+
+Iterating through an array with an index is straightforward. You can use the ES6 `forEach()` method:
+
+```tsx
+arr.forEach((item, index) => { ... });
+```
+
+However, when you need to return a value immediately while iterating over an object, breaking out of the parent function is not easy.
+
+In such cases, if you are willing to accept a small trade-off in time and space complexity, `Object.entries()` is a good option. Once you have the entries, you can iterate with a simple `for...of` loop.
+
+```tsx
+for (let [index, value] of iterable) {
+  console.log(index, value)
+}
+```
+
+`Map` and `Set` are also commonly used in problem-solving to reduce time complexity.
+
+For this reason, being comfortable with `for...in` and `for...of` when iterating over objects is essential.
+
+→ [Related docs: Difference between ( for... in ) and ( for... of ) statements?](https://stackoverflow.com/questions/29285897/difference-between-for-in-and-for-of-statements)
+
+## In Practice
+
+For example, suppose you want to collect all unique numbers from an array and then iterate over them. Just put all the numbers into a `Set` and iterate with `for...of`. That's all there is to it!

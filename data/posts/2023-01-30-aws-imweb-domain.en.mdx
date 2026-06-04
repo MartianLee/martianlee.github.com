@@ -1,0 +1,69 @@
+---
+title: 'Connecting Your Own Domain to an Imweb Landing Page via AWS Route 53'
+crawlertitle: 'Connecting Your Own Domain to an Imweb Landing Page via AWS Route 53'
+slug: '2023-01-30-aws-imweb-domain'
+summary: 'How to attach your own domain to an Imweb landing page'
+date: 2023-01-30 01:04:18 +0900
+categories: posts
+tags: ['infra', 'domain', 'aws', 'route53', '아임웹']
+author: MartianLee
+---
+
+**A walkthrough of connecting a root domain managed in AWS Route 53 to an Imweb site.**
+
+Imweb has quite a lot of documentation related to domains. The first result you usually find when searching is [this article](https://imweb.me/faq?mode=view&category=29&category2=34&idx=71418).
+
+In my case, however, I was already managing my domain in AWS and needed to route traffic to various services — so using Imweb's own nameservers was not an option. It is surprisingly hard to find guidance for this setup, and since I eventually got it working, I wrote it up for my future self and anyone else who runs into the same situation.
+
+If you are using AWS, [refer directly to this document](https://imweb.me/faq?mode=view&category=29&category2=34&idx=71739).
+
+Below I walk through the steps in order, as a supplement to the official documentation.
+
+(This assumes AWS nameservers are already connected in Route 53.)
+
+## 1. Register the domain in Imweb
+
+Go to **Imweb Admin → Settings → Domain Purchase & Configuration**.
+
+Click the **[Purchase/Connect Domain]** button. Enter your domain and click **Fetch Current Nameservers Now**.
+
+Imweb will detect the nameservers, then display a **[Verify Ownership]** button confirming that you own those nameservers.
+
+Click **Verify Ownership** right away.
+
+## 2. Add the verification CNAME record in AWS
+
+After clicking the verify button and waiting a short while (roughly 2–5 minutes in practice), you will see a message like:
+
+> A verification record has been issued to confirm domain ownership. Please register the verification record with your nameserver within 30 minutes.
+
+Now go to Route 53 and add the CNAME record. The record is provided in the form of a record name, type, and value.
+
+Example:
+
+```html
+Record name sadfasdfasdfasdf.app.stepping.co.kr. Record type CNAME Record value
+asdfsadfasdfasdfasdf.asdfasdfasd.acm-validations.aws.
+```
+
+## 3. Point the A record to the Imweb landing page address
+
+Once nameserver ownership is confirmed (about 5 minutes in practice), you will see a verification success message along with an address:
+
+```
+Verification complete
+
+You can connect to the domain below using a CNAME from your nameserver. You may also switch to the assigned nameserver at any time.
+
+**asdfasdfasdf.cloudfront.net**
+```
+
+## 4. Verify the domain is connected correctly
+
+Confirm everything is working — and you are done!
+
+### Closing thoughts
+
+P.S. If something is not working, make active use of Imweb's support chat feature.
+
+P.S2. In the next post I will cover how to configure a subdomain in AWS Route 53 to point to Imweb.
