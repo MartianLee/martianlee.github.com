@@ -353,6 +353,24 @@ input:-webkit-autofill:focus {
   @apply my-6 w-full;
 }
 
+.reading-measure {
+  @apply mx-auto max-w-[820px];
+}
+.reading-measure .prose {
+  font-family: var(--font-family-serif);
+  font-size: 20px;
+}
+.reading-measure .prose p,
+.reading-measure .prose li {
+  @apply leading-[1.72];
+}
+.reading-measure .prose h1,
+.reading-measure .prose h2,
+.reading-measure .prose h3,
+.reading-measure .prose h4 {
+  font-family: var(--font-family-sans);
+}
+
 /* ========================================
    Knowledge IDE Theme
    ======================================== */
