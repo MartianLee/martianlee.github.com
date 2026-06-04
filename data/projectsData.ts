@@ -1,5 +1,7 @@
 interface Project {
   title: string
+  slug: string
+  kind: string
   description: string
   category: 'game' | 'non-game'
   href?: string
@@ -15,6 +17,8 @@ interface Project {
 const projectsData: Project[] = [
   {
     title: 'More Munch',
+    slug: 'more-munch',
+    kind: 'Web Service',
     description:
       'A lunch-recommendation service for office workers. It auto-collects nearby restaurants (discoverable via the OpenClaw skill-optimized API) and suggests a fresh lunch every day based on your visit history and ratings.',
     category: 'non-game',
@@ -33,6 +37,8 @@ const projectsData: Project[] = [
   },
   {
     title: 'CheerCat',
+    slug: 'cheercat',
+    kind: 'Mobile App',
     description:
       'A daily journaling app that builds the habit of praising yourself every day — a small ritual for a positive mindset.',
     category: 'non-game',
@@ -43,6 +49,8 @@ const projectsData: Project[] = [
   },
   {
     title: 'Earth Invaders',
+    slug: 'earth-invaders',
+    kind: 'Arcade Game',
     description:
       'A Phaser3 arcade shooter. Fend off the aliens invading Earth, classic arcade style.',
     category: 'game',
@@ -55,6 +63,8 @@ const projectsData: Project[] = [
   },
   {
     title: 'Fish Tank Simulator',
+    slug: 'fish-tank-simulator',
+    kind: 'Idle Game',
     description:
       'A pixel-art idle productivity tool that blends a Pomodoro timer with an aquarium sim. Complete focus sessions to earn fish eggs, collect 12+ species, and grow your own tank.',
     category: 'game',
@@ -67,6 +77,8 @@ const projectsData: Project[] = [
   },
   {
     title: 'Shoulder Check',
+    slug: 'shoulder-check',
+    kind: 'Web App',
     description:
       'A web app to calculate and track bag weight — a smart bag-weight checker for healthier shoulders.',
     category: 'non-game',
@@ -77,6 +89,8 @@ const projectsData: Project[] = [
   },
   {
     title: 'First Defense',
+    slug: 'first-defense',
+    kind: 'Tower Defense',
     description:
       'A 2.5D roguelite tower-defense prototype built in Godot 4.6, designed around unit combos, tag synergies, real-time placement, and meta-progression.',
     category: 'game',
@@ -90,6 +104,8 @@ const projectsData: Project[] = [
   },
   {
     title: 'Side Project Tracker',
+    slug: 'side-project-tracker',
+    kind: 'macOS App',
     description:
       'A macOS desktop app that tracks all your side projects in one window. For each GitHub repo it surfaces release stage, staleness detection, interest tags, and mood-matching, using the authenticated gh CLI and local git as data sources. Ships with an English/Korean UI.',
     category: 'non-game',

@@ -11,14 +11,13 @@ export default function Projects() {
   const renderCards = (items: (typeof projectsData)[number][]) =>
     items.map((d) => (
       <Card
-        key={d.title}
+        key={d.slug}
         title={d.title}
         description={d.description}
-        href={d.href}
+        slug={d.slug}
+        kind={d.kind}
+        imgSrc={d.imgSrc}
         techStack={d.techStack}
-        aiTools={d.aiTools}
-        demo={d.demo}
-        github={d.github}
       />
     ))
 
