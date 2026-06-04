@@ -1,7 +1,7 @@
 # i18n Framework — Bilingual Posts (EN default / KO toggle)
 
 - **Date:** 2026-06-04
-- **Status:** Design approved (brainstorming), pending implementation plan
+- **Status:** Implemented on branch `i18n/framework` (2026-06-04). Verified end-to-end via a temporary `.en.mdx` sample (canonical EN, `/ko` KO, hreflang, sitemap, single-listing) then removed; baseline (no translations) unchanged.
 - **Scope of this spec:** The bilingual **framework** only. Actually translating the ~80 Korean posts is a **separate follow-up sub-project** (subagent-driven, phased).
 - **Builds on:** the merged "Bold Editorial" redesign.
 
