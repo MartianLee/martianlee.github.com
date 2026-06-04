@@ -1,4 +1,5 @@
 import Link from '@/components/Link'
+import PostLink from '@/components/PostLink'
 import { formatDate } from 'pliny/utils/formatDate'
 import siteMetadata from '@/data/siteMetadata'
 import { CoreContent } from 'pliny/utils/contentlayer'
@@ -26,9 +27,9 @@ export default function WritingSection({ posts }: { posts: CoreContent<Blog>[] }
               {post.tags?.slice(0, 2).join(' / ')}
             </div>
             <h3 className="mt-1.5 text-2xl leading-tight font-bold tracking-tight">
-              <Link href={`/${post.path}`} className="hover:text-accent transition-colors">
+              <PostLink slug={post.slug} className="hover:text-accent transition-colors">
                 {post.title}
-              </Link>
+              </PostLink>
             </h3>
             {post.summary && (
               <p className="text-muted mt-2 max-w-[64ch] font-serif">{post.summary}</p>
@@ -39,12 +40,12 @@ export default function WritingSection({ posts }: { posts: CoreContent<Blog>[] }
       <div className="mt-8">
         {rest.map((post) => (
           <div key={post.slug} className="list-row items-baseline">
-            <Link
-              href={`/${post.path}`}
+            <PostLink
+              slug={post.slug}
               className="hover:text-accent text-[17px] font-semibold transition-colors"
             >
               {post.title}
-            </Link>
+            </PostLink>
             <span className="text-muted shrink-0 font-mono text-xs">
               {formatDate(post.date, siteMetadata.locale)}
             </span>

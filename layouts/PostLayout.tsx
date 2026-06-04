@@ -3,6 +3,7 @@ import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog, Authors } from '.contentlayer/generated'
 import Comments from '@/components/Comments'
 import Link from '@/components/Link'
+import PostLink from '@/components/PostLink'
 import SectionContainer from '@/components/SectionContainer'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
@@ -14,8 +15,8 @@ const editUrl = (path: string) => `${siteMetadata.siteRepo}/blob/main/data/${pat
 interface LayoutProps {
   content: CoreContent<Blog>
   authorDetails: CoreContent<Authors>[]
-  next?: { path: string; title: string }
-  prev?: { path: string; title: string }
+  next?: { path: string; slug: string; title: string }
+  prev?: { path: string; slug: string; title: string }
   children: ReactNode
 }
 
@@ -109,22 +110,22 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
           {(prev || next) && (
             <div className="mt-7 flex justify-between gap-5">
               <div>
-                {prev?.path && (
+                {prev?.slug && (
                   <>
                     <div className="text-muted font-mono text-[11px]">← PREVIOUS</div>
-                    <Link href={`/${prev.path}`} className="hover:text-accent font-semibold">
+                    <PostLink slug={prev.slug} className="hover:text-accent font-semibold">
                       {prev.title}
-                    </Link>
+                    </PostLink>
                   </>
                 )}
               </div>
               <div className="text-right">
-                {next?.path && (
+                {next?.slug && (
                   <>
                     <div className="text-muted font-mono text-[11px]">NEXT →</div>
-                    <Link href={`/${next.path}`} className="hover:text-accent font-semibold">
+                    <PostLink slug={next.slug} className="hover:text-accent font-semibold">
                       {next.title}
-                    </Link>
+                    </PostLink>
                   </>
                 )}
               </div>
