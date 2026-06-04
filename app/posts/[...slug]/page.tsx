@@ -1,9 +1,9 @@
 import 'katex/dist/katex.css'
 import { allCoreContent } from 'pliny/utils/contentlayer'
 import { Metadata } from 'next'
-import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
-import { canonicalBlogs, postBySlug, hasBothLanguages } from '@/lib/posts'
+import { canonicalBlogs, postBySlug } from '@/lib/posts'
+import { buildPostMetadata } from '@/lib/postMeta'
 import PostView from '@/components/PostView'
 
 export async function generateMetadata(props: {
@@ -13,31 +13,7 @@ export async function generateMetadata(props: {
   const slug = decodeURI(slugArr.join('/'))
   const post = postBySlug(slug)
   if (!post) return
-  const both = hasBothLanguages(slug)
-  return {
-    title: post.title,
-    description: post.summary,
-    keywords: post.tags,
-    alternates: both
-      ? {
-          languages: {
-            en: `${siteMetadata.siteUrl}/posts/${slug}`,
-            ko: `${siteMetadata.siteUrl}/ko/posts/${slug}`,
-            'x-default': `${siteMetadata.siteUrl}/posts/${slug}`,
-          },
-        }
-      : undefined,
-    openGraph: {
-      title: post.title,
-      description: post.summary,
-      siteName: siteMetadata.title,
-      locale: post.language === 'en' ? 'en_US' : 'ko_KR',
-      type: 'article',
-      url: './',
-      images: [siteMetadata.socialBanner],
-    },
-    twitter: { card: 'summary_large_image', title: post.title, description: post.summary },
-  }
+  return buildPostMetadata(post)
 }
 
 export const generateStaticParams = async () =>

@@ -4,8 +4,10 @@ import { sortPosts } from 'pliny/utils/contentlayer'
 
 /** One doc per slug, English preferred, sorted newest-first. */
 export function canonicalBlogs(): Blog[] {
+  const isProduction = process.env.NODE_ENV === 'production'
+  const source = isProduction ? allBlogs.filter((p) => !p.draft) : allBlogs
   const bySlug = new Map<string, Blog>()
-  for (const p of allBlogs) {
+  for (const p of source) {
     const existing = bySlug.get(p.slug)
     if (!existing || p.language === 'en') bySlug.set(p.slug, p)
   }

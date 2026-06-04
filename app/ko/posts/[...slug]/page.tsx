@@ -1,10 +1,10 @@
 import 'katex/dist/katex.css'
 import { allCoreContent } from 'pliny/utils/contentlayer'
 import { Metadata } from 'next'
-import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
 import { allBlogs } from '.contentlayer/generated'
-import { canonicalBlogs, postBySlug, hasBothLanguages } from '@/lib/posts'
+import { canonicalBlogs, postBySlug } from '@/lib/posts'
+import { buildPostMetadata } from '@/lib/postMeta'
 import PostView from '@/components/PostView'
 
 export async function generateMetadata(props: {
@@ -14,24 +14,15 @@ export async function generateMetadata(props: {
   const slug = decodeURI(slugArr.join('/'))
   const post = postBySlug(slug, 'ko')
   if (!post) return
-  const both = hasBothLanguages(slug)
-  return {
-    title: post.title,
-    description: post.summary,
-    alternates: both
-      ? {
-          languages: {
-            en: `${siteMetadata.siteUrl}/posts/${slug}`,
-            ko: `${siteMetadata.siteUrl}/ko/posts/${slug}`,
-            'x-default': `${siteMetadata.siteUrl}/posts/${slug}`,
-          },
-        }
-      : undefined,
-  }
+  return buildPostMetadata(post)
 }
 
-export const generateStaticParams = async () =>
-  allBlogs.filter((p) => p.language === 'ko').map((p) => ({ slug: p.slug.split('/') }))
+export const generateStaticParams = async () => {
+  const isProduction = process.env.NODE_ENV === 'production'
+  return allBlogs
+    .filter((p) => p.language === 'ko' && (!isProduction || !p.draft))
+    .map((p) => ({ slug: p.slug.split('/') }))
+}
 
 export default async function Page(props: { params: Promise<{ slug: string[] }> }) {
   const { slug: slugArr } = await props.params
