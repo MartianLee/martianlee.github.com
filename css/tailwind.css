@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-family-sans: var(--font-space-grotesk), 'Pretendard', ui-sans-serif, system-ui, sans-serif;
-  --font-family-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-family-serif: var(--font-newsreader), Georgia, serif;
+  --font-family-sans: var(--font-space-grotesk), '42dot Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: var(--font-jetbrains), '42dot Sans', ui-monospace, monospace;
+  --font-family-serif: var(--font-newsreader), '42dot Sans', Georgia, serif;
 
   /* Rust accent ramp (replaces Professional Blue) */
   --color-primary-50: #fef6f0;
