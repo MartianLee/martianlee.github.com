@@ -1,0 +1,90 @@
+---
+title: 'LLM Math Basics 1: Vectors and the Dot Product'
+date: '2026-04-17'
+tags: ['llm', 'math', 'vector', 'dot-product', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'A walkthrough of vectors and the dot product — with notation, explanations, and examples — covering what you need to know before reading LLM papers.'
+---
+
+## Why Does This Matter
+
+Vectors and dot products appear in almost every LLM paper.
+In particular, the Transformer attention score starts from the dot product between the Query and the Key.
+
+After reading this note, the following sentence will feel a lot less opaque.
+
+```txt
+Attention scores are computed by dot products between queries and keys.
+```
+
+## Core Concept and Notation
+
+Let's say we have two vectors `a` and `b`.
+
+```txt
+a = [a1, a2, a3]
+b = [b1, b2, b3]
+
+a · b = a1*b1 + a2*b2 + a3*b3
+```
+
+Generalizing, this becomes:
+
+```txt
+a · b = sum_i a_i * b_i
+```
+
+In Transformer attention, this typically appears as:
+
+```txt
+score = Q · K
+```
+
+## First-Pass Explanation: What the Formula Is Saying
+
+The dot product multiplies the numbers at each matching position of two vectors, then sums all the products.
+
+The key intuition is this:
+
+- When two vectors point in similar directions, the dot product is large.
+- When the vectors are unrelated in direction, the dot product is small.
+- When they point in opposite directions, the dot product can be negative.
+
+In an LLM, words are represented as vectors.
+The dot product therefore acts like a relevance score — it measures how well two word representations fit together in the current context.
+
+## A Simple Example
+
+Suppose a sentence contains the words `cat`, `milk`, and `car`.
+The current token is `cat`, and the model needs to decide which word to attend to.
+
+- If the vector for `cat` and the vector for `milk` point in similar directions, the dot product score is high.
+- If the vector for `cat` and the vector for `car` point in less similar directions, the dot product score is low.
+
+Attention can then lean more heavily on `milk`.
+
+To be precise, this is not a hand-crafted rule — training adjusts the model so that the vector layout emerges naturally from data.
+
+## How to Read It When You See It in a Paper
+
+When you encounter `QK^T` in a paper, read it like this:
+
+```txt
+Compute the dot product between every Query and every Key to build a relevance table.
+```
+
+For example, with 4 tokens, comparing 4 Queries against 4 Keys produces a `4 x 4` score table.
+Each cell of that table is a value close to "how much should this token attend to that token."
+
+## Common Misconceptions
+
+- The dot product does not exclusively encode semantic similarity.
+- In a learned vector space, information about syntax, position, and role can also be mixed in.
+- The raw dot product scores do not become the final attention weights directly — they are typically passed through softmax first.
+
+## Minimum Checkpoints
+
+- A vector is a collection of numbers that encodes features.
+- The dot product turns the degree of alignment between two vectors into a scalar score.
+- The first step of attention is building a score table from the dot products of Q and K.

@@ -1,0 +1,104 @@
+---
+title: 'LLM Learning Basics: Masked Language Model'
+date: '2026-04-18'
+tags: ['llm', 'masked-language-model', 'mlm', 'bert', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: "Explains BERT's core training objective — the Masked Language Model — with formulas, commentary, and examples."
+---
+
+## Why Does This Matter
+
+BERT does not train solely by predicting the next token the way GPT does.
+Instead, it masks part of the input sentence and learns to recover the masked tokens using context from both sides.
+
+After reading this note, the following sentence will feel far less opaque.
+
+```txt
+We pre-train BERT using a masked language model objective.
+```
+
+## The Core Concept and Formula
+
+Consider an input token sequence.
+
+```txt
+x = [x1, x2, x3, ..., xn]
+```
+
+Let `M` denote the set of positions selected for masking.
+MLM trains the model to predict the original token at each selected position.
+
+```txt
+L_MLM = - sum_{i in M} log P(x_i | x_with_masks)
+```
+
+In the BERT paper, 15% of all WordPiece tokens are chosen as prediction targets.
+Each selected token is then replaced according to the following rule.
+
+```txt
+80%: replaced with [MASK]
+10%: replaced with a random other token
+10%: left unchanged
+```
+
+## First-Pass Commentary: What the Formula Is Saying
+
+MLM is a fill-in-the-blank task.
+
+The model must assign high probability to the correct token at each masked position.
+Assigning low probability to the correct token increases the cross-entropy loss.
+
+The key insight is that the model can use both left-context and right-context simultaneously.
+
+```txt
+I drank [MASK] in the morning.
+```
+
+In this case, the model sees `I drank` on the left and `in the morning` on the right together, and can predict something like `coffee`.
+
+## A Simple Analogy
+
+Think of a grade-school reading comprehension exercise.
+
+```txt
+Cheolsu opened his ___ because it was raining.
+```
+
+The most likely answer is `umbrella`.
+
+Looking only at the left side — `because it was raining` — requires guesswork.
+Including the right side — `opened his`... — makes the answer much more certain.
+
+BERT learns representations that exploit both sides of the context in exactly this way.
+
+## How to Read the Paper When You Encounter MLM Again
+
+When you see MLM in the BERT paper, read it like this.
+
+```txt
+Rather than generating the next word, the training objective masks some words
+and recovers them using context from both directions.
+```
+
+Because of this objective, BERT can incorporate both left-context and right-context simultaneously when building the representation of each token.
+
+There is a downside, however.
+
+```txt
+[MASK] tokens do not normally appear during fine-tuning or real-world inference.
+```
+
+The 80/10/10 rule is BERT's attempt to reduce this train-inference mismatch.
+
+## Common Misconceptions
+
+- MLM is not the same as a full-sentence autoencoder: only the selected subset of tokens is predicted.
+- Only `[MASK]` positions matter — this is not quite right. Because the model cannot tell in advance which tokens will be prediction targets, it is forced to maintain contextually informed representations for every token.
+- MLM is a different objective from generative chatbot training. BERT is not fundamentally structured to generate long sequences of tokens autoregressively.
+
+## Minimum Checkpoint
+
+- MLM masks a subset of tokens and trains the model to recover the originals.
+- BERT uses this objective to learn bidirectional contextual representations.
+- The 15% selection rate and the 80/10/10 replacement rule are design choices intended to reduce the `[MASK]` train-inference mismatch.

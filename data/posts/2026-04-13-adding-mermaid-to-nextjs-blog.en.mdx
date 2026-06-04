@@ -1,0 +1,166 @@
+---
+title: 'Adding Mermaid Diagram Support to a Next.js Blog'
+date: 2026-04-13 18:00:00 +0900
+tags: ['nextjs', 'mermaid', 'contentlayer', 'rehype', 'blog']
+summary: 'How to add build-time Mermaid diagram rendering with rehype-mermaid to a Next.js + Contentlayer2 blog, with conditional loading to keep CI build times lean.'
+author: MartianLee
+---
+
+_This article is mostly written by Claude Code_
+
+## Background
+
+Diagrams are essential for explaining architectures and flows in a technical blog. Rather than opening an image editor every time, I wanted to write diagrams as text directly inside Markdown.
+
+```mermaid
+graph LR
+    A[Markdown 작성] --> B[Mermaid 코드 블록]
+    B --> C[빌드 타임 SVG 변환]
+    C --> D[블로그에 렌더링]
+```
+
+## Tech Stack
+
+The content pipeline for this blog looks like this:
+
+```mermaid
+flowchart TD
+    MDX[".mdx 파일"] --> CL["Contentlayer2"]
+    CL --> RP["remark/rehype 플러그인 체인"]
+    RP --> |remarkGfm| GFM["GitHub Flavored Markdown"]
+    RP --> |remarkMath| MATH["수식 처리"]
+    RP --> |rehypePrismPlus| CODE["코드 하이라이팅"]
+    RP --> |rehypeMermaid| MERMAID["Mermaid → SVG"]
+    GFM & MATH & CODE & MERMAID --> NEXT["Next.js 정적 페이지"]
+```
+
+## Why rehype-mermaid?
+
+There are two main approaches to rendering Mermaid diagrams:
+
+| Approach                                  | Pros                                    | Cons                           |
+| ----------------------------------------- | --------------------------------------- | ------------------------------ |
+| **Client-side rendering** (mermaid.js)    | No Playwright required                  | ~800 KB increase in JS bundle  |
+| **Build-time rendering** (rehype-mermaid) | No client-side JS, SVG inlined directly | Requires Playwright + Chromium |
+
+Since this blog already uses a rehype plugin chain, `rehype-mermaid` is a natural fit.
+
+## Installation
+
+```bash
+yarn add rehype-mermaid playwright
+npx playwright install chromium
+```
+
+`rehype-mermaid` uses `mermaid-isomorphic` under the hood, which runs mermaid.js inside a headless browser to produce SVG output. This is necessary because mermaid.js itself depends on browser DOM APIs.
+
+```mermaid
+sequenceDiagram
+    participant B as 빌드 프로세스
+    participant P as Playwright (Chromium)
+    participant M as mermaid.js
+
+    B->>P: mermaid 코드 블록 전달
+    P->>M: 브라우저 내에서 실행
+    M-->>P: SVG 반환
+    P-->>B: SVG를 MDX에 삽입
+```
+
+## The Key: Conditional Loading
+
+The challenge lies in CI environments. Installing Playwright Chromium on every build — even when no post contains a Mermaid diagram — wastes build time unnecessarily.
+
+**Solution:** Scan the post files at build time and load the plugin only when a ` ```mermaid ` block is actually found.
+
+```mermaid
+flowchart TD
+    START["빌드 시작"] --> SCAN["data/posts/*.mdx 스캔"]
+    SCAN --> CHECK{"mermaid 블록 존재?"}
+    CHECK -->|Yes| LOAD["rehype-mermaid 동적 import"]
+    LOAD --> RENDER["SVG 변환"]
+    CHECK -->|No| SKIP["플러그인 스킵"]
+    SKIP --> BUILD["Next.js 빌드"]
+    RENDER --> BUILD
+```
+
+### Core Code in contentlayer.config.ts
+
+````typescript
+import { readFileSync, readdirSync } from 'fs'
+
+function hasMermaidBlocks(): boolean {
+  const postsDir = path.join(root, 'data', 'posts')
+  try {
+    return readdirSync(postsDir).some((file) => {
+      if (!file.endsWith('.mdx')) return false
+      return readFileSync(path.join(postsDir, file), 'utf-8').includes('```mermaid')
+    })
+  } catch {
+    return false
+  }
+}
+
+// Lazy-load: contentlayer's esbuild targets es2020,
+// which doesn't support top-level await, so we wrap it in a function
+function lazyRehypeMermaid() {
+  let plugin: any = null
+  return () => {
+    return async (tree: any, file: any) => {
+      if (!plugin) {
+        const mod = await import('rehype-mermaid')
+        plugin = mod.default({ strategy: 'inline-svg' })
+      }
+      return plugin(tree, file)
+    }
+  }
+}
+
+const useMermaid = hasMermaidBlocks()
+
+// Conditionally append to the rehypePlugins array
+rehypePlugins: [
+  // ... existing plugins
+  ...(useMermaid ? [lazyRehypeMermaid()] : []),
+  [rehypePrismPlus, { defaultLanguage: 'js', ignoreMissing: true }],
+]
+````
+
+### GitHub Actions CI
+
+````yaml
+- name: Check for mermaid diagrams
+  id: check-mermaid
+  run: |
+    if grep -r '```mermaid' data/posts/ >/dev/null 2>&1; then
+      echo "found=true" >> $GITHUB_OUTPUT
+    else
+      echo "found=false" >> $GITHUB_OUTPUT
+    fi
+- name: Get Playwright version
+  if: steps.check-mermaid.outputs.found == 'true'
+  id: playwright-version
+  run: echo "version=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+- name: Cache Playwright browsers
+  if: steps.check-mermaid.outputs.found == 'true'
+  uses: actions/cache@v4
+  id: playwright-cache
+  with:
+    path: ~/.cache/ms-playwright
+    key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+- name: Install Playwright Chromium (for mermaid rendering)
+  if: steps.check-mermaid.outputs.found == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+  run: npx playwright install --with-deps chromium
+- name: Install Playwright deps only (cached browsers)
+  if: steps.check-mermaid.outputs.found == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+  run: npx playwright install-deps chromium
+````
+
+## Results
+
+| Scenario                                | CI Behavior                                                             |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| **No** mermaid blocks                   | Playwright skipped — no change in build time                            |
+| mermaid blocks **present** (cache miss) | Full Playwright + Chromium install (+30–40 seconds)                     |
+| mermaid blocks **present** (cache hit)  | Browser binary (112 MB) served from cache, only OS deps installed (~5s) |
+
+With this setup, simply writing a ` ```mermaid ` code block in any post is enough — SVG diagrams are generated automatically at build time.
