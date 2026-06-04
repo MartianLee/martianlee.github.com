@@ -1,0 +1,33 @@
+---
+title: 'Getting Started with VueJS Frontend Framework'
+crawlertitle: 'Frontend Framework: Getting Started with VueJS'
+slug: '2017-09-09-first-vue'
+summary: 'React Book Recommend'
+date: 2017-09-09 19:08:16 +0900
+categories: posts
+tags: ['front-end']
+author: MartianLee
+---
+
+In this post I want to walk through how to get started with VueJS, one of the most popular frontend frameworks right now. I will also cover how I am applying it in the project I am currently working on.
+
+A bit of background on me: I started learning programming by solving problems in C, and it was my dislike of staring at a black terminal screen that led me to pursue frontend development.
+
+I read a couple of introductory books on HTML, CSS, and JavaScript, and eventually built enough skill to create my own personal blog. After that I briefly dabbled in React — picking up some ES6 and Redux along the way — before giving up on it. I have now been learning and developing with VueJS at my current startup for about four months. This post is aimed at readers who have a basic understanding of HTML, CSS, and JavaScript but are not particularly comfortable with the command line.
+
+My first impression of VueJS was: "This is beautiful!"
+
+Unlike React, the official VueJS website is strikingly well-designed and clearly organized. When I started learning I did not bother buying a book (and frankly there were not many available at the time); I simply began by following the official examples. One thing I found particularly interesting is that the official documentation openly compares VueJS against React and Angular, explaining what makes Vue a good choice.
+
+As everyone knows, roughly 80% of learning something new in development is just getting the environment set up.
+
+Installation instructions can be found at https://nodejs.org/ko/download/package-manager/.
+
+My Dockerfile looked like this:
+
+```bash
+RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
+RUN apt-get install -y nodejs
+```
+
+Decide on the Node version you want to use. There are roughly versions 6, 7, and 8 to choose from — just close your eyes and pick one. Higher means more recent, of course, but for initial development the differences between them should not matter much.

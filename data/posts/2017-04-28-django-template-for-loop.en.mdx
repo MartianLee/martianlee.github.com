@@ -1,0 +1,47 @@
+---
+title: 'Django Template Numeric For Loop'
+crawlertitle: 'Django Template Numeric For Loop'
+slug: '2017-04-28-django-template-for-loop'
+summary: 'Django Template Numeric For Loop'
+date: 2017-04-28 02:38:15 +0900
+categories: posts
+tags: ['develop']
+author: MartianLee
+---
+
+I was trying to implement something similar to a bingo game in Django. To do that, I needed to know the board size and render an HTML table of size×size cells. The only Django template `for` loop I knew at the time was one that iterates automatically over the elements of a given object. So I did some digging...
+
+```django
+...
+render_to_response('foo.html', \{..., 'range': range(10), ...\}, ...)
+...
+and in the template:
+
+\{% for i in range %\}
+...
+\{% endfor %\}
+
+\{% endhighlight %\}
+```
+
+There is [a way to pass a range from the view][link1].
+
+Or, if you just want to repeat a fixed number of times:
+
+```
+\{% highlight html+django %\}
+
+\{% for i in "1234567" %\}
+<option value=\{\{i\}\}> \{\{i\}\}</option>
+\{% endfor %\}
+
+\{% endhighlight %\}
+```
+
+There is also [a way to use a string like "1234567"][link2].
+
+A page actually built with a loop!!
+![bingo](\{\{ site.images \}\}/bingo.jpg)
+
+[link1]: http://stackoverflow.com/questions/1107737/numeric-for-loop-in-django-templates
+[link2]: http://stackoverflow.com/questions/5242866/how-to-loop-7-times-in-the-django-templates

@@ -1,0 +1,131 @@
+---
+title: 'Samsung Codeground Practice Problem: Dart Game Solution'
+crawlertitle: 'Samsung Codeground Practice Problem: Dart Game Solution'
+slug: '2019-04-11-dart-game'
+summary: 'A walkthrough of the Samsung Codeground practice problem — Dart Game.'
+date: 2019-04-11 19:03:48 +0900
+categories: posts
+tags: ['algorithm']
+author: MartianLee
+---
+
+## Problem Summary
+
+You are given a dartboard laid out exactly like a real one — a BULL at the center, surrounded by Triple, Single, Double rings. Given the radii of each ring (with the board center at the origin 0,0) and the coordinates where each dart lands, compute the total score.
+
+I had to re-read it twice because I could hardly believe it, but yes — this problem literally asks you to implement a real dartboard. lol. The board looks like this:
+![img1](/static/post-images/190411_dart-game/dart.png)
+
+For the full problem statement, visit [Codeground Practice Problems][codeground] and search for "Dart Game".
+
+## Solution
+
+Two pieces of math do all the heavy lifting: the **Pythagorean theorem** and **arctangent**. The Pythagorean theorem is straightforward, but the mention of trigonometry may make some heads spin — arctangent is simply the inverse function of tangent.
+
+### Solution Steps
+
+1. Compute the distance of each dart from the origin.
+2. Use that distance to determine which ring the dart landed in: BULL, Triple, Single, Double, or Out.
+3. Compute the angle of the dart relative to the origin.
+4. Determine which scoring segment the dart falls in.
+5. Add the result to the total score.
+
+### Pythagorean Theorem
+
+As everyone knows: `a^2 + b^2 = c^2`.
+
+This is used to calculate the distance from the center of the board to each dart position.
+
+### Arctangent
+
+```
+#include <math.h>
+
+double getDegree(double x, double y) {
+	double result = atan2(y, x) * 180 / 3.141592;
+	if (result < 0)
+		return 360 + result;
+	return result;
+}
+```
+
+`getDegree` determines how many degrees the dart is rotated from the origin. It uses `atan2()` from `math.h`, which returns the angle in radians, so we multiply by `180 / π` to convert to degrees. I used the π approximation 3.141592 straight from memory. Since dart coordinates are bounded within −30000 to 30000, the precision is more than sufficient.
+
+## Full Source
+
+```
+#include <iostream>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+using namespace std;
+
+int Answer;
+int val[22] = { 6, 13, 4, 18, 1, 20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6 };
+
+double getDegree(double x, double y) {
+	double result = atan2(y, x) * 180 / 3.141592;
+	if (result < 0)
+		return 360 + result;
+	return result;
+}
+
+int main(int argc, char** argv)
+{
+	int T, test_case;
+
+	cin >> T;
+	for (test_case = 0; test_case < T; test_case++)
+	{
+
+		Answer = 0;
+
+		int a, b, c, d, e;
+		cin >> a >> b >> c >> d >> e;
+		int n;
+		cin >> n;
+		double x, y;
+		for (int i = 1; i <= n; i++) {
+			cin >> x >> y;
+			double degree = getDegree(x, y);
+			double eval = -9;
+			int lengthSquare = x * x + y * y;
+			for (int j = 0; j <= 20; j++) {
+				if (eval <= degree && degree < eval + 18) {
+					if (lengthSquare <= a * a) {
+						Answer += 50;
+					}
+					else if (lengthSquare <=  b *b) {
+						Answer += val[j];
+					}
+					else if (lengthSquare <= c * c) {
+						Answer += val[j] * 3;
+					}
+					else if (lengthSquare <= d * d) {
+						Answer += val[j];
+					}
+					else if (lengthSquare <= e * e) {
+						Answer += val[j] * 2;
+					}
+					break;
+				}
+				eval += 18;
+			}
+		}
+
+		cout << "Case #" << test_case + 1 << endl;
+		cout << Answer << endl;
+	}
+
+	return 0;
+}
+```
+
+- For convenience, the value 6 (the segment that straddles the 0°/360° boundary) is stored at both ends of the `val` array.
+- Squared distances are compared directly — there is no need to take the square root, since the comparison holds either way.
+
+## Conclusion
+
+This problem brings back a long-forgotten arctangent function and demands careful attention to boundary checks. One small slip in the middle and the answer goes wrong. It was a good excuse to actually use `atan2` in practice, and once everything came together, it genuinely felt like building a real dart game — surprisingly satisfying.
+
+[codeground]: https://www.codeground.org/practice
