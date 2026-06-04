@@ -1,0 +1,68 @@
+---
+title: 'Setting a Default Value for AngularJS Form Binding Input'
+crawlertitle: 'Setting a Default Value for AngularJS Form Binding Input'
+slug: '2019-06-12-angular-form'
+summary: 'How to set a default option value when using AngularJS forms.'
+date: 2019-06-12 20:16:32 +0900
+categories: posts
+tags: ['develop', 'frontend']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img1](/static/post-images/190612_angular_form/form.png)
+
+- Table of Contents
+
+## Problem
+
+When using AngularJS, you will often use a selectbox with form binding. I had set the HTML `selected` attribute on an option, but found that the default value was not being applied.
+
+## Solution
+
+I checked all option values, the model, and the rendering timing, but nothing looked wrong. The `selected` attribute should have been working.
+
+```Angular
+{% raw %}
+<div class="form-select-area">
+  <label class="form-label" for="gender">성별</label>
+  <select id="gender" name="gender" class="form-select"
+          required
+          [(ngModel)]="data.sex"
+          #sex="ngModel">
+    <option value="" selected disabled>성별을 선택하세요</option>
+    <option *ngFor="let sex of [1, 2]" [ngValue]="sex">
+      {{sex === 1 ? '남자' : '여자'}}
+    </option>
+  </select>
+  <p class="form-msg error"
+      [hidden]="isValidForm(f, sex)">
+    This field is required
+  </p>
+</div>
+{% endraw %}
+```
+
+In the code above, I added an extra option to serve as the default placeholder and disabled it so users cannot actually select it. I also set its value to an empty string `""`. This is where the problem was hiding: the value I provided for that option did not match the value bound to `[(ngModel)]="data.sex"`. When the two values differ, `selected` will never be applied — not even if you set it manually. !!
+
+For reference, here is the model corresponding to `data`.
+
+```
+export class UserUpdateUI {
+  constructor(
+    public name: string = '',
+    public email: string = '',
+    public phone: string = '',
+    public sex: number = 0,
+    public password: string = '',
+    public confirmPassword: string = ''
+  ) {
+  }
+}
+```
+
+## Conclusion
+
+The value of the option must match the initial value of the model — whether that is `null`, `undefined`, or some other value. Pay particular attention when the model field is a `number` type, as it is likely initialized to `undefined`. Whenever you want a pre-selected option in an AngularJS form, always be careful about the initial value.

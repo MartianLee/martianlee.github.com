@@ -1,0 +1,359 @@
+---
+slug: '2026-06-04-semble-architecture'
+title: 'Semble Architecture Analysis: How an Agent-Oriented RAG Solves Code Search with Static Embeddings'
+crawlertitle: 'Semble Architecture Analysis: How an Agent-Oriented RAG Solves Code Search with Static Embeddings'
+summary: 'Semble is a Python library that splits code into chunks with tree-sitter, fuses Model2Vec static embeddings with BM25 via RRF, and applies code-aware reranking — delivering millisecond code search on CPU alone. Where CodeGraph solves the same problem with an AST knowledge graph, Semble solves it through retrieval. This post analyzes the architecture by contrasting the two approaches.'
+date: 2026-06-04 01:00:00 +0900
+categories: posts
+tags:
+  [
+    'semble',
+    'code-search',
+    'hybrid-search',
+    'semantic-search',
+    'model2vec',
+    'static-embeddings',
+    'bm25',
+    'rag',
+    'tree-sitter',
+    'mcp',
+    'architecture',
+  ]
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+> Analyzed: 2026-06-04
+> Package: `semble` (PyPI)
+> Commit: `512142ea84b652dd937ec4a41a0da9c8b921c9c3` (2026-06-03)
+> Repository: https://github.com/MinishLab/semble
+> Local path: `~/workspace/opensources/semble`
+
+---
+
+_This article is mostly written by Claude Code_
+
+---
+
+## 1. Why Semble?
+
+I analyzed [CodeGraph](/kb/2026-06-04-codegraph-architecture) just before this. CodeGraph tackles "the problem of coding agents burning tokens by grep-ing and Read-ing their way through a codebase" using an **AST knowledge graph**. Semble solves _the exact same problem_ from the opposite direction — through **retrieval**.
+
+One line from the README captures the ambition:
+
+> Fast and Accurate Code Search for Agents — Uses ~98% fewer tokens than grep+read
+
+The motivation is identical to CodeGraph's. When an agent is asked something like "how is authentication handled?", it greps files and reads them whole, burning tokens. Semble's answer has three parts.
+
+First, **it builds a search index by chunking code.** tree-sitter splits code at AST boundaries, and each chunk is indexed two ways: embeddings (semantic) and BM25 (lexical).
+
+Second, **it returns only the relevant chunks for a natural-language query.** Instead of reading whole files, the agent receives "just the code snippets it needs." The README claims a 98% reduction in tokens compared to grep+read.
+
+Third, **everything runs on CPU in milliseconds — no API keys, no GPU, no external services.** Average repository indexing takes ~250ms; queries take ~1.5ms. The key enabler is **static embeddings**, which we'll look at in detail later.
+
+Calling Semble "a RAG for code" only tells half the story. More precisely, it is a **CPU-first code search engine that achieves search quality through static embeddings + BM25 + code-aware reranking, with no transformer forward pass**.
+
+## 2. Where Does It Fit Among Previous Posts?
+
+Semble sits at the intersection of two threads I have covered before.
+
+| Post                                                     | Core Problem                                    | Relationship to Semble                                                                                                                                                                     |
+| -------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [CodeGraph](/kb/2026-06-04-codegraph-architecture)       | Reduce agent code navigation cost via AST graph | **Direct competitor and mirror image.** Solves the same problem (98% token reduction, MCP, tree-sitter, local/CPU) through search instead of a graph. Compared head-to-head in section 13. |
+| [WeKnora](/kb/2026-05-30-weknora-architecture)           | Document knowledge base with RAG search         | WeKnora searches _documents_ with heavyweight embedding models; Semble searches _code_ with static embeddings. Same RAG family, very different cost structure.                             |
+| [Hermes Agent](/kb/2026-05-13-hermes-agent-architecture) | Custom coding agent runtime                     | Semble is a consumer that plugs in as an MCP tool. If Hermes is the agent doing the reading, Semble is the search layer that does the looking-up on its behalf.                            |
+| [Qwen Code](/kb/2026-05-17-qwen-code-architecture)       | How a terminal coding agent becomes a platform  | An MCP tool that plugs into Qwen Code's tool registry — competing for the same slot as CodeGraph.                                                                                          |
+| [Playwright](/kb/2026-04-17-playwright-architecture)     | Abstracting the browser via protocol            | Just as Playwright exposes the browser as a tool, Semble exposes code search as two MCP tools (`search`, `find_related`).                                                                  |
+
+The key insight from this table is Semble's position: **between CodeGraph and WeKnora**.
+
+The RAG we saw in [WeKnora](/kb/2026-05-30-weknora-architecture) searched documents with embeddings. The approach in [CodeGraph](/kb/2026-06-04-codegraph-architecture) turned code into an AST graph. Semble is the intersection of the two — **it takes the retrieval paradigm of RAG, applies it to the domain of code, and uses static embeddings as the cost-reduction technique**.
+
+The most interesting way to read Semble, then, is to place it side by side with CodeGraph and ask: "what changes when you solve the same problem with a graph versus with search?"
+
+## 3. Understanding the Project in One Sentence
+
+> Semble is a **hybrid code search library** that chunks code at AST boundaries using tree-sitter, fuses Model2Vec static embeddings (semantic) with BM25 (lexical) via Reciprocal Rank Fusion, layers on code-aware reranking signals (definition boost, file coherence, path penalties), and returns only the relevant chunks in milliseconds on CPU alone.
+
+That sentence contains four stages:
+
+- **Chunking** — split code into chunks following tree-sitter AST boundaries.
+- **Indexing** — build two parallel indexes: static embeddings + BM25.
+- **Hybrid search** — fuse the two scores with RRF.
+- **Reranking** — re-order results using code-domain signals.
+
+## 4. Tech Stack and Scale
+
+The first thing that stands out is **the contrast in scale**.
+
+| Item           | Details                                                                     |
+| -------------- | --------------------------------------------------------------------------- |
+| Language       | Python (`src/` ~**2,930 LOC**) — 1/14th the size of CodeGraph (~42,800 LOC) |
+| Embeddings     | `model2vec` (static embeddings), default model `minishlab/potion-code-16M`  |
+| Vector search  | `vicinity` (MinishLab's own library, brute-force cosine backend)            |
+| Lexical search | `bm25s` (fast BM25 implementation)                                          |
+| Parsing        | `tree-sitter` + `tree-sitter-language-pack`                                 |
+| File filtering | `pathspec` (`.gitignore` + `.sembleignore`)                                 |
+| Serialization  | `orjson`                                                                    |
+| MCP            | `mcp` (FastMCP) + `watchfiles` (file watcher) — `mcp` extra                 |
+| Runtime        | Python `>=3.10`, CPU only                                                   |
+| License        | MIT (authors: Thomas van Dongen, Stéphan Tulkens — MinishLab)               |
+
+The small footprint has a clear explanation. Semble **assembles rather than builds** its heavy components. Embeddings come from model2vec, vector search from vicinity, lexical search from bm25s, chunking from tree-sitter. Notably, most of these are products of the same team (MinishLab — the creators of Model2Vec). Semble reads very much like a showcase of: "what happens if you assemble a code search engine from the static embedding ecosystem we built?"
+
+CodeGraph, by contrast, implemented nearly everything in-house — extraction, resolution, graph, MCP — hence its ~42,800 LOC. Same problem, opposite build-vs-buy decision.
+
+## 5. The Big Picture: A 4-Stage Search Pipeline
+
+```
+[1] Chunking              [2] Indexing                [3] Hybrid search          [4] Reranking
+ chunking/core.py          index/dense.py + sparse.py   search.py                  ranking/
+ ───────────────           ────────────────────────     ─────────                  ────────
+ tree-sitter AST           Model2Vec 임베딩 →           semantic + BM25            정의 부스트
+ 노드 병합/분할            vicinity 코사인 백엔드        각각 top_k*5 후보          파일 응집 부스트
+ desired_length=1500       BM25 (bm25s)                 → RRF(k=60) 점수           경로 페널티
+ (실패 시 line chunking)                                → alpha 가중 융합          파일 saturation decay
+   │                         │                            │                          │
+   └────────────────────────►└───────────────────────────►└─────────────────────────►└──────►
+                                                                                       관련 청크 top_k
+```
+
+The central idea is **running two retrievers in parallel, then fusing their results**. The semantic retriever (embedding cosine similarity) finds "code that means the same thing"; the BM25 retriever finds "code where identifiers and API names match literally". Natural-language queries favor the former; symbol queries like `getUserById` favor the latter. RRF combines them, and code-aware reranking finishes the job.
+
+## 6. Codebase Map
+
+A quick guide for first-time readers:
+
+- `src/semble/index/index.py` — `SembleIndex` facade. `from_path`/`from_git`, `search`, `find_related`, `save`/`load_from_disk`.
+- `src/semble/index/create.py` — file walk → chunking → embedding/BM25 index creation.
+- `src/semble/chunking/core.py` — algorithm for cutting tree-sitter AST nodes into chunks.
+- `src/semble/index/dense.py` — Model2Vec loading + vicinity cosine backend (`SelectableBasicBackend`).
+- `src/semble/index/sparse.py` — BM25 index and selector mask.
+- `src/semble/search.py` — hybrid search + RRF fusion.
+- `src/semble/ranking/weighting.py` / `boosting.py` / `penalties.py` — alpha weighting, boosts, penalties.
+- `src/semble/mcp.py` — FastMCP server, on-demand indexing, cache, file watcher.
+- `src/semble/cache.py` — disk cache and freshness validation.
+- `src/semble/cli.py` — `semble search` / `find-related` / `init` / `savings` CLI.
+
+## 7. Code-Aware Chunking: Splitting at AST Boundaries
+
+Search quality starts with "what do you treat as a single unit to index?" Semble does not split by line or fixed length — it **respects tree-sitter AST node boundaries** (`chunking/core.py`).
+
+The core algorithm `_merge_node_inner` works recursively:
+
+- The target length is `_DESIRED_CHUNK_LENGTH_CHARS = 1500` characters.
+- If a single node exceeds the target, it recurses into children (a function that is too long gets split by its inner blocks).
+- Short adjacent nodes are merged up to the target length (several small functions become one chunk).
+- Recursion depth is capped at `_RECURSION_DEPTH = 500`; minimum chunk size is guarded at `_MIN_CHUNK_SIZE = 50` characters.
+- Languages with no parser fall back to `chunk_lines` for line-based splitting.
+
+The benefit of this approach is that **chunks align with semantic units (functions, classes, blocks)**. When a function is sliced in the middle before being embedded, the meaning gets diluted. Following AST boundaries keeps each chunk close to "one function = one chunk". The algorithm converts byte offsets back to character offsets so multi-byte (UTF-8) characters are handled safely.
+
+This is also where the first fork from CodeGraph appears. **Both use tree-sitter, but for different purposes.** CodeGraph uses the AST to extract _symbols and relationships (edges)_ and build a graph. Semble uses the AST only as _chunk boundary markers_ — no relationship extraction, just producing searchable text units.
+
+## 8. Static Embeddings: Why Milliseconds on CPU?
+
+Semble's speed secret is **Model2Vec static embeddings** (`index/dense.py`, default model `minishlab/potion-code-16M`).
+
+A conventional embedding model (BERT-style transformer) must run a **forward pass** every time a query arrives — tokens pass through attention layers to produce contextual embeddings. This requires a GPU and introduces latency.
+
+Static embeddings work differently. The transformer is distilled in advance into a **token → vector lookup table**. At query time, embedding is almost entirely a matter of looking up each token's vector and averaging them. With no forward pass, the whole thing completes in milliseconds on CPU. As the README puts it: "embedding model is static with no transformer forward pass at query time."
+
+This single choice dominates the entire design of Semble.
+
+- **What you gain:** ~250ms repository indexing, ~1.5ms queries, no GPU or API key required, end-to-end processing of the average repository in under a second. 218× faster indexing than a code-specific transformer (CodeRankEmbed, 137M).
+- **What you give up:** because the embeddings are closer to a bag-of-tokens average than contextual representations, semantic discrimination is lower than a transformer's. In benchmarks, quality reaches **99%** of that transformer — nearly on par, but marginally below.
+
+The vector search backend echoes the same philosophy of elegant simplicity. `SelectableBasicBackend` extends vicinity's `CosineBasicBackend` as a **brute-force cosine** — no ANN index (no HNSW, etc.), just a matrix multiplication against all chunks. Since static embeddings are lightweight and the chunk count for a single repository is manageable, a full scan is already sub-millisecond. The consistent philosophy throughout: **run a low-discrimination retriever fast, then correct for it through fusion and reranking**.
+
+The optional `selector` is equally clever. Pre-filtering candidates by language or file path means brute-force cosine only runs over that subset. `find_related` uses this selector to compare only chunks in the same language.
+
+## 9. Hybrid Search: Fusing Semantic and BM25 with RRF
+
+The way `search.py` combines the two retrievers is clean:
+
+```python
+_RRF_K = 60
+
+def _rrf_scores(scores):
+    ranked = sorted(scores, key=lambda c: -scores[c])
+    return {chunk: 1.0 / (_RRF_K + rank) for rank, chunk in enumerate(ranked, 1)}
+```
+
+The key is **Reciprocal Rank Fusion (RRF)**. Semantic scores (cosine similarity) and BM25 scores (lexical matching) operate on completely different scales. Adding them directly would let one dominate. RRF converts both scores to **ranks** and transforms them as `1/(60+rank)`, making them composable regardless of scale.
+
+The fusion weight `alpha` is determined automatically based on query type (`ranking/weighting.py`):
+
+```python
+_ALPHA_SYMBOL = 0.3  # symbol query → lean toward BM25
+_ALPHA_NL = 0.5      # natural language query → balanced
+```
+
+**Symbol queries** — patterns like `getUserById`, `Foo::bar`, `_private` — are detected by regex and given higher BM25 weight (exact identifier matching matters here). Natural-language queries blend semantic and BM25 equally. Both retrievers over-fetch `top_k * 5` candidates, so the pool remains large enough after fusion and reranking.
+
+If CodeGraph's `codegraph_explore` was a single tool that "returns the relevant symbol source all at once", Semble's search is an ensemble that "fuses two weak signals to improve precision." A graph _knows_ the correct path; search _estimates_ the correct candidates.
+
+## 10. Code-Aware Reranking: Definition Boost, File Coherence, Path Penalties
+
+Fusion alone is not enough. Semble layers code-domain-specific reranking signals on top (`ranking/boosting.py`, `penalties.py`). This is where the "99% quality" is actually earned.
+
+**Definition boost.** Chunks that _define_ the queried symbol are ranked above chunks that merely _reference_ it. More than 20 language keywords are matched case-sensitively (`class`, `def`, `func`, `struct`, `interface`, `defmodule` for Elixir, `fn` for Rust, etc.), while SQL DDL (`CREATE TABLE`, etc.) is matched case-insensitively. The multiplier is `_DEFINITION_BOOST_MULTIPLIER = 3.0`; an additional 1.5× is applied when the filename stem matches the symbol.
+
+**File coherence.** When multiple chunks from the same file match, the file's top chunk is boosted (`_FILE_COHERENCE_BOOST_FRAC = 0.2`). A chunk that randomly surfaces is trusted less than one in a file that is broadly relevant to the query.
+
+**Identifier stem matching.** A query like `parse config` boosts chunks containing `parseConfig`, `ConfigParser`, or `config_parser`. snake_case, camelCase, and plural variants are all normalized for comparison.
+
+**Embedded symbol boost.** When a natural-language query contains CamelCase identifiers like `StateManager`, chunks that define that symbol are boosted at half strength (`0.5`).
+
+**Path penalties (`penalties.py`).** Files unlikely to contain the correct answer are penalized multiplicatively:
+
+| Target                                             | Penalty |
+| -------------------------------------------------- | ------- |
+| Test files/directories (patterns for 19 languages) | 0.3     |
+| `compat/`, `legacy/` directories                   | 0.3     |
+| `examples/`, `docs_src/`                           | 0.3     |
+| Re-export barrels (`__init__.py`, etc.)            | 0.5     |
+| `.d.ts` declaration stubs                          | 0.7     |
+
+On top of this, **file saturation decay** is applied. When more than a threshold (1) of chunks from the same file are selected, each excess chunk is penalized by `0.5^excess`, spreading results across multiple files rather than concentrating them in one.
+
+What makes this interesting is that **these reranking heuristics reconstruct information that CodeGraph gets for free from its graph structure**. "Definition vs. reference" is a clearly labeled edge type in CodeGraph; in Semble it is estimated by regex-matching definition keywords. "Down-rank test files" is also something CodeGraph does in its explore sizing. The same intuition, implemented in one case as a graph, in the other as regex-based signals.
+
+## 11. MCP Server: On-Demand Indexing and Cache
+
+`mcp.py` exposes two tools via FastMCP:
+
+| Tool           | Purpose                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `search`       | Search a codebase with a natural-language or code query. `repo` accepts a local path or git URL. |
+| `find_related` | Find chunks semantically similar to the code at a specific file and line.                        |
+
+The operational design is thoughtful:
+
+- **On-demand indexing.** `repo` accepts a local path or an `https://` git URL. For git URLs, the repo is cloned to a temp directory with `--depth 1` (60-second timeout), indexed, then cleaned up. Dangerous transports like `git@` or `ssh://` are rejected.
+- **Model prewarm.** As soon as the server starts, embedding model loading and default source indexing run in parallel as background tasks. The first query waits for the model to load, but the server itself starts immediately.
+- **In-memory LRU cache.** Up to `_CACHE_MAX_SIZE = 10` indexes are held in an `OrderedDict` with LRU eviction. Concurrent requests for the same source are deduplicated via `asyncio.Task` and protected with `asyncio.shield`.
+- **File watcher.** Local paths are monitored with `watchfiles.awatch`; when a change is detected, the cache entry is evicted and reindexing is triggered.
+
+This architecture is simpler than the multi-session shared daemon seen in [CodeGraph](/kb/2026-06-04-codegraph-architecture). CodeGraph went as far as a cross-process shared daemon (Unix socket + lockfile + refcount), while Semble maintains an in-memory cache only for the **lifetime of a single MCP server process**. Since reindexing is fast (~250ms), the engineering cost of a sophisticated shared daemon is simply not justified.
+
+## 12. Cache and Freshness: Full Rebuild on Any Change
+
+Indexes are persisted to the OS cache folder (`~/Library/Caches/semble/` etc., overridable via `SEMBLE_CACHE_LOCATION`). BM25 index, embedding vectors, chunks, and metadata are stored separately.
+
+Freshness validation (`get_validated_cache` in `cache.py`) is a key divergence from CodeGraph:
+
+- If the model or content type differs from what is cached, invalidate.
+- For local paths, walk all files and compare mtime against the cache-write timestamp — **invalidate if any file is newer**.
+- If the current set of files differs from the stored set (additions or deletions), invalidate.
+
+And when invalidated, it is a **full reindex, not an incremental update**. This is the opposite of CodeGraph, which incrementally syncs only changed files. Semble's stance is: "a full rebuild costs 250ms, so there is no reason to take on the complexity of incremental logic." A significant portion of the small LOC count (~2,930) is directly attributable to this decision.
+
+Token savings tracking (`semble savings`) is honest. For each call, it estimates tokens saved as: (total character count of files that contained matching chunks − character count of the returned snippets) / 4. This is a conservative estimate that uses "read all matching files in full" as the baseline.
+
+## 13. CodeGraph vs. Semble: Graph or Search?
+
+Placing the two projects — both analyzed on the same day — directly side by side makes the philosophical fork strikingly clear.
+
+| Dimension             | [CodeGraph](/kb/2026-06-04-codegraph-architecture)           | Semble                                                                  |
+| --------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Core data structure   | AST knowledge graph (nodes + edges)                          | Chunks + embedding/BM25 indexes                                         |
+| Search paradigm       | Structural/relational (graph traversal)                      | Retrieval-based (semantic + lexical fusion)                             |
+| "How does X reach Y?" | Follows edges (callers/callees/impact)                       | Retrieves semantically similar chunks (agent infers connections)        |
+| Language / scale      | TypeScript / ~42,800 LOC (much built in-house)               | Python / ~2,930 LOC (library composition)                               |
+| Storage               | SQLite + FTS5                                                | Embedding matrix + BM25 (disk cache)                                    |
+| Embeddings            | None (pure static analysis)                                  | Model2Vec static embeddings (potion-code-16M)                           |
+| Updates               | Incremental sync (per file)                                  | Full rebuild on any change                                              |
+| MCP tools             | 7 (explore/search/callers/callees/impact/node/...)           | 2 (search/find_related)                                                 |
+| Concurrency           | Multi-session shared daemon                                  | In-memory LRU cache per server process                                  |
+| Strengths             | Precise call relationships, blast radius, flow tracing       | Fast semantic search, "where is this handled?"                          |
+| Weaknesses            | Graph construction is complex; dynamic dispatch is heuristic | No knowledge of relationships; long cross-chunk flows are hard to trace |
+
+The takeaway is that these are **two approaches to the same token-reduction goal**:
+
+- If the question is **relational** ("what breaks if I change this function?", "what path does a request take to reach the DB?"), the graph (CodeGraph) answers directly. Search (Semble) returns relevant chunks, but the agent must infer the connections.
+- If the question is **locational/semantic** ("where is authentication handled?", "where is this concept implemented?"), search (Semble) answers quickly and lightly. The graph (CodeGraph) can also answer, but its index is heavier to build.
+
+Interestingly, both projects arrived at the same conclusion independently: **make the agent spend its tokens on answers, not on exploration**. One precomputed the _structure_ of the code; the other preindexed its _semantics_. Add [WeKnora's](/kb/2026-05-30-weknora-architecture) document RAG to the picture, and you have all three vertices of "building searchable knowledge for agents in advance" — documents (WeKnora), code semantics (Semble), and code structure (CodeGraph).
+
+## 14. What the Benchmarks Say
+
+The README benchmarks cover 19 languages, 63 repositories, and ~1,250 queries:
+
+- **Quality:** NDCG@10 of **0.854** — **99%** of the quality of the code-specific transformer CodeRankEmbed (137M) Hybrid, at **218× faster indexing**.
+- **Speed:** ~250ms average repository indexing, ~1.5ms queries (all CPU).
+- **Token efficiency:** **98% fewer tokens** on average compared to grep+read. Semble reaches 94% recall with just 2k tokens, while grep+read needs a full 100k context window to reach 85%.
+
+Two things stand out here.
+
+First, **"99% quality, 218× speed" is the value proposition of static embeddings**. You give up the last 1% of quality, throw away the GPU, and get CPU milliseconds in return. In an agent loop where search happens dozens of times, this trade is almost always a win.
+
+Second, **the token efficiency figure (98%) is nearly identical to CodeGraph's claim**. Two projects independently reporting "overwhelming token reduction versus grep+read" at the same order of magnitude is evidence that the problem (agents reading files indiscriminately) is both real and large. That said, as noted in the [CodeGraph post](/kb/2026-06-04-codegraph-architecture), the _cost_ savings may be less dramatic than the token and tool-call savings as models become more capable — this caveat applies equally to Semble.
+
+## 15. Recommended Reading Order
+
+1. `README.md` — value proposition, "How it works", benchmarks.
+2. `src/semble/index/index.py` — `SembleIndex` facade; the entry point for the full pipeline.
+3. `src/semble/chunking/core.py` — AST boundary chunking algorithm.
+4. `src/semble/index/dense.py` — Model2Vec loading + brute-force cosine backend.
+5. `src/semble/search.py` — RRF fusion and alpha weighting.
+6. `src/semble/ranking/boosting.py` + `penalties.py` — code-aware reranking (where quality is actually made).
+7. `src/semble/mcp.py` — MCP server, on-demand indexing, cache, file watcher.
+8. `src/semble/cache.py` — disk cache and freshness validation.
+
+## 16. Impressive Design Choices
+
+### 1. Targeting "good enough and overwhelmingly fast" with static embeddings
+
+Replacing the transformer forward pass with a lookup table yields 99% of the quality at 218× the speed. This is a trade-off that fits precisely into environments like agent loops, where search happens frequently.
+
+### 2. Correcting weak signals through fusion and reranking
+
+Low-discrimination static embeddings and BM25 are combined with RRF, then lifted by definition boost, file coherence, and path penalties. Quality comes not from "one strong retriever" but from "several weak retrievers plus code-domain knowledge."
+
+### 3. Using the AST as chunk boundaries, not as a relationship source
+
+Where CodeGraph uses tree-sitter to extract a graph, Semble uses it only to find clean split points. Chunks aligned to semantic units (functions, classes) improve embedding quality.
+
+### 4. A codebase 14× smaller through library composition
+
+By composing model2vec, vicinity, bm25s, and tree-sitter, the whole thing fits in ~2,930 LOC — the exact opposite build-vs-buy decision from CodeGraph (~42,800 LOC), which implemented most of the same concerns from scratch.
+
+### 5. Choosing simplicity with "full rebuild"
+
+By choosing full reindexing over incremental sync, complexity is traded away against the fact that a rebuild costs 250ms. Fast indexing justifies a simpler architecture.
+
+## 17. Points to Watch Out For
+
+### 1. Weak on relational questions
+
+Semble retrieves chunks; it has no knowledge of call relationships, impact, or blast radius. "What breaks if I change this function?" is CodeGraph's territory — Semble can only hand the agent related chunks and let it reason about the connections.
+
+### 2. Hard to trace long flows across chunk boundaries
+
+A single chunk is ~1500 characters. Long data flows crossing multiple files and functions are difficult to reconstruct through search alone. `find_related` partially compensates, but it is not the same as graph traversal.
+
+### 3. Limits of static embedding discrimination
+
+99% quality is impressive, but it is not 100%. For queries where subtle semantic differences matter, there will be minor losses compared to transformer embeddings — which is exactly why BM25 fusion and reranking are essential.
+
+### 4. Full-rebuild cost scales with repository size
+
+~250ms for an average repository is fast, but in a very large monorepo, "full rebuild on every single-file change" can become a burden. The lack of incremental sync is a trade-off that worsens with scale.
+
+### 5. In-memory cache lifetime is process-scoped
+
+Unlike CodeGraph's shared daemon, when multiple agents use the same repository concurrently, each may hold its own index and cache (the disk cache is shared, but in-memory cache is per-process). In practice, the fast rebuild time keeps the real-world cost small.
+
+## 18. Conclusion
+
+Semble is a more specific project than "a RAG for code." Its real identity is a **CPU-first agent code search engine that achieves search quality through static embeddings + BM25 + code-aware reranking, with no transformer**.
+
+Viewed alongside [CodeGraph](/kb/2026-06-04-codegraph-architecture), the two are complementary solutions to the same problem. The cost of an agent understanding an unfamiliar codebase is reduced by CodeGraph through precomputing its _structure_ (AST graph), and by Semble through preindexing its _semantics_ (embedding index). Add [WeKnora's](/kb/2026-05-30-weknora-architecture) document RAG and you have three variations on a single theme: "build searchable knowledge for agents ahead of time" — documents (WeKnora), code semantics (Semble), and code structure (CodeGraph).
+
+The most important question to ask about Semble is not "what embedding model does it use?" The more important question is this:
+
+> Is the trade — giving up the last 1% of retrieval quality and dropping the GPU in exchange for CPU milliseconds — actually profitable in an agent loop where search happens dozens of times? And how far can you push a _fast-but-weak_ retriever by correcting for it with fusion and code-aware reranking?
+
+Semble's answer is: static embeddings, RRF fusion, definition boost + file coherence + path penalties, and a "250ms is fast enough to justify a full rebuild" simplicity. Understanding these choices reveals that Semble is not just a code search library — it is **an attempt to redesign the cost of search for the agent era, using a static embedding ecosystem as the foundation**.

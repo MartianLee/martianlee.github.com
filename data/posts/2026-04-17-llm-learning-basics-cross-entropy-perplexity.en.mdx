@@ -1,0 +1,108 @@
+---
+title: 'LLM Learning Basics: cross-entropy and perplexity'
+date: '2026-04-17'
+tags: ['llm', 'loss', 'cross-entropy', 'perplexity', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Explains cross-entropy and perplexity — the metrics used to measure how wrong a model is — with formulas, commentary, and examples.'
+---
+
+## Why do these matter
+
+When comparing model performance in papers, loss, cross-entropy, and perplexity come up constantly.  
+Being able to read these values is essential for interpreting learning curves and experimental results.
+
+After reading this note, you will be less confused the next time you encounter a sentence like this:
+
+```txt
+We minimize the cross-entropy loss and report perplexity on the validation set.
+```
+
+## Core concepts and formulas
+
+Let's call the probability the model assigns to the correct token `p(correct)`.
+
+The cross-entropy loss for a single token simplifies to:
+
+```txt
+loss = -log p(correct)
+```
+
+For multiple tokens, we take the average:
+
+```txt
+cross_entropy = average(-log p(correct_token))
+```
+
+Perplexity is cross-entropy transformed into a more interpretable form:
+
+```txt
+perplexity = exp(cross_entropy)
+```
+
+## First-pass explanation: what the formulas say
+
+Cross-entropy imposes a larger penalty the lower the probability the model assigns to the correct answer.
+
+- When the probability of the correct answer is high, `-log p` is small.
+- When the probability of the correct answer is low, `-log p` is large.
+
+Perplexity gives an intuitive sense of how many candidates the model is confused between on average.  
+It should not be read as an exact candidate count, but lower means less confused.
+
+## A simple example
+
+Suppose the task is to predict the next word:
+
+```txt
+I drank ___ in the morning.
+```
+
+The correct answer is `coffee`, and the model predicts:
+
+```txt
+coffee: 0.80
+milk:   0.15
+car:    0.05
+```
+
+Since the model assigned 0.80 to the correct token `coffee`, the loss is small.
+
+Conversely, if the model predicts like this, the loss is large:
+
+```txt
+coffee: 0.05
+milk:   0.15
+car:    0.80
+```
+
+This is because it assigned a low probability to the correct answer.
+
+## How to read these metrics when you encounter them in a paper
+
+When a paper says the validation loss is decreasing, read it as:
+
+```txt
+The model is assigning progressively higher probabilities to the correct tokens.
+```
+
+When a paper says perplexity has decreased, read it as:
+
+```txt
+The model is less confused when choosing the next token.
+```
+
+Note that perplexity is primarily useful in the context of language modeling.  
+It is not sufficient on its own to judge performance on classification, question answering, or instruction following.
+
+## Common misconceptions
+
+- A low loss does not always mean a good user experience.
+- A low perplexity does not always mean the model follows instructions well.
+- If the model overfits to the training data, validation/test performance may not improve.
+
+## Minimum checkpoints
+
+- Cross-entropy turns the degree to which the model assigns low probability to the correct answer into a penalty.
+- Perplexity is a metric that reframes cross-entropy as something like a "degree of confusion."
+- Both are generally better when lower, but neither represents every capability of a model.

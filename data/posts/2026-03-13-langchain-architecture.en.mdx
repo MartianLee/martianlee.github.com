@@ -1,0 +1,637 @@
+---
+slug: '2026-03-13-langchain-architecture'
+title: 'LangChain Python Monorepo Architecture Analysis Report'
+crawlertitle: 'LangChain Python Monorepo Architecture Analysis Report'
+summary: 'A comprehensive architectural analysis of LangChain, the Python-based LLM application framework. Covers the full technology stack, core modules, the Runnable interface, the callback system, and partner package structure in detail.'
+date: 2026-03-13 00:00:00 +0900
+categories: posts
+tags: ['langchain', 'architecture', 'python', 'llm', 'ai']
+author: MartianLee
+---
+
+> Analyzed: 2026-03-13
+> Package: langchain-core v1.2.18 / langchain v1.2.12
+> Repository: https://github.com/langchain-ai/langchain
+
+---
+
+_This article is mostly written by Claude Code_
+
+---
+
+## 1. Project Overview
+
+**LangChain** is a Python-based framework for building LLM applications. It lets you combine a wide variety of language models and tools to construct complex AI pipelines.
+
+- **Core philosophy:** Composability — every component connects like a pipe
+- **Core values:** Provider neutrality, type safety, observability, extensibility
+- **Supported LLMs:** OpenAI, Anthropic, Google, Groq, Mistral, HuggingFace, Ollama, xAI, DeepSeek, Fireworks, Perplexity, OpenRouter, and 20+ others
+- **Supported vector DBs:** Chroma, Qdrant, Pinecone, Weaviate, and 71+ others
+- **License:** MIT
+
+---
+
+## 2. Technology Stack
+
+| Area             | Technology                           |
+| ---------------- | ------------------------------------ |
+| Language         | Python 3.10–3.14                     |
+| Package manager  | uv (replaces pip/poetry)             |
+| Build backend    | hatchling                            |
+| Linter/formatter | ruff                                 |
+| Type checker     | mypy (strict mode)                   |
+| Testing          | pytest, pytest-asyncio, pytest-xdist |
+| Snapshot testing | syrupy                               |
+| Test recording   | vcrpy                                |
+| Serialization    | pydantic v2                          |
+| Observability    | LangSmith                            |
+| Tracing          | langsmith SDK                        |
+
+### Core Dependencies
+
+| Package            | Role                                    |
+| ------------------ | --------------------------------------- |
+| pydantic ≥ 2.7.4   | Runtime type validation & serialization |
+| langsmith ≥ 0.3.45 | Production observability & tracing      |
+| tenacity           | Retry logic (exponential backoff)       |
+| jsonpatch          | Incremental stream patching             |
+| PyYAML             | Configuration file parsing              |
+| langgraph ≥ 1.1.1  | Graph-based agent execution             |
+
+---
+
+## 3. Overall Architecture
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                         LangChain System                                 ║
+║                                                                          ║
+║  ┌─────────────────────────────────────────────────────────────────┐    ║
+║  │                    Application Layer                              │    ║
+║  │  User code / LangGraph graphs / LangServe API server             │    ║
+║  └───────────────────────┬─────────────────────────────────────────┘    ║
+║                          │ calls                                         ║
+║  ┌───────────────────────▼─────────────────────────────────────────┐    ║
+║  │                langchain (main package)                           │    ║
+║  │                                                                  │    ║
+║  │  agents/ ──┬── chains/         retrievers/ ── memory/           │    ║
+║  │            ├── tools/          embeddings/ ── callbacks/        │    ║
+║  │            ├── llms/           vectorstores/── output_parsers/  │    ║
+║  │            └── document_loaders/                                │    ║
+║  └──────────────────────┬──────────────────────────────────────────┘    ║
+║                         │ inherits/implements                            ║
+║  ┌──────────────────────▼──────────────────────────────────────────┐    ║
+║  │                langchain-core (foundation layer)                  │    ║
+║  │                                                                  │    ║
+║  │  Runnable ──┬── BaseLanguageModel (BaseLLM / BaseChatModel)     │    ║
+║  │  Protocol   ├── BaseRetriever                                    │    ║
+║  │             ├── BaseTool                                         │    ║
+║  │             ├── VectorStore                                      │    ║
+║  │             ├── BasePromptTemplate                               │    ║
+║  │             ├── BaseOutputParser                                 │    ║
+║  │             └── CallbackManager                                  │    ║
+║  └──────────┬─────────────────────────────────┬─────────────────────┘    ║
+║             │ implements                        │ implements               ║
+║             ▼                                  ▼                          ║
+║  ┌──────────────────────┐         ┌────────────────────────────────────┐  ║
+║  │  Partner packages (15)│         │         External services           │  ║
+║  │                      │         │                                    │  ║
+║  │  langchain-openai    │         │  OpenAI / Anthropic / Google       │  ║
+║  │  langchain-anthropic │  ──────▶│  Groq / Mistral / HuggingFace     │  ║
+║  │  langchain-ollama    │         │  Chroma / Qdrant / LangSmith       │  ║
+║  │  langchain-chroma    │         │  (including local models)          │  ║
+║  │  + 11 more           │         └────────────────────────────────────┘  ║
+║  └──────────────────────┘                                                ║
+╚══════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. Package Structure
+
+```
+langchain/ (monorepo root)
+├── libs/
+│   ├── core/                # langchain-core v1.2.18 — foundational abstractions
+│   ├── langchain_v1/        # langchain v1.2.12 — active main package
+│   ├── langchain/           # langchain-classic v1.0.2 — legacy (maintenance mode)
+│   ├── partners/            # 15 partner integration packages
+│   │   ├── openai/
+│   │   ├── anthropic/
+│   │   ├── ollama/
+│   │   ├── groq/
+│   │   ├── mistralai/
+│   │   ├── huggingface/
+│   │   ├── chroma/
+│   │   ├── qdrant/
+│   │   └── ... (7 more)
+│   ├── text-splitters/      # langchain-text-splitters v1.1.1
+│   ├── standard-tests/      # langchain-tests v1.1.5 — shared test suite
+│   └── model-profiles/      # model configuration profile management
+└── .github/
+    └── workflows/           # 19+ CI/CD workflows
+```
+
+---
+
+## 5. Core Modules (langchain-core)
+
+`langchain-core` is the foundational layer built on a zero-third-party-dependency principle.
+
+| Module               | Role                              | Key files                                        |
+| -------------------- | --------------------------------- | ------------------------------------------------ |
+| **runnables/**       | Universal invocation protocol     | `base.py` (222KB), `passthrough.py`, `branch.py` |
+| **language_models/** | Base classes for LLM/ChatModel    | `base.py`, `llms.py`, `chat_models.py`           |
+| **callbacks/**       | Event system (tracing, streaming) | `manager.py` (85KB+)                             |
+| **messages/**        | Message type system               | `base.py`, `ai.py`, `human.py`, `tool.py`        |
+| **prompts/**         | Prompt templates                  | `base.py`, `chat.py`, `few_shot.py`              |
+| **tools/**           | Tool base classes                 | `base.py`, `structured.py`                       |
+| **output_parsers/**  | LLM output parsing                | `json.py`, `pydantic.py`, `xml.py`               |
+| **vectorstores/**    | Vector store abstraction          | `base.py`, `in_memory.py`                        |
+| **retrievers.py**    | Document retrieval abstraction    | `base.py`                                        |
+| **embeddings/**      | Embedding interface               | `base.py`, `fake.py`                             |
+| **load/**            | Serialization/deserialization     | `serializable.py`, `dump.py`, `mapping.py`       |
+| **tracers/**         | LangSmith integration             | `langchain.py`, `log_stream.py`                  |
+| **utils/**           | Common utilities (17 modules)     | `pydantic.py`, `json_schema.py`                  |
+
+---
+
+## 6. Main Package (langchain)
+
+The `langchain` package under `libs/langchain_v1/` provides high-level implementations.
+
+| Directory           | Count              | Role                                 |
+| ------------------- | ------------------ | ------------------------------------ |
+| `agents/`           | 30 subdirectories  | ReAct, OpenAI Functions agents, etc. |
+| `chains/`           | 43 subdirectories  | Chain composition and LCEL patterns  |
+| `memory/`           | 21 files           | Conversational memory management     |
+| `retrievers/`       | 48 subdirectories  | Concrete retrieval implementations   |
+| `embeddings/`       | 53 subdirectories  | Embedding provider adapters          |
+| `chat_models/`      | 37 subdirectories  | Chat model wrappers                  |
+| `llms/`             | 86 subdirectories  | LLM provider wrappers                |
+| `vectorstores/`     | 71 subdirectories  | Vector store implementations         |
+| `tools/`            | 74 subdirectories  | Tool implementations                 |
+| `document_loaders/` | 149 subdirectories | Document loader implementations      |
+| `evaluation/`       | 15 subdirectories  | LLM evaluation tooling               |
+| `graphs/`           | 15 subdirectories  | Graph-related functionality          |
+
+---
+
+## 7. Partner Packages
+
+All partner packages follow an identical structure.
+
+### Partner Package List
+
+| Package                        | Provides                                          |
+| ------------------------------ | ------------------------------------------------- |
+| **langchain-openai** (v1.1.11) | ChatOpenAI, OpenAI embeddings, middleware support |
+| **langchain-anthropic**        | Claude models, Tool Use support                   |
+| **langchain-groq**             | Groq high-speed inference API                     |
+| **langchain-mistralai**        | Mistral AI models                                 |
+| **langchain-huggingface**      | HuggingFace Hub models                            |
+| **langchain-ollama**           | Local model execution (llama, gemma, etc.)        |
+| **langchain-fireworks**        | Fireworks AI serverless inference                 |
+| **langchain-deepseek**         | DeepSeek models                                   |
+| **langchain-xai**              | xAI Grok models                                   |
+| **langchain-perplexity**       | Perplexity search-augmented LLM                   |
+| **langchain-openrouter**       | OpenRouter multi-provider gateway                 |
+| **langchain-chroma**           | Chroma vector database                            |
+| **langchain-qdrant**           | Qdrant vector database                            |
+| **langchain-exa**              | Exa neural search                                 |
+| **langchain-nomic**            | Nomic embeddings                                  |
+
+### Common Partner Package Structure
+
+```
+partners/{provider}/
+├── pyproject.toml                  # package metadata
+├── langchain_{provider}/
+│   ├── __init__.py
+│   ├── chat_models.py              # ChatModel implementation
+│   ├── llms.py                     # LLM implementation
+│   ├── embeddings.py               # Embedding implementation
+│   ├── output_parsers/             # custom output parsers
+│   ├── tools/                      # tool integrations
+│   └── data/                       # model profile JSON
+├── tests/
+│   ├── unit_tests/
+│   └── integration_tests/
+├── Makefile
+└── uv.lock
+```
+
+---
+
+## 8. The Runnable Interface
+
+The central pattern of LangChain — a universal invocation protocol shared by every component. (`base.py` 222KB)
+
+```python
+class Runnable[Input, Output](ABC, Generic[Input, Output]):
+    """Universal invocation protocol — the foundation of every LangChain component"""
+
+    # Synchronous interface
+    def invoke(self, input: Input, config: RunnableConfig) -> Output: ...
+    def batch(self, inputs: list[Input]) -> list[Output]: ...
+    def stream(self, input: Input) -> Iterator[Output]: ...
+
+    # Asynchronous interface
+    async def ainvoke(self, input: Input) -> Output: ...
+    async def abatch(self, inputs: list[Input]) -> list[Output]: ...
+    async def astream(self, input: Input) -> AsyncIterator[Output]: ...
+
+    # Advanced streaming
+    async def astream_log(self, input: Input) -> AsyncIterator[RunLogPatch]: ...
+    async def astream_events(self, input: Input) -> AsyncIterator[StreamEvent]: ...
+
+    # Composition operators
+    def pipe(self, other: Runnable) -> RunnableSequence: ...
+    def __or__(self, other: Runnable) -> RunnableSequence: ...  # | operator
+
+    # Configuration variants
+    def with_config(self, config: RunnableConfig) -> Runnable: ...
+    def with_fallbacks(self, fallbacks: list[Runnable]) -> RunnableWithFallbacks: ...
+    def with_retry(self, ...) -> RunnableRetry: ...
+    def configurable_fields(...) -> RunnableConfigurableFields: ...
+```
+
+### Runnable Sub-patterns
+
+| Class                   | Role                                  |
+| ----------------------- | ------------------------------------- |
+| `RunnableSequence`      | Sequential execution (`a \| b \| c`)  |
+| `RunnableParallel`      | Parallel fan-out (`{a: r1, b: r2}`)   |
+| `RunnableMap`           | Mapping over inputs                   |
+| `RunnableBranch`        | Conditional routing                   |
+| `RunnablePassthrough`   | Pass input through unchanged          |
+| `RunnableWithFallbacks` | Error recovery                        |
+| `RunnableRetry`         | Automatic retry (exponential backoff) |
+| `RunnableConfigurable`  | Dynamic runtime configuration         |
+
+### LCEL Chain Example
+
+```python
+# LangChain Expression Language (LCEL)
+chain = (
+    {"context": retriever, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | output_parser
+)
+
+# Identical interface for sync and async
+result = chain.invoke("user question")
+result = await chain.ainvoke("user question")
+
+# Streaming
+for chunk in chain.stream("user question"):
+    print(chunk, end="", flush=True)
+```
+
+---
+
+## 9. The Callback System
+
+An event-driven architecture for tracing and observing LLM execution.
+
+```
+[Runnable.invoke() called]
+        │
+        ▼
+CallbackManager
+  ├── on_llm_start(serialized, prompts)     ← LLM call begins
+  │       │ streaming
+  │       ▼
+  ├── on_llm_new_token(token)               ← token received (streaming)
+  │       │ complete
+  │       ▼
+  ├── on_llm_end(response)                  ← LLM response complete
+  │
+  ├── on_tool_start(tool, input)            ← tool execution begins
+  ├── on_tool_end(output)                   ← tool execution complete
+  │
+  ├── on_retriever_start(query)             ← retrieval begins
+  ├── on_retriever_end(documents)           ← retrieval complete
+  │
+  └── → LangSmithTracer / custom handlers
+```
+
+### Callback Handler Types
+
+| Handler                          | Purpose                                |
+| -------------------------------- | -------------------------------------- |
+| `LangSmithTracer`                | Production observability and debugging |
+| `StreamingStdOutCallbackHandler` | Console streaming output               |
+| `AsyncIteratorCallbackHandler`   | Async streaming                        |
+| `FileCallbackHandler`            | File logging                           |
+| Custom                           | Extend `BaseCallbackHandler`           |
+
+---
+
+## 10. Core Data Structures
+
+### Message Type Hierarchy
+
+```python
+BaseMessage(Serializable)
+├── content: str | list[BaseMessageContentBlock]
+│   # BaseMessageContentBlock:
+│   # - TextContentBlock    → text
+│   # - ImageContentBlock   → image (multimodal)
+│   # - FileContentBlock    → file attachment
+│   # - ToolUseBlock        → tool call request
+│   # - ToolCallBlock       → tool call result
+│
+├── HumanMessage      ← user input
+├── AIMessage         ← model response (includes tool_calls)
+│   └── AIMessageChunk  ← streaming chunk
+├── SystemMessage     ← system instruction
+├── ToolMessage       ← tool execution result
+└── FunctionMessage   ← (legacy, deprecated)
+```
+
+### LLM Model Hierarchy
+
+```python
+BaseLanguageModel (Runnable[LanguageModelInput, str])
+├── BaseLLM                       ← text completion (legacy)
+│   └── invoke(str) -> str
+│
+└── BaseChatModel                 ← chat interface (current standard)
+    ├── invoke(List[BaseMessage]) -> AIMessage
+    ├── stream()  -> Iterator[AIMessageChunk]
+    └── with_structured_output()  → Pydantic model output
+```
+
+### Tool Hierarchy
+
+```python
+BaseTool (RunnableSerializable[ToolInput, ToolOutput])
+├── name: str
+├── description: str
+├── args_schema: Type[BaseModel]         ← Pydantic schema
+│
+├── StructuredTool                       ← Pydantic-based
+├── Tool                                 ← function-based
+└── ToolCollection                       ← multi-tool bundle
+```
+
+### Document
+
+```python
+Document(BaseModel)
+├── page_content: str          ← document text
+└── metadata: dict             ← source, date, etc.
+```
+
+---
+
+## 11. Layer-by-Layer Dependency Graph
+
+```
+langchain (v1.2.12)
+├── langchain-core (≥1.2.10)
+├── langgraph (≥1.1.1)
+└── pydantic (≥2.7.4)
+
+langchain-core (v1.2.18)
+├── langsmith (≥0.3.45)       ← observability
+├── tenacity (≥8.1.0)         ← retries
+├── pydantic (≥2.7.4)         ← serialization
+├── PyYAML                     ← configuration
+└── typing-extensions
+
+langchain-classic (v1.0.2)    ← legacy
+├── langchain-core
+├── langchain-text-splitters
+└── SQLAlchemy, requests
+
+langchain-{provider}          ← partner packages
+├── langchain-core
+├── {provider-sdk}             ← openai≥2.26.0, anthropic SDK, etc.
+└── tiktoken (OpenAI only)
+
+langchain-tests (v1.1.5)      ← test suite
+├── langchain-core
+├── pytest, pytest-asyncio
+└── httpx, vcrpy
+```
+
+---
+
+## 12. Build & Developer Tooling
+
+### Common Per-Package Makefile Targets
+
+```makefile
+make lock          # regenerate uv.lock
+make check-lock    # verify lockfile is up to date
+make test          # run unit tests (no network)
+make lint          # lint code with ruff
+make format        # format code with ruff
+make spell_check   # spell checking
+```
+
+### Dependency Installation
+
+```bash
+# Install test group only
+uv sync --group test
+
+# Install all groups
+uv sync --all-groups
+
+# Run a specific test
+uv run --group test pytest tests/unit_tests/test_specific.py
+
+# Type checking
+uv run --group lint mypy .
+```
+
+### Local Editable Install Pattern
+
+```toml
+# Each package's pyproject.toml
+[tool.uv.sources]
+langchain-core = { path = "../core", editable = true }
+langchain-tests = { path = "../standard-tests", editable = true }
+```
+
+### Code Quality Tools
+
+| Tool           | Version       | Role                               |
+| -------------- | ------------- | ---------------------------------- |
+| ruff           | 0.15.0–0.16.0 | Linter + formatter                 |
+| mypy           | 1.19.1–1.20.0 | Static type checking (strict mode) |
+| pytest         | -             | Test framework                     |
+| pytest-asyncio | -             | Async test support                 |
+| pytest-xdist   | -             | Parallel test execution            |
+| syrupy         | -             | Snapshot testing                   |
+| vcrpy          | -             | HTTP interception testing          |
+
+---
+
+## 13. CI/CD Infrastructure
+
+### Key GitHub Actions Workflows (19+)
+
+| Workflow                     | Role                                       |
+| ---------------------------- | ------------------------------------------ |
+| `_test.yml`                  | Unit test execution template               |
+| `_lint.yml`                  | Linting workflow template                  |
+| `_release.yml`               | Release orchestration (25KB)               |
+| `_test_pydantic.yml`         | Pydantic version compatibility validation  |
+| `check_diffs.yml`            | Detect changed packages (10KB)             |
+| `integration_tests.yml`      | Scheduled integration tests (12KB)         |
+| `pr_lint.yml`                | PR title validation (Conventional Commits) |
+| `auto-label-by-package.yml`  | Auto-label PRs by modified package         |
+| `refresh_model_profiles.yml` | Automated model profile refresh            |
+| `check_core_versions.yml`    | Dependency version checks                  |
+| `require_issue_link.yml`     | Enforce issue link on PRs (10KB)           |
+| `v03_api_doc_build.yml`      | Automated API documentation build          |
+
+### Commit Conventions (Conventional Commits)
+
+```
+feat(scope): add a new feature
+fix(scope): fix a bug
+chore(scope): infrastructure changes
+docs(scope): documentation updates
+refactor(scope): refactoring
+test(scope): add or modify tests
+
+Examples:
+- feat(core): add streaming support to Runnable
+- fix(openai): handle rate limit errors gracefully
+- chore(anthropic): update infrastructure dependencies
+```
+
+---
+
+## 14. Directory Tree
+
+```
+langchain/
+├── libs/
+│   ├── core/
+│   │   ├── langchain_core/
+│   │   │   ├── runnables/          # 18 files (base.py 222KB)
+│   │   │   ├── language_models/
+│   │   │   ├── callbacks/          # manager.py 85KB+
+│   │   │   ├── messages/           # 14 files
+│   │   │   ├── prompts/            # 14 files
+│   │   │   ├── tools/              # 6 files
+│   │   │   ├── output_parsers/     # 13 files
+│   │   │   ├── vectorstores/
+│   │   │   ├── retrievers.py
+│   │   │   ├── embeddings/
+│   │   │   ├── load/               # 4 files
+│   │   │   ├── tracers/
+│   │   │   └── utils/              # 17 modules
+│   │   └── pyproject.toml
+│   │
+│   ├── langchain_v1/
+│   │   ├── langchain/
+│   │   │   ├── agents/             # 30 subdirectories
+│   │   │   ├── chains/             # 43 subdirectories
+│   │   │   ├── document_loaders/   # 149 subdirectories
+│   │   │   ├── llms/               # 86 subdirectories
+│   │   │   ├── vectorstores/       # 71 subdirectories
+│   │   │   └── tools/              # 74 subdirectories
+│   │   └── pyproject.toml
+│   │
+│   ├── partners/
+│   │   ├── openai/
+│   │   │   ├── langchain_openai/
+│   │   │   │   ├── chat_models.py
+│   │   │   │   ├── llms.py
+│   │   │   │   ├── embeddings/
+│   │   │   │   ├── middleware/
+│   │   │   │   └── data/           # model profiles
+│   │   │   └── pyproject.toml
+│   │   ├── anthropic/
+│   │   ├── ollama/
+│   │   └── ... (12 more)
+│   │
+│   ├── standard-tests/
+│   │   └── langchain_tests/
+│   │       ├── integration_tests/
+│   │       │   ├── chat_models.py  # 128KB comprehensive tests
+│   │       │   ├── embeddings.py
+│   │       │   └── vectorstores.py # 31KB
+│   │       └── unit_tests/
+│   │
+│   ├── text-splitters/
+│   ├── model-profiles/
+│   └── Makefile
+│
+└── .github/
+    ├── workflows/              # 19+ YAML files
+    └── ISSUE_TEMPLATE/
+```
+
+---
+
+## 15. Key Concepts Explained
+
+### Runnable Protocol
+
+Every LangChain component — models, retrievers, parsers, and prompt templates — implements the `Runnable` interface. This is the central design decision that makes it possible to connect any component to any other using the `|` operator.
+
+```python
+# Every component implements the same interface
+prompt    : Runnable[dict, PromptValue]
+llm       : Runnable[PromptValue, AIMessage]
+parser    : Runnable[AIMessage, str]
+
+# Pipe composition (creates a RunnableSequence)
+chain = prompt | llm | parser
+```
+
+### LCEL (LangChain Expression Language)
+
+A domain-specific language that overloads Python's `|` operator to let you declare chains in a declarative style.
+
+### Serializable Pattern
+
+Every component inherits from `Serializable` (backed by Pydantic's `BaseModel`), giving it JSON serialization and deserialization out of the box. This allows entire chains to be saved and restored.
+
+### Standard Test Pattern
+
+`langchain-tests` provides a shared test suite that every partner package can inherit and run, ensuring consistent behavior across integrations.
+
+```python
+# Example partner package test
+from langchain_tests.integration_tests import ChatModelIntegrationTests
+
+class TestChatOpenAI(ChatModelIntegrationTests):
+    @property
+    def chat_model_class(self) -> type:
+        return ChatOpenAI
+
+    @property
+    def chat_model_params(self) -> dict:
+        return {"model": "gpt-4o-mini"}
+```
+
+---
+
+## 16. Differentiators from Generic LLM Libraries
+
+| Feature                   | LangChain                               | Generic LLM SDK                      |
+| ------------------------- | --------------------------------------- | ------------------------------------ |
+| **Provider neutrality**   | Swap models with identical code         | API differences per provider         |
+| **Component composition** | Build pipelines with the `\|` operator  | Manual function calls                |
+| **Streaming**             | Unified interface across all components | Per-model implementation differences |
+| **Sync/async**            | Consistent `invoke`/`ainvoke` pairing   | Separate clients required            |
+| **Observability**         | LangSmith built in                      | Must be set up separately            |
+| **Serialization**         | Save and restore entire chains          | Not available                        |
+| **Tool integration**      | Standardized tool interface             | Manual parsing required              |
+| **Structured output**     | `with_structured_output()`              | Relies on prompt engineering         |
+| **Error recovery**        | `with_fallbacks()`, `with_retry()`      | Manual try/except                    |
+| **Testing**               | Shared `langchain-tests` suite          | Write tests individually             |
+
+---
+
+> **Summary:** The LangChain Python monorepo is a provider-neutral LLM framework designed around the **Runnable Protocol**. It achieves both extensibility and consistency through a three-tier architecture: foundational abstractions in `langchain-core` → high-level implementations in `langchain` → concrete integrations in partner packages. A `uv`-based monorepo setup and the shared `langchain-tests` test suite maintain quality across all 15 partner packages.

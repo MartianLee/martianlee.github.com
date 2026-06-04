@@ -1,0 +1,95 @@
+---
+title: 'LLM Learning Basics: Pre-training and Fine-tuning'
+date: '2026-04-18'
+tags: ['llm', 'pre-training', 'fine-tuning', 'training', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Explains large-scale pre-training and task-specific fine-tuning through the lens of the BERT workflow.'
+---
+
+## Why Does This Matter
+
+The core insight of the BERT paper lies not in the model architecture, but in the training methodology.
+The idea is to first train the model on large-scale unlabeled text, then adapt it to a specific task using a small amount of labeled data.
+
+After reading this note, the following sentence should feel far less intimidating.
+
+```txt
+The pre-trained model is fine-tuned on downstream tasks with minimal task-specific parameters.
+```
+
+## The Core Concepts and Notation
+
+The overall workflow consists of two stages.
+
+```txt
+1. Pre-training:
+   minimize L_pretrain(theta; unlabeled_text)
+
+2. Fine-tuning:
+   initialize theta from pre-training
+   minimize L_task(theta, phi; labeled_task_data)
+```
+
+The symbols mean the following.
+
+- `theta`: parameters of the pre-trained model.
+- `phi`: new parameters such as a task-specific output layer.
+- `L_pretrain`: the pre-training loss.
+- `L_task`: the loss for a specific downstream task.
+
+## First-Pass Interpretation: What the Notation Is Saying
+
+Pre-training is the stage in which the model first learns the general patterns of language.
+
+It learns things such as:
+
+- Co-occurrence patterns between words
+- Sentence structure
+- How word meanings shift depending on context
+- Relationships between sentences
+
+Fine-tuning is the stage in which the knowledge already acquired is adapted to a specific problem.
+
+For example, to apply BERT to sentiment classification, you attach a classification layer on top of the `[CLS]` representation and retrain the model on labeled sentiment data.
+
+## An Accessible Analogy
+
+Think of medical education.
+
+- Pre-training: In medical school, students study anatomy, physiology, and pathology broadly.
+- Fine-tuning: Afterward, they train in a specific specialty such as dermatology, internal medicine, or surgery.
+
+It would be very difficult to become a competent physician by seeing only a handful of dermatology cases from the start.
+Learning broad foundational knowledge first, then specializing for a particular role later, is far more efficient.
+
+LLMs work similarly.
+Labeled data is expensive and scarce, while unlabeled text is abundantly available.
+The model therefore learns extensively from general text first, then is aligned to a specific purpose using a small labeled dataset.
+
+## How to Read the Paper When You Encounter This Again
+
+When the BERT paper refers to fine-tuning, it typically means the following.
+
+```txt
+All pre-trained BERT parameters are updated again using downstream task data.
+```
+
+This is different from feature extraction.
+
+```txt
+Feature extraction: the pre-trained model is frozen; only its output is used as features.
+Fine-tuning: the pre-trained model itself is also updated during training.
+```
+
+## Common Misconceptions
+
+- Fine-tuning does not mean training only the output layer. In the BERT paper, the entire set of parameters is fine-tuned.
+- More pre-training data does not automatically guarantee better downstream task performance.
+- If fine-tuning data is too small, the model can become unstable or overfit.
+
+## Minimum Checkpoint
+
+- Pre-training is the stage in which the model acquires general language knowledge first.
+- Fine-tuning is the stage in which the model is adapted to a specific task.
+- The strength of BERT is that the same pre-trained model can be reused across many tasks in nearly the same way.

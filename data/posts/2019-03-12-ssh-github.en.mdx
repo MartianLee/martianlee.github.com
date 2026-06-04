@@ -1,0 +1,68 @@
+---
+title: 'Adding an SSH Key to GitHub'
+crawlertitle: 'Adding an SSH Key to GitHub'
+slug: '2019-03-12-ssh-github'
+summary: 'A step-by-step guide to generating an SSH key, registering it with GitHub, and pushing your first commit'
+date: 2019-03-12 15:13:19 +0900
+categories: posts
+tags: ['develop', 'github']
+author: MartianLee
+---
+
+I got a new laptop today. I've used company-issued machines before, but it's been so long since I had one that was fully mine that I can't even remember the last time. Anyway, if you're registering a GitHub key for the first time, you're probably in a similar situation — once you set up your dev environment once, you rarely need to touch this again.
+
+Let me walk through how to clone a GitHub repository on a brand-new MacBook.
+
+This guide assumes you already have a repository you were working on and covers how to connect to it over SSH.
+
+## 1. Generate an SSH Key
+
+![img2](/static/post-images/190312_ssh_key_github/img2.png)
+
+Run `ssh-keygen` in your terminal.
+It will ask you two things: (1) where to save the key (press Enter to accept the default location `~/.ssh/id_rsa`), and (2) a passphrase.
+
+For more details, see [this link][ssh-key].
+
+## 2. Register the Key on [GitHub][github]
+
+Your key files are located in the `~/.ssh` directory.
+
+![img4](/static/post-images/190312_ssh_key_github/img4.png)
+
+![img5](/static/post-images/190312_ssh_key_github/img5.png)
+
+Go to GitHub **Settings**, navigate to the **SSH and GPG keys** section, and add your public key there.
+
+## 3. Configure Your GitHub Account Locally
+
+![img3](/static/post-images/190312_ssh_key_github/img3.png)
+
+> git config --global user.name "Your Name"
+
+> git config --global user.email "Your Email"
+
+GitHub needs to know who you are in order to attribute commits to you. Set your identity globally using the commands above. There are many other config options available — exploring them with `git --help` or a quick web search is worth your time.
+
+## 4. git clone
+
+![img6](/static/post-images/190312_ssh_key_github/img6.png)
+
+## \* Common Error Messages
+
+### No local SSH key found
+
+![img1](/static/post-images/190312_ssh_key_github/img1.png)
+
+This was the first error I ran into. When trying to `git clone` over SSH, I got a plain "Permission denied" message. GitHub has no way to verify that this machine belongs to me without an SSH key. The fix is to generate an SSH key with `ssh-keygen` and then add it in GitHub Settings under **SSH keys**.
+
+### SSH key not registered on GitHub
+
+If `~/.ssh/id_rsa` already exists, go to GitHub **Settings → SSH keys** and verify that the key is listed there.
+
+## Closing Thoughts
+
+When I first started using GitHub I was confused about what SSH even was, so I just used HTTPS and moved on. It wasn't until I joined a private project that I actually needed SSH keys. I hope this guide helps you get your first commit pushed to GitHub without any trouble.
+
+[github]: https://github.com/
+[ssh-key]: https://git-scm.com/book/ko/v1/Git-%EC%84%9C%EB%B2%84-SSH-%EA%B3%B5%EA%B0%9C%ED%82%A4-%EB%A7%8C%EB%93%A4%EA%B8%B0

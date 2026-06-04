@@ -1,0 +1,76 @@
+---
+title: 'SCCC Homepage Renewal'
+slug: '2019-04-17-renwal-sccc-page'
+crawlertitle: 'SCCC Homepage Renewal with Jekyll Blog'
+summary: 'Renewing the SCCC club homepage as a Jekyll blog.'
+date: 2019-04-17 18:27:41 +0900
+categories: posts
+tags: ['develop', 'jekyll']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+- Table of Contents
+
+## Background
+
+Back in 2016, I built a page for the Soongsil University club SCCC (Soongsil Computing Contest Club). It was a static page served on nginx — a simple HTML/CSS/JavaScript site based on a Bootstrap theme. Time passes, and after about three years you naturally get tired of the same design.
+
+Around that time, club activity had also picked up again, and while thinking about ways to share problem solutions on the homepage, I decided it would be nice to rebuild it as a Jekyll blog on GitHub Pages. The original goal had been to build a full-featured Rails site with member registration, a bulletin board, and an archive — but that scope was too ambitious and the project had been stagnating. Jekyll seemed like a good fit: fast to host and capable enough to cover the one feature I actually needed, "solution sharing."
+
+## Problem
+
+The migration path is: HTML/CSS/JavaScript → Jekyll blog.
+
+On top of that, the goal was to introduce a somewhat nicer design.
+
+## Approach
+
+I had actually just renewed my own Jekyll blog a few days earlier. See the linked post for details on how that was done.
+
+I reused the same approach, but this time I had four specific goals:
+
+- Keep the club promotion/information features of the existing homepage while adding a "Solutions" tab.
+- Decorate the top header with animations.
+- Show attractive animations when scrolling.
+- Replace Bootstrap with a different CSS framework — I was tired of Bootstrap.
+
+## Solution
+
+1. Use Jekyll's Collection feature to create a new solutions tab in the same way posts work.
+   1. Initially I considered tagging posts with `solution`, but I switched to Collections for easier styling and iteration later on.
+   2. It was my first time using Collections, so it took about **#2h**.
+2. Write the animations manually using [Anime.js](https://animejs.com/).
+   1. I looked at quite a few CSS libraries; Anime.js stood out for its large GitHub star count and general-purpose feature set, so I chose it.
+   2. This took a while — somewhere between **#1h and #2h**. The result wasn't exactly what I had envisioned, but it captures at least the basic feel. I originally imagined a dramatic crash-and-scatter effect, but that felt too ambitious so I pivoted to something simpler. lol
+3. Apply floating animations using the [AOS (Animate On Scroll) CSS Library](https://michalsnik.github.io/aos/).
+   1. There are several scroll-animation libraries out there; AOS looked exceptionally easy to integrate (just one attribute per element), so I went with it.
+   2. As the documentation promised, it really was straightforward — include the library, then add the attribute to whichever tags you need. Took about **#30min**.
+4. Try [Semantic UI](https://semantic-ui.com/) instead of Bootstrap.
+   1. Among the well-known CSS frameworks, Semantic UI is arguably the runner-up to Bootstrap, so I gave it a shot.
+   2. The main draw was the Sidebar component. Classes didn't behave quite as expected in places, which ended up costing around **#2h**.
+
+#### Desktop page
+
+![img1](/static/post-images/190417_renewal-sccc-homepage/homepage.png)
+
+#### Mobile page
+
+![img2](/static/post-images/190417_renewal-sccc-homepage/mobile1.png)
+![img3](/static/post-images/190417_renewal-sccc-homepage/mobile2.png)
+
+## Conclusion
+
+The site is currently live at https://ssu-sccc.github.io/sccc-homepage/. Once the styling for the solutions pages is finished, I plan to attach the [sccc.kr](http://sccc.kr) domain.
+
+The homepage renewal had been on the backlog since last year. Fortunately, having just finished renewing my own Jekyll blog, I had enough familiarity with the tooling to pull off a reasonably polished result without spending too much time.
+
+I've already graduated, but imagining a future where club members actively share solutions, commit code, and send pull requests for issues was oddly motivating — I found myself very focused during development. One last note: the club president of 2019 was a huge help; his enthusiasm in sitting down right then and there to write and share a solution was genuinely inspiring.
+
+Unlike before, the source is no longer locked away on our server alone, so future members should find it much easier to build on or rebuild. The repository is at: https://github.com/ssu-sccc/sccc-homepage
+
+Go SCCC — all the way to ACM!
+
+[codeground]: https://www.codeground.org/practice

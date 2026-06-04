@@ -1,0 +1,38 @@
+---
+title: '220313 TIL'
+crawlertitle: '220313 TIL'
+slug: '2022-03-13-TIL-css-grid'
+summary: '220313 TIL'
+date: 2022-03-13 20:16:45 +0900
+categories: posts
+tags: ['question']
+author: MartianLee
+---
+
+# TIL: Exploring Various Uses of CSS Grid
+
+## Problem
+
+How can you make two elements on the same row behave so that one has a fixed width while the other stretches to fill the remaining space?
+
+## Solution
+
+-> Solved with CSS grid
+
+1. Initially I tried to solve this with flexbox + `min-width`. However, I kept running into a problem where the element with `min-width` set would overflow beyond its maximum width.
+2. After searching online, I found that using grid allows you to specify exact column sizes.
+
+```html
+<div style="display:grid; grid-template-columns: minmax(0,1fr) 100px;">
+  <input type="text" placeholder="검색" />
+  <button type="submit">검색하기</button>
+</div>
+```
+
+With the styling above, the button's width is fixed at 100px, and the input stretches to fill all remaining space as the container width changes.
+
+## Summary
+
+Up until now I only understood grid well enough for `grid-template-columns: 1fr 1fr 1fr 1fr;`, but this time I learned that it can be used to create far more varied layouts.
+
+- [How to use the grid fr unit](https://www.digitalocean.com/community/tutorials/css-css-grid-layout-fr-unit)

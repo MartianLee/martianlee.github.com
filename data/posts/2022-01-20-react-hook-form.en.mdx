@@ -1,0 +1,167 @@
+---
+title: 'Getting Started with react-hook-form 1'
+crawlertitle: 'Getting Started with react-hook-form 1'
+slug: '2022-01-20-react-hook-form'
+summary: 'react-hook-form'
+date: 2022-01-20 23:26:34 +0900
+categories: posts
+tags: ['javascript', 'form', 'react', 'hook']
+author: MartianLee
+---
+
+- Table of Contents
+
+## Background
+
+At work, I was assigned to rewrite a single page in a small project. The task involved merging existing logic and adding two new API calls to the existing flow. Glancing at the code, it seemed like there were only two or three components involved and I already had a decent grasp of the flow, so I was confident it would be done quickly. However, every single component was written entirely with react-hook-form, and since I knew absolutely nothing about react-hook-form, I ended up finishing the work far beyond the estimated timeline. The takeaway is twofold: react-hook-form is genuinely powerful, and going forward, I should never underestimate an unfamiliar codebase.
+
+## What is react-hook-form?
+
+It introduces itself as a "performant, flexible and extensible forms with easy-to-use validation" library.
+
+It is the [second library listed](https://github.com/enaqx/awesome-react#forms) in the forms section of awesome-react. The library with the most stars is formik. If I get the chance, I would like to use it and study how each one solves the problems that come up when implementing form patterns. The official documentation is even available in [Korean](https://react-hook-form.com/kr/).
+
+### What''s good about it
+
+1. It uses the native HTML5 `input` tag as-is.
+2. Form validation is very easy, exactly as advertised.
+3. It avoids re-rendering whenever possible. (Meaning it has great performance.)
+4. Accessing a parent component''s form from a child component is easy. (`useContext`)
+5. Validation is straightforward.
+6. Initial values and the submit function interface are already built in.
+
+## Usage
+
+```tsx
+import React from 'react'
+import { useForm } from 'react-hook-form'
+
+export default function App() {
+  const { register, handleSubmit } = useForm()
+  const onSubmit = (data) => console.log(data)
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('firstName')} />
+      <select {...register('gender')}>
+        <option value="female">female</option>
+        <option value="male">male</option>
+        <option value="other">other</option>
+      </select>
+      <input type="submit" />
+    </form>
+  )
+}
+```
+
+This is the very first example from the official docs at [https://react-hook-form.com/get-started](https://react-hook-form.com/get-started).
+
+The first concept to understand is `register`. Using the `register` function, you can register form fields into the `useForm` hook instance you created. Then you make the form''s `onSubmit` call `handleSubmit`, and that''s it. This is the fundamental pattern — when you call `register`, you can configure validation rules, whether a field is required, and how error messages should be displayed. That alone is enormous. Angular''s form was also very powerful, and I found the usability to be roughly comparable. (Angular forms: [https://angular.io/guide/forms](https://angular.io/guide/forms))
+
+```tsx
+import React from 'react'
+import { useForm } from 'react-hook-form'
+
+// The following component is an example of your existing Input Component
+const Input = ({ label, register, required }) => (
+  <>
+    <label>{label}</label>
+    <input {...register(label, { required })} />
+  </>
+)
+
+// you can use React.forwardRef to pass the ref too
+const Select = React.forwardRef(({ onChange, onBlur, name, label }, ref) => (
+  <>
+    <label>{label}</label>
+    <select name={name} ref={ref} onChange={onChange} onBlur={onBlur}>
+      <option value="20">20</option>
+      <option value="30">30</option>
+    </select>
+  </>
+))
+
+const App = () => {
+  const { register, handleSubmit } = useForm()
+
+  const onSubmit = (data) => {
+    alert(JSON.stringify(data))
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Input label="First Name" register={register} required />
+      <Select label="Age" {...register('Age')} />
+      <input type="submit" />
+    </form>
+  )
+}
+```
+
+What I found most powerful was the **Integrating an existing form** section. We declare forms, but we tend to build our own custom option components, custom checkbox fields, and so on — and react-hook-form integrates with those custom components remarkably well. It pre-provides the essential `onChange`, `onBlur`, `label`, and other handlers via `register`, enabling two integration approaches: using `forwardRef` to pass the ref down, or passing the `register` function as a prop so the child can register itself with the parent form. From a development-speed standpoint, this was genuinely compelling.
+
+Validation deserves mention as well. When I implement validation myself, I end up writing `if` statements inside `handleSubmit` to validate and show `alert`s, or creating a separate `errorMessage` state to track which error to display — a lot of state and conditionals. With react-hook-form, you simply configure `pattern` and `required` upfront and it handles validation automatically. Although it''s not shown in the example above, using `formState.isValid` lets you prevent submission until all conditions are satisfied. This is extremely useful when you need to make an API request (no invalid values will ever be submitted).
+
+```tsx
+const { formState } = useForm();
+return (
+...
+<input type="submit" disabled={!formstate.isValid}/>
+)
+```
+
+The issue I struggled with was that after setting a value directly via `setValue`, react-hook-form would not run validation on its own, so `isValid` on the submit button did not work correctly. But brilliantly, react-hook-form had a feature prepared exactly for this situation: `trigger`. [https://react-hook-form.com/api/useform/trigger](https://react-hook-form.com/api/useform/trigger)
+
+```tsx
+import React from 'react'
+import { useForm } from 'react-hook-form'
+
+export default function App() {
+  const {
+    register,
+    trigger,
+    formState: { errors },
+  } = useForm()
+
+  return (
+    <form>
+      <input {...register('firstName', { required: true })} />
+      <input {...register('lastName', { required: true })} />
+      <button
+        type="button"
+        onClick={async () => {
+          const result = await trigger('lastName')
+          // const result = await trigger("lastName", { shouldFocus: true }); allowed to focus input
+        }}
+      >
+        Trigger
+      </button>
+      <button
+        type="button"
+        onClick={async () => {
+          const result = await trigger(['firstName', 'lastName'])
+        }}
+      >
+        Trigger Multiple
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          trigger()
+        }}
+      >
+        Trigger All
+      </button>
+    </form>
+  )
+}
+```
+
+→ This is taken from the `trigger` section of the official docs.
+
+The above shows a scenario where clicking a button forces validation on `lastName`. You can even trigger multiple fields, or all fields at once.
+
+## What''s Next
+
+If time permits, it would be great to write my own tutorial going from installation through a simple sign-up form all the way to custom components.
+That''s a wrap!

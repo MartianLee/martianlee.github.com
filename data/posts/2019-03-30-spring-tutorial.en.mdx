@@ -1,0 +1,52 @@
+---
+title: 'Getting Started with Spring Boot'
+crawlertitle: 'Getting Started with Spring Boot'
+slug: '2019-03-30-spring-tutorial'
+summary: 'Installing Spring Boot and exploring its basic features'
+date: 2019-03-30 02:04:32 +0900
+categories: posts
+tags: ['develop']
+author: MartianLee
+---
+
+After reading through job descriptions from a large number of companies while searching for a new position, I noticed that almost every backend role at mid-to-large companies listed "Spring Framework experience preferred." Having briefly touched Spring during my military service and then forgotten about it entirely, I found myself coming back to it once again — what a reunion. With interviews just around the corner, diving deep into Spring's core concepts like AOP and DI felt unrealistic, so I set a modest goal: build a simple bulletin board and ship it.
+
+There are several tutorials out there, but I went with the well-known [tutorial by jojoldu][tutorial], which, though a bit dated, walks you through not just using Spring Boot but actually deploying a live service. Below are the issues I ran into while following along.
+
+_Note: I started with STS as my IDE but switched to Visual Studio Code partway through the tutorial — keep that in mind as you read._
+
+### Lombok Error
+
+This error occurs in STS when **Enable Annotation Processing** is not checked.
+I referred to [this issue][error-1] for the fix.
+
+### Error: Red underline on `access = AccessLevel.PROTECTED`
+
+Add the following import:
+
+`import lombok.AccessLevel;`
+
+### java.lang.NoClassDefFoundError: org/junit/runner/manipulation/Filter
+
+This error means JUnit is missing. You can resolve it by adding the JUnit library through the project settings:
+
+Properties → Libraries → Add Library → JUnit
+
+### Problem accessing http://localhost:8080/h2-console
+
+You need to change the JDBC URL from the default value to `jdbc:h2:mem:testdb`.
+
+### LocalDate dependency configuration not updated
+
+Starting from Spring 2, Spring Boot 2.0 ships with Hibernate 5.2.16 (the latest version at the time of writing was Spring Boot 2.0.1). Hibernate 5.2 depends on JPA 2.1 and supports it, but it also partially supports JPA 2.2. JPA 2.2 includes support for JSR-310 — the Date and Time API — so the dependency configuration needs to be updated accordingly.
+
+### Test code placed in the `main` folder instead of the `test` folder kept causing errors
+
+Always put your test code under the `test` folder.
+
+### The BaseEntity Concept
+
+In Rails, you simply inherit from `ActiveRecord` and everything is taken care of. In Spring, you need to define your own `BaseEntity` and have your entities extend it.
+
+[tutorial]: https://jojoldu.tistory.com/251?category=635883
+[error-1]: https://github.com/spring-projects/spring-ide/issues/273

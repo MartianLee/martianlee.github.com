@@ -1,0 +1,142 @@
+---
+title: 'Checking Duplicate IDs Among Billions — Is a Bloom Filter Really the Answer?'
+date: '2026-04-18'
+tags: ['bloom-filter', 'redis', 'database', 'backend', 'scaling']
+topic: backend-architecture
+stage: seedling
+summary: 'A clear explanation of how Bloom filters work, how to use them correctly for user-ID duplicate checks during sign-up, and a concise implementation example.'
+---
+
+There is a claim that circulates frequently on tech Twitter:
+"Checking whether an ID already exists at a service like Google? Just use a Bloom filter."
+
+The short answer: both halves of that statement are right — and wrong.
+
+- What is correct: a Bloom filter can dramatically reduce the performance cost of large-scale duplicate checks.
+- What is wrong: you cannot rely on a Bloom filter alone for the final verdict.
+
+A Bloom filter is not a source of truth. It is a high-speed pre-screening filter.
+
+## 3-Minute Summary
+
+- A Bloom filter gives you a definite "does not exist" answer, but only a probabilistic "may exist" answer.
+- In a sign-up duplicate-check flow, placing it in front of the database as a first-pass filter can cut costs significantly.
+- The final authoritative decision must always be enforced by a DB `UNIQUE` constraint.
+
+```mermaid
+flowchart LR
+  A[사용자 ID 입력] --> B{Bloom 조회}
+  B -->|False| C[가입 진행]
+  B -->|True| D[DB 최종 확인]
+  D -->|미존재| C
+  D -->|존재| E[중복 안내]
+  C --> F[DB INSERT with UNIQUE]
+```
+
+## What Is a Bloom Filter?
+
+A Bloom filter is a probabilistic data structure that answers membership queries quickly.
+
+- `False`: the element is definitely not in the set
+- `True`: the element _may_ be in the set (false positives are possible)
+
+In other words, you can trust a "not present" result, but a "present" result always requires a second verification step.
+
+## Why Are They Used in Large-Scale Services?
+
+Querying the database directly every time a user submits an ID at sign-up becomes increasingly expensive as traffic grows. Placing a Bloom filter in front of the database lets you rule out non-existent IDs almost instantly, reducing database load substantially.
+
+Common use cases:
+
+- First-pass duplicate check for user IDs and display names at sign-up
+- Cache miss prevention
+- Duplicate event / request filtering
+- URL visitation tracking in web crawlers
+
+## How It Works
+
+1. Allocate a large bit array.
+2. When inserting an element, compute `k` hash functions and set the resulting bit positions to 1.
+3. When querying an element, check those same `k` bit positions.
+4. If any position holds a 0, the element is definitely absent. If all positions are 1, the element may be present.
+
+## The Correct Pattern for Sign-Up Duplicate Checks
+
+1. The user submits an ID.
+2. Query the Bloom filter.
+3. If the result is `False`, proceed with registration immediately.
+4. If the result is `True`, perform a final lookup against the database or index.
+5. Persist the record using a DB `UNIQUE` constraint to make the decision official.
+
+The one rule that matters: the database's unique index is the single source of truth.
+
+## Sizing the Filter: A Quick Calculation
+
+Formula for the number of bits required:
+
+$$
+m = -\frac{n \ln p}{(\ln 2)^2}
+$$
+
+- `n`: number of elements to store
+- `p`: acceptable false positive rate
+- `m`: bit array size
+
+For example, with `n = 1 billion` and `p = 1%`:
+
+- `m ≈ 9.6e9 bits` (roughly 1.2 GB)
+- Optimal number of hash functions `k ≈ 7`
+
+## Minimal Implementation (Python)
+
+```python
+import hashlib
+import math
+
+class BloomFilter:
+    def __init__(self, capacity: int, error_rate: float = 0.01):
+        self.m = int(-capacity * math.log(error_rate) / (math.log(2) ** 2))
+        self.k = max(1, int((self.m / capacity) * math.log(2)))
+        self.bits = bytearray((self.m + 7) // 8)
+
+    def _hashes(self, item: str):
+        b = item.encode("utf-8")
+        for i in range(self.k):
+            h = hashlib.sha256(i.to_bytes(2, "big") + b).digest()
+            yield int.from_bytes(h[:8], "big") % self.m
+
+    def add(self, item: str):
+        for idx in self._hashes(item):
+            self.bits[idx // 8] |= (1 << (idx % 8))
+
+    def might_contain(self, item: str) -> bool:
+        for idx in self._hashes(item):
+            if not (self.bits[idx // 8] & (1 << (idx % 8))):
+                return False
+        return True
+```
+
+## 30-Second Mini-Experiment: Why Only "May Exist"?
+
+A small toy example makes it immediately clear why false positives occur.
+
+- Bit array size `m=8`
+- Two hash functions `h1`, `h2`
+- Inserting `alice` sets bits `1` and `5` to 1
+- Inserting `carl` sets bits `3` and `5` to 1
+
+Now query `bob`. Suppose by coincidence `h1(bob)=1` and `h2(bob)=3`.
+Bits `1` and `3` are already set to 1, so the filter returns `True`.
+But `bob` was never inserted. This is a false positive.
+
+The takeaway is straightforward: because a Bloom filter stores only bits, it permanently loses the information about _which element_ set each bit. Membership queries are therefore fast but probabilistic by design.
+
+## Practical Pitfalls Often Overlooked
+
+- Deletion is generally not supported in a standard Bloom filter.
+- As the data set grows, the false positive rate increases.
+- Consistency guarantees must be enforced by a DB `UNIQUE` constraint, not the filter.
+
+## Wrapping Up
+
+A Bloom filter is highly effective at eliminating the cost of repeatedly scanning the entire database to check whether an ID already exists. However, the correct solution is not a Bloom filter in isolation — it is the combination of a Bloom filter _plus_ a database unique constraint working together.

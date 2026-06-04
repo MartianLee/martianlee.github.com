@@ -1,0 +1,58 @@
+---
+title: 'Link Management Service Plan'
+crawlertitle: 'Link Management Service Plan'
+slug: '2022-07-17-link-manage-service-plan'
+summary: 'react-hook-form'
+date: 2022-07-17 19:56:23 +0900
+categories: posts
+tags: ['javascript', 'react', 'product', 'toy project']
+author: MartianLee
+---
+
+## Background
+
+While browsing the web I often come across useful links worth reading, but they tend to get buried after being dropped into KakaoTalk or Slack. Organizing them in Notion is another option, but Notion already has many other pages in use, and navigating to the right page then formatting an entry correctly is not very ergonomic on mobile. Recently I noticed that other developers approach this kind of problem by building a small service and iterating on it incrementally, so I decided to try the same.
+
+## Service Concept
+
+Working title: Choroc-link — "Choling"
+
+Drop links you want to read into Choling. Choling will organize them so you can read them whenever you are ready.
+
+### Usage Scenario
+
+Step 1. While browsing, paste a link you found into Choling.
+
+Step 2. Choling sends you a notification at a fixed time every day.
+
+Step 3. You read the linked content, write a summary, or set a priority to defer it for later.
+
+### Link CRUD
+
+- Link attributes
+  - url, link alias, tags, read status, priority (enum 1–5), link summary (markdown format)
+- Related features
+  - If no alias is provided when saving a link, automatically populate it from the page's meta title
+- Implementation
+
+### Cron
+
+- One-to-one mapping with a user
+- Day-of-week and time input (minutes excluded in the initial version); default is 10 PM every day
+- Implementation options
+  - GitHub Actions (e.g. nextjs-cron https://github.com/paulphys/nextjs-cron, [general-purpose cron job with GitHub Actions](https://yceffort.kr/2020/07/cron-job-with-github-actions))
+  - easycron [https://www.easycron.com/](https://www.easycron.com/)
+
+### Architecture
+
+- Framework
+  - React — Next.js vs Svelte
+- Next.js
+  - CSS framework
+    - tailwind vs emotion/styled vs ??
+
+### Deploy
+
+- [S3 hosting](https://dev.to/parmentierchristophe/how-to-deploy-static-next-js-to-aws-s3-1d4f)
+- Vercel hosting
+- GitHub Pages

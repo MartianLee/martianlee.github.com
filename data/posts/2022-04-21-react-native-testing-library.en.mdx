@@ -1,0 +1,99 @@
+---
+title: 'Setting Up react-native-testing-library'
+crawlertitle: 'Setting Up react-native-testing-library'
+slug: '2022-04-21-react-native-testing-library'
+summary: 'react-hook-form'
+date: 2022-04-21 23:42:15 +0900
+categories: posts
+tags: ['javascript', 'react', 'react-native', 'test']
+author: MartianLee
+---
+
+- Table of Contents
+
+## Background
+
+While migrating an old library to a newer version at work, I had to modify the entire set of components. Fortunately, there was existing test code. However, some tests were not working, and some always passed regardless of the author's intent. In particular, tests involving asynchronous operations had no reliable way to verify behavior. I briefly considered switching from react-testing-library to enzyme to solve the problem, but the official documentation clearly stated that asynchronous operations were supported. When I looked into what was wrong, I found that the library version was considerably outdated. So I [updated the library to the latest version](https://callstack.github.io/react-native-testing-library/docs/migration-v7/) and improved parts of the test code. This experience made me want to correct the habit of writing tests sloppily under various excuses, so I decided to properly study react-testing-library as I currently use it.
+
+## What is react-native-testing-library?
+
+react-native-testing-library is a testing library inspired by react-testing-library. Because React Native does not run in a browser, its core queries are implemented independently rather than on top of the DOM Testing Library. It is developed by a company called [Callstack](https://www.callstack.com/open-source?utm_source=testing-library.com&utm_medium=referral&utm_campaign=react-native-testing-library).
+
+[Official documentation](https://testing-library.com/docs/react-native-testing-library/intro)
+
+### Benefits
+
+1. Similar to react-testing-library, so you can get started quickly.
+2. Well maintained by the maintainers and community alongside other `@testing-library` packages.
+
+## Installation
+
+```bash
+npm install --save-dev @testing-library/react-native
+yarn add --dev @testing-library/react-native
+```
+
+[Setup guide](https://testing-library.com/docs/react-native-testing-library/setup)
+
+If you do not have jest installed yet, you will also need to install a few additional libraries.
+
+```bash
+npm install --save-dev jest @testing-library/jest-native @babel/preset-typescript
+yarn add --dev jest @testing-library/jest-native @babel/preset-typescript
+```
+
+### jest.config.js Configuration
+
+```
+const transformWhitelist = [
+    'react-native',
+    '@react-native',
+    '@react-navigation',
+];
+
+const transformIgnorePatternsRegx = `node_modules/(?!${transformWhitelist.join('|')})`;
+
+const config = {
+    verbose: true,
+    preset: "@testing-library/react-native",
+    transformIgnorePatterns: [transformIgnorePatternsRegx],
+    setupFiles: ['<rootDir>/tests/setup.ts'],
+};
+
+module.exports = config;
+```
+
+### Writing a Test File
+
+```jsx
+// Example)
+import { render } from '@testing-library/react-native'
+import React from 'react'
+import Header from '../../src/components/Header'
+import CalendarScreen from '../../src/screens/CalendarScreen'
+
+describe('CalendarScreen', () => {
+  describe('render components', () => {
+    it(`render header`, () => {
+      const { getByText } = render(<Header />)
+      getByText('앱이름')
+    })
+  })
+})
+```
+
+This is a test that verifies the `앱이름` text is rendered correctly in the Header component of a sample application.
+
+![img](/static/post-images/220422_react-native-testing-library/test1.png)
+
+You can confirm that the test passes successfully.
+
+### Running Tests
+
+```bash
+yarn test
+```
+
+## Next Steps
+
+In the next session, I plan to write more test cases, including tests for user interactions such as button presses and tests for asynchronous code.

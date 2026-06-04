@@ -1,0 +1,299 @@
+---
+title: 'NDC 2019 Review'
+crawlertitle: 'NDC 2019 Review'
+slug: '2019-05-07-NDC-review'
+summary: 'Notes and thoughts from sessions I attended at NDC 2019.'
+date: 2019-05-07 20:20:12 +0900
+categories: posts
+tags: ['develop', 'conference']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img1](/static/post-images/190507_NDC/logo_2015.png)
+
+- Table of Contents
+
+# NDC 2019
+
+I attended NDC — the Nexon Developers Conference — held at Nexon's Pangyo headquarters from April 24 to 26. The conference has been running annually since 2013, and this was my third time attending. One of its most appealing aspects is that the program covers not only engineering but also game design, art, and sound. I would highly recommend it to any student dreaming of a career in game development. Registration is free as long as you sign up in advance!! I mainly attended programming sessions, which were largely centered around testing, logging, and artificial intelligence. Below are my notes and summaries from the sessions I took notes on.
+
+# A/B Testing — Devsisters
+
+## "How do we maximize sales of a time-limited product?"
+
+Beginner Starter Pack: has a purchase time limit.
+
+1. Running tests at different times for each country means the experiment is not properly controlled — global holidays, per-country income levels, and so on all interfere. —> Let's run an A/B test!
+
+2. Experiment design
+   - Primary metric
+     - Sales volume (selected)
+     - Return visit rate
+     - Conversion rate
+   - Meaningful difference
+   - Target audience
+     - Country, user level
+     - Global (selected)
+   - Number of groups
+     - Control vs. treatment (two or more)
+     - 1 hour, 1 day, 3 days
+   - Experiment duration
+     - The experiment must span at least one minimal business cycle, which varies by game. —> 2 weeks
+
+3. Splitting experiment groups
+   - By login order? Requires recording login order.
+   - If users can be mapped to numbers? Convert user IDs to hash values via md5 (0–9999), then split into three groups: 0–3333, 3333–6666, 6666–9999.
+   - Afterward, verify that the groups are homogeneous.
+     - Low-level and high-level users have different purchasing patterns.
+     - Properties to check: country distribution / stage completion rate / monetization ratio / level distribution
+     - Statistically verify homogeneity across groups.
+     - Chi-squared test
+4. Running multiple experiments simultaneously
+5. Applied to the Devplay platform
+6. Result summary — Bayesian methodology
+   1. Plans to visualize confidence intervals as graphs
+
+## Q&A
+
+- Defining experiment groups is inevitably heuristic and depends on the designer's judgment.
+- Total development time: 2 months for the A/B testing feature itself, plus 1 month to integrate with Devplay.
+
+# Building a Real-Time A/B Testing Platform — PUBG
+
+Design — Implementation — Usage
+
+### What I originally wanted to do: machine learning + create new value (make money) —> What I actually ended up doing: building an A/B testing platform. In other words, let's take the easy route (;;)
+
+## What is A/B Testing?
+
+Objective measurement of user experience
+Data-driven decision making
+
+## Design
+
+- Experiment accuracy is low. —> Run experiments for a longer duration.
+- I'm worried about impacting the live service. —> Reduce the proportion of users in the treatment group.
+- We don't have a data pipeline. —> Build an ETL pipeline ourselves.
+  Logging is non-negotiable.
+
+### Dig —> Collect —> Analyze
+
+### Firebase —> Google Analytics —> Google BigQuery: data semantics
+
+## Building Our Own Data Pipeline
+
+- Capable of real-time response
+- Scalable
+- Operates 24/7 without dedicated operations staff
+
+### Real-time response capability
+
+- Total impressions over the past week
+- Calculate ARPU and ARPPU on a daily basis
+- —> Solved with batch processing
+- Want to know within 10 minutes if payment volume suddenly drops.
+- Need user clicks to be reflected in recommendations instantly.
+- —> ????? —> Real-time streaming
+
+### Scalability
+
+- 1 million concurrent users × log per second × average 1 KB per log —> 3.6 TB
+- Solution: scale up servers. Scale-in
+- What we actually need is Scale-out.
+- Real-time streaming + distributed processing: Apache Flink, a distributed processing engine for data streams
+- Spark Streaming
+  - Originally a distributed processing engine. Rich feature set, robust ecosystem.
+- Flink
+  - Built for stream processing from the ground up.
+- Choose the right tool for the job.
+
+### Operations
+
+- Incident response: AWS
+- Server management via serverless services
+- Monitoring via managed monitoring services
+
+### The Future of A/B Testing
+
+- Multi-Armed Bandit
+  - Automatically increases the proportion of option A when it proves more effective
+- Recommendation systems —> Learn and serve valuable content
+- A/B testing is necessary. But it has to be done right.
+- There is no need to repeat the hard work others have already done.
+- If you don't have the people, pay for a service!
+
+# How Should We Match You?
+
+by Nexon Intelligence Labs, Solutions Division, Matching Team — Seong Uigyeong [Game Data Analyst], matchmaking specialist
+
+## Problem Definition
+
+Matchmaking: the process of finding opponents in business, sports, and games. The act of constructing a game lobby.
+
+- Let's pair users of similar skill.
+- How do we measure skill?
+
+### Existing approach: Skill Score, MatchMaking Rating (MMR). How likely are you to win compared to another player? Designed to predict win rate based on score difference.
+
+- Ex) Example of the Elo rating system
+- -> If a win was expected, you gain fewer points. If it was unexpected, you gain more.
+- -> If a loss was expected, you lose fewer points. If it was unexpected, you lose more.
+- Score calculation methods: Elo, Glicko, TrueSkill (introduces team play and draw handling)
+- Common principle: new skill = previous skill + (actual result − expected result)
+
+## Procedure
+
+- Sort players who requested a match by skill score; pair adjacent players.
+- Trade-off between skill parity with the opponent and wait time (similar in concept to a navigation app like Kakao Navi)
+
+## What Did We Actually Want?
+
+- The frame of skill parity
+- When you play against someone of similar skill?? -> You don't win or lose by a landslide.
+
+## The Unresolved Problems
+
+### Stress
+
+- Even if the matchmaker ensures a 50% win rate for every player,
+- frustrating moments still occur
+- and accepting outcomes is subjective
+
+### Operational Issues
+
+- Cheating, abuse
+- Boosting
+- Intentional losses, smurf accounts, pub-stomping, AFK / parking
+
+### The Measurement Problem
+
+### The Parity Problem
+
+- Equal game vs. fun game: somewhere in between lies what we have been searching for
+- Beyond the frame of skill parity
+  - Is skill parity always a good match?
+
+## Thinking About Solutions
+
+### How do we solve this?
+
+- Data & User Profile
+
+### Match quality over skill score
+
+Evaluate the combination of participants as a group, not just individual players in isolation.
+
+- How much higher is your skill score than your opponent's?
+- —> Each player's preferred weapons, character choices? Positioning strategy, party composition, win streaks, trolling behavior ...
+- Previously: my win rate = f(score difference between me and my opponent)
+- Now: my win rate = f(my profile, my opponent's profile, game information ...)
+
+### Even within the parity frame, model the player's state in finer detail
+
+### Escaping the parity frame
+
+- My win rate = f(my profile, my opponent's profile ...)
+- Reframe the quality target around a specific fun element: particular actions, performance, showmanship, outcome uncertainty, interaction
+- Let's make fun the quality target!!!
+- Find the combination that maximizes match quality within a given time window!!
+
+## Closing
+
+- The MatchMob project
+- -> Measuring the quality of interaction and relationships, matching players so they can find the fun
+
+# Hearthstone Reinforcement Learning
+
+### by utilForever (Chahn-ho Ok)
+
+A talk about the process of building a reinforcement learning environment.
+
+## Goals
+
+- Enable intelligent play
+- Build a deck with a high win rate
+- Target win rate ≥ 60%, better than a Tier 1 deck
+- Recommend cards to players when constructing a deck
+
+### Reinforcement Learning
+
+- Learning the correlation between actions and rewards. The agent starts learning with no prior knowledge.
+  The agent perceives its state in the environment and acts.
+- The environment gives the agent a reward and tells it the next state. (The focus of today's talk.)
+  The agent uses rewards to recognize which actions are good.
+
+- AlphaGo
+  All information is given. Turn-based. Time-limited.
+
+- AlphaStar
+  Real-time strategy game. Incomplete information.
+  Scouting, skirmishing —> inference —> controlling units and buildings
+
+- Hearthstone
+  - You don't know which cards will come from your own deck.
+  - You don't know which cards your opponent is holding.
+  - Even your own information is incomplete.
+  - Many card effects involve random outcomes, making results hard to reason about.
+
+- A growing body of recent research papers is emerging.
+
+## Hearthstone Game Development
+
+### To apply reinforcement learning using a game
+
+1. Use an API provided by the game company.
+   1. Hearthstone has none.
+2. Use information obtained by hooking into the game.
+   1. Illegal.
+3. Implement Hearthstone yourself.
+   1. No alternative...
+
+### Card Implementation
+
+Before building a Hearthstone AI, implement each card and its effects by hand.
+
+### Card Data Processing
+
+- Mana cost
+- Minion cards: attack and health
+- Weapons: attack and durability
+- Abilities
+- Special effects
+
+### Card Effect Processing
+
+Problem: (virtually all data)
+Cards to implement: 1,926
+—> Including uncollectible cards: 6,086
+
+### Card Effect Implementation
+
+Neural network for code generation —> implement card effects directly
+
+### Draw function, TensorFlow, PyTorch
+
+Policy implementation based on the PyTorch C++ API via RosettaTorch
+675 dimensions
+
+## Development Progress
+
+## Upcoming Plans
+
+- Implement all cards
+- Console GUI rendering
+- Enable real-device play via RealStone (a Hearthstone IoT project)
+
+## Summary
+
+- If the game company doesn't provide it, build it yourself!
+- The function that communicates game state is critical!
+- Use AI to drive it!
+
+# Closing Thoughts
+
+The matchmaking algorithm session on the 25th was packed. It was a session I was personally curious about, having played a lot of competitive games over the years, and I was glad to get even a brief glimpse into the insights of someone at Nexon Intelligence Labs who studies matchmaking quality as an ongoing research area. What resonated most was this: "In the end, as algorithm developers, our goal shifted from 'fairness' to the player's 'fun.'" And the fact that they are using machine learning to identify the factors that influence that fun was an additional highlight.
+
+More than anything, seeing so many people interested in game development — asking questions, attending sessions — is a huge source of motivation for me personally. As a gamer who has enjoyed games since childhood, I also carry a quiet dream of making a game myself someday. Above all, I am grateful to Nexon for continuing to make this event free to attend every year.

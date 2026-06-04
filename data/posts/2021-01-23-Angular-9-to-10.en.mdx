@@ -1,0 +1,73 @@
+---
+title: 'Angular 9 to 10'
+crawlertitle: 'Angular 9 to 10'
+slug: '2021-01-23-Angular-9-to-10'
+summary: 'Angular 9 to 10'
+date: 2021-01-23 22:07:33 +0900
+categories: posts
+tags: ['Angular', 'frontend']
+author: MartianLee
+---
+
+- Table of Contents
+
+## Goal
+
+I upgraded a company project from Angular 9 to v10 and am documenting the process along with the trial and error along the way. The Angular 10 release notes are available in English on the [official blog](https://blog.angular.io/version-10-of-angular-now-available-78960babd41).
+
+## Approach
+
+```
+This post is written for readers who have a basic understanding of Angular and npm.
+```
+
+### Tools Used
+
+- node 14.16.0
+- npm 7.14.0
+- Angular
+
+### Process
+
+As you may already know from a quick search, the [Angular Update Guide](https://update.angular.io/) provides a version-by-version upgrade guide. Select your current version, your target version, and the complexity level of your app (basic, medium, or advanced), and it will generate a pre-upgrade checklist. The [official Angular guide](https://v10.angular.io/guide/updating-to-version-10) provides more detailed instructions.
+
+1. Run the `ng update` command
+
+   Angular will automatically update TypeScript and any required libraries. TypeScript 3.9 or later is required.
+
+   ```bash
+   ng update @angular/core@10 @angular/cli@10 --force
+   ```
+
+   The trailing `--force` flag is optional. In my case there were conflicts with other libraries, so I chose to upgrade Angular first and sort out the conflicts afterward.
+
+2. Update other libraries
+   1. Resolve library version mismatches — for example, `videogular2` → `@videogular/ngx-videogular`
+3. Fix SCSS import paths to use absolute paths (change to `.../.../../assets`)
+4. During the build, any place that uses CommonJS will generate a large number of warnings. Angular recommends migrating to ECMAScript modules. See: [https://angular.io/guide/build#configuring-commonjs-dependencies](https://angular.io/guide/build#configuring-commonjs-dependencies)
+
+#### Errors
+
+I was using a library called `videogular2`, which was not compatible with v10.
+
+```bash
+npm uninstall videogular2
+npm install @videogular/ngx-videogular --save
+```
+
+Fortunately, simply uninstalling the old package and installing the new one was enough to resolve the issue.
+
+## Result
+
+Running
+
+```bash
+ng version
+```
+
+confirms that both the CLI and core have been successfully upgraded to Angular 10. Thankfully, unlike the 8→9 migration, there was no need to worry about the Ivy rendering engine. Here is hoping the next upgrades from 10 to 11 and 12 go just as smoothly.
+
+### References
+
+- [Angular Official Guide](https://v10.angular.io/guide/updating-to-version-10)
+- [Angular 10.0.0 Release Notes](https://blog.angular.io/version-10-of-angular-now-available-78960babd41)

@@ -1,0 +1,93 @@
+---
+title: 'Transformer Basics: Residual, LayerNorm, FFN'
+date: '2026-04-17'
+tags: ['llm', 'transformer', 'residual', 'layernorm', 'ffn', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Why Residual, LayerNorm, and FFN are necessary in a Transformer block — explained with equations, commentary, and examples.'
+---
+
+## Why Do These Components Exist?
+
+It is easy to feel that understanding Attention is all you need to understand a Transformer.
+In practice, however, a Transformer block does not run on Attention alone.
+
+Residual connections, LayerNorm, and the FFN are the key mechanisms that make it possible to stack models deep and train them stably.
+
+## The Original Concept and Equations
+
+The high-level flow of an encoder block in the Transformer paper can be simplified as follows:
+
+```txt
+x1 = LayerNorm(x + SelfAttention(x))
+x2 = LayerNorm(x1 + FFN(x1))
+```
+
+Breaking the three components apart:
+
+- **Residual**: adds the input back in, as in `x + f(x)`.
+- **LayerNorm**: normalizes the scale of each token's representation.
+- **FFN**: applies the same MLP independently to each token representation.
+
+The FFN typically takes the form:
+
+```txt
+FFN(x) = max(0, xW1 + b1)W2 + b2
+```
+
+BERT-family models often replace ReLU with GELU.
+
+## First-Pass Commentary: What the Equations Say
+
+Residual is a shortcut that prevents the original information from being lost.
+Even if SelfAttention or the FFN is imperfect, the original input `x` keeps flowing into every subsequent layer.
+
+LayerNorm stabilizes the scale of the values.
+When many layers are stacked, activations can grow extremely large or collapse toward zero; LayerNorm mitigates this and makes optimization easier.
+
+FFN is a per-token post-processing step.
+Where Attention mixes information across tokens, the FFN takes each individual token representation and transforms it into a richer form.
+
+## An Intuitive Example
+
+Imagine taking notes at a meeting and then writing them up.
+
+- **Attention**: links what each participant said to what others said — capturing "who replied to whom."
+- **Residual**: keeps the original raw notes on the table. Even if the summary is wrong, the source material is never lost.
+- **LayerNorm**: normalizes paragraph lengths and expression intensity so the document reads consistently.
+- **FFN**: rewrites each sentence into clearer, more polished phrasing.
+
+In short, a Transformer block is not merely a "look at each other" mechanism.
+It is a bundle that mixes relationships, preserves the original information, stabilizes values, and re-transforms representations.
+
+## How to Read These Terms in Papers
+
+When you encounter the following label in a paper:
+
+```txt
+Add & Norm
+```
+
+it typically refers to a Residual add followed by LayerNorm.
+
+When you see:
+
+```txt
+Position-wise Feed-Forward Network
+```
+
+it means the same small MLP is applied at every token position independently.
+Mixing information across tokens is the job of Attention; per-token transformation is the job of the FFN.
+
+## Common Misconceptions
+
+- The FFN does **not** directly mix information between tokens — that is what Attention handles.
+- Residual is not a minor convenience; it is a critical stabilizer that makes training deep models possible.
+- LayerNorm is better understood as a training-stability device than as a component that directly constructs the model's semantics.
+
+## Minimum Checkpoints
+
+- **Residual** is a shortcut that preserves the original input.
+- **LayerNorm** normalizes value scale and stabilizes training.
+- **FFN** applies a nonlinear transformation to each token representation.
+- A Transformer block is the combination of Attention + Residual + Normalization + FFN.

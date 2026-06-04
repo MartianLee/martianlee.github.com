@@ -1,0 +1,102 @@
+---
+title: 'LLM Math Basics 2: Softmax and Probability Interpretation'
+date: '2026-04-17'
+tags: ['llm', 'math', 'softmax', 'probability', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'A walkthrough of how softmax converts raw scores into probability-like values, with formulas, explanations, and examples.'
+---
+
+## Why Do We Need It?
+
+In LLM papers, raw scores are rarely used as-is — softmax is applied first.
+It plays a central role both in Attention and in next-token prediction.
+
+After reading this note, the following formula will feel less intimidating.
+
+```txt
+softmax(x_i) = exp(x_i) / sum_j exp(x_j)
+```
+
+## The Core Concept and Formula
+
+Suppose we have an array of scores.
+
+```txt
+scores = [2.0, 1.0, 0.1]
+```
+
+Softmax applies `exp` to each score and then divides by the sum of all the exponentiated values.
+
+```txt
+softmax(x_i) = exp(x_i) / sum_j exp(x_j)
+```
+
+The result has the following properties.
+
+- Every value is greater than 0.
+- All values sum to 1.
+- Larger scores become more pronounced.
+
+## First-Pass Explanation: What the Formula Is Saying
+
+Softmax is a function that decides how much weight to assign to each candidate.
+
+The reason `exp` is used is to make the gap between large and small scores more distinct.
+Because we then divide by the total sum, the result can be interpreted as a probability distribution.
+
+In other words, softmax performs the following transformation.
+
+```txt
+list of scores -> list of proportions
+```
+
+## A Simple Example
+
+Imagine three people gave presentations, and a judge assigned scores.
+
+```txt
+A: 2.0 points
+B: 1.0 points
+C: 0.1 points
+```
+
+Softmax converts these scores into "prize distribution ratios."
+
+```txt
+A: largest share
+B: middle share
+C: small share
+```
+
+The key point is that A scoring 2.0 does not mean A receives exactly $2.
+Softmax does not use raw scores directly — it creates relative weights among the candidates.
+
+## How to Read It When You Encounter It in Attention
+
+The Attention formula typically looks like this.
+
+```txt
+Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+```
+
+The softmax part can be read as follows.
+
+```txt
+Convert the relevance scores into proportions that say how much to attend to each token.
+```
+
+`QK^T` is a table of relevance scores, and softmax turns that table into a table of weights.
+Those weights are used to blend `V`, producing the final context vector.
+
+## Common Misconceptions
+
+- The output of softmax is not always a "probability of the correct answer."
+- The softmax inside Attention is closer to an attention ratio than to a correctness probability.
+- Looking at a single score in isolation is not very meaningful. Softmax is about relative comparison among candidates.
+
+## Minimum Checkpoint
+
+- Softmax converts scores into proportions that sum to 1.
+- Larger scores receive larger weights.
+- In Attention, it is the step that decides "which tokens to look at, and by how much."

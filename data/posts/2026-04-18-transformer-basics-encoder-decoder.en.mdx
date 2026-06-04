@@ -1,0 +1,89 @@
+---
+title: 'Transformer Basics: Encoder and Decoder'
+date: '2026-04-18'
+tags: ['llm', 'transformer', 'encoder', 'decoder', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'A clear explanation of what the Transformer encoder and decoder each do, grounded in the original architecture and illustrated with simple examples.'
+---
+
+## Why This Matters
+
+The original Transformer paper uses an encoder-decoder architecture.
+BERT uses only the encoder, while the GPT family uses only the decoder.
+
+Understanding the distinct roles of the encoder and decoder makes it far easier to follow the direction research took afterward.
+
+## Original Concept and Architecture
+
+The original Transformer was designed as an encoder-decoder model for machine translation.
+
+```txt
+source sentence -> Encoder -> memory -> Decoder -> target sentence
+```
+
+For example, translating English to Korean looks like this:
+
+```txt
+I love coffee -> Encoder -> semantic representation -> Decoder -> 나는 커피를 좋아합니다
+```
+
+The key difference between the two sides lies in the attention mask.
+
+```txt
+Encoder self-attention:        all input tokens can attend to each other
+Decoder masked self-attention: future tokens not yet generated cannot be seen
+Decoder cross-attention:       attends to the encoder output (memory)
+```
+
+## First-Pass Explanation: What the Architecture Is Saying
+
+The encoder reads the input sentence and produces a representation for comprehension.
+The decoder generates the output sentence one token at a time, referencing that representation.
+
+Because the encoder already has access to the entire input, it can attend in both directions.
+The decoder, however, must not peek at words in the output sentence that have not been generated yet — hence the use of masked self-attention.
+
+## A Simple Analogy
+
+Think of a human interpreter.
+
+- **Encoder**: the stage of reading the source text and internalizing its meaning.
+- **Decoder**: the stage of articulating the translation based on that internalized meaning.
+
+The person reading the source can see the whole sentence at once.
+But the person speaking the translation cannot say a future word before reaching it.
+
+That is why the decoder selects the next token by looking only at the tokens generated so far.
+
+## How to Read Papers When You Encounter These Terms
+
+When a paper says `encoder-only`, read it as:
+
+```txt
+A model focused on understanding and representing the input.
+```
+
+When a paper says `decoder-only`, read it as:
+
+```txt
+A model focused on generating the next token from the tokens seen so far.
+```
+
+When a paper says `encoder-decoder`, read it as:
+
+```txt
+A structure that first understands the input, then uses a separate generator to produce the output.
+```
+
+## Common Misconceptions
+
+- The encoder is not inherently better than the decoder, nor vice versa.
+- They serve different purposes. If the task is understanding-centric, the encoder architecture tends to work well; if it is generation-centric, the decoder architecture is the natural fit.
+- Some models, such as T5, have applied the encoder-decoder structure to large-scale pre-training.
+
+## Minimum Checkpoints
+
+- The encoder reads the entire input and produces a representation.
+- The decoder looks at the tokens generated so far and produces the next token.
+- BERT can be understood as an encoder-only model; GPT as a decoder-only model.

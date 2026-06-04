@@ -1,0 +1,143 @@
+---
+title: 'NAVER Technical Interview Review'
+crawlertitle: 'NAVER Technical Interview Review'
+slug: '2019-04-22-naver-interview-review'
+summary: 'A summary of the questions and answers from a NAVER technical interview.'
+date: 2019-04-22 16:08:45 +0900
+categories: posts
+tags: ['develop', 'interview']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img1](/static/post-images/190422_interviews/naver.png)
+
+- Table of Contents
+
+## Background
+
+I applied to NAVER's open recruitment in March. Unfortunately, I was rejected at the resume screening and phone technical interview stage. As a consolation, I am writing up the questions that came up during the interview.
+
+## Questions & Answers
+
+- Please explain the HTTP protocol.
+  - I explained that there is a header, the request has a method, and below that there is content. The interviewer asked for more detail, but I was unable to answer further.
+- Please explain RESTful API.
+  - I described it as a technique for representing the state of resources, and a convention applied to most web servers today.
+- Please explain as much as you know about the path taken when accessing a web service.
+  - I explained roughly: the client enters a URL → DNS server → the actual server address held by the DNS server → the server's load balancer → the actual server → response. They did not ask any follow-up questions.
+- How can you improve response speed when traffic is placed on a server?
+  - To be honest, I had no hands-on experience improving this, so I ended up talking in generalities — something vague like "improve the response logic."
+- Please explain the MVC pattern.
+  - It is a concept used in most web frameworks, consisting of Model, View, and Controller. The Model communicates with the DB, the Controller takes the result from the Model and maps it to the View, and the View is the screen actually presented to the user.
+- Please explain the difference between React and Vue.
+  - I only got as far as saying they are both frontend JavaScript frameworks with differences in speed and syntax.
+- What changed in Java version 8?
+  - I did not know the answer and moved on.
+- How does the garbage collector work in the JVM?
+  - Again, I could not answer in detail and moved on.
+- What are the advantages of placing an Index on a table?
+  - Obviously, `SELECT` speed improves. However, I answered that having too many indexes — like having multiple appendices at the back of a book — can gradually slow things down, especially during `INSERT` and `UPDATE` operations.
+
+## Post-Interview Impressions
+
+The NAVER phone interview was extremely dry. Right after the greeting, a barrage of questions began, and the call ended immediately after the last question. I was still stammering when the line went dead. There was no mention of when to expect a result; a rejection email arrived roughly 3–5 days later. Each question was sharp, and I was very nervous and unable to answer properly. It made me realize I need a much stronger grasp of fundamental concepts.
+
+## Things to Study Going Forward
+
+- What is the HTTP protocol?
+  - Stands for `Hyper Text Transfer Protocol`.
+  - An application-layer protocol that uses TCP/IP.
+  - A connectionless protocol that does not maintain connection state.
+  - Structure of HTTP 1.1:
+    - Request (Response) line
+    - Header
+      - General Header
+      - Request/Response Header
+      - Entity Header
+    - (blank line)
+    - Body
+
+- What is REST?
+  - Stands for `Representational State Transfer`. It refers to the entire practice of distinguishing resources by name (their representation) and exchanging the state (information) of those resources. [Source](https://gmlwjd9405.github.io/2018/09/21/rest-and-restful.html)
+  - Components:
+    - Resource: URI
+    - Verb: HTTP Method
+    - Representation of Resource: server response
+  - Characteristics:
+    - Stateless: Because HTTP is a stateless protocol, REST is also stateless. That is, the API server does not separately store or manage state information in a context store like `HttpSession` — it simply processes each incoming request on its own. There is no need to worry about context information like sessions, which simplifies implementation.
+      - What kinds of state information can be stored in a context store — for example?
+    - Cacheable
+    - Layered System: The client only calls the REST API Server. In practice, however, the server may be composed of multiple layers — for instance, layers for authentication and encryption.
+- What is a RESTful API?
+  - API stands for `Application Programming Interface`. A RESTful API is an API implemented based on REST principles.
+- Please explain the MVC pattern.
+  - ![img1](/static/post-images/190422_interviews/mvc.png)
+  - MVC stands for `Model View Controller`. It is a software design pattern that divides an application into three roles.
+- What is the difference between React and Vue?
+  - Similarities:
+    - Both are JavaScript-based frontend frameworks.
+    - Both use a virtual DOM.
+    - Both provide reactive and composable components.
+    - Both focus on the core library, with companion libraries for routing and global state management.
+  - Differences:
+    - Runtime performance
+    - HTML & CSS
+    - In React, everything is JavaScript. Not only is HTML structure brought in via JSX, but recently CSS management has also been trending toward JavaScript. This approach has its own merits, but it has drawbacks that make it not well-suited for every developer.
+    - Vue embraces classic web technologies and is built on top of them.
+  - Advantages of Vue:
+    - The option to use both Templates and Render Functions
+    - Simple syntax and project setup
+    - Fast rendering and smaller bundle size
+  - Advantages of React:
+    - Shines more at larger scale and is easier to test
+    - Can be used for both Web and Native app development
+    - Abundant references and tooling from a larger developer ecosystem
+- What is a lambda function in Java?
+  - An `expression that can be executed without an identifier`
+  - A concept originating from functional programming languages. It is a code block with parameters, but at runtime it creates an anonymous implementation object (containing one abstract method).
+  - Why use it?
+    - A lambda expression ultimately creates a local anonymous implementation object, but its purpose is to implement an interface's method conveniently and on the fly.
+    - It makes code concise and improves readability.
+  - ```
+    Traditional anonymous class approach
+      new Thread(new Runnable() {
+        public void run() {
+          System.out.println("Annoymous Thread");
+        }
+      }).start();
+    Lambda approach
+      new Thread(()->System.out.println("Lambda Thread")).start();
+    ```
+  - In practice, Java's anonymous functions operate based on interfaces.
+  - By adding the `@FunctionalInterface` annotation, you can create an interface intended for use as an anonymous class.
+- How does the garbage collector work in the JVM?
+  - What does Java's memory area look like?
+    - Java accesses OS memory indirectly through a virtual machine called the JVM. As a result, memory leaks at the OS level do not occur.
+    - Stack
+      - The area allocated per scope, such as local variables
+    - Heap
+      - Stores data with a longer lifecycle
+  - Why is a garbage collector necessary?
+    - ,
+  - How does it work?
+    - The programmer freely uses the heap area, and the garbage collector removes objects that are no longer in use from memory.
+    - Objects in the heap that are unreachable from the stack become candidates for garbage collection.
+    - The process of scanning all variables on the stack to find which objects each one references is called **Mark**. Objects referenced by reachable objects are also marked. Then, removing all unmarked objects from the heap is called **Sweep**.
+- Explaining the state management pattern in Vue.js
+  - ![img1](/static/post-images/190422_interviews/vuex-diagram.png)
+  - Why is a state management pattern necessary?
+    - As an app grows in scale, the number of component types increases and components become deeply nested. In such cases, it becomes very difficult to track the flow of data. A centralized pattern that manages a single source of data is therefore necessary.
+  - Components of state management:
+    - state: data to be shared between components
+    - view: the template where data is displayed
+    - actions: methods that respond to user input
+  - How to apply it?
+    - Import Vuex.
+    - All data is then managed through a single state.
+  - What are the methods for managing state?
+    - Getters: retrieve updated state values.
+    - Mutations: modify state values. Think of them as setters.
+    - Actions: execute asynchronous mutations logic.

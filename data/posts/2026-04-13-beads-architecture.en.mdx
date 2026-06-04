@@ -1,0 +1,1333 @@
+---
+slug: '2026-04-13-beads-architecture'
+title: 'Beads (bd) Project Analysis Report / A Distributed Graph Issue Tracker for AI Agents'
+crawlertitle: 'Beads (bd) Project Analysis Report / A Distributed Graph Issue Tracker for AI Agents'
+summary: "An analysis of Steve Yegge's Beads project. A deep dive into its Dolt-backed distributed graph issue tracker architecture, designed to give AI agents structured memory, dependency management, and the ability to execute long-horizon tasks."
+date: 2026-04-13 00:00:00 +0900
+categories: posts
+tags: ['beads', 'architecture', 'go', 'ai-agent', 'issue-tracker', 'distributed-system', 'dolt']
+author: MartianLee
+---
+
+_This article is mostly written by Claude Code_
+
+# Beads (bd) Project Analysis Report
+
+> Analyzed: 2026-04-13 (first edition: 2026-03-29)
+> Repository: https://github.com/steveyegge/beads
+> Latest version: v1.0.0 (2026-04-02)
+
+---
+
+---
+
+## 1. Project Overview
+
+**Beads (`bd`)** is a **distributed graph issue tracker for AI agents**. Built on top of [Dolt](https://github.com/dolthub/dolt) (a version-controlled SQL database), it is designed to let coding agents maintain structured memory, manage complex dependencies, and execute long-horizon tasks.
+
+v1.0.0 reached the **production stability milestone**, marking the transition from rapid iteration to stable operation.
+
+### Core Philosophy
+
+- **Replace markdown plans**: Swap unstructured markdown plans for dependency-aware graphs
+- **Zero Framework Cognition (ZFC)**: Code is simple orchestration; intelligence is delegated to AI models
+- **Distribution-first**: Multiple agents and branches can work concurrently without central coordination
+- **Agent-optimized**: Every command supports `--json` output, optimized for programmatic use
+
+### Key Features
+
+| Feature                 | Description                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| Dolt-backed storage     | Version-controlled SQL, cell-level merge, native branching                     |
+| Embedded Dolt (default) | Runs in-process with no external server (since v1.0.0)                         |
+| Hash-based IDs          | `bd-a1b2` format prevents merge conflicts                                      |
+| Dependency graph        | 19+ relationship types, automatic readiness detection                          |
+| Semantic compaction     | AI-powered summarization of old issues to save context window space            |
+| Federation              | P2P sync with encrypted credentials                                            |
+| Molecules / Wisps       | Template-driven workflows + local-only execution traces                        |
+| Atomic batch processing | `bd batch` executes multiple operations in a single transaction (since v1.0.0) |
+| Graph-based creation    | `bd create --graph` creates an entire dependency tree at once (since v1.0.0)   |
+
+---
+
+## 2. Technology Stack
+
+| Item                      | Technology                                                       |
+| ------------------------- | ---------------------------------------------------------------- |
+| **Language**              | Go 1.25.8 (CGO required — embedded mode)                         |
+| **CLI framework**         | Cobra (`github.com/spf13/cobra`)                                 |
+| **Database**              | Dolt (embedded) via `github.com/dolthub/driver` v1.84.1          |
+| **AI API**                | Anthropic SDK (`github.com/anthropics/anthropic-sdk-go v1.34.0`) |
+| **Observability**         | OpenTelemetry (`go.opentelemetry.io/otel`)                       |
+| **TUI**                   | Charm Huh, Glamour, Lipgloss v2                                  |
+| **Testing**               | testcontainers-go, rsc.io/script (scripttest)                    |
+| **External integrations** | GitHub, GitLab, Linear, Jira, Azure DevOps, Notion API           |
+| **Build**                 | Makefile + GoReleaser + Zig cross-compilation                    |
+| **Platforms**             | macOS, Linux, Windows, FreeBSD                                   |
+
+---
+
+## 3. Project Structure
+
+```
+beads/
+├── cmd/bd/                  # CLI command layer (402+ files, 100+ subcommands)
+│   ├── main.go              # Entry point (36,000+ lines)
+│   ├── create.go            # Issue creation (--parent, --graph)
+│   ├── ready.go             # Query ready work (auto-ready)
+│   ├── dep.go               # Dependency management
+│   ├── graph.go             # Graph loading/visualization
+│   ├── graph_apply.go       # Atomic graph creation (since v1.0.0)
+│   ├── batch.go             # Atomic batch processing (since v1.0.0)
+│   ├── rules.go             # Rules audit/compact (since v1.0.0)
+│   ├── ado.go               # Azure DevOps integration (since v1.0.0)
+│   ├── context_cmd.go       # Backend context diagnostics (since v1.0.0)
+│   ├── compact.go           # Semantic compaction
+│   └── testdata/*.txt       # Script-based tests
+│
+├── internal/
+│   ├── storage/
+│   │   ├── storage.go       # Storage interface definition
+│   │   ├── hook_decorator.go # Storage hook decorator (since v1.0.0)
+│   │   ├── dolt/            # Dolt implementation
+│   │   │   ├── schema.go    # DB schema (v11, was v9)
+│   │   │   ├── store.go     # DoltStore struct
+│   │   │   ├── issues.go    # Issue CRUD
+│   │   │   ├── dependencies.go  # Dependency CRUD
+│   │   │   └── queries.go   # Core queries: computeBlockedIDs, etc.
+│   │   ├── schema/          # Unified schema package (SSOT, since v1.0.0)
+│   │   ├── embeddeddolt/    # Embedded Dolt (VC, sync, Federation)
+│   │   └── issueops/        # Shared issue operations (blocked, cycles, compaction, child_id)
+│   │
+│   ├── types/               # Core domain types (Issue, Dependency, Status, etc.)
+│   │   ├── types.go         # Data struct definitions
+│   │   └── id_generator.go  # Hash-based ID generation
+│   │
+│   ├── beads/               # Core domain logic (DB discovery, bootstrap)
+│   ├── compact/             # Semantic compaction (compactor.go, haiku.go)
+│   ├── config/              # Configuration system
+│   ├── hooks/               # Git hooks integration
+│   ├── molecules/           # Molecule workflows
+│   ├── formula/             # Rules engine
+│   ├── query/               # Query DSL
+│   ├── git/                 # Git operations
+│   ├── telemetry/           # OpenTelemetry instrumentation (full metrics added)
+│   ├── {github,gitlab,linear,jira,ado,notion}/  # External service integrations
+│   └── testutil/            # Test utilities
+│
+├── docs/                    # 55+ markdown documents
+├── examples/                # 14 example projects
+├── scripts/                 # 25+ utility scripts (bump-version.sh, release.sh, etc.)
+├── website/                 # Documentation website
+├── beads.go                 # Public API
+├── beads_cgo.go             # CGO build: embedded + server mode (since v1.0.0)
+├── beads_nocgo.go           # Non-CGO build: server mode only (since v1.0.0)
+├── AGENT_INSTRUCTIONS.md    # Agent operating instructions (since v1.0.0)
+├── Makefile                 # Build system
+├── .goreleaser.yml          # Release configuration
+└── .github/workflows/       # CI/CD (9+ workflows)
+```
+
+---
+
+## 4. Architecture
+
+### 4.1 Three-Layer Design (updated in v1.0.0)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     CLI Layer (cmd/bd/)                   │
+│  Cobra commands → --json support → direct DB access       │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         v
+┌─────────────────────────────────────────────────────────┐
+│              Hook Decorator Layer (since v1.0.0)          │
+│  HookFiringStore: fires hooks automatically on mutations  │
+│  Propagates on_create, on_update, on_close events         │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         v
+┌─────────────────────────────────────────────────────────┐
+│                   Dolt Database Layer                     │
+│  Version-controlled SQL │ Cell-level merge │ Auto-commit  │
+│  .beads/embeddeddolt/ (embedded, default)                 │
+│  or dolt sql-server (server mode)                         │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                    Dolt push/pull
+                   (or Federation)
+                         │
+                         v
+┌─────────────────────────────────────────────────────────┐
+│              Remote (DoltHub, S3, GCS, Git)               │
+│  Cell-level merge resolves conflicts automatically        │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 4.2 Write Path
+
+```
+bd create "New feature"
+  → CLI parsing (Cobra)
+  → HookFiringStore.CreateIssue() [hook_decorator.go — fires hooks]
+  → DoltStore.CreateIssue() [internal/storage/dolt/issues.go]
+  → issueops.CreateIssueInTx() [SQL INSERT]
+  → Check if Wisp
+    ├─ ephemeral/no_history → wisps table (skip DOLT_COMMIT)
+    └─ regular issue →
+         CALL DOLT_ADD('issues', 'events')
+         CALL DOLT_COMMIT('-m', 'bd: create bd-xyz', '--author', ...)
+         Cache invalidation
+         Fire on_create hook (after transaction commit)
+```
+
+**Key point**: Every write operation automatically creates a Dolt commit. Transactions are handled by `withRetryTx()`, which selectively stages only the changed tables. Since v1.0.0, the `HookFiringStore` decorator fires hooks at the storage layer rather than the CLI layer, ensuring hooks run consistently across all mutation paths.
+
+### 4.3 Read Path
+
+```
+bd ready → SQL SELECT from ready_issues view → direct query against local Dolt DB
+```
+
+Queries the local DB directly, with no network round-trip. The `ready_issues` and `blocked_issues` views are predefined.
+
+### 4.4 Embedded vs. Server Mode
+
+| Item              | Embedded mode (default since v1.0.0) | Server mode                            |
+| ----------------- | ------------------------------------ | -------------------------------------- |
+| Connection        | In-process Dolt engine               | TCP MySQL protocol (`dolt sql-server`) |
+| Concurrency       | Single writer (exclusive file lock)  | Multiple writers                       |
+| Data location     | `.beads/embeddeddolt/`               | `.beads/dolt/`                         |
+| Server process    | None                                 | PID: `.beads/dolt-server.pid`          |
+| Use case          | Solo developer, CI/CD (recommended)  | Orchestrators, teams                   |
+| Build requirement | CGO enabled (`beads_cgo.go`)         | No CGO required (`beads_nocgo.go`)     |
+
+Since v1.0.0, embedded mode is enabled by default on macOS via a native CGO build. Non-CGO builds support server mode only and provide a clear error message.
+
+Configuration precedence: environment variables > metadata.json > config.yaml > defaults
+
+### 4.5 Storage Abstraction
+
+```go
+// Core interface (internal/storage/storage.go)
+type Storage interface {
+    CreateIssue(ctx, issue, actor)
+    GetIssue(ctx, id)
+    UpdateIssue(ctx, id, updates, actor)
+    GetReadyWork(ctx, filter)
+    GetBlockedIssues(ctx, filter)
+    AddDependency(ctx, dep, actor)
+    RunInTransaction(ctx, commitMsg, fn)
+    // Added in v1.0.0
+    SlotSet(ctx, issueID, key, value)     // per-issue metadata
+    SlotGet(ctx, issueID, key)
+    SlotClear(ctx, issueID, key)
+    ListWisps(ctx, filter)                // list ephemeral wisps
+    ReopenIssue(ctx, id, actor)           // reopen an issue
+    UpdateIssueType(ctx, id, newType)     // change issue type
+    // ...
+}
+
+type DoltStorage interface {
+    Storage
+    VersionControl    // Branch, checkout, commit history
+    HistoryViewer     // AS OF, dolt_history_* tables
+    RemoteStore       // Push, pull, remote management
+    SyncStore         // High-level peer sync
+    FederationStore   // Multi-repo support
+    CompactionStore   // History compaction
+    // ...
+}
+
+// New in v1.0.0: Hook Decorator
+type HookFiringStore struct {
+    inner DoltStorage
+}
+// CreateIssue → inner.CreateIssue + fire on_create hook
+// UpdateIssue → inner.UpdateIssue + fire on_update hook
+// Within a transaction: hooks fire only after commit, not on rollback
+```
+
+The `DoltStore` implementation holds a `*sql.DB` (MySQL protocol connection), caches (blockedIDs, customStatus, etc.), and a circuit breaker keyed on host:port.
+
+### 4.6 Public API (since v1.0.0)
+
+```go
+// beads.go — public API for external integrations
+func OpenBestAvailable() (Storage, Unlocker, error)  // supports resource cleanup
+func PrettyIssue(issue *Issue) string                 // exposes format package
+func CompactIssue(issue *Issue) string
+func LongIssue(issue *Issue) string
+```
+
+---
+
+## 5. Data Model
+
+### 5.1 Schema Overview (v11)
+
+```sql
+-- 5 core tables
+issues           -- Issues/tasks (30+ columns)
+dependencies     -- Relationship edges (19+ types)
+labels           -- Tagging system
+comments         -- Threaded discussion
+events           -- Complete audit trail
+
+-- Supporting tables
+config                 -- Global key-value settings
+metadata               -- Framework-level state (schema version, etc.)
+child_counters         -- Hierarchical ID generation (parent.N)
+issue_snapshots        -- Compaction snapshots
+compaction_snapshots   -- Compaction state management
+repo_mtimes            -- Multi-repo change detection
+routes                 -- Prefix-to-path routing
+issue_counter          -- Sequential ID mode (GH#2002)
+interactions           -- Agent audit log
+federation_peers       -- P2P sync credentials
+
+-- New in v1.0.0 (schema v10–v11)
+custom_statuses        -- Normalized custom statuses (name, category)
+custom_types           -- Normalized custom types (name)
+```
+
+**Schema changes (v9 → v11):**
+
+- **v10**: Added `custom_statuses` and `custom_types` tables — migrated from comma-separated config values to normalized tables
+- **v11**: `ready_issues`/`blocked_issues` views changed to table-based subqueries (replacing dynamic IN clauses)
+- Migrations run automatically and idempotently
+
+### 5.2 The `issues` Table (Core)
+
+```sql
+CREATE TABLE issues (
+    -- Core identification
+    id VARCHAR(255) PRIMARY KEY,          -- Hash-based ID (bd-a1b2)
+    content_hash VARCHAR(64),             -- SHA256 for deduplication
+
+    -- Issue content
+    title VARCHAR(500) NOT NULL,
+    description TEXT NOT NULL,
+    design TEXT NOT NULL,
+    acceptance_criteria TEXT NOT NULL,
+    notes TEXT NOT NULL,
+
+    -- Workflow
+    status VARCHAR(32) DEFAULT 'open',    -- open, in_progress, blocked, deferred, closed, pinned, hooked
+    priority INT DEFAULT 2,               -- 0=critical ~ 4=backlog
+    issue_type VARCHAR(32) DEFAULT 'task', -- bug, feature, task, epic, chore, message,
+                                          --   molecule, gate, spike, story, milestone (since v1.0.0)
+
+    -- Assignment
+    assignee VARCHAR(255),
+    owner VARCHAR(255),
+    estimated_minutes INT,
+
+    -- Timestamps
+    created_at DATETIME, updated_at DATETIME, closed_at DATETIME,
+
+    -- Compaction metadata
+    compaction_level INT DEFAULT 0,       -- 0: none, 1: Tier 1, 2: Tier 2
+    compacted_at DATETIME,
+    original_size INT,
+
+    -- Messaging
+    sender VARCHAR(255),
+    ephemeral TINYINT(1) DEFAULT 0,       -- if true, not synced
+    no_history TINYINT(1) DEFAULT 0,      -- stored in wisps table, not GC'd
+
+    -- Gate (async coordination)
+    await_type VARCHAR(32),               -- gh:run, gh:pr, timer, human, mail
+    await_id VARCHAR(255),
+    timeout_ns BIGINT,
+
+    -- Scheduling
+    due_at DATETIME,
+    defer_until DATETIME,
+
+    -- Extension
+    metadata JSON DEFAULT (JSON_OBJECT()),
+    -- + indexes: status, priority, issue_type, assignee, created_at, spec_id, external_ref
+);
+```
+
+### 5.3 The `dependencies` Table (Edge Schema)
+
+```sql
+CREATE TABLE dependencies (
+    issue_id VARCHAR(255) NOT NULL,       -- the dependent issue
+    depends_on_id VARCHAR(255) NOT NULL,  -- the blocking issue (no FK — allows external refs)
+    type VARCHAR(32) DEFAULT 'blocks',    -- 19+ relationship types
+    created_at DATETIME,
+    created_by VARCHAR(255),
+    metadata JSON DEFAULT (JSON_OBJECT()), -- WaitsForMeta, AttestsMeta, etc.
+    thread_id VARCHAR(255),               -- conversation thread grouping
+    PRIMARY KEY (issue_id, depends_on_id)
+);
+```
+
+**Design Decision 004 (Edge Schema Consolidation)**: All relationships (replies-to, relates-to, duplicates, etc.) are unified as edges in the `dependencies` table. This allows new edge types to be added without schema changes.
+
+### 5.4 Hash-Based ID System
+
+```
+ID format: prefix-{hash}
+Examples:  bd-a1b2, bd-a1b2cd, bd-af78.1 (child)
+```
+
+**Generation process:**
+
+1. SHA256 hash of Title + Description + Timestamp + Workspace ID
+2. Starts at 6 characters; expands incrementally on collision (7 chars → 8 chars)
+3. At 1,000 issues, 97% remain at 6 characters
+
+**Hierarchical IDs:**
+
+```
+bd-af78e9      → root (epic)
+bd-af78e9.1    → child (task)
+bd-af78e9.1.2  → grandchild (subtask)
+Max depth: 3 levels, unlimited breadth (tested with 347+ children)
+```
+
+**Child ID generation (v1.0.0 detail):**
+
+```go
+// Atomically allocates the next number from the child_counters table
+func GetNextChildIDTx(ctx, tx, parentID) (string, error) {
+    // 1. Look up last_child from child_counters
+    // 2. Scan issues table to find existing children (handles JSONL imports)
+    // 3. Determine new number as max(counter, existing) + 1
+    // 4. UPSERT to update the counter
+    return fmt.Sprintf("%s.%d", parentID, nextChild), nil
+}
+```
+
+**Significance in distributed environments:**
+
+- Branch A: `bd create "Feature X"` → `bd-a1b2` (hash-based)
+- Branch B: `bd create "Feature Y"` → `bd-f14c` (different hash)
+- On Dolt merge, both issues merge without conflict
+
+### 5.5 Content Hash
+
+```go
+func (i *Issue) ComputeContentHash() string {
+    // SHA256(title + description + design + acceptance_criteria + notes +
+    //        spec_id + status + priority + issue_type + assignee + ...)
+    // Excluded: ID, timestamps, compaction metadata
+}
+```
+
+Same content = same hash → used for deduplication and change tracking.
+
+### 5.6 Status Flow
+
+```
+open ──→ in_progress ──→ closed
+  ↓                         ↑
+  └─────── reopen ──────────┘
+
+Special statuses:
+  blocked   : blocked (waiting for a blocker to be resolved)
+  deferred  : intentionally paused
+  pinned    : permanent context marker (not a work item)
+  hooked    : actively claimed by a worker
+  tombstone : soft delete
+
+Custom statuses: managed via the custom_statuses table (categories: active, wip, done, frozen)
+```
+
+### 5.7 Issue Types (updated in v1.0.0)
+
+```
+Default types:   bug, feature, task, epic, chore, message, molecule, gate
+Added in v1.0.0: spike     — time-boxed investigation to resolve uncertainty
+                 story     — user-facing feature description
+                 milestone — marks completion of related issues (no work of its own)
+Custom types:    managed via the custom_types table; any non-empty string up to 50 chars
+```
+
+### 5.8 Views
+
+**`ready_issues`** — issues that are actionable:
+
+- status = 'open' (or active category in the `custom_statuses` table)
+- not blocked by any active `blocks` dependency
+- not transitively blocked within a parent-child hierarchy
+- respects `defer_until` scheduling
+- excludes ephemeral issues
+- v1.0.0: performance improved with table-based subqueries
+
+**`blocked_issues`** — blocked issues + `blocked_by_count` column
+
+---
+
+## 6. Dependency & Graph System
+
+### 6.1 Relationship Types (19+)
+
+#### Workflow Types (Blocking — affects `bd ready`)
+
+| Type                 | Meaning                          | Behavior                          |
+| -------------------- | -------------------------------- | --------------------------------- |
+| `blocks`             | B cannot start until A is closed | Default block                     |
+| `parent-child`       | Epic/subtask hierarchy           | Blocking parent also blocks child |
+| `conditional-blocks` | B runs only if A fails           | Conditional block                 |
+| `waits-for`          | Fan-out gate                     | all-children or any-children      |
+
+#### Informational Types (Non-Blocking)
+
+| Type              | Meaning                            |
+| ----------------- | ---------------------------------- |
+| `related`         | Loose reference link               |
+| `discovered-from` | Found while working another issue  |
+| `relates-to`      | Bidirectional knowledge-graph edge |
+| `replies-to`      | Conversation threading             |
+| `duplicates`      | Duplicate link                     |
+| `supersedes`      | Version chain / replacement        |
+
+#### Entity Relationship Types (HOP Foundation)
+
+| Type          | Meaning                 |
+| ------------- | ----------------------- |
+| `authored-by` | Creator relationship    |
+| `assigned-to` | Assignment relationship |
+| `approved-by` | Approval relationship   |
+| `attests`     | Skill attestation       |
+
+#### Other
+
+| Type             | Meaning                               |
+| ---------------- | ------------------------------------- |
+| `tracks`         | Cross-project tracking (non-blocking) |
+| `caused-by`      | Root cause link                       |
+| `validates`      | Validation/approval relationship      |
+| `until`          | Active until target is closed         |
+| `delegated-from` | Task delegation chain                 |
+
+Custom types are also allowed: any non-empty string up to 50 characters is valid.
+
+### 6.2 Auto-Ready Detection (`bd ready`)
+
+`computeBlockedIDs()` is the single source of truth for blocked status:
+
+```
+1. Query active issues (excluding closed, pinned)
+2. Query blocking dependencies (blocks, conditional-blocks)
+3. Filter to only those where both sides are active
+4. Process waits-for:
+   - all-children: blocked if any child is still active
+   - any-children: blocked until the first child closes
+5. Store result in blockedIDsCacheMap (O(1) lookup)
+```
+
+The cache is valid for the lifetime of the DoltStore instance and is invalidated on dependency changes.
+
+**Added in v1.0.0:**
+
+- `bd ready --explain` — explains why a given issue is ready or not, based on its dependencies
+- `bd ready --parent <epic-id>` — filters to only children of a specific epic
+
+### 6.3 Cycle Prevention
+
+**On write**: `AddDependency()` → recursive CTE SQL detects cycle → rejects  
+**On read**: `DetectCycles()` → DFS-based full graph analysis  
+**CLI**: `bd dep cycles` → prints all cycle paths (A → B → C → A)  
+**v1.0.0**: `bd graph check` — graph integrity validation including extended cycle detection
+
+### 6.4 Graph Visualization
+
+**Layout computation** (`computeLayout()`):
+
+1. Build dependency map using only `blocks` dependencies
+2. Assign layers using a longest-path algorithm (Layer 0 = no dependencies)
+3. Lift parent-child children to the parent's layer
+4. Sort within each layer by ID
+
+**Output formats:**
+
+| Format         | Description                                       |
+| -------------- | ------------------------------------------------- |
+| Terminal DAG   | Box-drawing characters, status icons (○ ◐ ● ✓ ❄) |
+| DOT (Graphviz) | `bd graph --dot ID \| dot -Tsvg > graph.svg`      |
+| HTML (D3.js)   | Interactive (drag, zoom, click, legend)           |
+| Compact/Tree   | One-line-per-node tree connectors (├── └──)       |
+
+### 6.5 Atomic Graph Creation (`bd create --graph`)
+
+Create an entire dependency graph at once from a JSON plan:
+
+```json
+{
+  "commit_message": "Bootstrap auth epic",
+  "nodes": [
+    { "key": "epic", "title": "Auth System", "type": "epic", "priority": 1 },
+    { "key": "design", "title": "Design API", "type": "task", "parent_key": "epic" },
+    { "key": "impl", "title": "Implement API", "type": "task", "parent_key": "epic" },
+    { "key": "tests", "title": "Write tests", "type": "task", "parent_key": "epic" }
+  ],
+  "edges": [
+    { "from_key": "impl", "to_key": "design", "type": "blocks" },
+    { "from_key": "tests", "to_key": "impl", "type": "blocks" }
+  ]
+}
+```
+
+**Highlights:**
+
+- Returns a mapping of symbolic keys → real IDs
+- `parent_key` automatically creates the parent-child hierarchy
+- `metadata_refs` allows cross-issue metadata references (resolved after all IDs are assigned)
+- Single transaction — any failure rolls back the entire graph
+- Validation: unique keys, existing references, valid dependency types
+
+---
+
+## 7. Memory Compaction (Semantic Compaction)
+
+### 7.1 Concept
+
+AI-powered summarization of old closed issues to **reduce DB size and save LLM context window space**.
+
+### 7.2 Two-Tier Strategy
+
+| Tier       | Condition                                                     | Target compression | Method                     |
+| ---------- | ------------------------------------------------------------- | ------------------ | -------------------------- |
+| **Tier 1** | Closed 30+ days ago (configurable via `compact_tier1_days`)   | ~70%               | Summarized by Claude Haiku |
+| **Tier 2** | 90+ days after Tier 1 (configurable via `compact_tier2_days`) | ~95%               | Further ultra-compression  |
+
+### 7.3 AI Summary Format
+
+```
+Input:  Title, Description, Design, Acceptance Criteria, Notes
+Output:
+  **Summary:** 2-3 sentences (what was done and why)
+  **Key Decisions:** key technical decisions
+  **Resolution:** one-sentence final outcome
+```
+
+- AI model: **Claude Haiku** (lightweight, cost-efficient)
+- Retries: up to 3, with exponential backoff (1s, 2s, 4s)
+- API key: `ANTHROPIC_API_KEY` environment variable or `ai.api_key` config value
+
+### 7.4 Eligibility Conditions
+
+```go
+// Tier 1 eligible:
+status == CLOSED
+&& closed_at <= (now - 30 days)
+&& compaction_level == 0
+
+// Tier 2 eligible:
+status == CLOSED
+&& compaction_level == 1
+&& closed_at <= (now - 90 days)
+```
+
+### 7.5 Three Operating Modes
+
+| Mode                                             | Description                    | API required? |
+| ------------------------------------------------ | ------------------------------ | ------------- |
+| **Analyze** (`--analyze`)                        | List eligible candidates       | No            |
+| **Apply** (`--apply --id <ID> --summary <file>`) | Apply a human-provided summary | No            |
+| **Auto** (`--auto --all`)                        | AI auto-summarize (legacy)     | Yes           |
+
+Batch processing: configurable concurrency (default 5 workers), semaphore pattern.
+
+### 7.6 Storage Structure
+
+```sql
+-- Metadata columns in the issues table:
+compaction_level INT   -- 0 (none), 1 (Tier 1), 2 (Tier 2)
+compacted_at DATETIME  -- time of compaction
+compacted_at_commit VARCHAR(64)  -- Dolt commit hash at compaction
+original_size INT      -- original size in bytes
+
+-- Separate snapshot table:
+compaction_snapshots (issue_id, compaction_level, snapshot_json, created_at)
+```
+
+### 7.7 Dolt History Compaction (separate)
+
+Separate from issue compaction, this feature **squashes the Dolt commit history** that accumulates from auto-commits:
+
+```bash
+bd compact --dolt --dry-run        # preview
+bd compact --dolt --days 7 --force # squash history older than 7 days
+```
+
+1. Identify commits older than the `--days` threshold
+2. Create a squashed base commit
+3. Cherry-pick recent commits
+4. Reclaim disk space with Dolt GC
+
+---
+
+## 8. Sync System
+
+### 8.1 Native Dolt Push/Pull
+
+```bash
+bd dolt push    # push to origin remote
+bd dolt pull    # pull from origin + auto cell-level merge
+bd dolt commit -m "msg"  # commit changes
+```
+
+**Three-way routing logic:**
+
+- Git protocol remote → CLI `dolt push` (avoids MySQL timeout)
+- Hosted Dolt + SQL auth → SQL `CALL DOLT_PUSH('--user', ...)`
+- Other → SQL `CALL DOLT_PUSH(remote, branch)`
+
+**Supported remote types:**
+
+- DoltHub: `dolthub://org/repo`
+- Direct SQL: `host:port/database`
+- File: `file:///path/to/repo`
+- Git conversion: `https://...` → `git+https://...`
+- Azure Blob: `az://container/path` (since v1.0.0)
+
+### 8.2 Federation (P2P Sync)
+
+```bash
+# Add a peer
+bd federation add-peer team-beta dolthub://acme/team-beta-beads
+bd federation add-peer partner https://partner.example.com/beads --sovereignty T3
+
+# Sync
+bd federation sync --peer team-beta --strategy ours
+bd federation status
+```
+
+**Sync workflow (5 steps):**
+
+1. **Fetch**: `CALL DOLT_FETCH(peer_name)`
+2. **Merge**: `CALL DOLT_MERGE('--author', author, peer/branch)`
+3. **Conflict detection**: query `dolt_conflicts` table
+4. **Conflict resolution**: `--ours` (local wins) / `--theirs` (remote wins) / manual
+5. **Push**: `CALL DOLT_PUSH(peer_name, branch)`
+
+**Credential management:**
+
+- AES-256-GCM encryption (random key)
+- Stored in `federation_peers` table
+- Automatically decrypted at sync time
+- v1.0.0: supports `~/.config/beads/credentials` file with Unix permission checks
+
+### 8.3 Conflict Resolution
+
+Dolt's **cell-level merge** is the key mechanism:
+
+- Different rows/columns in the same table modified → auto-merge
+- Same cell modified on both sides → recorded in `dolt_conflicts` table
+- Resolution strategies: `--ours` (DOLT_CONFLICTS_RESOLVE --ours) / `--theirs` / manual
+
+### 8.4 Git Integration
+
+```go
+// Automatic URL conversion
+gitURLToDoltRemote("https://github.com/org/repo.git")
+  → "git+https://github.com/org/repo.git"
+
+gitURLToDoltRemote("git@github.com:org/repo.git")
+  → "git+ssh://git@github.com/org/repo.git"
+```
+
+### 8.5 Backup
+
+```bash
+bd backup init /path/to/backup   # configure backup target
+bd backup sync                    # sync
+bd backup restore --force /path   # restore
+```
+
+Uses Dolt's native backup mechanism → preserves full commit history.
+
+---
+
+## 9. Wisps & Molecules
+
+### 9.1 Concepts
+
+**Molecules**: Template work items that define structured workflows  
+**Wisps**: **Local-only ephemeral issues** generated from a Molecule (execution traces)
+
+### 9.2 Wisp Lifecycle
+
+```
+bd mol wisp (generate from template)
+  → Wisp Issues (local-only work)
+  → bd mol squash (compress into a permanent digest)
+```
+
+### 9.3 Molecule Hierarchical Loading
+
+```
+1. Built-in molecules (embedded in binary)
+2. Town-level: $GT_ROOT/.beads/molecules.jsonl (orchestrator)
+3. User-level: ~/.beads/molecules.jsonl
+4. Project-level: .beads/molecules.jsonl
+```
+
+Each level can override the level above it.
+
+### 9.4 Why Wisps Are Not Synced
+
+| Property            | Regular issue       | Wisp              |
+| ------------------- | ------------------- | ----------------- |
+| Remote sync         | Yes                 | No                |
+| Tombstone on delete | Yes                 | No (hard delete)  |
+| Can be resurrected  | Yes                 | No (never synced) |
+| Deletion method     | `CreateTombstone()` | `DeleteIssue()`   |
+
+**Benefits:**
+
+- Fast local iteration with no sync overhead
+- Only the digest (result) enters git, keeping history clean
+- Execution traces are isolated between agents
+- Prevents wisp accumulation across clones
+
+---
+
+## 10. New Features in v1.0.0
+
+### 10.1 `bd batch` — Atomic Batch Processing
+
+```bash
+# Execute multiple operations from stdin
+echo "close bd-a1b2 done
+update bd-c3d4 status=in_progress
+create task 1 New authentication module
+dep add bd-e5f6 bd-c3d4 blocks" | bd batch
+
+# Execute from a file
+bd batch -f operations.txt
+
+# Dry run
+bd batch --dry-run -f operations.txt
+```
+
+**Supported operations:**
+| Operation | Syntax | Description |
+|-----------|--------|-------------|
+| `close` | `close <id> [reason...]` | Close an issue |
+| `update` | `update <id> <key>=<value>` | Update status, priority, title, assignee |
+| `create` | `create <type> <priority> <title>` | Create a new issue |
+| `dep add` | `dep add <from> <to> [type]` | Add a dependency |
+| `dep remove` | `dep remove <from> <to>` | Remove a dependency |
+
+**Core value:** Consolidates N sequential `bd` calls into **a single Dolt commit**, eliminating write amplification.
+
+### 10.2 `bd rules audit` — Rules Audit
+
+```bash
+bd rules audit              # check .claude/rules/*.md for contradictions
+bd rules compact            # suggest merging duplicate rules
+```
+
+- Extracts Do/Don't directives
+- Detects antonym pairs (block↔proceed, verbose↔minimize, etc.)
+- Identifies contradictory rules using a scope score
+- Suggests merging duplicate candidates
+
+### 10.3 New Issue Types: Spike, Story, Milestone
+
+| Type        | Meaning                  | Example use case                                       |
+| ----------- | ------------------------ | ------------------------------------------------------ |
+| `spike`     | Time-boxed investigation | "Compare Redis vs DynamoDB performance, within 2 days" |
+| `story`     | User story               | "As a user, I can reset my password"                   |
+| `milestone` | Completion marker        | "Alpha release ready" (no work of its own)             |
+
+### 10.4 Storage Hook Decorator (`HookFiringStore`)
+
+Hook-firing logic moved from the CLI to the storage layer:
+
+```go
+// Decorated methods:
+CreateIssue  → fires on_create hook
+UpdateIssue  → fires on_update hook
+ReopenIssue  → fires on_update hook
+CloseIssue   → fires on_close hook
+// ...all mutation methods
+
+// Transaction-safe: fires only after commit, not on rollback
+// UnwrapStore(): for optional interface type assertions
+```
+
+**Benefit:** All future commands automatically get consistent hook execution without any extra work.
+
+### 10.5 Slot API — Per-Issue Metadata
+
+```bash
+bd slot set bd-a1b2 delegation_state "waiting_review"
+bd slot get bd-a1b2 delegation_state
+bd slot clear bd-a1b2 delegation_state
+```
+
+Allows external tools to store delegation state, hook state, etc., without polluting issue fields.
+
+### 10.6 `bd config set-many` — Batch Configuration
+
+```bash
+bd config set-many ado.state_map.open=New ado.state_map.closed=Closed gitlab.project=myproject
+```
+
+Atomically updates YAML, git config, and database config keys in a single command.
+
+### 10.7 `bd context` — Backend Diagnostics
+
+```bash
+bd context --json
+# {
+#   "beads_dir": ".beads",
+#   "backend": "embedded",
+#   "dolt_mode": "embedded",
+#   "bd_version": "1.0.0",
+#   "project_id": "my-project",
+#   ...
+# }
+```
+
+Works without a DB connection, making it useful for diagnostics in a degraded state.
+
+### 10.8 CLI Improvements
+
+- **Top-level aliases**: `bd comment`, `bd assign`, `bd tag`, `bd link`, `bd priority`
+- **Comma-separated filters**: `bd list --status open,in_progress`
+- **Blocking icon**: shown in `bd list` for issues blocked by a dependency
+- **`bd ready --explain`**: explains why an issue is ready or blocked
+- **Bootstrap improvements**: `--non-interactive` / `--yes` flags (for CI/automation), server DB existence validation
+
+### 10.9 Enhanced External Integrations
+
+**Azure DevOps (ADO) — fully new integration:**
+
+```bash
+bd ado sync          # sync ADO ↔ Beads
+bd ado status        # check sync status
+bd ado projects      # list ADO projects
+```
+
+- Recognizes shorthand references (`ado:NNNNN`), prevents duplicates on sync
+- Push filters: `--types`, `--states`, `--no-create`
+
+**GitLab Sync improvements:**
+
+- Epic → Milestone mapping
+- GraphQL-based task hierarchy
+- Automatic filtering of internal types
+- Dynamic work item type ID queries (session-cached)
+
+**Common enhancements:**
+
+- Retry logic with jitter on all tracker HTTP clients
+- Linear/Jira pagination guards
+- Response size limits
+- Terminal-safe content sanitization
+
+### 10.10 Connection Pool & Stability
+
+- Configurable connection pool lifetimes (longer defaults)
+- `BEADS_DOLT_READY_TIMEOUT` environment variable overrides the `waitForReady` timeout
+- Circuit breaker keyed on host:port (prevents cross-host blocking)
+- btrfs worker thrashing prevention (`FS_NOCOW_FL` flag)
+- dolt-server.log rotation on startup
+
+### 10.11 Build & Deployment Improvements
+
+- **CGO/Non-CGO separation**: `beads_cgo.go` (embedded+server) / `beads_nocgo.go` (server only)
+- **CI overhaul**: test sharding, pre-compiled binaries, shared Go module cache
+- **Cross-version smoke tests**: workflow for verifying migration safety
+- **Checksum verification on install**: SHA256 check before extraction
+- **ICU/CGO fallback handling**: graceful degradation on systems without the ICU library
+
+---
+
+## 11. Project Development History
+
+### 11.1 Born from Vibe Coding
+
+Beads is a project where **Steve Yegge** built the initial version in **6 days with Claude**.
+
+| Item                       | Figure                                                        |
+| -------------------------- | ------------------------------------------------------------- |
+| Total commits              | ~8,365+                                                       |
+| Claude co-authored commits | ~2,927+ (**35%+**)                                            |
+| GitHub Copilot co-authored | ~13                                                           |
+| Core developer             | Steve Yegge (4,475+ commits)                                  |
+| AI agent crew              | emma (379), refinery (307), george, dennis, dave, jane, lizzy |
+| External contributors      | coffeegoddd/DoltHub (147), matt wilkie, osamu2001, etc.       |
+
+### 11.2 Development Methodology
+
+- **ZFC (Zero Framework Cognition)**: "Intelligence belongs to the AI model; code is just orchestration"
+- **Dogfooding**: The Beads project itself uses `bd` to track its own issues
+- **Multi-agent orchestration**: The "Beads Crew" system — a crew of named AI agents (emma, george, dennis, etc.) that independently contribute to development
+- Commit format: `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>`
+
+### 11.3 AI-Agent-Friendly Design
+
+The project was built for AI agents, by AI agents:
+
+- `AGENTS.md`: Complete guide for agent workflows (e.g., do not use interactive `bd edit`)
+- `AGENT_INSTRUCTIONS.md` (since v1.0.0): Detailed operating instructions — Go 1.24+, test workflows, "Push to Main, Never PR," the Landing the Plane protocol
+- `CLAUDE.md`: Guide for Claude Code sessions (project-local settings by default)
+- `.claude/settings.json`: Hooks that block problematic patterns (e.g., `gh watch` polling)
+- `bd prime`: Context injection command (~1–2k tokens)
+- `bd setup claude`: Auto-generates project-local `.claude/settings.json` (since v1.0.0)
+- MCP server support
+
+### 11.4 Steve Yegge's Related Posts
+
+1. _"Introducing Beads: A Coding Agent Memory System"_ — original problem statement
+2. _"The Beads Revolution"_ — experience building it with Claude over 6 days
+3. _"Beads Blows Up"_ — 3-week retrospective, the "land the plane" protocol
+4. _"From Beads to Tasks"_ — influence on Anthropic's thinking about agent memory
+
+### 11.5 Major Evolution Timeline
+
+| Version    | Changes                                                                                                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v0.20+     | Introduced hash-based IDs                                                                                                                                                                                                      |
+| v0.50.3    | Unified tracker sync (SyncEngine)                                                                                                                                                                                              |
+| v0.51.0    | Removed `bd sync` → replaced with `bd dolt push/pull`; removed SQLite backend                                                                                                                                                  |
+| v0.53.0    | Removed JSONL sync pipeline (~11,000 lines)                                                                                                                                                                                    |
+| v0.55.0+   | Multi-agent orchestration (Gas Town)                                                                                                                                                                                           |
+| v0.60+     | UUID migration, Federation conflict resolution                                                                                                                                                                                 |
+| v0.61.0+   | Prime SSOT, circuit breaker pattern                                                                                                                                                                                            |
+| v0.62.0    | Embedded Dolt mode, custom status categories                                                                                                                                                                                   |
+| **v1.0.0** | **Production stability milestone**: embedded default, `bd batch`, graph creation, ADO integration, storage hook decorator, Slot API, rules audit, schema v11, new issue types (spike/story/milestone), CGO/Non-CGO build split |
+
+---
+
+## 12. Key File Reference
+
+### Architecture & Design
+
+| File                     | Role                                                          |
+| ------------------------ | ------------------------------------------------------------- |
+| `docs/ARCHITECTURE.md`   | Architecture documentation                                    |
+| `docs/INTERNALS.md`      | Internal implementation details (FlushManager, Blocked Cache) |
+| `docs/CLI_REFERENCE.md`  | Full CLI reference (32KB+)                                    |
+| `docs/COLLISION_MATH.md` | Hash collision probability math                               |
+| `AGENTS.md`              | Agent workflow guide                                          |
+| `AGENT_INSTRUCTIONS.md`  | Detailed agent operating instructions (since v1.0.0)          |
+
+### Core Source Code
+
+| File                                      | Role                                              |
+| ----------------------------------------- | ------------------------------------------------- |
+| `cmd/bd/main.go`                          | Entry point, global state, signal handling        |
+| `internal/types/types.go`                 | Domain types: Issue, Dependency, Status, etc.     |
+| `internal/types/id_generator.go`          | Hash-based ID generation, hierarchical ID parsing |
+| `internal/storage/storage.go`             | Storage interface (including Slot API)            |
+| `internal/storage/hook_decorator.go`      | HookFiringStore (since v1.0.0)                    |
+| `internal/storage/dolt/schema.go`         | DB schema (v11)                                   |
+| `internal/storage/dolt/store.go`          | DoltStore implementation                          |
+| `internal/storage/dolt/issues.go`         | Issue CRUD (write path)                           |
+| `internal/storage/dolt/dependencies.go`   | Dependency CRUD                                   |
+| `internal/storage/dolt/queries.go`        | computeBlockedIDs, GetReadyWork                   |
+| `internal/storage/schema/schema.go`       | Unified schema SSOT (since v1.0.0)                |
+| `internal/storage/issueops/blocked.go`    | ComputeBlockedIDsInTx (shared)                    |
+| `internal/storage/issueops/cycles.go`     | Cycle detection (DFS)                             |
+| `internal/storage/issueops/compaction.go` | Compaction eligibility/tier logic                 |
+| `internal/storage/issueops/child_id.go`   | Child ID generation, counter adjustment           |
+| `beads_cgo.go`                            | CGO build: embedded+server (since v1.0.0)         |
+| `beads_nocgo.go`                          | Non-CGO build: server only (since v1.0.0)         |
+
+### CLI Commands (Key Files)
+
+| File                     | Role                                          |
+| ------------------------ | --------------------------------------------- |
+| `cmd/bd/create.go`       | Issue creation (--parent, --graph)            |
+| `cmd/bd/ready.go`        | Query ready work + blocked issues (--explain) |
+| `cmd/bd/dep.go`          | Dependency management                         |
+| `cmd/bd/graph.go`        | Graph loading/command dispatch                |
+| `cmd/bd/graph_visual.go` | Terminal DAG rendering                        |
+| `cmd/bd/graph_export.go` | DOT/HTML export                               |
+| `cmd/bd/graph_apply.go`  | Atomic graph creation from JSON               |
+| `cmd/bd/batch.go`        | Atomic batch processing (since v1.0.0)        |
+| `cmd/bd/rules.go`        | Rules audit/compact (since v1.0.0)            |
+| `cmd/bd/ado.go`          | Azure DevOps integration (since v1.0.0)       |
+| `cmd/bd/context_cmd.go`  | Backend context diagnostics (since v1.0.0)    |
+| `cmd/bd/compact.go`      | Semantic compaction CLI                       |
+| `cmd/bd/dolt.go`         | Dolt sync commands                            |
+| `cmd/bd/federation.go`   | Federation P2P sync                           |
+| `cmd/bd/relate.go`       | Bidirectional relates-to links                |
+
+### Compaction & AI
+
+| File                            | Role                        |
+| ------------------------------- | --------------------------- |
+| `internal/compact/compactor.go` | Compactor orchestration     |
+| `internal/compact/haiku.go`     | Claude Haiku AI integration |
+
+---
+
+## 13. Key Design Decisions Summary
+
+| Decision                      | Choice                                       | Rationale                                                               |
+| ----------------------------- | -------------------------------------------- | ----------------------------------------------------------------------- |
+| **Use Dolt**                  | Dolt instead of SQLite/PostgreSQL            | Version control, cell-level merge, native distribution                  |
+| **Hash-based IDs**            | Hash instead of sequential IDs               | Distributed generation without central coordination; no merge conflicts |
+| **Edge schema consolidation** | All relationships as edges in `dependencies` | Flexible new edge types without schema changes                          |
+| **Only 4 blocking types**     | 4 of 19+ types affect `ready`                | Clear workflow semantics                                                |
+| **Auto Dolt commit**          | Automatic commit on every write              | Complete audit trail, no data loss                                      |
+| **Non-synced Wisps**          | Local-only ephemeral issues                  | Fast iteration, clean history                                           |
+| **Claude Haiku compaction**   | Lightweight AI for issue summarization       | Cost-efficient, optimizes LLM context window                            |
+| **ZFC principle**             | Code is orchestration; intelligence is AI    | Minimizes code complexity, maximizes AI model leverage                  |
+| **Embedded default (v1.0.0)** | In-process, no external server               | Eliminates installation complexity, native macOS support                |
+| **Hook decorator (v1.0.0)**   | Hooks fire at storage layer, not CLI         | Consistent hook execution across all mutation paths                     |
+| **Batch processing (v1.0.0)** | N operations in 1 commit                     | Eliminates write amplification, optimizes shell scripts                 |
+
+---
+
+## 14. USE CASE: Epic Decomposition
+
+### 14.1 Scenario
+
+A large epic called "User Authentication System" is decomposed in design → implementation → testing order, and an AI agent executes the tasks following the dependency sequence.
+
+### 14.2 Method A: Individual Creation (`bd create --parent`)
+
+```bash
+# ===== Step 1: Create the epic =====
+bd create "User Authentication System" -t epic -p 1 \
+  -d "OAuth 2.0 + MFA support" --json
+# → {"id": "bd-a3f8e9", "title": "User Authentication System", ...}
+
+# ===== Step 2: Create child tasks =====
+bd create "Design OAuth flow" --parent bd-a3f8e9 -p 1 --json
+# → {"id": "bd-a3f8e9.1"}  ← automatic hierarchical ID
+
+bd create "Implement OAuth provider" --parent bd-a3f8e9 -p 1 --json
+# → {"id": "bd-a3f8e9.2"}
+
+bd create "Add MFA support" --parent bd-a3f8e9 -p 2 --json
+# → {"id": "bd-a3f8e9.3"}
+
+bd create "Write integration tests" --parent bd-a3f8e9 -p 1 --json
+# → {"id": "bd-a3f8e9.4"}
+
+bd create "Write security documentation" --parent bd-a3f8e9 -p 2 --json
+# → {"id": "bd-a3f8e9.5"}
+
+# ===== Step 3: Add execution-order dependencies =====
+bd dep add bd-a3f8e9.2 bd-a3f8e9.1 --type blocks   # implementation after design
+bd dep add bd-a3f8e9.3 bd-a3f8e9.2 --type blocks   # MFA after OAuth implementation
+bd dep add bd-a3f8e9.4 bd-a3f8e9.2 --type blocks   # tests after implementation
+bd dep add bd-a3f8e9.5 bd-a3f8e9.4 --type blocks   # docs after tests
+```
+
+### 14.3 Method B: Atomic Graph Creation (`bd create --graph`)
+
+Create all issues and dependencies in a **single transaction**:
+
+```bash
+cat > auth-epic.json <<'EOF'
+{
+  "commit_message": "Bootstrap User Authentication System epic",
+  "nodes": [
+    {
+      "key": "epic",
+      "title": "User Authentication System",
+      "type": "epic",
+      "priority": 1,
+      "description": "OAuth 2.0 + MFA support"
+    },
+    {
+      "key": "design",
+      "title": "Design OAuth flow",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic"
+    },
+    {
+      "key": "oauth-impl",
+      "title": "Implement OAuth provider",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic"
+    },
+    {
+      "key": "mfa",
+      "title": "Add MFA support",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic"
+    },
+    {
+      "key": "tests",
+      "title": "Write integration tests",
+      "type": "task",
+      "priority": 1,
+      "parent_key": "epic"
+    },
+    {
+      "key": "docs",
+      "title": "Write security documentation",
+      "type": "task",
+      "priority": 2,
+      "parent_key": "epic"
+    }
+  ],
+  "edges": [
+    {"from_key": "oauth-impl", "to_key": "design", "type": "blocks"},
+    {"from_key": "mfa", "to_key": "oauth-impl", "type": "blocks"},
+    {"from_key": "tests", "to_key": "oauth-impl", "type": "blocks"},
+    {"from_key": "docs", "to_key": "tests", "type": "blocks"}
+  ]
+}
+EOF
+
+bd create --graph auth-epic.json --json
+# → {
+#     "ids": {
+#       "epic": "bd-a3f8e9",
+#       "design": "bd-a3f8e9.1",
+#       "oauth-impl": "bd-a3f8e9.2",
+#       "mfa": "bd-a3f8e9.3",
+#       "tests": "bd-a3f8e9.4",
+#       "docs": "bd-a3f8e9.5"
+#     }
+#   }
+```
+
+### 14.4 Method C: Batch Processing (`bd batch`)
+
+Useful for bulk changes to existing issues:
+
+```bash
+cat > epic-ops.txt <<'EOF'
+create task 1 Design OAuth flow
+create task 1 Implement OAuth provider
+create task 2 Add MFA support
+create task 1 Write integration tests
+create task 2 Write security documentation
+EOF
+
+bd batch -f epic-ops.txt --message "Bulk-create epic child tasks"
+```
+
+### 14.5 Agent Task Execution Flow
+
+```bash
+# ===== Agent queries ready work =====
+bd ready --parent bd-a3f8e9 --json
+# Result: [{"id": "bd-a3f8e9.1", "title": "Design OAuth flow"}]
+# → Only "design" is ready — it has no blocking dependencies
+
+# ===== Design complete → unblock implementation =====
+bd update bd-a3f8e9.1 --status in_progress
+# ... do work ...
+bd close bd-a3f8e9.1 --reason "OAuth design document approved"
+
+bd ready --parent bd-a3f8e9 --json
+# Result: [{"id": "bd-a3f8e9.2", "title": "Implement OAuth provider"}]
+# → Closing "design" unblocked "implementation"
+
+# ===== Implementation complete → MFA + tests both unblocked =====
+bd update bd-a3f8e9.2 --status in_progress
+# ... do work ...
+bd close bd-a3f8e9.2 --reason "OAuth provider integrated"
+
+bd ready --parent bd-a3f8e9 --json
+# Result: [
+#   {"id": "bd-a3f8e9.3", "title": "Add MFA support"},
+#   {"id": "bd-a3f8e9.4", "title": "Write integration tests"}
+# ]
+# → Closing "implementation" unblocked both "MFA" and "tests" simultaneously (parallel work possible!)
+
+# ===== Parallel work → sequential completion =====
+bd close bd-a3f8e9.3 --reason "MFA implementation complete"
+bd close bd-a3f8e9.4 --reason "All tests passing"
+
+bd ready --parent bd-a3f8e9 --json
+# Result: [{"id": "bd-a3f8e9.5", "title": "Write security documentation"}]
+
+bd close bd-a3f8e9.5 --reason "API docs and security guide written"
+```
+
+### 14.6 Checking Epic Status & Auto-Close
+
+```bash
+# Check in-progress status
+bd show bd-a3f8e9
+# ┌──────────────────────────────────────┐
+# │  bd-a3f8e9: User Authentication System │
+# │  Type: epic  Status: open  P1          │
+# │  Children: 5 total (2 closed, 3 open)  │
+# │  Progress: ██████░░░░░░░ 40%           │
+# └──────────────────────────────────────┘
+
+# Graph visualization
+bd graph bd-a3f8e9
+# Layer 0:  [○ bd-a3f8e9.1 Design]
+#              │
+# Layer 1:  [◐ bd-a3f8e9.2 Implementation]
+#            ┌──┤
+# Layer 2:  [○ bd-a3f8e9.3 MFA]  [○ bd-a3f8e9.4 Tests]
+#                                    │
+# Layer 3:                        [○ bd-a3f8e9.5 Docs]
+
+# Closing the last child → epic auto-closes
+bd close bd-a3f8e9.5 --reason "done"
+bd show bd-a3f8e9
+# Status: closed ← automatically transitioned when all children complete
+```
+
+### 14.7 Dependency Graph (Visual Summary)
+
+```
+                    bd-a3f8e9 (epic: User Authentication System)
+                    ├── .1 Design OAuth flow
+                    │     ↓ blocks
+                    ├── .2 Implement OAuth provider
+                    │     ├── ↓ blocks
+                    │     └── ↓ blocks
+                    ├── .3 Add MFA support ←──────┘
+                    ├── .4 Write integration tests ←────┘
+                    │     ↓ blocks
+                    └── .5 Write security documentation
+
+Execution order:  .1 → .2 → (.3 + .4 in parallel) → .5
+```
+
+### 14.8 Key Mechanisms Summary
+
+| Mechanism               | Description                                                            |
+| ----------------------- | ---------------------------------------------------------------------- |
+| **Hierarchical ID**     | `--parent` auto-generates `.N` suffix, up to 3 levels deep             |
+| **parent-child dep**    | Creating a child automatically adds a `parent-child` edge              |
+| **blocks dep**          | Controls execution order — B appears in `bd ready` only after A closes |
+| **`bd ready --parent`** | Filters to only actionable children within a specific epic             |
+| **Epic auto-close**     | Epic automatically closes when all children are closed                 |
+| **Graph creation**      | `bd create --graph` atomically creates the entire structure            |
+| **Batch processing**    | `bd batch` consolidates multiple changes into a single commit          |
+| **Molecule seed**       | `bd mol seed <template>` reuses repeatable epic patterns               |
+
+### 14.9 waits-for: Dynamic Fan-Out Pattern
+
+When the number of children within an epic is determined at runtime:
+
+```bash
+# MapReduce pattern: reduce waits until all map partitions finish
+bd create "Data Pipeline" -t epic -p 1
+# → bd-b2c3
+
+bd create "Map Partition 1" --parent bd-b2c3
+bd create "Map Partition 2" --parent bd-b2c3
+# ... more can be added at runtime
+
+bd create "Reduce & Aggregate" -t task -p 1
+bd dep add reduce-id bd-b2c3 --type waits-for
+# → "Reduce" is blocked until all children of bd-b2c3 are closed
+# → New partitions added during the run are automatically detected
+```
+
+---
+
+_This report was written by analyzing the source code, documentation, and git history of beads v1.0.0 (2026-04-02)._  
+_For major changes compared to the previous version (v0.62.0), see [10. New Features in v1.0.0](#10-new-features-in-v100)._

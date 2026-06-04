@@ -1,0 +1,436 @@
+---
+slug: '2026-06-04-codegraph-architecture'
+title: 'CodeGraph Architecture Analysis: How Is the Code Intelligence Layer Beneath Coding Agents Built?'
+crawlertitle: 'CodeGraph Architecture Analysis: How Is the Code Intelligence Layer Beneath Coding Agents Built?'
+summary: 'CodeGraph is a TypeScript tool that uses tree-sitter to parse source code, builds a local SQLite knowledge graph of symbols, edges, and files (with FTS5), and exposes that graph via an MCP server to coding agents like Claude Code, Cursor, Codex, and Hermes Agent. Instead of burning tokens navigating a codebase with grep/Read calls, agents get answers from a single codegraph_explore invocation. This post analyzes the architecture that makes that possible.'
+date: 2026-06-04 00:00:00 +0900
+categories: posts
+tags:
+  [
+    'codegraph',
+    'code-intelligence',
+    'knowledge-graph',
+    'tree-sitter',
+    'static-analysis',
+    'mcp',
+    'sqlite',
+    'coding-agent',
+    'architecture',
+  ]
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+> Analyzed: 2026-06-04
+> Package: `@colbymchenry/codegraph` `0.9.9`
+> Commit: `629d8472b14168841cd1f26b7022bf5934ff205d` (2026-06-02)
+> Repository: https://github.com/colbymchenry/codegraph
+> Local path: `~/workspace/opensources/codegraph`
+
+---
+
+_This article is mostly written by Claude Code_
+
+---
+
+## 1. Why CodeGraph?
+
+Most of the projects analyzed on this blog have been **agents themselves**. [Hermes Agent](/kb/2026-05-13-hermes-agent-architecture), [Qwen Code](/kb/2026-05-17-qwen-code-architecture), and [OpenHands](/kb/2026-05-17-openhands-architecture) are runtimes that shuttle between LLM responses and tool calls, while [Claude Code Game Studios](/kb/2026-04-18-claude-code-game-studios-architecture) is the orchestration layer built on top of them.
+
+CodeGraph sits one level lower. It is not an agent — it is a **code intelligence layer that helps agents understand a codebase more cheaply**.
+
+The problem is straightforward. When an agent like Claude Code is asked something like "how does a request reach the database?" on an unfamiliar codebase, it typically spins up an Explore sub-agent and scans files with `grep`, `glob`, and `Read`. Every one of those tool calls burns tokens. The larger the repository, the more exploration costs explode before the agent reaches an answer.
+
+CodeGraph's solution has three parts.
+
+First, **it pre-indexes the codebase into a knowledge graph.** It parses source files with tree-sitter, extracts symbols (functions, classes, methods) as nodes and call/import/inheritance relationships as edges, and stores everything in a local SQLite database.
+
+Second, **it exposes that graph to agents via an MCP server.** Instead of scanning files, agents query the graph. In the README's own words, "agents don't repeat work already done (indexing) with grep/read."
+
+Third, **it is 100% local.** No API keys, no external services — just a single SQLite file.
+
+Viewed narrowly, CodeGraph looks like just another code search tool. More precisely, it is **infrastructure that sits beneath coding agents and redirects their token budget from exploration to answers**.
+
+## 2. Where Does It Fit Among the Projects We've Seen?
+
+CodeGraph's position becomes clear when compared with previously analyzed projects.
+
+| Post                                                     | Core Problem                                      | Relationship to CodeGraph                                                                                                                                                                    |
+| -------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Hermes Agent](/kb/2026-05-13-hermes-agent-architecture) | A TypeScript coding agent runtime                 | Explicitly listed as a supported agent in CodeGraph's README. If Hermes is the subject reading code, CodeGraph hands it a map.                                                               |
+| [Qwen Code](/kb/2026-05-17-qwen-code-architecture)       | How a terminal coding agent becomes a platform    | If Qwen Code wraps tools in a tool registry/scheduler, CodeGraph is one MCP tool plugged into it.                                                                                            |
+| [OpenHands](/kb/2026-05-17-openhands-architecture)       | Running a coding agent as a web product + sandbox | If OpenHands operates agents as a product, CodeGraph is a code-understanding layer that any agent can share.                                                                                 |
+| [Playwright](/kb/2026-04-17-playwright-architecture)     | Abstracting the browser behind a protocol         | Just as Playwright exposes a browser over CDP, CodeGraph exposes a codebase through 7 MCP tools. Both define "the surface an agent touches."                                                 |
+| [Superpowers](/kb/2026-04-18-superpowers-architecture)   | Injecting procedures and knowledge into agents    | If Superpowers teaches _how to work_, CodeGraph teaches _what the target code looks like_.                                                                                                   |
+| [agentmemory](/kb/2026-05-13-agentmemory-architecture)   | Long-term memory and shared context               | If agentmemory is memory that persists across sessions, CodeGraph is structural memory (a graph) about the codebase itself.                                                                  |
+| [WeKnora](/kb/2026-05-30-weknora-architecture)           | A knowledge base that searches documents with RAG | If WeKnora searches documents with embeddings, CodeGraph searches code with an AST graph. Both produce "searchable knowledge," but one enters via embeddings, the other via static analysis. |
+
+This connection matters because CodeGraph touches a **shared assumption** running through all the agent posts: every coding agent pays some cost to "understand the codebase." Hermes, Qwen Code, and Claude Code all ultimately read files.
+
+CodeGraph prepays that cost once with a single indexing pass, and lets every subsequent agent session share that index. It does for code, via static analysis, what RAG did for document retrieval.
+
+## 3. The Project in One Sentence
+
+> CodeGraph is a **zero-config code intelligence tool** that uses tree-sitter to parse 20+ languages, builds a local SQLite knowledge graph of symbols, edges, and files (with FTS5), exposes that graph to coding agents via an MCP server, and keeps the graph in sync with the code through a file watcher.
+
+That sentence contains four axes.
+
+- **Extraction** — pulling nodes and edges from tree-sitter ASTs.
+- **Storage** — persisting to local SQLite + FTS5.
+- **Resolution** — linking references to definitions after extraction (imports, inheritance, framework routes, dynamic dispatch).
+- **Serve & Sync** — exposing via MCP and refreshing automatically via file watcher.
+
+## 4. Technology Stack and Scale
+
+Looking at `package.json` and the source, the dependency list is surprisingly lean.
+
+| Item           | Detail                                                                                                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language       | TypeScript (`src/` — roughly **42,800 LOC**)                                                                                                                           |
+| Parsing        | `web-tree-sitter` + `tree-sitter-wasms` (WASM grammars)                                                                                                                |
+| Storage        | SQLite — Node's built-in `node:sqlite` (WAL mode)                                                                                                                      |
+| CLI            | `commander` + `@clack/prompts` (interactive install wizard)                                                                                                            |
+| File filtering | `ignore`, `picomatch` (respects `.gitignore`)                                                                                                                          |
+| Runtime        | Node `>=20 <25`. CLI/MCP runs on a **bundled self-contained runtime** (no Node required at install time); embedding as a library requires Node 22.5+ for `node:sqlite` |
+| Tests          | `vitest` (with an eval runner at `__tests__/`)                                                                                                                         |
+| License        | MIT                                                                                                                                                                    |
+
+The LOC breakdown by directory makes the center of gravity clear.
+
+| Directory     | Files | LOC    | Role                                          |
+| ------------- | ----- | ------ | --------------------------------------------- |
+| `resolution/` | 32    | 12,970 | Reference resolution — the heaviest component |
+| `extraction/` | 32    | 9,159  | tree-sitter extraction + per-language queries |
+| `mcp/`        | 10    | 5,745  | MCP server, daemon, session, proxy            |
+| `installer/`  | 16    | 3,262  | Automated agent configuration wizard          |
+| `db/`         | 4     | 2,313  | SQLite adapter, query builder, migrations     |
+| `context/`    | 3     | 1,673  | `codegraph_explore` context builder           |
+| `graph/`      | 3     | 1,102  | BFS/DFS traversal                             |
+| `sync/`       | 5     | 1,101  | File watcher, git hook, worktree              |
+| `search/`     | 2     | 553    | Query parser / utilities                      |
+
+`resolution` and `extraction` together account for more than half the codebase. The essential difficulty in CodeGraph is not "parsing" but **"connecting the parsed pieces into a meaningful graph."** This becomes even more apparent when we look at dynamic dispatch synthesis later.
+
+## 5. The Big Picture: A 4-Stage Pipeline
+
+Redrawing the README's diagram from a code perspective:
+
+```
+[1] Extraction          [2] Storage              [3] Resolution           [4] Serve & Sync
+ src/extraction/         src/db/                   src/resolution/          src/mcp/ + src/sync/
+ ─────────────           ─────────                 ───────────────          ────────────────
+ tree-sitter WASM        nodes / edges / files     import-resolver          7 MCP tools
+ worker thread           unresolved_refs           name-matcher             daemon (multi-session)
+ per-language queries    FTS5 (nodes_fts)          framework resolvers      file watcher
+   │                       │                       callback-synthesizer       (FSEvents/inotify)
+   │  nodes+edges+unres.   │  load unresolved refs  │  unresolved → edges     │  debounce 2s
+   └──────────────────────►└──────────────────────►└────────────────────────►└─────────────►
+                                                                              codegraph_explore
+                                                                              exposed via MCP
+```
+
+The key insight is that **extraction and resolution are decoupled.** tree-sitter sees only one file at a time. Determining "which definition does this function call point to?" requires global knowledge, so the extraction phase records _unresolved references (`unresolved_refs`)_, and only after all files have been processed does the resolution phase stitch them together globally. This 2-pass architecture is the structural backbone of CodeGraph's design.
+
+## 6. A Map of the Codebase
+
+Entry points to orient your first reading:
+
+- `src/index.ts` — The `CodeGraph` class. A facade over the public API: `init`/`open`, `indexAll`, `sync`, `searchNodes`, `getCallers`, `buildContext`, `watch`, etc.
+- `src/bin/codegraph.ts` — CLI entry point. Commands: `install`, `init`, `index`, `sync`, `serve --mcp`, `callers/callees/impact`, `affected`.
+- `src/extraction/index.ts` — Indexing orchestrator (scan → parse → store → resolve).
+- `src/extraction/tree-sitter.ts` + `languages/*.ts` — Per-language queries that extract nodes and edges from ASTs.
+- `src/db/schema.sql` + `db/queries.ts` — Schema and query builder.
+- `src/resolution/index.ts` — Reference resolution orchestrator.
+- `src/resolution/callback-synthesizer.ts` — Dynamic dispatch edge synthesis.
+- `src/graph/traversal.ts` — BFS/DFS graph traversal.
+- `src/context/index.ts` + `formatter.ts` — `codegraph_explore` output generation.
+- `src/mcp/engine.ts` / `session.ts` / `daemon.ts` / `proxy.ts` — The four MCP server components.
+- `src/mcp/server-instructions.ts` — Usage instructions given to agents (single source of truth).
+- `src/sync/watcher.ts` — File watcher.
+
+## 7. Extraction: Running tree-sitter in a Worker Thread
+
+The extraction orchestrator (`src/extraction/index.ts`) is less "read and parse files" and more operational code for running a WASM parser reliably at scale. Three constants capture the philosophy:
+
+```ts
+const FILE_IO_BATCH_SIZE = 10 // overlap I/O 10 at a time to pipeline against parse CPU
+const PARSE_TIMEOUT_MS = 10_000 // if one file hangs, restart the worker after 10 seconds
+const WORKER_RECYCLE_INTERVAL = 250 // tear down and recreate the worker thread every 250 files
+```
+
+The comment on `WORKER_RECYCLE_INTERVAL` is particularly telling:
+
+> WASM linear memory can grow but **never shrink** (WebAssembly spec limitation). The only way to reclaim tree-sitter's WASM heap is to terminate the worker thread and spawn a fresh one, destroying the entire V8 isolate.
+
+In other words, CodeGraph knows that tree-sitter WASM holds memory permanently, and responds by **running the parser in a worker thread — not the main thread — and periodically discarding it wholesale**. This is how memory stays flat even when indexing a large monorepo (e.g., VS Code with ~10,000 files). `PARSE_TIMEOUT_MS` simultaneously prevents any single pathological file from freezing the entire indexing run.
+
+The pattern is similar to what we saw in the [Playwright post](/kb/2026-04-17-playwright-architecture): isolating a heavy, untrustworthy (or resource-hoarding) component in a separate process or thread, and designing it so it can be killed and restarted cleanly.
+
+Per-language extraction logic is split across 20+ files in `src/extraction/languages/` (`typescript.ts`, `python.ts`, `go.ts`, `rust.ts`, `swift.ts`, `kotlin.ts`, …), supplemented by framework- and template-specific extractors (`vue-extractor.ts`, `svelte-extractor.ts`, `mybatis-extractor.ts`, `liquid-extractor.ts`, `dfm-extractor.ts`) and `generated-detection.ts` for identifying auto-generated code.
+
+## 8. Storage: SQLite Knowledge Graph with FTS5
+
+The schema (`src/db/schema.sql`) is compact but precise. Four core tables:
+
+- **`nodes`** — Symbols. `id`, `kind`, `name`, `qualified_name`, `file_path`, `language`, start/end line·column, `signature`, `docstring`, `visibility`, `is_exported/async/static/abstract`, `decorators` (JSON), `type_parameters` (JSON).
+- **`edges`** — Relationships. `source`, `target`, `kind`, `metadata` (JSON), `line`, `col`, `provenance`. Edges are cleaned up with `ON DELETE CASCADE` when their node is deleted.
+- **`files`** — Tracked files. `content_hash`, `language`, `size`, `modified_at`, `indexed_at`, `node_count`. Change detection during sync uses `(size, mtime)` plus a content hash.
+- **`unresolved_refs`** — References not yet linked to a definition. Written during extraction; cleared during resolution.
+
+Full-text search is handled via the FTS5 virtual table `nodes_fts`, automatically synchronized with `nodes` via **three triggers (INSERT/DELETE/UPDATE)**. Updating a node updates the search index without any additional application code.
+
+The edge index comment is worth noting:
+
+```sql
+-- idx_edges_source / idx_edges_target are intentionally omitted —
+-- the (source, kind) and (target, kind) composites below cover the
+-- corresponding source-only / target-only lookups via SQLite's
+-- left-prefix scan, so the narrow indexes are dead weight on writes.
+```
+
+The `(source, kind)` composite index covers source-only lookups through SQLite's left-prefix scan, making standalone single-column indexes pure write amplification. Since indexing is a bulk-write workload, reducing write amplification is the right trade-off.
+
+The database is opened in **WAL mode**. Per the README's troubleshooting notes, concurrent reads under WAL mode with Node's bundled `node:sqlite` are not blocked by writers, so `database is locked` errors should not occur — except on filesystems where WAL cannot be enabled (network shares, WSL2 `/mnt`). This connects directly to the multi-session daemon design discussed later.
+
+## 9. Resolution: Linking References to Definitions
+
+This is why `resolution/` is the largest directory. tree-sitter tells you "there is a `userService.find()` call on this line." Knowing which _file_ and _method_ that `find` resolves to requires global information.
+
+The resolution orchestrator (`src/resolution/index.ts`) deploys multiple strategies:
+
+- **`import-resolver.ts`** — Resolves import paths to actual source files. Handles JVM imports, C/C++ include directories, and re-exports.
+- **`name-matcher.ts`** — Name-based matching with scoring when multiple candidates exist.
+- **`path-aliases.ts`** — Resolves `tsconfig` path aliases like `@/components`.
+- **`go-module.ts`, `workspace-packages.ts`** — Go module paths and monorepo workspace package resolution.
+- **`swift-objc-bridge.ts`** — Swift ↔ Objective-C automatic bridging name conventions.
+- **`frameworks/`** — Recognizes routing patterns from 14 frameworks (Django `path()`, Express `app.get()`, NestJS decorators, Spring `@GetMapping`, Rails, Laravel, Gin, etc.) and creates URL → handler edges.
+- **`callback-synthesizer.ts`** — Dynamic dispatch edge synthesis (covered in the next section).
+
+The orchestrator maintains a `Set` of well-known built-ins (JS `console`/`Promise`, Python `print`/`len`, Go standard packages `fmt`/`os`, etc.) and excludes them from resolution. Without this, `console.log` could be incorrectly matched to a user-defined symbol.
+
+For large codebases, each resolver cache is capped with LRU (`DEFAULT_CACHE_LIMIT = 5000`, adjustable via `CODEGRAPH_RESOLVER_CACHE_SIZE`). This ensures flat memory even on 20,000-file repositories — the same "stay flat at scale" philosophy as the worker recycle mechanism above.
+
+## 10. Dynamic Dispatch: Synthesizing Hops That grep Cannot Follow
+
+This is the most interesting part of CodeGraph. The fundamental limitation of static analysis is **dynamic dispatch**. Callback registration with deferred invocation, event-name-based handler dispatch, and JSX rendering child components all represent flows where "who calls whom" cannot be determined from AST alone. grep cannot follow these either.
+
+`callback-synthesizer.ts` is a dedicated pass that **fills these gaps with heuristic pattern matching**. It handles several dispatch patterns:
+
+```ts
+// Identify registrar and dispatcher by name patterns
+const REGISTRAR_NAME =
+  /^(on[A-Z]\w*|subscribe|addListener|addEventListener|register|watch|listen|addCallback)$/
+const DISPATCHER_NAME = /(emit|trigger|notify|dispatch|fire|publish|flush)/i
+```
+
+- **Field-based observers** — `onUpdate(cb)` collects callbacks into a field, and `triggerUpdate()` iterates over them to invoke each. → Synthesizes a `triggerUpdate → (registered callbacks)` edge.
+- **String-keyed EventEmitter** — Pairs `this.on('mount', fn)` registrations with `emit('mount')` dispatches by event name. Common names like `'error'` (where fan-out exceeds `EVENT_FANOUT_CAP = 6`) are skipped, as they are too ambiguous to link correctly without type information.
+- **Closure collection dispatch** — Swift-first. One method `append`s closures to a collection; another iterates with `coll.forEach { $0() }`, calling each element. The `$0(` call proves "this collection holds closures," so pairs can be matched with high precision across file and class boundaries. (The comment cites Alamofire's `Request`/`DataRequest` as an example.)
+- **JSX/Vue** — JSX child components (`<MyView/>`), Vue kebab-case children (`<el-button>`), event bindings (`@click="fn"`), and composable destructuring.
+
+The design principle is **high-precision, low-recall**: only named callbacks, excluding common event names, with a fan-out cap. All synthesized edges are tagged `provenance: 'heuristic'` and carry a `metadata.synthesizedBy` channel name (`swift-objc-bridge`, `rn-event-channel`, `fabric-native-impl`, etc.), so agents can immediately distinguish "statically certain" edges from "heuristically inferred" ones.
+
+`docs/design/dynamic-dispatch-coverage-playbook.md` documents the empirical motivation. When an agent was asked "how does an update reach the screen?" in Excalidraw, it read files to reconstruct the flow when the key edges were _absent_ from the graph — and answered without reading any files when the edges were _present_. The conclusion: the lever that stops agents from reaching for grep/Read is not prompt engineering but **graph coverage**.
+
+This is the key distinction between CodeGraph and a simple symbol indexer. The entire codebase is organized around a single causal chain: statically hard-to-connect flows must be filled in, even heuristically, so agents can complete answers from the graph alone — which is what saves the tokens.
+
+## 11. Graph Traversal and Impact Analysis
+
+`GraphTraverser` in `src/graph/traversal.ts` provides BFS and DFS. Options include `maxDepth`, `edgeKinds` (filter by specific relationship types), `nodeKinds`, `direction` (incoming/outgoing), `limit` (default 1000), and `includeStart`.
+
+Three analysis tools are built on top of this traversal:
+
+- **callers** — Follows incoming call edges: "what calls this?"
+- **callees** — Follows outgoing call edges: "what does this call?"
+- **impact** — Computes the _blast radius_ of changing a symbol — transitively, up to a given depth.
+
+The CLI also exposes a practical `codegraph affected` command derived from this. It transitively traces import dependencies from changed source files to **identify affected test files**. The intended usage is `git diff --name-only | codegraph affected --stdin` to run only the tests relevant to changed code in CI. This extends graph capabilities beyond search into build pipeline optimization.
+
+## 12. codegraph_explore: Returns Answers at the Size of the Answer, Not the Size of Files
+
+The MCP server exposes 7 tools:
+
+| Tool                | Purpose                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `codegraph_explore` | **Primary.** A single call returns verbatim source for related symbols, grouped by file |
+| `codegraph_search`  | Find symbol locations by name                                                           |
+| `codegraph_callers` | What calls this function?                                                               |
+| `codegraph_callees` | What does this function call?                                                           |
+| `codegraph_impact`  | What breaks if this symbol changes?                                                     |
+| `codegraph_node`    | Full source of a specific symbol (returns all overloads for ambiguous names)            |
+| `codegraph_files`   | Indexed file structure                                                                  |
+| `codegraph_status`  | Index status and statistics                                                             |
+
+Among these, `codegraph_explore` is the design centerpiece. It accepts either a natural-language question ("how does X work?") or a set of symbol names, then returns **verbatim source for related symbols grouped by file**, together with a relationship map and blast radius — all in one round trip. From the agent's perspective this is functionally equivalent to `Read`, except the answer to a question scattered across many files arrives in a single call.
+
+What makes it interesting is that output size is **adaptively sized to project scale** (`getExploreBudget` and `ExploreOutputBudget` in `src/mcp/tools.ts`):
+
+```ts
+export function getExploreBudget(fileCount: number): number {
+  if (fileCount < 500) return 1
+  if (fileCount < 5000) return 2
+  if (fileCount < 15000) return 3
+  if (fileCount < 25000) return 4
+  return 5
+}
+```
+
+Small projects get tighter caps on total output, default file count, per-file limits, and clustering. This prevents a single question on a 100-file project from dumping entire files into the context window. Large codebases keep generous defaults — at that scale, the native exploration cost (grep + find + multiple Reads) dwarfs even a large explore response.
+
+`docs/design/adaptive-explore-sizing.md` documents the real-world tuning history in detail. An early version over-skeletonized output on "sibling-heavy" flows (many interchangeable implementations), causing agents to _re-Read_ the file. OkHttp's `RealCall` and Django's `compiler.py` were affected. The fix: "keep files full if they contain a callable the agent explicitly named; but skeleton-ize family files that _define_ a supertype with ≥3 implementations (those will be Read anyway) and reallocate the budget to sibling files." The result: OkHttp went from 3% more expensive to ~10% cheaper, Django from 10% more expensive to ~14–17% cheaper.
+
+The point is this: **`codegraph_explore` is not a tool that "returns N files" — it aims to return exactly as much as one answer needs.** And it continuously calibrates "exactly as much" against real agent A/B measurements. This is not a simple search API; it is **output design that treats the LLM context window as a first-class resource**.
+
+## 13. The MCP Layer: engine, session, daemon, proxy
+
+`src/mcp/` is divided into four collaborators:
+
+- **`engine.ts` (`MCPEngine`)** — Heavy _shared_ state. Holds exactly one `CodeGraph` instance per project, one file watcher, and a `ToolHandler` cache. The invariant is "one engine, many sessions."
+- **`session.ts` (`MCPSession`)** — MCP protocol state machine. One instance per socket connection.
+- **`daemon.ts`** — One detached daemon per project root. Accepts N MCP clients over a Unix domain socket (Windows: named pipe).
+- **`proxy.ts`** — The thin process actually launched by the MCP host. Bridges between daemon and host.
+
+The motivation (issue #411) is compelling. When multiple agents — Claude Code, Cursor, and others — open the same project simultaneously, each maintaining its own inotify set, SQLite connection, and tree-sitter warm-up is wasteful. So **one daemon pays that cost once, and all sessions share the same WAL connection and file watcher**.
+
+Lifecycle management is robust:
+
+- The daemon is launched **detached** (its own session/process group). It is not a child of any MCP host, so closing a terminal or sending Ctrl-C does not disconnect other sessions.
+- Each host communicates with the daemon through a **proxy**. The proxy carries a PPID watchdog (issue #277): if the host is SIGKILLed, the proxy cleans up immediately, and the proxy's socket closure decrements the daemon's refcount.
+- Even after all clients disconnect, the daemon lingers for `CODEGRAPH_DAEMON_IDLE_TIMEOUT_MS` (default 300 seconds) before exiting, avoiding startup costs when running agents in quick succession on the same project.
+- Competing daemon instances are arbitrated by a lockfile (`.codegraph/daemon.pid`) created atomically with `O_EXCL`. The record is written in one step, with no empty-file window.
+
+There is also **lazy-loading of heavy dependencies on the startup path**:
+
+```ts
+// Decouples sqlite + query/graph/context layers from MCP startup path.
+// Only require() when a tool actually opens a project — not needed for initialize/tools-list.
+const loadCodeGraph = () => require('../index').default
+```
+
+The reason: cold-start races with headless agents. This makes `serve --mcp` bind and register tools in roughly Node startup time (~800ms becomes near-instant), preventing the "No such tool available" errors agents hit when they call a tool before the server has finished loading. It is an optimization tailored to the timing characteristics of agents as unusual clients.
+
+Interestingly, this is the reverse of what we saw in the [Qwen Code post](/kb/2026-05-17-qwen-code-architecture) (`qwen serve` daemon) and [Hermes Agent's](/kb/2026-05-13-hermes-agent-architecture) runtime boundaries. Those projects exposed _the agent_ as a daemon; CodeGraph exposes _the tools the agent uses_ as a shared daemon.
+
+## 14. Auto-sync: Keeping the Graph Breathing with the Code
+
+The existential risk for any knowledge graph is **staleness**. If the code changes but the graph points to an outdated state, agents receive silently wrong answers. CodeGraph defends against this risk on three fronts.
+
+1. **File watcher + debounced auto-sync.** Native OS events (FSEvents / inotify / ReadDirectoryChangesW) detect source file changes, followed by a debounce window (default 2000ms, adjustable to `[100ms, 60s]` via `CODEGRAPH_WATCH_DEBOUNCE_MS`) before incremental re-indexing. Rapid successive edits are coalesced into a single sync.
+
+2. **Per-file staleness banners.** During the debounce window, MCP responses that reference not-yet-synced files include a `⚠️` banner explicitly saying "Read this file directly." Pending files not referenced in the response appear in a smaller footer. The design principle is _explicit signal instead of silently wrong answers_.
+
+3. **Connect-time catch-up.** When the MCP server (re-)connects, before answering the first query it performs a quick pass comparing the working tree against `(size, mtime)` + content hash. Changes that occurred while the watcher was not running — `git pull` in another terminal, edits in a different editor, changes from a previously stopped session — are absorbed on the first tool call of the new session.
+
+`catchUpSync()` in `engine.ts` runs this catch-up in the background but inserts the returned promise as a one-shot gate into `ToolHandler`, so **the first tool call waits for sync to complete**. Without this, a call that races ahead of sync could return rows referring to files no longer on disk. The balance between correctness and latency is achieved with a single line (`setCatchUpGate(p)`).
+
+This mirrors the "freshness of memory" problem from the [agentmemory post](/kb/2026-05-13-agentmemory-architecture). A supporting layer — memory or graph — becomes a liability the moment it falls out of sync with the primary source. CodeGraph defends against this with three layers: watcher, banners, and catch-up.
+
+## 15. Cross-Language Bridging: iOS, React Native, Expo
+
+Real iOS and React Native codebases cross language boundaries constantly. Swift calls auto-bridged Objective-C selectors, JavaScript invokes native modules, and JSX delegates to native view managers. tree-sitter extraction stops at each language boundary, so CodeGraph maintains dedicated bridging code to fill these gaps.
+
+| Boundary              | JS/Swift side                      | Native side                          | Mechanism                                               |
+| --------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------------- |
+| Swift → ObjC          | `obj.foo(bar:)`                    | `-fooWithBar:`                       | `@objc` auto-bridging rules + Cocoa preposition prefix  |
+| RN legacy bridge      | `NativeModules.X.fn()`             | `RCT_EXPORT_METHOD` / `@ReactMethod` | Macro/annotation → JS name ↔ native method map         |
+| RN TurboModules       | `import M from './NativeM'`        | Codegen spec implementation          | `Native<X>.ts` spec as ground truth                     |
+| RN native → JS events | `NativeEventEmitter().addListener` | `sendEventWithName:` / `.emit()`     | Channel synthesis by event name literal                 |
+| Expo Modules          | `requireNativeModule('X').fn()`    | `Module { AsyncFunction("fn") }`     | Expo DSL literal parsing                                |
+| Fabric/Paper views    | `<MyView/>`                        | Codegen spec + native impl           | Name + suffix convention (`View`/`Manager`, etc.) match |
+
+Each bridge edge carries `provenance:'heuristic'` and a `synthesizedBy` channel name. The README explicitly states that these bridges were **validated against real open-source repositories** including Charts, realm-swift, Wikipedia-iOS, react-native-firebase, and expo-camera. The areas where static analysis is weakest — dynamic connections across language boundaries — received the most investment, following the "coverage equals token savings" principle from section 10.
+
+## 16. Token Economics: What the Benchmarks Say
+
+CodeGraph's value proposition ultimately has to be proven with numbers. The README benchmarks run Claude Opus 4.8 headlessly against 7 real open-source projects in 7 languages, asking the same questions **with and without CodeGraph**, taking the median of 4 runs (re-verified 2026-06-02).
+
+> Average: **16% cheaper · 47% fewer tokens · 22% faster · 58% fewer tool calls**
+
+| Codebase  | Language / Scale   | Cost        | Tokens    | Tool calls |
+| --------- | ------------------ | ----------- | --------- | ---------- |
+| VS Code   | TS · ~10k files    | 18% cheaper | 64% fewer | 81% fewer  |
+| Django    | Python · ~3k files | 8% cheaper  | 60% fewer | 77% fewer  |
+| Alamofire | Swift · ~110 files | 40% cheaper | 64% fewer | 58% fewer  |
+| Tokio     | Rust · ~790 files  | even        | 38% fewer | 57% fewer  |
+
+The methodology note is refreshingly honest: "These numbers are _lower_ than the previous Opus 4.7 validation — not a CodeGraph regression, but a stronger baseline." Opus 4.8 efficiently grep/reads on the main thread, so the no-CodeGraph baseline is faster than before.
+
+Two things follow from this. First, **CodeGraph's biggest gains are in tokens and tool calls** (47%, 58%). Cost reduction is smaller (16% average), and on response-heavy repositories (Excalidraw, Tokio) it approaches break-even — because the trade is replacing many small grep/read round-trips with a few large, cache-heavy responses.
+
+Second, **the author explicitly acknowledges that a stronger model narrows the baseline gap**. This mirrors the tension observed in the [browser automation comparison post](/kb/2026-04-16-browser-automation-comparison). The value of a tool that augments an agent must be re-measured as the agent itself improves.
+
+## 17. Recommended Reading Order
+
+For a first read through the CodeGraph codebase:
+
+1. `README.md` — Value proposition, benchmarks, 7 MCP tools, supported languages/frameworks.
+2. `src/index.ts` — The `CodeGraph` facade. The full public API surface.
+3. `src/db/schema.sql` — nodes, edges, files, unresolved refs, FTS5. Understand the data model first.
+4. `src/extraction/index.ts` — scan → parse → store → resolve orchestration, worker recycle, and timeout.
+5. `src/resolution/index.ts` — The high-level picture of reference resolution strategies.
+6. `src/resolution/callback-synthesizer.ts` — Dynamic dispatch synthesis (the heart of the project).
+7. `src/context/index.ts` + `ExploreOutputBudget` in `tools.ts` — How `codegraph_explore` sizes its output.
+8. `src/mcp/daemon.ts` + `engine.ts` — Multi-session daemon and shared engine.
+9. `src/mcp/server-instructions.ts` — Usage instructions given to agents.
+10. `docs/design/*.md` — `adaptive-explore-sizing`, `callback-edge-synthesis`, `dynamic-dispatch-coverage-playbook`. Real design decision records.
+
+## 18. Notable Design Points
+
+### 1. 2-Pass Architecture: Extraction and Resolution Separated
+
+tree-sitter sees only one file at a time, so the extraction phase records unresolved references in `unresolved_refs`, and only after all files have been processed does resolution link them globally. A textbook implementation of a static analysis graph builder, executed cleanly.
+
+### 2. Worker Recycle as a Direct Response to WASM Memory Limits
+
+Knowing that tree-sitter's WASM heap cannot shrink, the parser is run in a worker thread and discarded entirely every 250 files. Memory stays flat even on large monorepos.
+
+### 3. `codegraph_explore` Sizes Output to Match the Answer
+
+Budget is adjusted adaptively by project scale, and read-back regressions are caught and corrected through real agent A/B testing. Output design that treats the LLM context window as a first-class resource.
+
+### 4. Graph Coverage as the Causal Mechanism for Token Savings
+
+Starting from the empirical observation that "if the flow is not in the graph, the agent reads files," the most engineering effort went into dynamic dispatch synthesis and cross-language bridging. The entire project follows a single hypothesis.
+
+### 5. Multi-Session Daemon to Pay Costs Only Once
+
+One daemon prepays the costs of the watcher, SQLite, and tree-sitter warm-up, shared by all agent sessions. Lifecycle is hardened with a detached daemon + PPID watchdog proxy + lockfile + idle timeout.
+
+### 6. Honesty About Staleness
+
+During the debounce window, staleness banners explicitly say "Read this file directly." Connect-time catch-up gates the first tool call until sync completes. Explicit signals instead of silent incorrectness.
+
+## 19. Caveats to Keep in Mind
+
+### 1. Heuristic Edges Trade Recall for Precision
+
+Dynamic dispatch synthesis is high-precision, low-recall. Common event names and high-fan-out channels are intentionally skipped. The absence of a `provenance:'heuristic'` edge does not mean no connection exists. Missing flows are still possible.
+
+### 2. Value Must Be Re-Measured Per Model Generation
+
+As the author acknowledges, Opus 4.8's baseline is more efficient than 4.7, so the savings margin has narrowed. Cost reduction averages 16%, and some repositories are break-even. The accurate expectation is: "tokens and tool calls reliably decrease; cost savings vary with workload."
+
+### 3. WAL May Not Work on All Filesystems
+
+On network shares, WSL2 `/mnt`, and similar environments, WAL may not activate, meaning reads can be blocked by writers (`database is locked`). The concurrency benefits of the multi-session daemon weaken in these environments. Local disk is recommended.
+
+### 4. No Index, No Value
+
+Tools do not work until `codegraph init -i` has been run. Also, `codegraph_explore` is only effective when _directly queried_ — if the agent delegates exploration to a file-reading sub-agent, that sub-agent reads files and CodeGraph becomes overhead. This is why `server-instructions.ts` insists strongly: "do not delegate, answer directly."
+
+### 5. Inherent Limits of Static Analysis
+
+Reflection, runtime-generated code, macro expansion, and highly dynamic dispatch may still not be captured in the graph. Files over 1MB and directories excluded by `.gitignore` or default exclusion rules are not indexed.
+
+## 20. Conclusion
+
+CodeGraph is a far more specific project than "yet another code search tool." Its real identity is a **code intelligence layer that sits beneath coding agents and redirects their token budget from exploration to answers**.
+
+If [Hermes Agent](/kb/2026-05-13-hermes-agent-architecture) and [Qwen Code](/kb/2026-05-17-qwen-code-architecture) are the _subjects_ that read and modify code, CodeGraph hands those subjects a pre-drawn map. If [WeKnora](/kb/2026-05-30-weknora-architecture) makes documents searchable through embeddings, CodeGraph makes code searchable through an AST graph. What RAG did for documents, static analysis does for code.
+
+When looking at CodeGraph, the most important question is not "which languages does it support?" The more important question is:
+
+> To prepay, once at indexing time, the cost that coding agents would otherwise pay in every session via grep/Read on an unfamiliar codebase — and to share that cost across all sessions — how _complete_ must that graph be, how _fresh_, and how precisely must its output be _sized to fit the answer_?
+
+CodeGraph's answers are: 2-pass extraction and resolution, dynamic dispatch synthesis, adaptive `codegraph_explore`, multi-session daemon, and three-layer auto-sync. Understanding these boundaries reveals that CodeGraph is not a simple indexer — it is **infrastructure designed to rethink the cost of code comprehension in the age of coding agents**.

@@ -1,0 +1,60 @@
+---
+title: 'Maintaining image aspect ratio with CSS'
+crawlertitle: 'Maintaining image aspect ratio with CSS'
+slug: '2022-07-29-aspect-ratio'
+summary: 'react-hook-form'
+date: 2022-07-29 17:26:45 +0900
+categories: posts
+tags: ['javascript', 'react', 'html', 'css']
+author: MartianLee
+---
+
+## Background
+
+One of the most important tasks when building an e-commerce site is laying out product thumbnail images. Typically, thumbnails are displayed at a 1:1 ratio or some other specific ratio that reflects the store's concept. Despite having implemented this many times, I always felt the approach was less than elegant.
+
+## Previous approaches
+
+### Using margin-top
+
+```html
+<div class='item'>
+  <div class='dummy'></div>
+  <div class='title'></title>
+</div>
+```
+
+```css
+.item {
+  position: relative;
+}
+.dummy {
+  margin-top: 100%;
+}
+.title {
+}
+```
+
+## aspect ratio
+
+```html
+<div class="demo"></div>
+```
+
+```css
+.demo {
+  background: black;
+  width: 500px;
+  aspect-ratio: 4/3;
+}
+```
+
+This sets the element's width-to-height ratio to 4:3. Amazing.
+
+### Examples
+
+### Usage
+
+### References
+
+[stackoverflow](https://stackoverflow.com/questions/1495407/maintain-the-aspect-ratio-of-a-div-with-css)

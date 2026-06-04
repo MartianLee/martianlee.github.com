@@ -1,0 +1,93 @@
+---
+title: 'Transformer Basics: Intuition Behind Q, K, and V'
+date: '2026-04-17'
+tags: ['llm', 'transformer', 'attention', 'qkv', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Explains the role of Q, K, and V through the attention formula, a plain-language walkthrough, and a concrete example.'
+---
+
+## Why This Matters
+
+When reading attention papers, the first place most people get stuck is Query, Key, and Value.
+The three names feel familiar, but their roles inside the actual formula are distinct.
+
+After reading this note, the following formula should trip you up a little less.
+
+```txt
+Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+```
+
+## The Core Formula
+
+The central equation of attention is:
+
+```txt
+Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+```
+
+The three components have separate responsibilities that are worth considering independently.
+
+- `Q`: the information the token at the current position is looking for.
+- `K`: a label each token exposes so that others can find it.
+- `V`: the actual content to be retrieved.
+
+The computation proceeds as follows:
+
+```txt
+1. Compare Q and K to produce a score.
+2. Convert the scores into weights via softmax.
+3. Use those weights to blend the Vs.
+```
+
+## First Pass: What the Formula Is Saying
+
+`QK^T` is the step that computes "who should attend to whom, and by how much."
+`softmax` converts those raw scores into attention weights.
+The final multiplication by `V` retrieves the actual content.
+
+Put simply: Q and K are for finding; V carries the content.
+
+```txt
+Q and K: produce matching scores
+V: the real information blended according to those scores
+```
+
+## A Concrete Analogy
+
+Think of looking up a book in a library.
+
+- Query: your question — "I want to understand what BERT is in the context of Transformers."
+- Key: the index card for each book.
+- Value: the actual body text inside each book.
+
+You start by comparing your question (Query) against the index cards (Keys).
+The index card most relevant to your question receives the highest score.
+You then read the actual body text (Value) of the top matches.
+
+You do not stop at the index card.
+The index card is merely a lookup tool; what you ultimately take away is the text inside the book.
+
+## How to Read This in a Paper
+
+When you encounter `multi-head attention` in a paper, read it as:
+
+```txt
+Perform the Q, K, V comparison from multiple perspectives simultaneously.
+```
+
+One head might capture syntactic relationships; another might capture positional ones.
+Which head learns to look at what is determined by training, but the key idea is that multiple comparison strategies run in parallel.
+
+## Common Misconceptions
+
+- Q, K, and V are not completely different data drawn from separate sources.
+- In practice they are all derived from the same token representations via distinct linear projections.
+- Q and K are used for scoring; V is the information that gets mixed into the final output.
+
+## Minimum Checkpoints
+
+- Q is "what am I looking for?"
+- K is "what can I be found by?"
+- V is "the content to be retrieved."
+- The attention output is a context vector formed by blending multiple Vs according to their relevance scores.

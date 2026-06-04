@@ -1,0 +1,97 @@
+---
+slug: '2024-09-16-til-ruby-rails'
+title: 'TIL: Ruby and Rails Knowledges 1'
+crawlertitle: 'TIL: Ruby and Rails Knowledges 1'
+summary: 'TIL: Ruby and Rails Knowledges'
+date: 2024-09-16 16:16:16 +0900
+categories: posts
+tags: ['ruby', 'rails', 'post', 'TIL']
+author: MartianLee
+---
+
+## What I Learned
+
+After a couple of months working with Rails, I am summarizing some of the useful things I have learned about Ruby and Rails.
+
+### Safe Navigation Operator
+
+Introduced in Ruby 2.3.0, the safe navigation operator (`&.`) prevents `undefined method for nil:NilClass` errors. It is similar to the `try` method in Rails.
+
+With it you can write:
+
+```ruby
+user&.address&.zip
+```
+
+instead of:
+
+```ruby
+if user
+  user.address.zip
+else
+  nil
+end
+```
+
+#### Alternatives
+
+When only the first item in a chain is nullable, you can use `&&` instead of `&.` to more accurately express intent.
+
+```ruby
+user && user.address.zip
+```
+
+Beyond just using different syntax, there is also an opportunity to refactor. The chain of non-nullable methods can safely be extracted out, which typically results in cleaner code and also satisfies the Law of Demeter.
+
+```ruby
+class User
+  def zip
+    address.zip
+  end
+end
+```
+
+### Dynamically Define a Method
+
+`define_method` defines an instance method on the receiver. The method parameter can be a `Proc`, a `Method`, or an `UnboundMethod` object. If a block is given, it is used as the method body.
+
+from [apidock](https://apidock.com/ruby/Module/define_method)
+
+```ruby
+class Product
+  class << self
+    [:name, :brand].each do |attribute|
+      define_method :"find_by_#{attribute}" do |value|
+        all.find {|prod| prod.public_send(attribute) == value }
+      end
+    end
+  end
+end
+```
+
+### Ruby freeze
+
+`freeze()`
+
+Prevents further modifications to an object. A `RuntimeError` will be raised if a modification is attempted. There is no way to unfreeze a frozen object. See also `Object#frozen?`.
+
+from [apidock](https://apidock.com/ruby/Object/freeze)
+
+```ruby
+str = "this is string"
+str.freeze
+
+str.replace("this is new string") #=> FrozenError (can't modify frozen String)
+or
+str[0] #=> 't'
+str[0] = 'X' #=> FrozenError (can't modify frozen String)
+```
+
+## Retrospect
+
+JavaScript has something similar to Ruby's safe navigation operator. However, `define_method` is especially powerful for specific use cases like the factory pattern, and makes for a very clean API.
+`freeze` can be found in many languages. What I learned here is how to handle constants inside a class. In JavaScript I typically reached for enums, but they were not always the smoothest solution.
+
+These are small parts of Ruby and Rails, and I am still getting used to them. I hope to write Ruby and Rails fluently while following community conventions.
+
+Well Done!
