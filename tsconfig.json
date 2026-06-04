@@ -22,6 +22,7 @@
       "@/layouts/*": ["layouts/*"],
       "@/css/*": ["css/*"],
       "@/hooks/*": ["hooks/*"],
+      "@/lib/*": ["lib/*"],
       "pliny/*": ["node_modules/pliny/*"],
       ".contentlayer/*": [".contentlayer/*"]
     },
