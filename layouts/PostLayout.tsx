@@ -58,8 +58,12 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
             </p>
           )}
           <div className="text-muted mt-6 flex flex-wrap items-center gap-3 font-mono text-xs">
-            {author?.name && <span>{author.name}</span>}
-            <span>·</span>
+            {author?.name && (
+              <>
+                <span>{author.name}</span>
+                <span>·</span>
+              </>
+            )}
             <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
             <span>·</span>
             <span>{readingTime.text}</span>
