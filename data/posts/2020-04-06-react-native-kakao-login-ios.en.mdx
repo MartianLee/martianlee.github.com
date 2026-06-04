@@ -1,0 +1,148 @@
+---
+title: 'Problems and Solutions When Integrating Kakao SDK on iOS with React Native'
+crawlertitle: 'Problems and Solutions When Integrating Kakao SDK on iOS with React Native'
+slug: '2020-04-06-react-native-kakao-login-ios'
+summary: 'A walkthrough of the problems encountered and the solutions found while integrating Kakao SDK into a React Native iOS project.'
+date: 2020-04-06 22:34:32 +0900
+categories: posts
+tags: ['develop', 'react-native', 'iOS']
+author: MartianLee
+output:
+  html_document:
+    toc: true
+---
+
+![img](/static/post-images/200406_react-native-kakao-login/0.jpg)
+
+- Table of Contents
+
+## Goal
+
+This post summarizes the problems I encountered and the solutions I found while integrating Kakao SDK into a React Native iOS native project.
+
+Development environment
+
+- MacOS Mojave 10.14.6 -> MacOS Catalina 10.15.3
+- React-Native 0.61.5
+- iOS ?
+
+## Resolution Process
+
+I was developing a "Share to KakaoTalk" feature in a React Native project. I thought applying Kakao''s iOS Native SDK would make it straightforward.
+
+My expectations were completely wrong, and I ended up wasting more than two days grinding through it. I''m sharing my solution in hopes that others won''t have to go through the same ordeal.
+
+### Project init
+
+```
+npm install -g react-native-cli@2.0.1
+react-native init KakaoShareApp
+react-native run-ios
+npm install -g react-native-create-library
+react-native-create-library KakaoModule
+npm install ./KakaoModule
+```
+
+### Importing Kakao SDK and Applying KakaoLink
+
+From the start, my plan was to build the module myself rather than importing a third-party open-source library. While Googling, I found the article [Applying KakaoLink to a React Native App](https://medium.com/@zeroweb.tech/react-native-앱에-카카오링크-적용하기-d170d31b780b) and started following it step by step.
+
+1. Successfully completed the first exercise in that post: executing a Native module method.
+
+KakaoModule/ios/RNKakaoTest.m
+
+```
+#import "RNKakaoTest.h"
+
+@implementation RNKakaoTest
+
+- (dispatch_queue_t)methodQueue
+{
+    return dispatch_get_main_queue();
+}
+RCT_EXPORT_MODULE() //이 부분을 추가해주세요.
+RCT_EXPORT_METHOD(foo:(RCTResponseSenderBlock)callback)
+{
+    callback(@[[NSNull null], [NSNull null]]);
+}
+
+@end
+```
+
+The source above is taken from that article. Even someone with no iOS experience can guess that this exports a function named `foo`.
+
+```
+...
+import RNKakaoTest from 'react-native-kakao-module';
+...<TouchableWithoutFeedback onPress={()=> {
+  RNKakaoTest.foo(() => console.log('hi'));
+}}>
+  <View style={styles.button}>
+    <Text style={styles.content}>제로웹 카카오톡 공유하기</Text>
+  </View>
+</TouchableWithoutFeedback>
+...
+```
+
+Once imported, `foo` can be called anywhere inside the React Native project. You can see that building a native module is not as difficult as you might expect.
+
+2. Next, configure the environment variables including the KAKAO APP KEY.
+3. After that comes the step of directly importing the required SDKs such as KakaoOpenSDK and KakaoLinkSDK. This is where the problems began.
+   1. Download the framework files.
+   2. Add the framework files to the project: [http://docs.onemobilesdk.aol.com/ios-ad-sdk/adding-frameworks-xcode.html](http://docs.onemobilesdk.aol.com/ios-ad-sdk/adding-frameworks-xcode.html)
+   3. Adding frameworks via files is also described in the official Kakao developer documentation. I followed the instructions and tried to build the project, but it failed.
+   4. The error was `Cannot include <KakaoLinkSDK.h>`. The same error appeared when trying to import other SDKs as well.
+      Search results suggested the issue was with file references — I tried checking "Copy items if needed" and similar checkboxes, directly importing into the project, and repeatedly verifying the entries in Build Phases, but the import still failed.
+
+### Starting Fresh with a New Project
+
+The original project already had `@react-native-seoul/kakao-login` imported, which kept causing SDK conflicts. So I set up a brand-new project from scratch, one step at a time. Googling suggested adding the SDK path to Build Paths, Header Paths, and Framework Search Path, so I tried every possible combination and built the project — but the SDK still failed to import.
+
+After adding various search path entries and struggling for a while — failed.
+
+After setting search paths multiple times, I started getting linker errors that prevented the project from building at all. No matter how I changed the other linker flags, the linker errors would not go away. In the end, I had to start yet another new project.
+
+The settings I tried and modified were:
+
+1. Xcode clean build
+2. `pod install`
+3. Adjusting other linker flags
+4. Setting Framework Search Path and Header Search Path
+
+### Reinstalling XCode
+
+After burning enormous amounts of time with repeated failures, I decided to reinstall XCode. A nearby iOS developer told me that XCode is actually well-known for getting its settings into a broken state. When I deleted XCode and went to the App Store to download it again, I found that I needed to upgrade macOS from Mojave to Catalina first. So I upgraded the OS — nervously.
+
+### Installing Only the react-native-kakao-link Module
+
+Having lost confidence from the repeated failures, I switched to a strategy of finding something that was guaranteed to work. I installed the `react-native-kakao-link` npm module in an empty project and tried it out. The result: success!
+
+Inspired by this, I observed how this project imported `KakaoSDK.framework`. It had apparently managed to do exactly what I had been trying to do. Looking through the project on GitHub, I found that `KakaoSDK` was imported as a file at the top-level folder.
+
+Excited, I quickly added it to the `package.json` of my existing project — but then came another problem: both `@react-native-seoul/kakao-login` and the new link module were importing Kakao SDK, causing a framework name conflict.
+
+So I decided to look into how the `@react-native-seoul/kakao-login` module fetches `KakaoOpenSDK` via CocoaPods.
+
+### Analyzing the react-native-kakao-login Module
+
+1. Discovered that the React Native kakao login library fetches OpenSDK via CocoaPods (pod).
+2. The link module imports the SDK directly as a file.
+3. Idea: make the link module use the pod-fetched Kakao SDK instead of a direct file import.
+4. Kept the link module as-is, and registered the Kakao dependency in the podspec file.
+5. Build succeeded.
+
+### Successfully Sharing a Kakao Message Template!
+
+I finally succeeded in sharing a Kakao message using KakaoSDK.
+
+## Lessons Learned
+
+1. Pay close attention to modules that other people have already built.
+2. If you don''t give up, there is always an answer.
+
+One regret is that I never found the way to use KakaoSDK by importing it directly as a file. Due to project deadlines, I had to move forward with the approach that worked, but I''d like to find the file-import method someday and write it up. (If anyone knows, feel free to share!)
+
+## References
+
+- Kakao message official documentation [https://developers.kakao.com/docs/latest/ko/message/ios](https://developers.kakao.com/docs/latest/ko/message/ios)
+- iOS SDK v1 official installation documentation [https://developers.kakao.com/docs/latest/ko/getting-started/sdk-ios-v1](https://developers.kakao.com/docs/latest/ko/getting-started/sdk-ios-v1)

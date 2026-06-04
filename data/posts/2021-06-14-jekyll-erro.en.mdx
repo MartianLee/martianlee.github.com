@@ -1,0 +1,90 @@
+---
+title: 'Jekyll openssl and webrick errors after upgrading to Ruby 3'
+crawlertitle: 'Jekyll openssl and webrick errors after upgrading to Ruby 3'
+slug: '2021-06-14-jekyll-erro'
+summary: 'Jekyll errors after upgrading to Ruby 3'
+date: 2021-06-14 19:20:12 +0900
+categories: posts
+tags: ['지킬', 'jekyll', '에러', 'bundle']
+author: MartianLee
+---
+
+- Table of Contents
+
+## Goal
+
+After setting up the blog after a long break, I installed the latest ruby 3.0.1 locally and ran `bundle install`, only to be greeted with a pile of errors. I'm documenting the errors I encountered in hopes it helps others trying to install Jekyll in a modern environment.
+
+## Approach
+
+```
+This post is written for users who already have a basic understanding of Jekyll project setup or have previously completed an installation.
+```
+
+### Tools used
+
+- rvm
+- ruby 3.0.1
+- zsh
+- bundle
+- jekyll
+
+### Error 1
+
+```bash
+In file included from binder.cpp:20:
+./project.h:119:10: fatal error: 'openssl/ssl.h' file not found
+#include <openssl/ssl.h>
+        ^~~~~~~~~~~~~~~
+1 error generated.
+make: *** [binder.o] Error 1
+
+make failed, exit code 2
+
+Gem files will remain installed in /Users/kahlo/.rvm/gems/ruby-3.0.1/gems/eventmachine-1.2.7 for inspection.
+Results logged to /Users/kahlo/.rvm/gems/ruby-3.0.1/extensions/x86_64-darwin-20/3.0.0/eventmachine-1.2.7/gem_make.out
+
+An error occurred while installing eventmachine (1.2.7), and Bundler cannot continue.
+Make sure that `gem install eventmachine -v '1.2.7' --source 'https://rubygems.org/'` succeeds before bundling.
+```
+
+#### Fix
+
+1.  `brew reinstall openssl`
+
+    The first result I found while searching suggested that openssl might be installed incorrectly.
+
+2.  Set the PATH — [reference link](https://velog.io/@dev_hikun/github-%EB%B8%94%EB%A1%9C%EA%B7%B8-%EC%84%A4%EC%B9%98%EC%A4%91-%EB%B0%9C%EC%83%9D%ED%95%9C-%EC%97%90%EB%9F%AC-%ED%95%B4%EA%B2%B0)
+
+    Configuring the PATH for openssl was suggested as another solution.
+
+3.  `gem install eventmachine -- --with-openssl-dir=/usr/local/opt/openssl@1.1`
+
+    This last approach is what worked for me. Installing the eventmachine gem while explicitly pointing it to the openssl directory lets it install cleanly. After that, run `bundle install` or `bundle update`.
+
+### Error 2
+
+```bash
+~/.rvm/gems/ruby-3.0.1/gems/jekyll-4.2.0/lib/jekyll/commands/serve/servlet.rb:3:in `require': cannot load such file -- webrick (LoadError)
+```
+
+I thought everything was installed and ran `bundle exec jekyll serve` — only to hit an error saying webrick was missing.
+
+#### Fix
+
+```bash
+bundle add webrick
+```
+
+webrick needs to be installed separately because it was removed from Ruby's default bundled gems starting with Ruby 3.0.0.
+
+## Result
+
+### Installation complete
+
+After getting everything sorted, I was able to run `bundle exec jekyll serve` and bring up the Jekyll blog locally. Coming back to blogging after a long time apparently requires a cold-sweat tax. Ha.
+
+### References
+
+- [eventmachine github issue](https://github.com/eventmachine/eventmachine/issues/932)
+- [jekyll 실행 시킬 때 `require': cannot load such file -- webrick (LoadError) 오류가 난다면](https://junho85.pe.kr/1850)

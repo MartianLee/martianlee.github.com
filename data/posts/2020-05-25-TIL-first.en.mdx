@@ -1,0 +1,50 @@
+---
+title: '200525 TIL'
+crawlertitle: '200525'
+slug: '2020-05-25-TIL-first'
+summary: '200525 TIL'
+date: 2020-05-25 22:46:51 +0900
+categories: posts
+tags: ['question']
+author: MartianLee
+---
+
+![img](/static/post-images/200525_TIL/drf.png)
+
+# TIL : Django and DRF!
+
+TIL stands for "Today I Learned" — it's a practice of summarizing what you learned each day, like a diary. I had seen the term scroll past my Facebook timeline and kept telling myself I'd start one someday; today I finally wrote my first entry. Starting with the freshest learnings! ([A document about TIL](https://velog.io/@2ujin/%EB%82%B4-%EB%A7%98%EB%8C%80%EB%A1%9C-%EC%9E%91%EC%84%B1%ED%95%98%EB%8A%94-TIL-9sk5ujmvv7))
+
+### Finding the culprit when an API built with DRF + ModelSerializer is slow
+
+1. Queries
+   - Problem: Django querysets are lazy by default. Laziness generally gives good performance, but when queries get complex they don't behave as expected. For example, when fetching values from table B that is related to A, you'd want to resolve A's id once and reuse it when querying the related B rows — but because the query fires at the very last moment due to laziness, A's id ends up being joined every single time, making things extremely slow.
+   - Solution: Always specify `select_related` when traversing foreign keys in a queryset, and use `prefetch_related` whenever a related field on an object is accessed more than once.
+
+2. DRF ModelSerializer
+   - Problem: Without much thought I used a Serializer nested 4 levels deep to implement a response. Returning a list of 36 items took nearly 8 seconds. (......)
+   - After consulting other Django developers: DRF Serializer is notoriously slow. [https://hakibenita.com/django-rest-framework-slow](https://hakibenita.com/django-rest-framework-slow) — always attach `read_only` and avoid nesting as much as possible. Other articles recommend inheriting from DRF and cherry-picking only the CRUD pieces you actually need. Since there seem to be fundamental issues in DRF itself, I'm considering writing my own Serializer from scratch. I'll write up the solution in a future TIL or Post when I find one! lol
+
+### Fetching a count alongside related model lookups
+
+This is exactly what TIL is for — writing down what I learned today. I've already forgotten where I used this... Anyway, via [annotate count with a distinct field](https://stackoverflow.com/questions/13145254/django-annotate-count-with-a-distinct-field) you can retrieve how many related model instances each model has. A practical example would be fetching how many unique users have commented on a post (as opposed to total comment count).
+
+```python
+p = Project.objects.all().annotate(Count('informationunit__username', distinct=True))
+```
+
+### Getting comfortable with the django shell
+
+- Problem: I started doing serious Django server development at work. Having used the Rails console for development, I assumed Django — being inspired by Rails — would have something similar. And of course it did. The shell is wonderful: whatever you're building, just fire it up and hack around and you usually end up with a working solution. Scripting languages are the best.
+- Related link: [https://wayhome25.github.io/django/2017/03/04/django-06-poll-project-3-shell/](https://wayhome25.github.io/django/2017/03/04/django-06-poll-project-3-shell/)
+
+### The difference between null=True and blank=True in Django ORM
+
+- Problem: Designing models often calls for `null=True`, but leaving it that way causes errors in the admin when you try to submit a blank value. It's a simple point, but worth keeping in mind.
+- Solution: [https://django-orm-cookbook-ko.readthedocs.io/en/latest/null_vs_blank.html](https://django-orm-cookbook-ko.readthedocs.io/en/latest/null_vs_blank.html) (Notable: to allow NULL in a `BooleanField`, you should not set `null=True` — you should use `NullBooleanField` instead.)
+
+### Retrospective
+
+That wraps up four things I learned today. They may look simple, but I'm realizing that leveling up requires building a solid foundation. (Which is a polite way of saying I've been winging Django.) I need to get into the habit of reading the documentation whenever I have free time.
+
+Lately I've been producing a lot of code. But I'm starting to run into cases where things work but are slow, or where I forget to handle edge cases. Even if it means developing at a slower pace, I need to make a conscious effort to stay calm and think in terms of the bigger picture. And I shouldn't forget to set up a realistic schedule well in advance so I'm never rushing.
