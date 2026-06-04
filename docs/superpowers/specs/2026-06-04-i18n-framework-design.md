@@ -59,16 +59,18 @@ The blog targets global developer roles, so posts should default to **English**,
 
 ---
 
-## 5. Toggle UI
+## 5. Toggle UI — global reading preference
 
-- **Remove the global header EN/KO stub** (`components/LanguageToggle.tsx` usage in `Header.tsx` and `MobileNav.tsx`) — the site UI is English-only, so a global toggle is misleading. Delete the stub component.
-- **Per-post toggle** lives in `PostLayout` (and `PostSimple`/`PostBanner` if used by posts): shown **only when the post has both language versions**. It links to the sibling-language URL (en `/posts/<slug>` ⇄ ko `/ko/posts/<slug>`), labeled `EN / KO` with the current language marked active.
+- **Keep the header `EN / KO` toggle** (and in `MobileNav`). Default **EN**.
+- A client **`LanguageProvider`** stores the reading-language preference in `localStorage` (key `lang`, default `'en'`), wrapping the app inside the existing providers. `components/LanguageToggle.tsx` is **kept and wired** to it (not deleted).
+- **Preference-aware post links:** post links across the site (home "Selected writing", `/posts` list, tags) render through a client **`PostLink`** that resolves the href from the preference — EN → `/posts/<slug>` (canonical, English-or-fallback), KO → `/ko/posts/<slug>` (Korean, which always exists). The static HTML ships the EN href (SEO / no-JS default); the client swaps to the KO href when that preference is set.
+- **On a post page:** the toggle also navigates to the sibling-language URL and updates the preference. Both URLs always exist (Korean is always present; English once translated), so the toggle is always functional; for a not-yet-translated post the EN canonical simply shows the Korean fallback.
 
 ---
 
 ## 6. Rollout (phased, never-broken)
 
-- This framework ships first. Because no `.en.mdx` exists yet, every post's `language` is `ko`, canonical `/posts/<slug>` serves Korean (today's behavior), and no toggle shows.
+- This framework ships first. Because no `.en.mdx` exists yet, every post is Korean: canonical `/posts/<slug>` serves Korean (today's behavior) and `/ko/posts/<slug>` is the same content. The header `EN / KO` toggle is present but has no visible effect (both languages resolve to Korean) until translations land.
 - As the translation sub-project adds `<slug>.en.mdx` files, those posts' canonical flips to English and the toggle appears. "English default" becomes true incrementally (recent/important posts first).
 - The site is valid and navigable at every step.
 
@@ -79,8 +81,9 @@ The blog targets global developer roles, so posts should default to **English**,
 - `contentlayer.config.ts` — add `language` + `translationKey` computed fields; make `slug`/`path` strip trailing `.en`.
 - `app/posts/[...slug]/page.tsx` — canonical EN route: `generateStaticParams` over unique `translationKey`s; pick English-else-Korean doc; render `PostLayout`; emit hreflang.
 - **New** `app/ko/posts/[...slug]/page.tsx` — KO route: params over keys with a Korean doc; render the Korean doc.
-- `layouts/PostLayout.tsx` (+ `PostSimple.tsx`, `PostBanner.tsx`) — accept current `language` + sibling availability; render the per-post toggle + hreflang.
-- `components/Header.tsx`, `components/MobileNav.tsx` — remove the `LanguageToggle` usage. **Delete** `components/LanguageToggle.tsx`.
+- `layouts/PostLayout.tsx` (+ `PostSimple.tsx`, `PostBanner.tsx`) — receive the doc's `language`; emit `hreflang` + canonical; on a post page the header toggle switches to the sibling URL.
+- **New** `LanguageProvider` (client context; `localStorage` `lang`, default `en`) added inside `app/theme-providers.tsx` (alongside the theme provider). `components/Header.tsx` / `components/MobileNav.tsx` **keep** `LanguageToggle`, now wired to the provider.
+- **New** `components/PostLink.tsx` (client) — resolves a post href from the preference; used by `components/home/WritingSection.tsx`, `layouts/ListLayoutWithTags.tsx`, and `app/tags/[tag]` post lists in place of raw `/posts/<slug>` links.
 - `app/sitemap.ts` — add `/ko/posts/<slug>` entries.
 - Search index (`createSearchIndex` in `contentlayer.config.ts`) — index **canonical (English-or-fallback) docs only**, so the Cmd+K palette doesn't show duplicate bilingual entries.
 - Prev/next + any post listing logic — operate on **canonical docs keyed by `translationKey`** (dedupe so a post isn't listed twice).
@@ -93,6 +96,7 @@ The blog targets global developer roles, so posts should default to **English**,
 - [ ] With no `.en.mdx`: every `/posts/<slug>` serves Korean (current behavior), no toggle, build identical in spirit to today.
 - [ ] Add one sample `<slug>.en.mdx`: `/posts/<slug>` now serves English, `/ko/posts/<slug>` serves Korean, toggle appears on both and links correctly, hreflang present.
 - [ ] Lists/home/search show each post once (no bilingual duplicates).
+- [ ] Header `EN / KO` toggle persists across pages (localStorage, default EN); in KO mode, clicking a post from home/list opens its `/ko/posts/<slug>` version.
 - [ ] `/notes` (KB) untouched.
 
 ---
