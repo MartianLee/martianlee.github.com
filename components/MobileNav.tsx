@@ -5,9 +5,20 @@ import Link from './Link'
 import headerNavLinks from '@/data/headerNavLinks'
 import LanguageToggle from './LanguageToggle'
 import siteMetadata from '@/data/siteMetadata'
+import { useUI } from './useUI'
+import type { UIStrings } from '@/lib/ui-strings'
+
+const navLabel = (ui: UIStrings, href: string, fallback: string): string => {
+  if (href === '/projects') return ui.nav.projects
+  if (href === '/posts') return ui.nav.writing
+  if (href === '/kb') return ui.nav.notes
+  if (href === '/about') return ui.nav.about
+  return fallback
+}
 
 const MobileNav = () => {
   const [navShow, setNavShow] = useState(false)
+  const ui = useUI()
 
   const onToggleNav = () => {
     setNavShow((status) => {
@@ -66,13 +77,13 @@ const MobileNav = () => {
                 className="text-ink hover:text-accent font-mono text-lg"
                 onClick={onToggleNav}
               >
-                {link.title}
+                {navLabel(ui, link.href, link.title)}
               </Link>
             </div>
           ))}
           <div className="px-12 py-4">
             <a href={siteMetadata.linkedin} className="text-accent font-mono text-lg">
-              CV ↗
+              {ui.cv}
             </a>
           </div>
           <div className="px-12 py-4">

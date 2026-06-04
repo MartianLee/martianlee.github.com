@@ -1,6 +1,19 @@
 import { allBlogs } from '.contentlayer/generated'
 import type { Blog } from '.contentlayer/generated'
-import { sortPosts } from 'pliny/utils/contentlayer'
+import { sortPosts, coreContent } from 'pliny/utils/contentlayer'
+import type { CoreContent } from 'pliny/utils/contentlayer'
+
+/** A list item carrying both the English (canonical) and Korean title/summary so
+ *  listings can switch language client-side via the reading-language toggle. */
+export type LocalizedListItem = CoreContent<Blog> & { titleKo?: string; summaryKo?: string }
+
+/** Turn canonical (English-preferred) docs into list items with their Korean counterparts attached. */
+export function localizedList(blogs: Blog[]): LocalizedListItem[] {
+  return blogs.map((en) => {
+    const ko = allBlogs.find((p) => p.slug === en.slug && p.language === 'ko')
+    return { ...coreContent(en), titleKo: ko?.title, summaryKo: ko?.summary }
+  })
+}
 
 /** One doc per slug, English preferred, sorted newest-first. */
 export function canonicalBlogs(): Blog[] {
