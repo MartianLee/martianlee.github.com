@@ -2,11 +2,9 @@
 
 import siteMetadata from '@/data/siteMetadata'
 import { useUI } from '@/components/useUI'
-import { useLanguage } from '@/components/LanguageProvider'
 
 export default function Masthead() {
   const ui = useUI()
-  const { lang } = useLanguage()
   return (
     <section className="pt-12 pb-16 sm:pt-16">
       <p className="eyebrow mb-5">{ui.masthead.eyebrow}</p>
@@ -15,10 +13,7 @@ export default function Masthead() {
         <br />
         LEE<span className="text-accent">.</span>
       </h1>
-      <p
-        className="text-ink/90 mt-7 max-w-[24ch] font-serif text-2xl leading-[1.4]"
-        style={lang === 'ko' ? { fontFamily: "'42dot Sans', sans-serif" } : undefined}
-      >
+      <p className="text-ink/90 mt-7 max-w-[24ch] font-serif text-2xl leading-[1.4]">
         {ui.masthead.tagline}
       </p>
       <div className="mt-8 flex flex-wrap gap-6 font-mono text-sm">
