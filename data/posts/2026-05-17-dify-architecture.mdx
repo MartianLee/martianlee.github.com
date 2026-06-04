@@ -33,29 +33,6 @@ author: MartianLee
 
 _This article is partially written by Codex_
 
-## 목차
-
-1. [왜 Dify인가요?](#1-왜-dify인가요)
-2. [기존 글들과 어디에 연결되나요?](#2-기존-글들과-어디에-연결되나요)
-3. [프로젝트를 한 문장으로 이해하기](#3-프로젝트를-한-문장으로-이해하기)
-4. [기술 스택](#4-기술-스택)
-5. [전체 그림](#5-전체-그림)
-6. [코드베이스 지도](#6-코드베이스-지도)
-7. [배포 단위가 곧 아키텍처입니다](#7-배포-단위가-곧-아키텍처입니다)
-8. [Flask API는 extension bootstrap으로 조립됩니다](#8-flask-api는-extension-bootstrap으로-조립됩니다)
-9. [API 표면: console, web, service, inner, MCP, trigger](#9-api-표면-console-web-service-inner-mcp-trigger)
-10. [Workflow runtime: Graphon 위에 Dify 문맥을 얹습니다](#10-workflow-runtime-graphon-위에-dify-문맥을-얹습니다)
-11. [비동기 실행: Celery가 긴 작업을 흡수합니다](#11-비동기-실행-celery가-긴-작업을-흡수합니다)
-12. [RAG와 vector backend](#12-rag와-vector-backend)
-13. [Plugin daemon: 모델, 도구, datasource를 밖으로 분리합니다](#13-plugin-daemon-모델-도구-datasource를-밖으로-분리합니다)
-14. [Web frontend: workflow canvas가 제품의 중심입니다](#14-web-frontend-workflow-canvas가-제품의-중심입니다)
-15. [MCP와 agent layer](#15-mcp와-agent-layer)
-16. [보안과 운영 지점](#16-보안과-운영-지점)
-17. [코드를 읽는 추천 순서](#17-코드를-읽는-추천-순서)
-18. [인상적인 설계 포인트](#18-인상적인-설계-포인트)
-19. [주의해서 볼 지점](#19-주의해서-볼-지점)
-20. [결론](#20-결론)
-
 ---
 
 ## 1. 왜 Dify인가요?

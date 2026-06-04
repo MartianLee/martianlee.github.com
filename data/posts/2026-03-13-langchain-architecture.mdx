@@ -15,26 +15,7 @@ author: MartianLee
 
 ---
 
-*This article is mostly written by Claude Code*
-
-## 목차
-
-1. [프로젝트 개요](#1-프로젝트-개요)
-2. [기술 스택](#2-기술-스택)
-3. [전체 아키텍처](#3-전체-아키텍처)
-4. [패키지 구조](#4-패키지-구조)
-5. [핵심 모듈 (langchain-core)](#5-핵심-모듈-langchain-core)
-6. [메인 패키지 (langchain)](#6-메인-패키지-langchain)
-7. [파트너 패키지](#7-파트너-패키지)
-8. [Runnable 인터페이스](#8-runnable-인터페이스)
-9. [콜백 시스템](#9-콜백-시스템)
-10. [핵심 데이터 구조](#10-핵심-데이터-구조)
-11. [레이어별 의존 관계](#11-레이어별-의존-관계)
-12. [빌드 & 개발 도구](#12-빌드--개발-도구)
-13. [CI/CD 인프라](#13-cicd-인프라)
-14. [디렉토리 트리](#14-디렉토리-트리)
-15. [핵심 개념 설명](#15-핵심-개념-설명)
-16. [일반 LLM 라이브러리와의 차별점](#16-일반-llm-라이브러리와의-차별점)
+_This article is mostly written by Claude Code_
 
 ---
 
@@ -52,30 +33,30 @@ author: MartianLee
 
 ## 2. 기술 스택
 
-| 영역 | 기술 |
-|------|------|
-| 언어 | Python 3.10–3.14 |
-| 패키지 관리 | uv (pip/poetry 대체) |
-| 빌드 백엔드 | hatchling |
-| 린터/포매터 | ruff |
-| 타입 체커 | mypy (strict mode) |
-| 테스트 | pytest, pytest-asyncio, pytest-xdist |
-| 스냅샷 테스트 | syrupy |
-| 테스트 레코딩 | vcrpy |
-| 직렬화 검증 | pydantic v2 |
-| 관측 | LangSmith |
-| 추적 | langsmith SDK |
+| 영역          | 기술                                 |
+| ------------- | ------------------------------------ |
+| 언어          | Python 3.10–3.14                     |
+| 패키지 관리   | uv (pip/poetry 대체)                 |
+| 빌드 백엔드   | hatchling                            |
+| 린터/포매터   | ruff                                 |
+| 타입 체커     | mypy (strict mode)                   |
+| 테스트        | pytest, pytest-asyncio, pytest-xdist |
+| 스냅샷 테스트 | syrupy                               |
+| 테스트 레코딩 | vcrpy                                |
+| 직렬화 검증   | pydantic v2                          |
+| 관측          | LangSmith                            |
+| 추적          | langsmith SDK                        |
 
 ### 핵심 의존성
 
-| 패키지 | 역할 |
-|--------|------|
-| pydantic ≥ 2.7.4 | 런타임 타입 검증 및 직렬화 |
-| langsmith ≥ 0.3.45 | 프로덕션 관측 및 트레이싱 |
-| tenacity | 재시도 로직 (지수 백오프) |
-| jsonpatch | 증분 스트림 패치 |
-| PyYAML | 설정 파일 파싱 |
-| langgraph ≥ 1.1.1 | 그래프 기반 에이전트 실행 |
+| 패키지             | 역할                       |
+| ------------------ | -------------------------- |
+| pydantic ≥ 2.7.4   | 런타임 타입 검증 및 직렬화 |
+| langsmith ≥ 0.3.45 | 프로덕션 관측 및 트레이싱  |
+| tenacity           | 재시도 로직 (지수 백오프)  |
+| jsonpatch          | 증분 스트림 패치           |
+| PyYAML             | 설정 파일 파싱             |
+| langgraph ≥ 1.1.1  | 그래프 기반 에이전트 실행  |
 
 ---
 
@@ -157,21 +138,21 @@ langchain/ (모노레포 루트)
 
 `langchain-core`는 제로 서드파티 의존성 원칙의 기반 레이어입니다.
 
-| 모듈 | 역할 | 핵심 파일 |
-|------|------|-----------|
-| **runnables/** | 범용 호출 프로토콜 | `base.py` (222KB), `passthrough.py`, `branch.py` |
-| **language_models/** | LLM/ChatModel 기반 클래스 | `base.py`, `llms.py`, `chat_models.py` |
-| **callbacks/** | 이벤트 시스템 (트레이싱, 스트리밍) | `manager.py` (85KB+) |
-| **messages/** | 메시지 타입 시스템 | `base.py`, `ai.py`, `human.py`, `tool.py` |
-| **prompts/** | 프롬프트 템플릿 | `base.py`, `chat.py`, `few_shot.py` |
-| **tools/** | 도구 기반 클래스 | `base.py`, `structured.py` |
-| **output_parsers/** | LLM 출력 파싱 | `json.py`, `pydantic.py`, `xml.py` |
-| **vectorstores/** | 벡터 저장소 추상화 | `base.py`, `in_memory.py` |
-| **retrievers.py** | 문서 검색 추상화 | `base.py` |
-| **embeddings/** | 임베딩 인터페이스 | `base.py`, `fake.py` |
-| **load/** | 직렬화/역직렬화 | `serializable.py`, `dump.py`, `mapping.py` |
-| **tracers/** | LangSmith 통합 | `langchain.py`, `log_stream.py` |
-| **utils/** | 공통 유틸리티 (17개 모듈) | `pydantic.py`, `json_schema.py` |
+| 모듈                 | 역할                               | 핵심 파일                                        |
+| -------------------- | ---------------------------------- | ------------------------------------------------ |
+| **runnables/**       | 범용 호출 프로토콜                 | `base.py` (222KB), `passthrough.py`, `branch.py` |
+| **language_models/** | LLM/ChatModel 기반 클래스          | `base.py`, `llms.py`, `chat_models.py`           |
+| **callbacks/**       | 이벤트 시스템 (트레이싱, 스트리밍) | `manager.py` (85KB+)                             |
+| **messages/**        | 메시지 타입 시스템                 | `base.py`, `ai.py`, `human.py`, `tool.py`        |
+| **prompts/**         | 프롬프트 템플릿                    | `base.py`, `chat.py`, `few_shot.py`              |
+| **tools/**           | 도구 기반 클래스                   | `base.py`, `structured.py`                       |
+| **output_parsers/**  | LLM 출력 파싱                      | `json.py`, `pydantic.py`, `xml.py`               |
+| **vectorstores/**    | 벡터 저장소 추상화                 | `base.py`, `in_memory.py`                        |
+| **retrievers.py**    | 문서 검색 추상화                   | `base.py`                                        |
+| **embeddings/**      | 임베딩 인터페이스                  | `base.py`, `fake.py`                             |
+| **load/**            | 직렬화/역직렬화                    | `serializable.py`, `dump.py`, `mapping.py`       |
+| **tracers/**         | LangSmith 통합                     | `langchain.py`, `log_stream.py`                  |
+| **utils/**           | 공통 유틸리티 (17개 모듈)          | `pydantic.py`, `json_schema.py`                  |
 
 ---
 
@@ -179,20 +160,20 @@ langchain/ (모노레포 루트)
 
 `libs/langchain_v1/`의 `langchain` 패키지는 고수준 구현체를 제공합니다.
 
-| 디렉토리 | 내용 수 | 역할 |
-|----------|---------|------|
-| `agents/` | 30개 서브 디렉토리 | ReAct, OpenAI Functions 에이전트 등 |
-| `chains/` | 43개 서브 디렉토리 | 체인 조합 및 LCEL 패턴 |
-| `memory/` | 21개 파일 | 대화 메모리 관리 |
-| `retrievers/` | 48개 서브 디렉토리 | 구체적인 검색 구현체 |
-| `embeddings/` | 53개 서브 디렉토리 | 임베딩 프로바이더 어댑터 |
-| `chat_models/` | 37개 서브 디렉토리 | 채팅 모델 래퍼 |
-| `llms/` | 86개 서브 디렉토리 | LLM 프로바이더 래퍼 |
-| `vectorstores/` | 71개 서브 디렉토리 | 벡터 저장소 구현체 |
-| `tools/` | 74개 서브 디렉토리 | 도구 구현체 |
-| `document_loaders/` | 149개 서브 디렉토리 | 문서 로더 구현체 |
-| `evaluation/` | 15개 서브 디렉토리 | LLM 평가 도구 |
-| `graphs/` | 15개 서브 디렉토리 | 그래프 관련 기능 |
+| 디렉토리            | 내용 수             | 역할                                |
+| ------------------- | ------------------- | ----------------------------------- |
+| `agents/`           | 30개 서브 디렉토리  | ReAct, OpenAI Functions 에이전트 등 |
+| `chains/`           | 43개 서브 디렉토리  | 체인 조합 및 LCEL 패턴              |
+| `memory/`           | 21개 파일           | 대화 메모리 관리                    |
+| `retrievers/`       | 48개 서브 디렉토리  | 구체적인 검색 구현체                |
+| `embeddings/`       | 53개 서브 디렉토리  | 임베딩 프로바이더 어댑터            |
+| `chat_models/`      | 37개 서브 디렉토리  | 채팅 모델 래퍼                      |
+| `llms/`             | 86개 서브 디렉토리  | LLM 프로바이더 래퍼                 |
+| `vectorstores/`     | 71개 서브 디렉토리  | 벡터 저장소 구현체                  |
+| `tools/`            | 74개 서브 디렉토리  | 도구 구현체                         |
+| `document_loaders/` | 149개 서브 디렉토리 | 문서 로더 구현체                    |
+| `evaluation/`       | 15개 서브 디렉토리  | LLM 평가 도구                       |
+| `graphs/`           | 15개 서브 디렉토리  | 그래프 관련 기능                    |
 
 ---
 
@@ -202,23 +183,23 @@ langchain/ (모노레포 루트)
 
 ### 파트너 패키지 목록
 
-| 패키지 | 제공 내용 |
-|--------|----------|
+| 패키지                         | 제공 내용                                |
+| ------------------------------ | ---------------------------------------- |
 | **langchain-openai** (v1.1.11) | ChatOpenAI, OpenAI 임베딩, 미들웨어 지원 |
-| **langchain-anthropic** | Claude 모델, Tool Use 지원 |
-| **langchain-groq** | Groq 고속 추론 API |
-| **langchain-mistralai** | Mistral AI 모델 |
-| **langchain-huggingface** | HuggingFace Hub 모델 |
-| **langchain-ollama** | 로컬 모델 실행 (llama, gemma 등) |
-| **langchain-fireworks** | Fireworks AI 서버리스 추론 |
-| **langchain-deepseek** | DeepSeek 모델 |
-| **langchain-xai** | xAI Grok 모델 |
-| **langchain-perplexity** | Perplexity 검색 기반 LLM |
-| **langchain-openrouter** | OpenRouter 멀티 프로바이더 |
-| **langchain-chroma** | Chroma 벡터 데이터베이스 |
-| **langchain-qdrant** | Qdrant 벡터 데이터베이스 |
-| **langchain-exa** | Exa 신경망 검색 |
-| **langchain-nomic** | Nomic 임베딩 |
+| **langchain-anthropic**        | Claude 모델, Tool Use 지원               |
+| **langchain-groq**             | Groq 고속 추론 API                       |
+| **langchain-mistralai**        | Mistral AI 모델                          |
+| **langchain-huggingface**      | HuggingFace Hub 모델                     |
+| **langchain-ollama**           | 로컬 모델 실행 (llama, gemma 등)         |
+| **langchain-fireworks**        | Fireworks AI 서버리스 추론               |
+| **langchain-deepseek**         | DeepSeek 모델                            |
+| **langchain-xai**              | xAI Grok 모델                            |
+| **langchain-perplexity**       | Perplexity 검색 기반 LLM                 |
+| **langchain-openrouter**       | OpenRouter 멀티 프로바이더               |
+| **langchain-chroma**           | Chroma 벡터 데이터베이스                 |
+| **langchain-qdrant**           | Qdrant 벡터 데이터베이스                 |
+| **langchain-exa**              | Exa 신경망 검색                          |
+| **langchain-nomic**            | Nomic 임베딩                             |
 
 ### 파트너 패키지 공통 구조
 
@@ -277,16 +258,16 @@ class Runnable[Input, Output](ABC, Generic[Input, Output]):
 
 ### Runnable 서브패턴
 
-| 클래스 | 역할 |
-|--------|------|
-| `RunnableSequence` | 순차 실행 (`a \| b \| c`) |
-| `RunnableParallel` | 병렬 팬아웃 (`{a: r1, b: r2}`) |
-| `RunnableMap` | 입력에 대한 매핑 |
-| `RunnableBranch` | 조건부 라우팅 |
-| `RunnablePassthrough` | 입력을 그대로 통과 |
-| `RunnableWithFallbacks` | 에러 복구 |
-| `RunnableRetry` | 자동 재시도 (지수 백오프) |
-| `RunnableConfigurable` | 런타임 동적 설정 |
+| 클래스                  | 역할                           |
+| ----------------------- | ------------------------------ |
+| `RunnableSequence`      | 순차 실행 (`a \| b \| c`)      |
+| `RunnableParallel`      | 병렬 팬아웃 (`{a: r1, b: r2}`) |
+| `RunnableMap`           | 입력에 대한 매핑               |
+| `RunnableBranch`        | 조건부 라우팅                  |
+| `RunnablePassthrough`   | 입력을 그대로 통과             |
+| `RunnableWithFallbacks` | 에러 복구                      |
+| `RunnableRetry`         | 자동 재시도 (지수 백오프)      |
+| `RunnableConfigurable`  | 런타임 동적 설정               |
 
 ### LCEL 체인 예시
 
@@ -338,13 +319,13 @@ CallbackManager
 
 ### 콜백 핸들러 타입
 
-| 핸들러 | 용도 |
-|--------|------|
-| `LangSmithTracer` | 프로덕션 관측 및 디버깅 |
-| `StreamingStdOutCallbackHandler` | 콘솔 스트리밍 출력 |
-| `AsyncIteratorCallbackHandler` | 비동기 스트리밍 |
-| `FileCallbackHandler` | 파일 로깅 |
-| 커스텀 | `BaseCallbackHandler` 상속 구현 |
+| 핸들러                           | 용도                            |
+| -------------------------------- | ------------------------------- |
+| `LangSmithTracer`                | 프로덕션 관측 및 디버깅         |
+| `StreamingStdOutCallbackHandler` | 콘솔 스트리밍 출력              |
+| `AsyncIteratorCallbackHandler`   | 비동기 스트리밍                 |
+| `FileCallbackHandler`            | 파일 로깅                       |
+| 커스텀                           | `BaseCallbackHandler` 상속 구현 |
 
 ---
 
@@ -479,15 +460,15 @@ langchain-tests = { path = "../standard-tests", editable = true }
 
 ### 코드 품질 도구
 
-| 도구 | 버전 | 역할 |
-|------|------|------|
-| ruff | 0.15.0–0.16.0 | 린터 + 포매터 |
-| mypy | 1.19.1–1.20.0 | 정적 타입 체크 (strict 모드) |
-| pytest | - | 테스트 프레임워크 |
-| pytest-asyncio | - | 비동기 테스트 |
-| pytest-xdist | - | 병렬 테스트 실행 |
-| syrupy | - | 스냅샷 테스트 |
-| vcrpy | - | HTTP 인터셉션 테스트 |
+| 도구           | 버전          | 역할                         |
+| -------------- | ------------- | ---------------------------- |
+| ruff           | 0.15.0–0.16.0 | 린터 + 포매터                |
+| mypy           | 1.19.1–1.20.0 | 정적 타입 체크 (strict 모드) |
+| pytest         | -             | 테스트 프레임워크            |
+| pytest-asyncio | -             | 비동기 테스트                |
+| pytest-xdist   | -             | 병렬 테스트 실행             |
+| syrupy         | -             | 스냅샷 테스트                |
+| vcrpy          | -             | HTTP 인터셉션 테스트         |
 
 ---
 
@@ -495,20 +476,20 @@ langchain-tests = { path = "../standard-tests", editable = true }
 
 ### 주요 GitHub Actions 워크플로우 (19개+)
 
-| 워크플로우 | 역할 |
-|------------|------|
-| `_test.yml` | 단위 테스트 실행 템플릿 |
-| `_lint.yml` | 린팅 워크플로우 템플릿 |
-| `_release.yml` | 릴리즈 오케스트레이션 (25KB) |
-| `_test_pydantic.yml` | Pydantic 버전 호환성 검증 |
-| `check_diffs.yml` | 변경된 패키지 감지 (10KB) |
-| `integration_tests.yml` | 예약된 통합 테스트 (12KB) |
-| `pr_lint.yml` | PR 제목 검증 (Conventional Commits) |
-| `auto-label-by-package.yml` | 수정된 패키지별 PR 라벨 자동 부여 |
-| `refresh_model_profiles.yml` | 모델 프로파일 자동 갱신 |
-| `check_core_versions.yml` | 의존성 버전 체크 |
-| `require_issue_link.yml` | PR에 이슈 링크 필수화 (10KB) |
-| `v03_api_doc_build.yml` | API 문서 자동 빌드 |
+| 워크플로우                   | 역할                                |
+| ---------------------------- | ----------------------------------- |
+| `_test.yml`                  | 단위 테스트 실행 템플릿             |
+| `_lint.yml`                  | 린팅 워크플로우 템플릿              |
+| `_release.yml`               | 릴리즈 오케스트레이션 (25KB)        |
+| `_test_pydantic.yml`         | Pydantic 버전 호환성 검증           |
+| `check_diffs.yml`            | 변경된 패키지 감지 (10KB)           |
+| `integration_tests.yml`      | 예약된 통합 테스트 (12KB)           |
+| `pr_lint.yml`                | PR 제목 검증 (Conventional Commits) |
+| `auto-label-by-package.yml`  | 수정된 패키지별 PR 라벨 자동 부여   |
+| `refresh_model_profiles.yml` | 모델 프로파일 자동 갱신             |
+| `check_core_versions.yml`    | 의존성 버전 체크                    |
+| `require_issue_link.yml`     | PR에 이슈 링크 필수화 (10KB)        |
+| `v03_api_doc_build.yml`      | API 문서 자동 빌드                  |
 
 ### 커밋 규칙 (Conventional Commits)
 
@@ -638,18 +619,18 @@ class TestChatOpenAI(ChatModelIntegrationTests):
 
 ## 16. 일반 LLM 라이브러리와의 차별점
 
-| 특징 | LangChain | 일반 LLM SDK |
-|------|-----------|--------------|
-| **프로바이더 중립성** | 동일 코드로 모델 교체 가능 | 프로바이더별 API 차이 |
-| **컴포넌트 조합** | `\|` 연산자로 파이프라인 구성 | 수동 함수 호출 |
-| **스트리밍** | 모든 컴포넌트에서 통일 인터페이스 | 모델별 구현 차이 |
-| **동기/비동기** | `invoke`/`ainvoke` 일관성 | 별도 클라이언트 |
-| **관측성** | LangSmith 내장 통합 | 별도 구축 필요 |
-| **직렬화** | 체인 전체 저장/복원 가능 | 없음 |
-| **도구 통합** | 표준화된 도구 인터페이스 | 수동 파싱 |
-| **구조화 출력** | `with_structured_output()` | 프롬프트 엔지니어링 의존 |
-| **에러 복구** | `with_fallbacks()`, `with_retry()` | try/except 수동 구현 |
-| **테스트** | `langchain-tests` 공통 슈트 | 개별 테스트 작성 |
+| 특징                  | LangChain                          | 일반 LLM SDK             |
+| --------------------- | ---------------------------------- | ------------------------ |
+| **프로바이더 중립성** | 동일 코드로 모델 교체 가능         | 프로바이더별 API 차이    |
+| **컴포넌트 조합**     | `\|` 연산자로 파이프라인 구성      | 수동 함수 호출           |
+| **스트리밍**          | 모든 컴포넌트에서 통일 인터페이스  | 모델별 구현 차이         |
+| **동기/비동기**       | `invoke`/`ainvoke` 일관성          | 별도 클라이언트          |
+| **관측성**            | LangSmith 내장 통합                | 별도 구축 필요           |
+| **직렬화**            | 체인 전체 저장/복원 가능           | 없음                     |
+| **도구 통합**         | 표준화된 도구 인터페이스           | 수동 파싱                |
+| **구조화 출력**       | `with_structured_output()`         | 프롬프트 엔지니어링 의존 |
+| **에러 복구**         | `with_fallbacks()`, `with_retry()` | try/except 수동 구현     |
+| **테스트**            | `langchain-tests` 공통 슈트        | 개별 테스트 작성         |
 
 ---
 

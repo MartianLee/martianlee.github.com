@@ -15,26 +15,7 @@ author: MartianLee
 
 ---
 
-*This article is mostly written by Claude Code*
-
-## 목차
-
-1. [프로젝트 개요](#1-프로젝트-개요)
-2. [기술 스택](#2-기술-스택)
-3. [전체 아키텍처](#3-전체-아키텍처)
-4. [핵심 모듈 구조](#4-핵심-모듈-구조)
-5. [메시지 처리 파이프라인](#5-메시지-처리-파이프라인)
-6. [오케스트레이터 상세](#6-오케스트레이터-상세)
-7. [컨테이너 에이전트 시스템](#7-컨테이너-에이전트-시스템)
-8. [채널 시스템](#8-채널-시스템)
-9. [스케줄러 & IPC 시스템](#9-스케줄러--ipc-시스템)
-10. [보안 아키텍처](#10-보안-아키텍처)
-11. [핵심 데이터 구조](#11-핵심-데이터-구조)
-12. [레이어별 의존 관계](#12-레이어별-의존-관계)
-13. [OpenClaw와의 차별점](#13-openclaw와의-차별점)
-14. [디렉토리 트리](#14-디렉토리-트리)
-15. [핵심 개념 설명](#15-핵심-개념-설명)
-16. [Q&A: 실제 사용 시나리오](#16-qa-실제-사용-시나리오)
+_This article is mostly written by Claude Code_
 
 ---
 
@@ -54,32 +35,32 @@ NanoClaw의 가장 큰 특징은 **코드가 설정**이라는 철학입니다. 
 
 ## 2. 기술 스택
 
-| 영역 | 기술 |
-|------|------|
-| 언어 | TypeScript (ESM) |
-| 런타임 | Node.js 20+ |
-| 패키지 관리 | npm |
-| 빌드 | tsc (TypeScript 컴파일러) |
-| 테스트 | Vitest |
-| 린터/포매터 | Prettier |
-| Git Hook | Husky |
-| 데이터베이스 | SQLite (better-sqlite3, 동기) |
-| AI 런타임 | @anthropic-ai/claude-code (Agent SDK) |
-| 스케줄러 | cron-parser |
-| 로거 | pino |
-| 스키마 검증 | zod |
-| 컨테이너 | Docker / Apple Container |
-| 서비스 관리 | macOS launchd / Linux systemd |
+| 영역         | 기술                                  |
+| ------------ | ------------------------------------- |
+| 언어         | TypeScript (ESM)                      |
+| 런타임       | Node.js 20+                           |
+| 패키지 관리  | npm                                   |
+| 빌드         | tsc (TypeScript 컴파일러)             |
+| 테스트       | Vitest                                |
+| 린터/포매터  | Prettier                              |
+| Git Hook     | Husky                                 |
+| 데이터베이스 | SQLite (better-sqlite3, 동기)         |
+| AI 런타임    | @anthropic-ai/claude-code (Agent SDK) |
+| 스케줄러     | cron-parser                           |
+| 로거         | pino                                  |
+| 스키마 검증  | zod                                   |
+| 컨테이너     | Docker / Apple Container              |
+| 서비스 관리  | macOS launchd / Linux systemd         |
 
 ### 채널별 SDK (스킬로 설치)
 
-| 채널 | 라이브러리 |
-|------|------------|
+| 채널     | 라이브러리              |
+| -------- | ----------------------- |
 | WhatsApp | @whiskeysockets/baileys |
-| Telegram | node-telegram-bot-api |
-| Slack | @slack/bolt |
-| Discord | discord.js |
-| Gmail | googleapis |
+| Telegram | node-telegram-bot-api   |
+| Slack    | @slack/bolt             |
+| Discord  | discord.js              |
+| Gmail    | googleapis              |
 
 ### 의존성 특징
 
@@ -141,21 +122,21 @@ NanoClaw 코어는 단 **5개의 런타임 의존성**만 사용합니다: `bett
 
 ## 4. 핵심 모듈 구조
 
-| 모듈 | 역할 | 핵심 파일 |
-|------|------|-----------|
-| **Orchestrator** | 메시지 루프, 에이전트 호출 | `src/index.ts` |
-| **Channel Registry** | 채널 자기 등록 | `src/channels/registry.ts` |
-| **Router** | 메시지 포맷 & 아웃바운드 라우팅 | `src/router.ts` |
-| **Config** | 환경변수 기반 설정 | `src/config.ts` |
-| **Container Runner** | 컨테이너 스폰 & 마운트 관리 | `src/container-runner.ts` |
-| **Group Queue** | 그룹별 큐 & 동시성 제어 | `src/group-queue.ts` |
-| **IPC Watcher** | 파일 기반 IPC 처리 | `src/ipc.ts` |
-| **Task Scheduler** | 예약 태스크 실행 | `src/task-scheduler.ts` |
-| **Database** | SQLite CRUD (동기) | `src/db.ts` |
-| **Credential Proxy** | 자격증명 격리 HTTP 프록시 | `src/credential-proxy.ts` |
-| **Mount Security** | 마운트 경로 검증 | `src/mount-security.ts` |
-| **Agent Runner** | 컨테이너 내부 에이전트 실행 | `container/agent-runner/src/index.ts` |
-| **IPC MCP** | 컨테이너 → 호스트 MCP 도구 | `container/agent-runner/src/ipc-mcp-stdio.ts` |
+| 모듈                 | 역할                            | 핵심 파일                                     |
+| -------------------- | ------------------------------- | --------------------------------------------- |
+| **Orchestrator**     | 메시지 루프, 에이전트 호출      | `src/index.ts`                                |
+| **Channel Registry** | 채널 자기 등록                  | `src/channels/registry.ts`                    |
+| **Router**           | 메시지 포맷 & 아웃바운드 라우팅 | `src/router.ts`                               |
+| **Config**           | 환경변수 기반 설정              | `src/config.ts`                               |
+| **Container Runner** | 컨테이너 스폰 & 마운트 관리     | `src/container-runner.ts`                     |
+| **Group Queue**      | 그룹별 큐 & 동시성 제어         | `src/group-queue.ts`                          |
+| **IPC Watcher**      | 파일 기반 IPC 처리              | `src/ipc.ts`                                  |
+| **Task Scheduler**   | 예약 태스크 실행                | `src/task-scheduler.ts`                       |
+| **Database**         | SQLite CRUD (동기)              | `src/db.ts`                                   |
+| **Credential Proxy** | 자격증명 격리 HTTP 프록시       | `src/credential-proxy.ts`                     |
+| **Mount Security**   | 마운트 경로 검증                | `src/mount-security.ts`                       |
+| **Agent Runner**     | 컨테이너 내부 에이전트 실행     | `container/agent-runner/src/index.ts`         |
+| **IPC MCP**          | 컨테이너 → 호스트 MCP 도구      | `container/agent-runner/src/ipc-mcp-stdio.ts` |
 
 ---
 
@@ -210,12 +191,12 @@ WhatsApp Channel → sendMessage() → 사용자 응답 전송
 
 ### 그룹 큐 상태 전이
 
-| 상태 | 설명 |
-|------|------|
-| idle | 활성 컨테이너 없음, 대기 중 |
-| running | 컨테이너 실행 중 (메시지/태스크 처리) |
+| 상태         | 설명                                        |
+| ------------ | ------------------------------------------- |
+| idle         | 활성 컨테이너 없음, 대기 중                 |
+| running      | 컨테이너 실행 중 (메시지/태스크 처리)       |
 | idle-waiting | 컨테이너 종료 대기, 파이프 메시지 수신 가능 |
-| pending | 메시지/태스크 큐에 대기 중 |
+| pending      | 메시지/태스크 큐에 대기 중                  |
 
 ---
 
@@ -241,7 +222,7 @@ WhatsApp Channel → sendMessage() → 사용자 응답 전송
 // 비-Main 그룹: @Andy 패턴 확인 후 처리
 const TRIGGER_PATTERN = new RegExp(`@${ASSISTANT_NAME}`, 'i')
 
-if (!group.isMain && !messages.some(m => TRIGGER_PATTERN.test(m.content))) {
+if (!group.isMain && !messages.some((m) => TRIGGER_PATTERN.test(m.content))) {
   // 메시지를 DB에 보관, 트리거 대기
   return
 }
@@ -277,15 +258,15 @@ registeredGroups: Map<jid, RegisteredGroup>
 
 ### 볼륨 마운트 정책
 
-| 마운트 | 소스 | 컨테이너 경로 | 권한 |
-|--------|------|--------------|------|
-| 그룹 폴더 | `groups/{name}/` | `/workspace/group` | 읽기/쓰기 |
-| 글로벌 메모리 | `groups/global/` | `/workspace/global` | 읽기 전용 |
-| 프로젝트 루트 | `nanoclaw/` | `/workspace/project` | 읽기 전용 (Main만) |
-| Claude 세션 | `data/sessions/{group}/.claude/` | `/home/node/.claude/` | 읽기/쓰기 |
-| IPC 폴더 | `data/ipc/{group}/` | `/workspace/ipc/` | 읽기/쓰기 |
-| 스킬 폴더 | `container/skills/` | (세션 sync) | — |
-| 추가 마운트 | 허용 목록 기반 | 사용자 지정 | 사용자 지정 |
+| 마운트        | 소스                             | 컨테이너 경로         | 권한               |
+| ------------- | -------------------------------- | --------------------- | ------------------ |
+| 그룹 폴더     | `groups/{name}/`                 | `/workspace/group`    | 읽기/쓰기          |
+| 글로벌 메모리 | `groups/global/`                 | `/workspace/global`   | 읽기 전용          |
+| 프로젝트 루트 | `nanoclaw/`                      | `/workspace/project`  | 읽기 전용 (Main만) |
+| Claude 세션   | `data/sessions/{group}/.claude/` | `/home/node/.claude/` | 읽기/쓰기          |
+| IPC 폴더      | `data/ipc/{group}/`              | `/workspace/ipc/`     | 읽기/쓰기          |
+| 스킬 폴더     | `container/skills/`              | (세션 sync)           | —                  |
+| 추가 마운트   | 허용 목록 기반                   | 사용자 지정           | 사용자 지정        |
 
 ### Dockerfile 구조
 
@@ -312,23 +293,23 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 ```typescript
 // stdin (호스트 → 컨테이너)
 interface ContainerInput {
-  messages: string          // XML 포맷 메시지
-  group: RegisteredGroup    // 그룹 메타데이터
-  sessionId?: string        // 세션 연속성
+  messages: string // XML 포맷 메시지
+  group: RegisteredGroup // 그룹 메타데이터
+  sessionId?: string // 세션 연속성
   isScheduledTask?: boolean // 예약 태스크 여부
-  taskPrompt?: string       // 태스크 프롬프트
+  taskPrompt?: string // 태스크 프롬프트
 }
 
 // stdout (컨테이너 → 호스트, sentinel markers로 감싸짐)
 interface ContainerOutput {
-  result: string            // 에이전트 응답
-  sessionId: string         // 새 세션 ID
+  result: string // 에이전트 응답
+  sessionId: string // 새 세션 ID
   error?: string
 }
 
 // 마커
 const START = '---NANOCLAW_OUTPUT_START---'
-const END   = '---NANOCLAW_OUTPUT_END---'
+const END = '---NANOCLAW_OUTPUT_END---'
 ```
 
 ### 팔로우업 메시지 (IPC Input)
@@ -382,9 +363,9 @@ interface Channel {
 ```typescript
 // 자격증명 없으면 null 반환 → 오케스트레이터가 스킵
 const factory = getChannelFactory(name)
-if (!factory) return  // 채널 미설치
+if (!factory) return // 채널 미설치
 const channel = await factory(config)
-if (!channel) return  // 자격증명 없음
+if (!channel) return // 자격증명 없음
 ```
 
 ### 멀티채널 라우팅
@@ -392,7 +373,7 @@ if (!channel) return  // 자격증명 없음
 ```typescript
 // 응답을 원본 채널로 라우팅
 function findChannel(jid: string): Channel | undefined {
-  return channels.find(ch => ch.ownsJid(jid))
+  return channels.find((ch) => ch.ownsJid(jid))
 }
 ```
 
@@ -438,17 +419,17 @@ startSchedulerLoop() [60초 폴링]
 
 ### 지원 IPC 명령
 
-| 명령 | 설명 | 권한 |
-|------|------|------|
-| `schedule_task` | 새 태스크 예약 | 자신의 그룹만 |
-| `pause_task` | 태스크 일시 정지 | 자신의 그룹만 |
-| `resume_task` | 태스크 재개 | 자신의 그룹만 |
-| `cancel_task` | 태스크 취소 | 자신의 그룹만 |
-| `update_task` | 태스크 수정 | 자신의 그룹만 |
-| `list_tasks` | 태스크 목록 조회 | 자신의 그룹만 |
-| `send_message` | 채널로 메시지 전송 | Main: 모든 JID, 기타: 자신의 JID만 |
-| `register_group` | 새 그룹 등록 | Main 그룹만 |
-| `refresh_groups` | 그룹 메타데이터 갱신 | Main 그룹만 |
+| 명령             | 설명                 | 권한                               |
+| ---------------- | -------------------- | ---------------------------------- |
+| `schedule_task`  | 새 태스크 예약       | 자신의 그룹만                      |
+| `pause_task`     | 태스크 일시 정지     | 자신의 그룹만                      |
+| `resume_task`    | 태스크 재개          | 자신의 그룹만                      |
+| `cancel_task`    | 태스크 취소          | 자신의 그룹만                      |
+| `update_task`    | 태스크 수정          | 자신의 그룹만                      |
+| `list_tasks`     | 태스크 목록 조회     | 자신의 그룹만                      |
+| `send_message`   | 채널로 메시지 전송   | Main: 모든 JID, 기타: 자신의 JID만 |
+| `register_group` | 새 그룹 등록         | Main 그룹만                        |
+| `refresh_groups` | 그룹 메타데이터 갱신 | Main 그룹만                        |
 
 ---
 
@@ -494,6 +475,7 @@ Anthropic API (api.anthropic.com)
 ```
 
 두 가지 인증 모드:
+
 - `api-key`: `x-api-key` 헤더에 실제 키 주입
 - `oauth`: Bearer 토큰 교체 (OAuth 플로우)
 
@@ -502,12 +484,17 @@ Anthropic API (api.anthropic.com)
 ```json
 // ~/.config/nanoclaw/mount-allowlist.json (호스트만 접근, 컨테이너 마운트 불가)
 {
-  "allowedRoots": [
-    { "path": "~/Documents", "label": "Documents" }
-  ],
+  "allowedRoots": [{ "path": "~/Documents", "label": "Documents" }],
   "blockedPatterns": [
-    ".ssh", ".gnupg", ".aws", ".env", "credentials",
-    "id_rsa", "id_ed25519", "*.pem", "*.key"
+    ".ssh",
+    ".gnupg",
+    ".aws",
+    ".env",
+    "credentials",
+    "id_rsa",
+    "id_ed25519",
+    "*.pem",
+    "*.key"
   ],
   "nonMainReadOnly": true
 }
@@ -608,7 +595,7 @@ CREATE TABLE registered_groups (
 // 채널에서 호스트로 전달되는 메시지
 interface NewMessage {
   id: string
-  chat_jid: string      // "1234567890@s.whatsapp.net"
+  chat_jid: string // "1234567890@s.whatsapp.net"
   sender: string
   sender_name: string
   content: string
@@ -620,8 +607,8 @@ interface NewMessage {
 // DB에 저장된 그룹 메타데이터
 interface RegisteredGroup {
   name: string
-  folder: string        // "groups/family-chat"
-  trigger: string       // "@Andy"
+  folder: string // "groups/family-chat"
+  trigger: string // "@Andy"
   added_at: number
   isMain?: boolean
   requiresTrigger?: boolean
@@ -707,21 +694,21 @@ interface ScheduledTask {
 
 ## 13. OpenClaw와의 차별점
 
-| 항목 | NanoClaw | OpenClaw |
-|------|----------|----------|
-| 코드 규모 | ~7,300 LOC | 500,000+ LOC |
-| 의존성 | 5개 (코어) | 수십 개 |
-| AI 런타임 | Claude Agent SDK (Anthropic 공식) | Pi Agent (자체 구현) |
-| LLM 지원 | Claude 전용 | 20개+ LLM |
-| 격리 방식 | OS 컨테이너 (Docker/Apple) | 애플리케이션 레벨 (샌드박스 정책) |
-| 채널 방식 | Git 브랜치 스킬로 확장 | 플러그인 npm 패키지 |
-| 설정 방식 | 환경변수 + 코드 수정 | config.yml (핫 리로드 지원) |
-| 통신 방식 | 파일 IPC + stdin/stdout | WebSocket RPC |
-| 메모리 | 그룹별 CLAUDE.md | 벡터 검색 메모리 |
-| 스케줄러 | 내장 (cron-parser) | 내장 (croner) |
-| UI | 없음 (CLI 전용) | WebUI + macOS/iOS/Android 앱 |
-| 학습 곡선 | 낮음 (코드 직접 수정) | 높음 (설정 시스템 학습 필요) |
-| 수정 용이성 | 매우 높음 | 낮음 (추상화 레이어 많음) |
+| 항목        | NanoClaw                          | OpenClaw                          |
+| ----------- | --------------------------------- | --------------------------------- |
+| 코드 규모   | ~7,300 LOC                        | 500,000+ LOC                      |
+| 의존성      | 5개 (코어)                        | 수십 개                           |
+| AI 런타임   | Claude Agent SDK (Anthropic 공식) | Pi Agent (자체 구현)              |
+| LLM 지원    | Claude 전용                       | 20개+ LLM                         |
+| 격리 방식   | OS 컨테이너 (Docker/Apple)        | 애플리케이션 레벨 (샌드박스 정책) |
+| 채널 방식   | Git 브랜치 스킬로 확장            | 플러그인 npm 패키지               |
+| 설정 방식   | 환경변수 + 코드 수정              | config.yml (핫 리로드 지원)       |
+| 통신 방식   | 파일 IPC + stdin/stdout           | WebSocket RPC                     |
+| 메모리      | 그룹별 CLAUDE.md                  | 벡터 검색 메모리                  |
+| 스케줄러    | 내장 (cron-parser)                | 내장 (croner)                     |
+| UI          | 없음 (CLI 전용)                   | WebUI + macOS/iOS/Android 앱      |
+| 학습 곡선   | 낮음 (코드 직접 수정)             | 높음 (설정 시스템 학습 필요)      |
+| 수정 용이성 | 매우 높음                         | 낮음 (추상화 레이어 많음)         |
 
 ---
 
@@ -787,6 +774,7 @@ nanoclaw/
 ### 그룹 (Group)
 
 NanoClaw에서 "그룹"은 채팅 채널(WhatsApp 그룹, Telegram 채팅 등)과 1:1로 대응하는 논리 단위입니다. 각 그룹은:
+
 - 별도의 `groups/{name}/` 폴더 (CLAUDE.md 포함)
 - 별도의 `.claude/` 세션 디렉토리
 - 별도의 SQLite 세션 ID

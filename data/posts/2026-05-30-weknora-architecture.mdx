@@ -33,30 +33,6 @@ author: MartianLee
 
 _This article is mostly written by Claude Code_
 
-## 목차
-
-1. [왜 WeKnora인가요?](#1-왜-weknora인가요)
-2. [최근 분석한 프로젝트들과의 비교](#2-최근-분석한-프로젝트들과의-비교)
-3. [프로젝트를 한 문장으로 이해하기](#3-프로젝트를-한-문장으로-이해하기)
-4. [기술 스택과 규모](#4-기술-스택과-규모)
-5. [전체 그림](#5-전체-그림)
-6. [코드베이스 지도](#6-코드베이스-지도)
-7. [docreader: 문서 파싱을 별도 Python gRPC 서비스로 분리합니다](#7-docreader-문서-파싱을-별도-python-grpc-서비스로-분리합니다)
-8. [Chat pipeline: RAG를 event-driven plugin으로 조립합니다](#8-chat-pipeline-rag를-event-driven-plugin으로-조립합니다)
-9. [Retriever: 여러 벡터 DB를 composite로 묶습니다](#9-retriever-여러-벡터-db를-composite로-묶습니다)
-10. [ReAct Agent: think → act → observe 루프](#10-react-agent-think--act--observe-루프)
-11. [Agent tools: 내장 도구, MCP, skill, final_answer](#11-agent-tools-내장-도구-mcp-skill-final_answer)
-12. [Skills와 sandbox: 코드 실행을 격리합니다](#12-skills와-sandbox-코드-실행을-격리합니다)
-13. [Wiki Mode: 문서를 self-maintaining 지식 베이스로 만듭니다](#13-wiki-mode-문서를-self-maintaining-지식-베이스로-만듭니다)
-14. [Model provider: 20여 개 LLM을 추상화합니다](#14-model-provider-20여-개-llm을-추상화합니다)
-15. [의존성 주입과 container](#15-의존성-주입과-container)
-16. [IM 채널과 외부 진입점](#16-im-채널과-외부-진입점)
-17. [Multi-tenant RBAC와 보안](#17-multi-tenant-rbac와-보안)
-18. [코드를 읽는 추천 순서](#18-코드를-읽는-추천-순서)
-19. [인상적인 설계 포인트](#19-인상적인-설계-포인트)
-20. [주의해서 볼 지점](#20-주의해서-볼-지점)
-21. [결론](#21-결론)
-
 ---
 
 ## 1. 왜 WeKnora인가요?
