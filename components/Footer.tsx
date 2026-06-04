@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="site-chrome-footer border-line mt-16 border-t">
       <div className="text-muted flex flex-col gap-4 py-7 font-mono text-xs sm:flex-row sm:items-center sm:justify-between">
         <span>
-          © {new Date().getFullYear()} {siteMetadata.author} — hand-built, no template energy.
+          © {new Date().getFullYear()} {siteMetadata.author}
         </span>
         <div className="flex items-center gap-4">
           <SocialIcon kind="mail" href={`mailto:${siteMetadata.email}`} size={5} />
