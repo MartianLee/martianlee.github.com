@@ -14,10 +14,8 @@ export default function Projects() {
         key={d.title}
         title={d.title}
         description={d.description}
-        imgSrc={d.imgSrc}
         href={d.href}
         techStack={d.techStack}
-        workflow={d.workflow}
         aiTools={d.aiTools}
         demo={d.demo}
         github={d.github}

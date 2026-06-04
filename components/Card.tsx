@@ -3,10 +3,8 @@ import Link from './Link'
 interface CardProps {
   title: string
   description: string
-  imgSrc?: string
   href?: string
   techStack?: string[]
-  workflow?: string[]
   aiTools?: string[]
   demo?: string
   github?: string
