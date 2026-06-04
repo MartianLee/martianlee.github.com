@@ -1,0 +1,1018 @@
+---
+slug: '2026-03-15-ollama-architecture'
+title: 'Ollama Architecture Analysis / Real-World Q&A'
+crawlertitle: 'Ollama Architecture Analysis / Real-World Q&A'
+summary: 'A comprehensive architecture analysis of Ollama, a local LLM execution platform implemented in Go. Covers the tech stack, scheduler, model management, llama.cpp integration, and the Runner system in detail.'
+date: 2026-03-15 00:00:00 +0900
+categories: posts
+tags: ['ollama', 'architecture', 'go', 'llm', 'llama.cpp', 'local-ai']
+author: MartianLee
+---
+
+> Analyzed: 2026-03-15
+> Package: v0.18.0
+> Repository: https://github.com/ollama/ollama
+
+---
+
+_This article is mostly written by Claude Code_
+
+---
+
+## 1. Project Overview
+
+**Ollama** is a local LLM (Large Language Model) execution platform written in Go. Inspired by Docker's design philosophy, it lets you run the latest open-source LLMs locally with a single command and no complex setup.
+
+- **Tagline:** "Get up and running with large language models locally."
+- **Core values:** Local execution, privacy protection, automatic GPU optimization, Docker-style model management
+- **Supported models:** LLaMA, Mistral, Qwen, Gemma, Phi, Deepseek, GLM, and dozens more
+- **Supported GPUs:** NVIDIA CUDA, AMD ROCm, Apple Metal (M1/M2/M3/M4)
+- **Supported platforms:** macOS, Linux, Windows
+
+---
+
+## 2. Tech Stack
+
+| Area              | Technology                |
+| ----------------- | ------------------------- |
+| Language          | Go 1.24.1                 |
+| HTTP framework    | Gin v1.10.0               |
+| CLI framework     | Cobra v1.7.0              |
+| Inference backend | llama.cpp (CGO bindings)  |
+| DB                | SQLite (blob metadata)    |
+| Compression       | zstd                      |
+| Serialization     | protobuf, JSON            |
+| GPU support       | CUDA / ROCm / Metal / CPU |
+
+### GPU Support Layers
+
+| Backend     | Target hardware                  |
+| ----------- | -------------------------------- |
+| NVIDIA CUDA | GeForce, RTX, Tesla, A100, etc.  |
+| AMD ROCm    | RX 7000/6000 series, MI300, etc. |
+| Apple Metal | Apple Silicon (M1–M4)            |
+| CPU         | AVX2/AVX512-optimized x86, ARM   |
+
+---
+
+## 3. Overall Architecture
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                        Ollama System                             ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐   ║
+║  │                    CLI Layer (Cobra)                      │   ║
+║  │  ollama run / pull / push / create / list / show / serve  │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │                                         ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │              HTTP Server (Gin + CORS)                     │   ║
+║  │         127.0.0.1:11434  (configurable via OLLAMA_HOST)   │   ║
+║  │                                                           │   ║
+║  │   OpenAI Compatibility   Anthropic Compatibility          │   ║
+║  │   Middleware             Middleware                       │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │                                         ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │                   Route Handlers                          │   ║
+║  │  ChatHandler / GenerateHandler / EmbedHandler             │   ║
+║  │  PullHandler / PushHandler / CreateHandler                │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │ scheduleRunner()                        ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │                   Scheduler                               │   ║
+║  │  - Model load/unload management                           │   ║
+║  │  - VRAM-based Eviction                                    │   ║
+║  │  - Reference Counting                                     │   ║
+║  │  - Keep-Alive timer                                       │   ║
+║  └──────────────────────┬───────────────────────────────────┘   ║
+║                         │ spawn process                           ║
+║  ┌──────────────────────▼───────────────────────────────────┐   ║
+║  │               Runner Process (separate process)           │   ║
+║  │                                                           │   ║
+║  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │   ║
+║  │  │LlamaRunner  │  │OllamaRunner │  │ImageGen Runner  │  │   ║
+║  │  │(llama.cpp)  │  │(Go native)  │  │(diffusion)      │  │   ║
+║  │  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘  │   ║
+║  │         └────────────────┴──────────────────┘           │   ║
+║  │                          │                                │   ║
+║  │               GGML Backend (GPU/CPU)                      │   ║
+║  │           CUDA  /  ROCm  /  Metal  /  CPU                │   ║
+║  └──────────────────────────────────────────────────────────┘   ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐   ║
+║  │              Model Storage (Content-Addressable)          │   ║
+║  │   ~/.ollama/models/manifests/ + blobs/sha256-[digest]    │   ║
+║  └──────────────────────────────────────────────────────────┘   ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. Core Module Structure
+
+### `/api` — Client API Package
+
+A Go client library for external access to the Ollama server.
+
+- `Client` struct: HTTP client
+- Request/response type definitions: `GenerateRequest`, `ChatRequest`, `EmbedRequest`, etc.
+- Streaming response handling
+- Error types such as `StatusError` and `AuthorizationError`
+
+### `/server` — HTTP Server + Core Logic
+
+```go
+type Server struct {
+    addr          net.Addr    // listening address
+    sched         *Scheduler  // model scheduler
+    defaultNumCtx int         // default context length
+}
+```
+
+Key handlers:
+
+- `ChatHandler` — multi-turn conversation
+- `GenerateHandler` — single-prompt generation
+- `EmbedHandler` — embedding generation
+- `PullHandler` — model download
+- `CreateHandler` — custom model creation
+
+### `/llm` — LLM Server Interface
+
+An abstract interface for communicating with Runner processes.
+
+```go
+type LlamaServer interface {
+    Load(ctx context.Context, opts api.Options) error
+    Ping(ctx context.Context) error
+    Completion(ctx context.Context, req CompletionRequest, fn func(CompletionResponse)) error
+    Embedding(ctx context.Context, input string) ([]float64, error)
+    Tokenize(ctx context.Context, content string) ([]int, error)
+    Detokenize(ctx context.Context, tokens []int) (string, error)
+    MemorySize(ctx context.Context) (uint64, error)
+    Close() error
+}
+```
+
+### `/runner` — Model Execution Engines
+
+| Runner       | Path                   | Description                             |
+| ------------ | ---------------------- | --------------------------------------- |
+| LlamaRunner  | `runner/llamarunner/`  | Legacy runner based on llama.cpp        |
+| OllamaRunner | `runner/ollamarunner/` | New Go-native engine                    |
+| ImageGen     | `runner/x/imagegen/`   | Stable Diffusion-class image generation |
+| MLX          | `runner/x/mlxrunner/`  | Apple MLX-optimized runner              |
+
+### `/model` — Model Architecture Implementations
+
+Model implementations used by the Go-native engine.
+
+- LLaMA, Mistral, Qwen, Gemma, Phi, Deepseek, GLM, and more
+- `Model` interface: implements the forward pass
+- `MultimodalProcessor`: image encoding (Vision models)
+- Model architecture registry (`model.Register()`)
+
+### `/manifest` — Content-Addressable Storage
+
+A model storage system similar to Docker image layers.
+
+```
+Manifest (JSON)
+  └── Layers []Layer
+        ├── Digest: "sha256-abc123..."
+        ├── MediaType: "application/vnd.ollama.image.model"
+        └── Size: 4_000_000_000
+```
+
+Media types:
+
+- `application/vnd.ollama.image.model` — model weights (GGUF)
+- `application/vnd.ollama.image.projector` — Vision projector
+- `application/vnd.ollama.image.adapter` — LoRA adapter
+- `application/vnd.ollama.image.template` — chat template
+- `application/vnd.ollama.image.params` — parameters
+
+### `/template` — Chat Template System
+
+Handles the prompt format expected by each model (ChatML, Llama3, Gemma, etc.) using Go's `text/template`.
+
+### `/discover` — GPU Discovery
+
+Detects installed GPUs at runtime and collects metadata such as VRAM size and driver version.
+
+---
+
+## 5. Request Processing Pipeline
+
+### Full Chat Request Flow
+
+```
+Client
+    │
+    │ POST /api/chat
+    ▼
+ChatHandler()
+    │ JSON parsing + validation
+    │
+    ▼
+scheduleRunner(modelName, options)
+    │
+    ▼
+Scheduler.GetRunner()
+    ├─ [already loaded] → return Runner reference
+    └─ [not loaded]     → enqueue as LlmRequest
+                            │
+                            ▼
+                 processPending() goroutine
+                            │
+                            ├─ detect GPU devices
+                            ├─ calculate available VRAM
+                            ├─ evict existing model if needed
+                            └─ spawn Runner process
+                                     │
+                                     ▼
+                          Runner process (separate port)
+                                     │
+                            HTTP RPC communication
+                                     │
+                                     ▼
+Runner.Completion()
+    │
+    ├─ messages → tokenize
+    ├─ initialize / reuse KV cache
+    ├─ execute forward pass (GPU)
+    ├─ sample next token
+    └─ repeat (until EOS or max_tokens)
+    │
+    ▼
+ChatResponse chunks streamed (NDJSON)
+    │
+    ▼
+Client (done: true + metrics)
+```
+
+### Model Resolution Flow
+
+```
+"llama3.2:3b"
+    │
+    ▼
+GetModel(name)
+    │
+    ├─ check for local manifest
+    ├─ if absent, Pull from registry
+    ▼
+parse manifest.json
+    │
+    ▼
+parse GGUF header → extract model metadata
+    │ (parameter count, context length, quantization type, etc.)
+    ▼
+auto-detect or explicitly load chat template
+    │
+    ▼
+return Model struct
+```
+
+---
+
+## 6. Scheduler System
+
+The scheduler (`/server/sched.go`) is a core Ollama component that **efficiently manages VRAM when multiple model requests arrive concurrently**.
+
+### Key Types
+
+```go
+// Unit of work queued for scheduling
+type LlmRequest struct {
+    ctx             context.Context
+    model           *Model
+    opts            api.Options
+    sessionDuration *api.Duration
+    successCh       chan *runnerRef   // delivers Runner once loaded
+    errCh           chan error
+}
+
+// Reference-counted handle to a running Runner
+type runnerRef struct {
+    refMu    sync.Mutex
+    refCount uint          // number of in-flight requests
+    llama    llm.LlamaServer
+    model    *Model
+    pid      int           // Runner process PID
+    gpus     []ml.DeviceID // GPUs in use
+    expireTimer *time.Timer
+}
+```
+
+### How the Scheduler Works
+
+1. **Single-threaded loading**: Model loading is executed sequentially to prevent GPU memory contention.
+2. **Keep-Alive management**: After a request completes, the model stays in memory for a configurable duration (default: 5 minutes).
+3. **Eviction policy**: When loading a new model and VRAM is insufficient, the least-recently-used model is unloaded first.
+4. **Reference counting**: Concurrent requests for the same model share the same Runner instance.
+
+```
+Request A → load llama3.2 → refCount: 1
+Request B → llama3.2 already loaded → refCount: 2
+Request A done → refCount: 1
+Request B done → refCount: 0 → Keep-Alive timer starts
+5 min later → model unloaded (reloaded on next request)
+```
+
+---
+
+## 7. Model Management System
+
+### Storage Structure
+
+```
+~/.ollama/models/
+├── manifests/
+│   └── registry.ollama.com/
+│       └── library/
+│           ├── llama3.2/
+│           │   ├── latest
+│           │   └── 3b
+│           └── mistral/
+│               └── latest
+└── blobs/
+    ├── sha256-abc123...  (model weights GGUF file)
+    ├── sha256-def456...  (template)
+    └── sha256-ghi789...  (parameters)
+```
+
+- **Content-addressable**: Files are stored by SHA256 digest — identical files are shared across multiple models.
+- **Manifest**: Describes which blobs compose a model (the same concept as Docker image layers).
+
+### Model Pull Process
+
+```
+1. Parse model name (registry/namespace/name:tag)
+2. Fetch Manifest from registry API
+3. Parallel download of required layer blobs (16-part chunks)
+4. Resumable download support (Range header)
+5. SHA256 digest verification
+6. Save Manifest + blobs locally
+```
+
+### Modelfile (Custom Model Creation)
+
+A format inspired by Docker's `Dockerfile`.
+
+```dockerfile
+FROM llama3.2
+
+SYSTEM """
+You are a helpful Korean assistant.
+항상 한국어로 답변해주세요.
+"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER num_ctx 8192
+
+TEMPLATE """
+{{- if .System }}<|system|>
+{{ .System }}<|end|>
+{{- end }}
+{{- range .Messages }}<|{{ .Role }}|>
+{{ .Content }}<|end|>
+{{- end }}<|assistant|>
+"""
+```
+
+---
+
+## 8. Runner Architecture
+
+### Process-Isolation Design
+
+```
+[Ollama Server Process]
+        │
+        │ spawn Runner via exec.Command()
+        │ pass port/config via environment variables
+        ▼
+[Runner Process (llama.cpp / ollama-engine)]
+        │
+        │ HTTP server on localhost:<random port>
+        │ JSON RPC communication
+        ▼
+[GGML Backend]
+        │
+        ├── CUDA (libcuda.so)
+        ├── ROCm (librocblas.so)
+        ├── Metal (Apple Framework)
+        └── CPU (AVX2/AVX512)
+```
+
+**Why processes are isolated:**
+
+- A model crash does not bring down the entire server.
+- Prevents GPU memory leaks (process exit = memory returned).
+- Provides a unified interface across different backends (llama.cpp, Go native, imagegen).
+
+### llama.cpp CGO Integration
+
+`/llama/llama.go` calls llama.cpp C/C++ code directly via CGO.
+
+```go
+// CGO binding example (conceptual)
+/*
+#include "llama.h"
+*/
+import "C"
+
+func loadModel(modelPath string) *C.llama_model {
+    params := C.llama_model_default_params()
+    return C.llama_load_model_from_file(C.CString(modelPath), params)
+}
+```
+
+### New Ollama Engine (Go Native)
+
+A pure-Go inference engine implemented in `/runner/ollamarunner/`.
+
+- Multi-sequence parallel processing (batch inference)
+- KV cache slot management
+- Multimodal (image) support
+- Buildable without CGO since it is Go-native
+
+---
+
+## 9. Configuration System
+
+### Environment Variables (envconfig package)
+
+| Environment variable    | Default            | Description                                     |
+| ----------------------- | ------------------ | ----------------------------------------------- |
+| `OLLAMA_HOST`           | `127.0.0.1:11434`  | Server listening address                        |
+| `OLLAMA_MODELS`         | `~/.ollama/models` | Model storage directory                         |
+| `OLLAMA_KEEP_ALIVE`     | `5m`               | Duration to keep model in memory                |
+| `OLLAMA_NUM_PARALLEL`   | `1`                | Number of models allowed to load simultaneously |
+| `OLLAMA_MAX_QUEUE`      | `512`              | Maximum request queue size                      |
+| `OLLAMA_DEBUG`          | `false`            | Enable debug logging                            |
+| `OLLAMA_ORIGINS`        | localhost          | Allowed CORS origins                            |
+| `OLLAMA_NUM_GPU`        | `-1` (all)         | Number of layers to offload to GPU              |
+| `OLLAMA_NUM_THREAD`     | auto               | Number of CPU threads                           |
+| `OLLAMA_CONTEXT_LENGTH` | `2048`             | Default context length                          |
+| `OLLAMA_LLM_LIBRARY`    | auto               | Force a specific GPU library                    |
+| `OLLAMA_USE_MMAP`       | auto               | Whether to use memory mapping                   |
+
+### Inference Parameters (per-request configuration)
+
+```json
+{
+  "model": "llama3.2",
+  "messages": [...],
+  "options": {
+    "temperature": 0.8,
+    "top_k": 40,
+    "top_p": 0.9,
+    "min_p": 0.05,
+    "repeat_penalty": 1.1,
+    "num_ctx": 4096,
+    "num_predict": 512,
+    "seed": 42,
+    "stop": ["\n\n", "<|end|>"],
+    "num_gpu": 35
+  },
+  "keep_alive": "10m"
+}
+```
+
+---
+
+## 10. REST API Structure
+
+### Key Endpoints
+
+| Method   | Path                 | Description                                 |
+| -------- | -------------------- | ------------------------------------------- |
+| `POST`   | `/api/chat`          | Multi-turn chat (streaming / non-streaming) |
+| `POST`   | `/api/generate`      | Single-prompt text generation               |
+| `POST`   | `/api/embed`         | Text embedding generation                   |
+| `POST`   | `/api/pull`          | Download a model                            |
+| `POST`   | `/api/push`          | Upload a model                              |
+| `POST`   | `/api/create`        | Create a custom model from a Modelfile      |
+| `DELETE` | `/api/delete`        | Delete a model                              |
+| `POST`   | `/api/copy`          | Copy a model                                |
+| `GET`    | `/api/tags`          | List locally available models               |
+| `GET`    | `/api/ps`            | List currently loaded models                |
+| `POST`   | `/api/show`          | Show model details                          |
+| `HEAD`   | `/api/blobs/:digest` | Check if a blob exists                      |
+
+### OpenAI-Compatible Endpoints
+
+Ollama also supports the OpenAI API format via middleware.
+
+```
+POST /v1/chat/completions     → ChatHandler (OpenAI format)
+POST /v1/completions          → GenerateHandler (OpenAI format)
+POST /v1/embeddings           → EmbedHandler (OpenAI format)
+GET  /v1/models               → ListHandler (OpenAI format)
+```
+
+### Streaming Response Format (NDJSON)
+
+```json
+{"model":"llama3.2","message":{"role":"assistant","content":"안"},"done":false}
+{"model":"llama3.2","message":{"role":"assistant","content":"녕"},"done":false}
+{"model":"llama3.2","message":{"role":"assistant","content":"하세요"},"done":false}
+{"model":"llama3.2","message":{"role":"assistant","content":"!"},"done":false}
+{
+  "model":"llama3.2",
+  "done":true,
+  "total_duration": 2340000000,
+  "load_duration": 100000000,
+  "prompt_eval_count": 12,
+  "prompt_eval_duration": 340000000,
+  "eval_count": 48,
+  "eval_duration": 1900000000
+}
+```
+
+---
+
+## 11. Core Data Structures
+
+### Request Types
+
+```go
+type ChatRequest struct {
+    Model     string          `json:"model"`
+    Messages  []Message       `json:"messages"`
+    Stream    *bool           `json:"stream"`
+    Tools     []Tool          `json:"tools"`         // function calling
+    Think     *ThinkValue     `json:"think"`         // reasoning mode (DeepSeek, etc.)
+    KeepAlive *Duration       `json:"keep_alive"`
+    Options   map[string]any  `json:"options"`
+}
+
+type Message struct {
+    Role      string      `json:"role"`    // system/user/assistant/tool
+    Content   string      `json:"content"`
+    Images    []ImageData `json:"images"`  // Base64 images (multimodal)
+    ToolCalls []ToolCall  `json:"tool_calls"`
+}
+```
+
+### Runtime Options
+
+```go
+type Options struct {
+    // Sampling parameters (can be changed per request)
+    Temperature    float32   // creativity (0.0 – 2.0)
+    TopK           int       // Top-K sampling
+    TopP           float32   // Top-P (nucleus) sampling
+    MinP           float32   // Min-P sampling
+    RepeatPenalty  float32   // repetition penalty
+    Seed           int       // seed for reproducibility
+
+    // Load-time parameters (applied when the model is reloaded)
+    NumCtx         int       // context window size
+    NumBatch       int       // batch size
+    NumGPU         int       // GPU offload layers (-1 = all)
+    NumThread      int       // CPU thread count
+    UseMMap        *bool     // memory mapping
+    UseMLock       bool      // memory lock (prevent swapping)
+}
+```
+
+### Model Struct
+
+```go
+type Model struct {
+    Name           string
+    Config         model.ConfigV2
+    ModelPath      string
+    AdapterPaths   []string     // LoRA adapters
+    ProjectorPaths []string     // Vision projectors
+    System         string       // system prompt
+    Template       *template.Template
+    Digest         string
+    Options        map[string]any
+    Messages       []api.Message // few-shot examples
+}
+```
+
+---
+
+## 12. Directory Tree
+
+```
+ollama/
+├── api/              # Go client library + type definitions
+├── auth/             # Ed25519-based authentication
+├── cmd/              # CLI commands (cobra)
+│   └── cmd.go        # run, pull, push, list, show, create...
+├── convert/          # Model format conversion (HuggingFace → GGUF, etc.)
+├── discover/         # GPU detection (CUDA, ROCm, Metal)
+├── envconfig/        # Environment variable config parsing
+├── format/           # Formatting utilities (file size, duration, etc.)
+├── integration/      # Integration tests
+├── llama/            # llama.cpp CGO bindings + C/C++ sources
+├── llm/              # LlamaServer interface + implementations
+├── middleware/       # OpenAI/Anthropic compatibility middleware
+├── ml/               # ML backend abstraction layer
+├── model/            # Go-native model architecture implementations
+│   ├── llama/
+│   ├── mistral/
+│   ├── qwen/
+│   └── ...
+├── manifest/         # Model manifests + blob management
+├── runner/           # Model execution engines
+│   ├── llamarunner/  # llama.cpp-based
+│   ├── ollamarunner/ # Go-native
+│   └── x/
+│       ├── imagegen/ # image generation
+│       └── mlxrunner/# Apple MLX
+├── server/           # HTTP server + handlers + scheduler
+│   ├── routes.go     # route definitions
+│   ├── sched.go      # scheduler
+│   └── ...
+├── template/         # chat template system
+└── tokenizer/        # tokenizer utilities
+```
+
+---
+
+## 13. Key Design Decisions
+
+### 1. Process Isolation (Process-per-Model)
+
+Each model runs in its own separate process. If a model crashes, the main server stays alive, and when the process exits, GPU memory is automatically reclaimed.
+
+### 2. Content-Addressable Storage
+
+Like Docker Hub, models are managed as SHA256 digest-based layers. Multiple model tags can share the same weight file, saving disk space.
+
+### 3. Single-Threaded Model Loading
+
+Loading models onto the GPU is performed sequentially. Loading multiple models in parallel can cause GPU memory fragmentation and incorrect VRAM accounting.
+
+### 4. Keep-Alive Caching
+
+Once a model is loaded, it stays in memory for 5 minutes by default. Repeated requests receive immediate responses without reloading (which can take tens of seconds). Set `OLLAMA_KEEP_ALIVE=0` to unload immediately, or `-1` to keep the model loaded indefinitely.
+
+### 5. Dynamic GPU Layer Allocation
+
+When loading a model, Ollama measures available VRAM and offloads as many layers as possible to the GPU. When VRAM is insufficient, the remaining layers fall back to CPU RAM.
+
+---
+
+## 14. Performance Optimization Strategies
+
+| Optimization technique    | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| **KV cache reuse**        | Reuse the KV cache from a previous request via the `context` field       |
+| **Memory mapping (mmap)** | Map the GGUF file into memory for fast loading                           |
+| **Batch inference**       | Process multiple sequences in a single batch                             |
+| **GPU layer offloading**  | Distribute layers between GPU and CPU via the `num_gpu` param            |
+| **Token streaming**       | Deliver generated tokens to the client immediately, no buffering         |
+| **Reference counting**    | Share the same Runner instance for concurrent requests to the same model |
+| **CPU SIMD**              | Leverage AVX2/AVX512 instruction sets                                    |
+
+---
+
+## 15. Q&A: Real-World Usage Scenarios
+
+### Q1. After running `ollama run llama3.2`, responses are very slow. How can I speed things up?
+
+**Root cause analysis:**
+
+1. **GPU not being used**: Check the current model state with `ollama ps`. The GPU/CPU ratio is shown next to the `Size` column.
+
+2. **CPU fallback due to insufficient VRAM**: If the model is larger than the available VRAM, some layers run on the CPU. This can make inference more than 10× slower.
+
+**Solutions:**
+
+```bash
+# Check GPU status
+ollama ps
+
+# Inspect the number of layers loaded onto VRAM (debug logs)
+OLLAMA_DEBUG=1 ollama run llama3.2
+
+# If VRAM is insufficient, use a smaller quantized model
+ollama pull llama3.2:3b-instruct-q4_K_M  # 4-bit quantization, ~2GB
+
+# Or increase the CPU thread count
+OLLAMA_NUM_THREAD=8 ollama serve
+```
+
+---
+
+### Q2. I'm getting a "context length exceeded" error when calling the API.
+
+**Cause**: The request has exceeded the model's default context length (2048 tokens).
+
+**Solution:**
+
+```bash
+# Increase num_ctx in the request
+curl http://localhost:11434/api/chat -d '{
+  "model": "llama3.2",
+  "messages": [{"role": "user", "content": "긴 문서..."}],
+  "options": {
+    "num_ctx": 8192
+  }
+}'
+```
+
+Or change the default via a Modelfile.
+
+```dockerfile
+FROM llama3.2
+PARAMETER num_ctx 8192
+```
+
+```bash
+ollama create my-llama --file ./Modelfile
+```
+
+> **Note**: Increasing `num_ctx` grows the KV cache size and requires more VRAM. If VRAM is insufficient, the model may fail to load at all.
+
+---
+
+### Q3. I get a different answer every time I ask the same question. How do I get consistent results?
+
+**Cause**: By default, `temperature > 0`, so sampling introduces randomness.
+
+**Solution:**
+
+```bash
+curl http://localhost:11434/api/chat -d '{
+  "model": "llama3.2",
+  "messages": [{"role": "user", "content": "2+2=?"}],
+  "options": {
+    "temperature": 0,
+    "seed": 42
+  }
+}'
+```
+
+Setting `temperature: 0` always selects the highest-probability token.
+
+---
+
+### Q4. How do I access Ollama from an external network (another machine, a Docker container, etc.)?
+
+By default, Ollama only listens on `127.0.0.1:11434`.
+
+```bash
+# Listen on all interfaces
+OLLAMA_HOST=0.0.0.0 ollama serve
+
+# Or bind to a specific IP
+OLLAMA_HOST=192.168.1.100:11434 ollama serve
+```
+
+You may also need to configure CORS.
+
+```bash
+OLLAMA_ORIGINS="http://localhost:3000,https://myapp.com" ollama serve
+```
+
+> **Security note**: When exposing Ollama externally, restrict access with firewall rules. Ollama itself has no authentication (except in cloud mode).
+
+---
+
+### Q5. I want to use multiple models at the same time. Is that possible?
+
+Yes, but VRAM is the limiting factor.
+
+```bash
+# Set the number of models allowed to load simultaneously (default: 1)
+OLLAMA_NUM_PARALLEL=2 ollama serve
+```
+
+How it works:
+
+- First model loaded: `llama3.2` → placed in VRAM
+- Second model loaded: `mistral` → loaded alongside if VRAM allows; otherwise `llama3.2` is unloaded first
+
+To keep a model permanently in memory:
+
+```bash
+# Call the model with keep_alive=-1 to retain it indefinitely
+curl http://localhost:11434/api/generate -d '{
+  "model": "llama3.2",
+  "keep_alive": -1,
+  "prompt": ""
+}'
+```
+
+---
+
+### Q6. My internet connection dropped during `ollama pull`. Do I have to start over?
+
+No. Ollama supports **resumable downloads**.
+
+Partial download files are saved to `~/.ollama/models/blobs/` in the form `sha256-[digest]-partial`. Simply re-run the same `ollama pull` command and the download will resume from where it left off.
+
+---
+
+### Q7. What is the fastest configuration on Apple Silicon Macs?
+
+The Metal backend is activated automatically on Apple Silicon.
+
+```bash
+# Leverage Unified Memory (shared CPU+GPU memory)
+# MacBook Pro M3 Pro (18GB): can run llama3.2:8b Q8 fully on GPU
+
+# Disabling memory mapping slows initial loading but can improve inference speed
+OLLAMA_USE_MMAP=0 ollama serve
+
+# Use the MLX Runner (experimental — faster Metal inference)
+OLLAMA_LLM_LIBRARY=mlx ollama serve
+```
+
+Because M1/M2/M3 Unified Memory has no distinct VRAM boundary, setting `num_gpu=-1` makes the entire memory available to the GPU.
+
+---
+
+### Q8. How do I call the Ollama API from Python or JavaScript?
+
+**Python (official library):**
+
+```python
+import ollama
+
+# Streaming chat
+for chunk in ollama.chat(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': '한국의 수도는?'}],
+    stream=True
+):
+    print(chunk['message']['content'], end='', flush=True)
+
+# Embeddings
+response = ollama.embed(model='nomic-embed-text', input='텍스트')
+print(response['embeddings'])
+```
+
+**JavaScript/TypeScript (official library):**
+
+```typescript
+import ollama from 'ollama'
+
+const response = await ollama.chat({
+  model: 'llama3.2',
+  messages: [{ role: 'user', content: '안녕하세요!' }],
+  stream: true,
+})
+
+for await (const part of response) {
+  process.stdout.write(part.message.content)
+}
+```
+
+**Using the OpenAI-compatible SDK:**
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url='http://localhost:11434/v1',
+    api_key='ollama',  # any value works
+)
+
+response = client.chat.completions.create(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': 'Hello!'}],
+)
+```
+
+---
+
+### Q9. How do I integrate with LangChain or LlamaIndex?
+
+```python
+# LangChain
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(model="llama3.2", temperature=0)
+response = llm.invoke("파이썬으로 피보나치 수열을 구현해줘")
+
+# LlamaIndex
+from llama_index.llms.ollama import Ollama
+
+llm = Ollama(model="llama3.2", request_timeout=120.0)
+response = llm.complete("안녕하세요!")
+```
+
+---
+
+### Q10. Can I run a GGUF model from HuggingFace directly in Ollama?
+
+Yes. You can specify a local path or a HuggingFace repository in the `FROM` directive of a Modelfile.
+
+```bash
+# Option 1: local GGUF file
+cat > Modelfile << 'EOF'
+FROM /path/to/my-model.gguf
+
+PARAMETER temperature 0.7
+SYSTEM "You are a helpful assistant."
+EOF
+
+ollama create my-custom-model --file Modelfile
+ollama run my-custom-model
+
+# Option 2: directly from a HuggingFace repo
+ollama run hf.co/bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M
+```
+
+---
+
+### Q11. How do I use a Vision model (image understanding)?
+
+```bash
+# Use the LLaVA model
+ollama pull llava
+
+# Send an image via the API (Base64-encoded)
+import base64, ollama
+
+with open('image.jpg', 'rb') as f:
+    image_data = base64.b64encode(f.read()).decode()
+
+response = ollama.chat(
+    model='llava',
+    messages=[{
+        'role': 'user',
+        'content': '이 이미지에 무엇이 보이나요?',
+        'images': [image_data]
+    }]
+)
+```
+
+---
+
+### Q12. How do I run Ollama with a GPU inside a Docker container?
+
+```bash
+# NVIDIA GPU
+docker run -d \
+  --gpus=all \
+  -v ollama:/root/.ollama \
+  -p 11434:11434 \
+  --name ollama \
+  ollama/ollama
+
+# CPU-only (no GPU)
+docker run -d \
+  -v ollama:/root/.ollama \
+  -p 11434:11434 \
+  --name ollama \
+  ollama/ollama
+
+# Run a model
+docker exec -it ollama ollama run llama3.2
+```
+
+---
+
+### Q13. Is Function Calling (Tool Use) supported?
+
+Yes! It follows the OpenAI-compatible format.
+
+```python
+import ollama
+
+tools = [{
+    'type': 'function',
+    'function': {
+        'name': 'get_weather',
+        'description': '특정 도시의 날씨를 조회합니다',
+        'parameters': {
+            'type': 'object',
+            'properties': {
+                'city': {'type': 'string', 'description': '도시 이름'},
+            },
+            'required': ['city'],
+        },
+    },
+}]
+
+response = ollama.chat(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': '서울 날씨 알려줘'}],
+    tools=tools,
+)
+
+# If tool_calls are present, execute the corresponding function
+if response.message.tool_calls:
+    for tool_call in response.message.tool_calls:
+        print(f"Call: {tool_call.function.name}({tool_call.function.arguments})")
+```
+
+> **Note**: Tool use support varies by model. Recent models such as `llama3.2`, `qwen2.5`, and `mistral` are recommended.
+
+---
+
+_Source code version analyzed: Ollama v0.18.0 (as of March 2026)_

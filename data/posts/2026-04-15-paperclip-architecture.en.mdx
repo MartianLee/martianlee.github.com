@@ -1,0 +1,289 @@
+---
+title: 'Paperclip Architecture Analysis - AI Agent Virtual Company Orchestration'
+date: 2026-04-15 18:00:00 +0900
+tags: ['ai-agent', 'orchestration', 'architecture', 'paperclip', 'open-source']
+summary: 'An architectural analysis of Paperclip, an open-source control plane that operates AI agents as a single virtual company under an org chart, budget, and governance structure.'
+author: MartianLee
+---
+
+_This article is mostly written by Claude Code_
+
+## Project Overview
+
+Paperclip is an **open-source control plane for orchestrating a virtual company composed of AI agents**. Its core purpose is not to run a single agent, but to operate multiple agents as one "company" under an organizational hierarchy, budget, goals, and governance — all in one place.
+
+To quote the official description:
+
+> "If OpenClaw is an _employee_, Paperclip is the _company_."
+
+### Core Concepts
+
+| Concept       | Description                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Company**   | A virtual organizational unit with fully isolated data. Multiple companies can run within a single instance.                       |
+| **Agent**     | An AI agent assigned a role such as CEO, CTO, or Engineer. Each agent has a reporting relationship (`reportsTo`) in the org chart. |
+| **Issue**     | A unit of work assigned to an agent. Supports parent-child hierarchies and is traceable all the way up to the parent Goal.         |
+| **Heartbeat** | A periodic mechanism by which an agent wakes on a schedule to check and execute its assigned work.                                 |
+| **Adapter**   | An abstraction layer that connects actual AI runtimes (Claude Code, Codex, Cursor, etc.) to Paperclip.                             |
+| **Plugin**    | An extension module that runs as an isolated process and communicates over JSON-RPC 2.0.                                           |
+
+## Technology Stack
+
+| Layer          | Technology                                                                  |
+| -------------- | --------------------------------------------------------------------------- |
+| **Runtime**    | Node.js 20+, pnpm 9.15 monorepo                                             |
+| **Server**     | Express.js 5.1, TypeScript                                                  |
+| **Database**   | PostgreSQL (embedded-postgres auto-starts in development), Drizzle ORM 0.38 |
+| **Auth**       | better-auth 1.4 (JWT + API keys), local trust mode supported                |
+| **Frontend**   | React 19, React Router 7, TanStack React Query 5, Tailwind CSS 4, Radix UI  |
+| **Realtime**   | WebSocket (custom implementation, LiveUpdatesProvider)                      |
+| **CLI**        | Commander.js, @clack/prompts                                                |
+| **MCP**        | Model Context Protocol server (40+ tool definitions)                        |
+| **Plugin IPC** | JSON-RPC 2.0 over stdio                                                     |
+| **Testing**    | Vitest (unit), Playwright (E2E)                                             |
+| **Build**      | esbuild (CLI), Vite (UI)                                                    |
+
+## Architecture
+
+### Monorepo Structure
+
+```
+paperclip/
+├── server/                  # Express REST API + orchestration services
+├── ui/                      # React SPA (Vite)
+├── cli/                     # CLI tool (Commander.js)
+├── packages/
+│   ├── db/                  # Drizzle schema + migrations (90+ tables)
+│   ├── shared/              # Types, constants, validators (shared by front & back)
+│   ├── adapter-utils/       # Common adapter types
+│   ├── adapters/            # Agent adapter implementations (7 types)
+│   ├── mcp-server/          # MCP tool server
+│   └── plugins/             # Plugin SDK + examples
+├── skills/                  # Agent skill definitions
+├── docs/                    # External docs (Mintlify)
+└── tests/                   # E2E + smoke tests
+```
+
+### Server Layer Structure
+
+```
+HTTP Request
+  → Middleware (auth, logger, validate, board-mutation-guard)
+    → Routes (25+ route modules)
+      → Services (40+ service modules)
+        → Drizzle ORM → PostgreSQL
+```
+
+Routes are separated by domain: `companies`, `agents`, `issues`, `goals`, `approvals`, `plugins`, `adapters`, `costs`, `routines`, `dashboard`, and more.
+
+The service layer owns all business logic; routes never access the database directly. A dependency injection pattern is used in the form `agentService(db)`, `issueService(db)`, `companyService(db)`.
+
+### Adapter System
+
+Adapters are Paperclip's core abstraction — the integration point with actual AI runtimes.
+
+| Adapter          | Type ID            | Target Runtime     |
+| ---------------- | ------------------ | ------------------ |
+| Claude Local     | `claude_local`     | Claude Code CLI    |
+| Codex Local      | `codex_local`      | Codex CLI          |
+| Cursor           | `cursor`           | Cursor IDE         |
+| Gemini Local     | `gemini_local`     | Gemini CLI         |
+| OpenCode Local   | `opencode_local`   | OpenCode           |
+| Pi Local         | `pi_local`         | Pi                 |
+| OpenClaw Gateway | `openclaw_gateway` | OpenClaw bot infra |
+| Process          | `process`          | Shell command      |
+| HTTP             | `http`             | HTTP webhook       |
+
+Each adapter implements the following interface:
+
+```typescript
+interface ServerAdapterModule {
+  execute(ctx: AdapterExecutionContext): Promise<AdapterExecutionResult>
+  testEnvironment(): Promise<TestResult>
+  listSkills(): Promise<Skill[]>
+  syncSkills(): Promise<void>
+  sessionCodec: SessionCodec // session serialization/deserialization
+  models: Model[] // list of available LLM models
+}
+```
+
+The design allows swapping runtimes simply by changing an agent's `adapterType` field (e.g., Claude → Cursor).
+
+### Plugin System
+
+Plugins run as **isolated Node.js processes** and communicate with the host over JSON-RPC 2.0.
+
+**Plugin manifest structure:**
+
+- `tools` — tools that agents can invoke
+- `jobs` — async background jobs
+- `webhooks` — inbound webhooks
+- `launchers` — UI launchers
+- `ui.slots` — UI slot extensions
+- `configSchema` — configuration schema (JSON Schema)
+
+**State scoping**: Plugin state is isolated at the `instance` / `company` / `project` / `issue` / `agent` level.
+
+**Lifecycle**: `installed` → `ready` → `disabled` / `error` → `uninstalled`
+
+### Database Design
+
+The schema spans 90+ tables. Key tables by domain:
+
+| Domain    | Key Tables                                                                              |
+| --------- | --------------------------------------------------------------------------------------- |
+| Org       | `companies`, `agents`, `agent_config_revisions`, `agent_api_keys`                       |
+| Work      | `issues`, `issue_comments`, `issue_approvals`, `issue_documents`, `issue_work_products` |
+| Goals     | `goals`, `projects`, `project_workspaces`                                               |
+| Execution | `heartbeat_runs`, `heartbeat_run_events`, `execution_workspaces`                        |
+| Finance   | `cost_events`, `finance_events`, `budget_policies`, `budget_incidents`                  |
+| Plugins   | `plugins`, `plugin_config`, `plugin_state`, `plugin_jobs`, `plugin_webhooks`            |
+| Auth      | `auth_users`, `auth_sessions`, `board_api_keys`, `company_memberships`                  |
+| Audit     | `activity_log`                                                                          |
+
+**Design principles:**
+
+- Every domain entity includes a `companyId` foreign key, guaranteeing multi-tenancy isolation.
+- The `agent_config_revisions` table snapshots every configuration change for full audit history.
+- The `issues` table supports hierarchical tasks via a self-referencing `parentId`.
+
+### Frontend Architecture
+
+**Routing**: Company-prefix based (`/:companyPrefix/dashboard`, `/:companyPrefix/agents`, etc.)
+
+**State management**: Nested Context Provider pattern.
+
+```
+QueryClientProvider (30s stale time)
+  → ThemeProvider → CompanyProvider → LiveUpdatesProvider
+    → SidebarProvider → PanelProvider → PluginLauncherProvider → App
+```
+
+**Realtime updates**: The WebSocket-based `LiveUpdatesProvider` handles auto-reconnect, toast notifications (10-second cooldown), and cache invalidation.
+
+### CLI
+
+Built on Commander.js, the CLI provides the following command groups:
+
+| Group       | Example Commands                          |
+| ----------- | ----------------------------------------- |
+| `onboard`   | Initial setup wizard                      |
+| `company`   | list, create, export, import              |
+| `agent`     | list, get, create, update, skills         |
+| `issue`     | list, create, get, update, comment        |
+| `heartbeat` | run (trigger an agent heartbeat directly) |
+| `routine`   | list, create, update                      |
+| `plugin`    | list, install, uninstall                  |
+| `doctor`    | diagnostics and auto-repair               |
+
+Quick start: `npx paperclipai onboard --yes`
+
+### MCP Server
+
+40+ tools are defined with Zod schemas, allowing agents to call the Paperclip API directly. Key tools include `paperclipMe`, `paperclipListIssues`, `paperclipCheckoutIssue`, `paperclipAddComment`, `paperclipCreateApproval`, `paperclipUpsertIssueDocument`, `paperclipRawRequest`, and more.
+
+## Core Design Patterns
+
+### Atomic Task Checkout
+
+Issue checkout and budget deduction are handled atomically. Two agents cannot check out the same issue simultaneously, which prevents double execution.
+
+### Goal-Aware Execution
+
+Every task carries the full ancestry chain up to its parent Goal. Agents always receive context for not just _what_ to do, but _why_ they are doing it.
+
+### Config Revision Tracking
+
+Every agent configuration change records a full snapshot in `agent_config_revisions`. Bad changes can be safely rolled back at any time.
+
+### Company-Scoped Multi-Tenancy
+
+Every entity is scoped by `companyId`, enabling multiple fully isolated companies within a single instance. Company boundaries are enforced at both the route and service layer.
+
+### Event-Driven Plugin Architecture
+
+Domain events (`issue.created`, `agent.wakeup`, etc.) are published through the Activity Log and Plugin Event Bus. Plugins subscribe to events to run external integrations, custom logic, and more.
+
+## Data Flow Example: Task Creation → Execution → Completion
+
+1. A user (or a parent agent) calls `POST /api/companies/{cid}/issues`
+2. `issueService.create()` inserts a record into the issues table
+3. The issue is assigned to an agent (`assigneeAgentId` is set)
+4. A Heartbeat trigger or manual wake brings the agent online
+5. The agent calls `paperclipCheckoutIssue()` via MCP tool → atomic checkout
+6. `Adapter.execute()` → the actual AI runtime (Claude Code, etc.) performs the work
+7. During execution, realtime logs stream back via the `onLog()` callback
+8. On completion, token usage is recorded in `costEvents`
+9. Issue status transitions to `done`; an entry is written to `activity_log`
+10. The UI reflects the update in realtime over WebSocket
+
+## Real-World Use Cases
+
+### Automated Product Development for an AI Startup
+
+Imagine a solo founder who wants to build an AI note-taking app.
+
+- **CEO Agent** (Claude Code): strategy, task breakdown, progress review
+- **CTO Agent** (Claude Code): technical architecture decisions, code review
+- **3 Engineer Agents** (Claude Code / Codex): backend, frontend, and infrastructure respectively
+- **Designer Agent** (Cursor): UI/UX design and component implementation
+- **QA Agent** (Claude Code): writing and running tests
+
+The founder sets a Goal; the CEO agent decomposes it into sub-projects and issues; the CTO decides the tech stack and delegates to the engineers. Each engineer wakes periodically on its Heartbeat schedule, checks out its assigned issue, and implements it. Instead of juggling 20 terminal windows to manage agents manually, the founder supervises the entire development pipeline from a single dashboard.
+
+### Content Marketing Automation Company
+
+This scenario sets up a "content company" that automatically produces and distributes tech blog posts, social media content, and newsletters. The company is staffed with CMO, Researcher, Writer, Designer, and Publisher agents. Repeated tasks are auto-scheduled via the Routine feature, and quality is enforced through Approval gates.
+
+### Open-Source Project Maintenance Automation
+
+This scenario automates issue triage, dependency updates, and releases for a popular open-source library. A plugin receives incoming GitHub Webhooks to auto-create new issues, and a team of PM → Engineer → QA → DevOps agents handles them systematically within a defined governance structure.
+
+## Q&A: Frequently Asked Questions
+
+### How is data isolation between Companies guaranteed in a multi-tenant setup?
+
+Paperclip's multi-tenancy is implemented as **application-level isolation**. Every domain table includes a `companyId` foreign key, and company boundaries are enforced at the route middleware and service layer. Database-level RLS (Row-Level Security) is not applied.
+
+From a security standpoint, omitting a `companyId` condition from a single query could result in a data leak. For stricter isolation in production, adding PostgreSQL RLS policies or adopting per-tenant schema separation are viable options.
+
+### What happens if Heartbeats are triggered concurrently?
+
+Paperclip resolves concurrent execution through the **Atomic Issue Checkout** pattern. A single issue can be assigned to only one agent, and checkouts are performed atomically. If a run is already in progress according to the `heartbeat_runs` table, duplicate execution is blocked. When a budget ceiling is reached, the agent is automatically paused.
+
+### Can a plugin failure affect the host?
+
+Each plugin runs as an independent Node.js child process. A plugin crash does not affect the host process; the plugin's state simply transitions to `error`. However, an infinite loop or memory leak inside a plugin could indirectly exhaust system-wide memory, so in production it is advisable to also apply cgroup or container resource limits.
+
+### How is runaway cost prevented?
+
+Both per-agent monthly budgets (`budgetMonthlyCents`) and per-company monthly budgets can be configured. Once a ceiling is reached, the agent is automatically set to `paused` and no further Heartbeats are executed. Note that because budget deduction is applied after a run completes, a single very expensive execution may exceed the limit by a small margin.
+
+### Can agents communicate with each other?
+
+Yes. Agents can be mentioned via issue comments and `@mention`, delegated to through sub-issue creation, and escalated to through Approval requests. Communication is **asynchronous messaging**, not real-time chat.
+
+## Roadmap
+
+| Status    | Item                                                                                                                                                               |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Completed | Plugin System, OpenClaw integration, Company Import/Export, AGENTS.md config, Skills Manager, Scheduled Routines, Budgeting, Agent Reviews & Approvals             |
+| Planned   | Multiple Human Users, Cloud/Sandbox Agents, Artifacts, Memory & Knowledge, Deep Planning, Work Queues, Self-Organization, CEO Chat, Cloud Deployments, Desktop App |
+
+## Summary
+
+Paperclip is a project that places the **organizational management metaphor** at the heart of a new domain: AI agent orchestration. What makes it distinctive is not that it is a simple task queue or workflow builder, but that it applies the foundational elements of corporate operations — org charts, budgets, governance, and audit logs — to the world of AI agents.
+
+**Strengths:**
+
+- The adapter abstraction yields a flexible architecture that can integrate a wide variety of AI runtimes
+- A comprehensive data model spanning 90+ tables supports complex agent operation scenarios
+- The plugin system achieves both stability and extensibility through process isolation + JSON-RPC
+- Multiple access paths are provided: CLI, MCP server, REST API, and WebSocket
+
+**Challenges:**
+
+- A schema of 90+ tables carries a steep learning curve
+- Application-level tenancy isolation requires thorough security validation in large-scale multi-tenant environments
+- The embedded PostgreSQL-based local development experience is convenient, but operational complexity increases when transitioning to production
+- Key roadmap items such as Memory & Knowledge and Self-Organization remain unfinished

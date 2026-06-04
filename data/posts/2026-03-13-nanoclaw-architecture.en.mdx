@@ -1,0 +1,849 @@
+---
+slug: '2026-03-13-nanoclaw-architecture'
+title: 'NanoClaw Architecture Analysis / Real-World Scenario Q&A'
+crawlertitle: 'NanoClaw Architecture Analysis / Real-World Scenario Q&A'
+summary: 'A comprehensive architecture analysis of NanoClaw, a TypeScript-based Personal Claude Assistant. Covers the single-process orchestrator, container-isolated agents, channel skill system, and security design in detail.'
+date: 2026-03-13 00:00:00 +0900
+categories: posts
+tags: ['nanoclaw', 'architecture', 'typescript', 'ai', 'agent', 'claude']
+author: MartianLee
+---
+
+> Analyzed: 2026-03-13
+> Version: v1.2.12
+> Repository: https://github.com/qwibitai/nanoclaw
+
+---
+
+_This article is mostly written by Claude Code_
+
+---
+
+## 1. Project Overview
+
+**NanoClaw** is a TypeScript-based Personal Claude Assistant — a lightweight local AI assistant that runs directly on the user's machine.
+
+- **Slogan:** "Small enough to understand. Secure enough to trust."
+- **Core values:** Simplicity, container-based security, local-first, code-as-customization
+- **Design philosophy:** Unlike OpenClaw (500k+ LOC), NanoClaw is a small codebase (~7,300 LOC) you can actually read, understand, and modify
+- **Supported channels:** WhatsApp, Telegram, Slack, Discord, Gmail (extensible via skills)
+- **Supported platforms:** macOS (launchd), Linux (systemd)
+
+NanoClaw's defining characteristic is the philosophy that **code is configuration**. There are no separate config files — you add features by merging skill branches, and change behavior by editing the code directly. Only the minimum necessary code exists; no framework abstractions.
+
+---
+
+## 2. Tech Stack
+
+| Area              | Technology                            |
+| ----------------- | ------------------------------------- |
+| Language          | TypeScript (ESM)                      |
+| Runtime           | Node.js 20+                           |
+| Package manager   | npm                                   |
+| Build             | tsc (TypeScript compiler)             |
+| Tests             | Vitest                                |
+| Linter/Formatter  | Prettier                              |
+| Git Hook          | Husky                                 |
+| Database          | SQLite (better-sqlite3, synchronous)  |
+| AI runtime        | @anthropic-ai/claude-code (Agent SDK) |
+| Scheduler         | cron-parser                           |
+| Logger            | pino                                  |
+| Schema validation | zod                                   |
+| Containers        | Docker / Apple Container              |
+| Service manager   | macOS launchd / Linux systemd         |
+
+### Channel SDKs (installed via skills)
+
+| Channel  | Library                 |
+| -------- | ----------------------- |
+| WhatsApp | @whiskeysockets/baileys |
+| Telegram | node-telegram-bot-api   |
+| Slack    | @slack/bolt             |
+| Discord  | discord.js              |
+| Gmail    | googleapis              |
+
+### Dependency footprint
+
+The NanoClaw core relies on just **5 runtime dependencies**: `better-sqlite3`, `cron-parser`, `pino`, `yaml`, and `zod`. Channel libraries are only added when the corresponding skill is merged.
+
+---
+
+## 3. Overall Architecture
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                          NanoClaw System                                 ║
+║                                                                          ║
+║  ┌─────────────────────────────────────────────────────────────────┐    ║
+║  │              Channels (Self-Registering Skills)                  │    ║
+║  │  WhatsApp │ Telegram │ Slack │ Discord │ Gmail │ (custom)        │    ║
+║  │           └─────────────────┬───────────────────                 │    ║
+║  │                  registerChannel() at startup                    │    ║
+║  └───────────────────────────┬─────────────────────────────────────┘    ║
+║                               │ onMessage(jid, NewMessage)               ║
+║                               ▼                                          ║
+║  ┌────────────────────────────────────────────────────────────────────┐ ║
+║  │                     SQLite Database                                │ ║
+║  │  chats │ messages │ scheduled_tasks │ sessions │ registered_groups │ ║
+║  └───────────────────────────┬────────────────────────────────────────┘ ║
+║                               │ poll every 2s                            ║
+║                               ▼                                          ║
+║  ┌────────────────────────────────────────────────────────────────────┐ ║
+║  │              Orchestrator (src/index.ts)                           │ ║
+║  │                                                                    │ ║
+║  │  Message Loop ──┬── Trigger Check (@Andy)                         │ ║
+║  │                 ├── Group Queue (per-group concurrency)            │ ║
+║  │                 └── runAgent()                                     │ ║
+║  │                                                                    │ ║
+║  │  IPC Watcher ───── File-based IPC (poll every 1s)                 │ ║
+║  │  Scheduler ─────── Cron/Interval/Once tasks (poll every 60s)      │ ║
+║  │  Credential Proxy ─ HTTP proxy on port 3001                       │ ║
+║  └───────────────────────────┬────────────────────────────────────────┘ ║
+║                               │ spawn container                          ║
+║                               ▼                                          ║
+║  ┌────────────────────────────────────────────────────────────────────┐ ║
+║  │              Container Agent (Docker / Apple Container)            │ ║
+║  │                                                                    │ ║
+║  │  entrypoint.sh → agent-runner/index.ts                            │ ║
+║  │       ├── Claude Agent SDK (streaming)                            │ ║
+║  │       ├── Tools: Bash, File I/O, Web, Browser                     │ ║
+║  │       └── MCP: ipc-mcp-stdio.ts (scheduler tools)                 │ ║
+║  └───────────────────────────┬────────────────────────────────────────┘ ║
+║                               │ stdout (JSON markers)                    ║
+║                               ▼                                          ║
+║  ┌──────────────────────────────────────────────────────────────────┐   ║
+║  │              Response Routing (src/router.ts)                    │   ║
+║  │  Strip <internal> tags → findChannel() → sendMessage()          │   ║
+║  └──────────────────────────────────────────────────────────────────┘   ║
+╚══════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. Core Module Structure
+
+| Module               | Role                                     | Key file                                      |
+| -------------------- | ---------------------------------------- | --------------------------------------------- |
+| **Orchestrator**     | Message loop, agent invocation           | `src/index.ts`                                |
+| **Channel Registry** | Self-registration of channels            | `src/channels/registry.ts`                    |
+| **Router**           | Message formatting & outbound routing    | `src/router.ts`                               |
+| **Config**           | Environment-variable-based configuration | `src/config.ts`                               |
+| **Container Runner** | Container spawning & mount management    | `src/container-runner.ts`                     |
+| **Group Queue**      | Per-group queue & concurrency control    | `src/group-queue.ts`                          |
+| **IPC Watcher**      | File-based IPC handling                  | `src/ipc.ts`                                  |
+| **Task Scheduler**   | Scheduled task execution                 | `src/task-scheduler.ts`                       |
+| **Database**         | SQLite CRUD (synchronous)                | `src/db.ts`                                   |
+| **Credential Proxy** | Credential-isolation HTTP proxy          | `src/credential-proxy.ts`                     |
+| **Mount Security**   | Mount path validation                    | `src/mount-security.ts`                       |
+| **Agent Runner**     | In-container agent execution             | `container/agent-runner/src/index.ts`         |
+| **IPC MCP**          | Container → host MCP tools               | `container/agent-runner/src/ipc-mcp-stdio.ts` |
+
+---
+
+## 5. Message Processing Pipeline
+
+```
+[Incoming WhatsApp message from user]
+        │
+        ▼
+WhatsApp Channel (Baileys)
+  └── onMessage(jid, NewMessage) callback fired
+        │
+        ▼
+src/db.ts → storeMessage()
+  └── Persisted to SQLite messages table
+        │
+        ▼
+src/index.ts → startMessageLoop() [2-second poll]
+  └── getNewMessages() — fetch unprocessed messages
+        │
+        ├── [Non-Main group] Check trigger pattern (@Andy)
+        │     ├── No trigger → hold in DB
+        │     └── Trigger found → continue
+        │
+        ▼
+processGroupMessages()
+  └── Collect pending messages for the group & format as XML
+        │
+        ▼
+src/group-queue.ts → enqueueMessageCheck()
+  └── Check concurrent container count (MAX_CONCURRENT_CONTAINERS: 5)
+        │
+        ▼
+src/container-runner.ts → runContainerAgent()
+  └── Build volume mount config (group folder, session directory, etc.)
+      └── docker run / container run
+            │
+            ▼
+  container/agent-runner/src/index.ts
+    └── Claude Agent SDK (streaming execution)
+          │
+          ├── Tool execution (Bash, file, web, browser)
+          └── MCP tools (schedule_task, send_message, etc.)
+                │ stdout JSON (sentinel markers)
+                ▼
+src/index.ts → receive result
+  └── Strip <internal> tags → router.ts → channel response
+        │
+        ▼
+WhatsApp Channel → sendMessage() → reply delivered to user
+```
+
+### Group queue state transitions
+
+| State        | Description                                                 |
+| ------------ | ----------------------------------------------------------- |
+| idle         | No active container; waiting                                |
+| running      | Container executing (processing a message or task)          |
+| idle-waiting | Waiting for container to finish; can receive piped messages |
+| pending      | Message or task queued and waiting                          |
+
+---
+
+## 6. Orchestrator Details
+
+### Initialization sequence (`src/index.ts`)
+
+```
+1. initDatabase() — SQLite init & migrations
+2. startCredentialProxy() — Start credential proxy (port 3001)
+3. Load channel factories — Initialize channels self-registered via registerChannel()
+4. getRegisteredGroups() — Load registered group list from DB
+5. startIpcWatcher() — Start file IPC watcher
+6. startSchedulerLoop() — Start scheduled task loop
+7. Check for unprocessed messages (crash recovery)
+8. startMessageLoop() — Start main message polling loop
+```
+
+### Trigger logic
+
+```typescript
+// Main group: no trigger required, all messages are processed
+// Non-Main groups: processed only when the @Andy pattern is present
+const TRIGGER_PATTERN = new RegExp(`@${ASSISTANT_NAME}`, 'i')
+
+if (!group.isMain && !messages.some((m) => TRIGGER_PATTERN.test(m.content))) {
+  // Hold message in DB, wait for trigger
+  return
+}
+```
+
+### Key state
+
+```typescript
+// Last-processed timestamp (per group)
+lastAgentTimestamp: Record<groupFolder, timestamp>
+
+// Group session IDs (container continuity)
+sessions: Map<groupFolder, sessionId>
+
+// Registered group metadata
+registeredGroups: Map<jid, RegisteredGroup>
+```
+
+---
+
+## 7. Container Agent System
+
+### Container execution model
+
+```
+Host process
+  └── docker run / container run
+        ├── stdin  ← ContainerInput JSON
+        │           { messages, group, sessionId, isScheduledTask, ... }
+        └── stdout → ContainerOutput JSON (sentinel markers)
+                     { result, sessionId, ... }
+```
+
+### Volume mount policy
+
+| Mount          | Source                           | Container path        | Permissions           |
+| -------------- | -------------------------------- | --------------------- | --------------------- |
+| Group folder   | `groups/{name}/`                 | `/workspace/group`    | Read/Write            |
+| Global memory  | `groups/global/`                 | `/workspace/global`   | Read-only             |
+| Project root   | `nanoclaw/`                      | `/workspace/project`  | Read-only (Main only) |
+| Claude session | `data/sessions/{group}/.claude/` | `/home/node/.claude/` | Read/Write            |
+| IPC folder     | `data/ipc/{group}/`              | `/workspace/ipc/`     | Read/Write            |
+| Skills folder  | `container/skills/`              | (session sync)        | —                     |
+| Extra mounts   | Allowlist-based                  | User-defined          | User-defined          |
+
+### Dockerfile structure
+
+```dockerfile
+FROM node:22-slim
+
+# Install Chromium and browser automation libraries
+RUN apt-get install -y chromium ...
+
+# Global packages
+RUN npm install -g agent-browser @anthropic-ai/claude-code
+
+# Compile agent runner
+COPY container/agent-runner/ /app/agent-runner/
+RUN tsc ...
+
+# Run as non-root user
+USER node
+ENTRYPOINT ["/app/entrypoint.sh"]
+```
+
+### Agent I/O protocol
+
+```typescript
+// stdin (host → container)
+interface ContainerInput {
+  messages: string // XML-formatted messages
+  group: RegisteredGroup // group metadata
+  sessionId?: string // session continuity
+  isScheduledTask?: boolean // whether this is a scheduled task
+  taskPrompt?: string // task prompt
+}
+
+// stdout (container → host, wrapped in sentinel markers)
+interface ContainerOutput {
+  result: string // agent response
+  sessionId: string // new session ID
+  error?: string
+}
+
+// Markers
+const START = '---NANOCLAW_OUTPUT_START---'
+const END = '---NANOCLAW_OUTPUT_END---'
+```
+
+### Follow-up messages (IPC input)
+
+```
+When a new message arrives while a container is actively running:
+
+Host → writes /workspace/ipc/input/{timestamp}.json
+Container (500ms poll) → detects file → appends to MessageStream
+Agent → processes follow-up message → sends response
+(Container stays alive; idle timeout 30 minutes)
+```
+
+---
+
+## 8. Channel System
+
+### Self-registering channels
+
+NanoClaw channels exist as separate Git branches (skills). When merged, they add a file to `src/channels/` and self-register at startup.
+
+```typescript
+// src/channels/registry.ts
+registerChannel('whatsapp', async (config) => {
+  if (!process.env.WHATSAPP_ENABLED) return null
+  return new WhatsAppChannel(config)
+})
+
+// Looked up by the orchestrator
+const factory = getChannelFactory('whatsapp')
+const channel = await factory?.(config)
+```
+
+### Channel interface
+
+```typescript
+interface Channel {
+  name: string
+  connect(): Promise<void>
+  disconnect(): Promise<void>
+  sendMessage(jid: string, text: string): Promise<void>
+  isConnected(): boolean
+  ownsJid(jid: string): boolean
+  setTyping?(jid: string, typing: boolean): Promise<void>
+  syncGroups?(): Promise<void>
+}
+```
+
+### Graceful skip when channel is absent
+
+```typescript
+// Returns null if credentials are missing → orchestrator skips it
+const factory = getChannelFactory(name)
+if (!factory) return // channel not installed
+const channel = await factory(config)
+if (!channel) return // no credentials
+```
+
+### Multi-channel routing
+
+```typescript
+// Route response back to the originating channel
+function findChannel(jid: string): Channel | undefined {
+  return channels.find((ch) => ch.ownsJid(jid))
+}
+```
+
+---
+
+## 9. Scheduler & IPC System
+
+### Scheduler (`src/task-scheduler.ts`)
+
+```
+startSchedulerLoop() [60-second poll]
+  └── getDueTasks() — next_run <= now AND status='active'
+        │
+        ├── [cron] Calculate next run time with cron-parser
+        ├── [interval] Last run + interval (drift-safe)
+        └── [once] Single execution, then mark as completed
+              │
+              ▼
+        group-queue.ts → enqueueTask()
+              │
+              ▼
+        runContainerAgent() (isolated or group context)
+              │
+              ▼
+        Result → send_message IPC tool → channel response
+        Logs  → task_run_logs table
+```
+
+### IPC system (`src/ipc.ts`)
+
+File-based unidirectional IPC. The container writes a JSON file; the host reads and deletes it.
+
+```
+Container side (MCP tools)
+  ipc-mcp-stdio.ts
+    └── Creates /workspace/ipc/{group}/messages/{id}.json
+          { type: 'schedule_task', payload: {...} }
+
+Host side (1-second poll)
+  src/ipc.ts → startIpcWatcher()
+    └── Detects file → parses content → executes command → deletes file
+```
+
+### Supported IPC commands
+
+| Command          | Description                 | Permission                          |
+| ---------------- | --------------------------- | ----------------------------------- |
+| `schedule_task`  | Schedule a new task         | Own group only                      |
+| `pause_task`     | Pause a task                | Own group only                      |
+| `resume_task`    | Resume a task               | Own group only                      |
+| `cancel_task`    | Cancel a task               | Own group only                      |
+| `update_task`    | Update a task               | Own group only                      |
+| `list_tasks`     | List tasks                  | Own group only                      |
+| `send_message`   | Send a message to a channel | Main: any JID; others: own JID only |
+| `register_group` | Register a new group        | Main group only                     |
+| `refresh_groups` | Refresh group metadata      | Main group only                     |
+
+---
+
+## 10. Security Architecture
+
+### Multi-layer isolation model
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   Host System                        │
+│                                                     │
+│  Credential Proxy ────────── Real API keys (inaccessible to container) │
+│  Mount Allowlist ──────────── .ssh, .aws, etc. blocked                  │
+│                                                     │
+│  ┌─────────────────────────────────────────────┐   │
+│  │           Container (isolation boundary)     │   │
+│  │                                             │   │
+│  │  Non-root user (node, uid 1000)             │   │
+│  │  Read/write only to /workspace/group        │   │
+│  │  Only placeholder credentials injected      │   │
+│  │                                             │   │
+│  │  ┌─────────────────────────────────────┐   │   │
+│  │  │         Agent execution space        │   │   │
+│  │  │  Group memory, session isolation     │   │   │
+│  │  └─────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+```
+
+### Credential proxy (`src/credential-proxy.ts`)
+
+```
+Container
+  └── ANTHROPIC_API_KEY=placeholder
+      ANTHROPIC_BASE_URL=http://host:3001
+        │
+        ▼ HTTP request
+Credential Proxy (port 3001)
+  └── Injects real API key
+        │ HTTP request (header replaced)
+        ▼
+Anthropic API (api.anthropic.com)
+```
+
+Two authentication modes:
+
+- `api-key`: injects the real key into the `x-api-key` header
+- `oauth`: replaces the Bearer token (OAuth flow)
+
+### Mount security (`src/mount-security.ts`)
+
+```json
+// ~/.config/nanoclaw/mount-allowlist.json (host-only; cannot be mounted into container)
+{
+  "allowedRoots": [{ "path": "~/Documents", "label": "Documents" }],
+  "blockedPatterns": [
+    ".ssh",
+    ".gnupg",
+    ".aws",
+    ".env",
+    "credentials",
+    "id_rsa",
+    "id_ed25519",
+    "*.pem",
+    "*.key"
+  ],
+  "nonMainReadOnly": true
+}
+```
+
+### IPC permission model
+
+```
+Main group container
+  ├── Can send messages to any JID
+  ├── Can manage tasks for any group
+  └── Can register new groups
+
+Non-Main group container
+  ├── Can send messages to its own JID only
+  ├── Can manage its own group's tasks only
+  └── Cannot register groups
+```
+
+---
+
+## 11. Core Data Structures
+
+### SQLite schema
+
+```sql
+-- Group/chat metadata
+CREATE TABLE chats (
+  jid TEXT PRIMARY KEY,
+  name TEXT,
+  last_message_time INTEGER,
+  channel TEXT,        -- 'whatsapp', 'telegram', etc.
+  is_group INTEGER
+);
+
+-- Message history
+CREATE TABLE messages (
+  id TEXT PRIMARY KEY,
+  chat_jid TEXT,
+  sender TEXT,
+  timestamp INTEGER,
+  content TEXT,
+  is_bot_message INTEGER DEFAULT 0
+);
+
+-- Scheduled tasks
+CREATE TABLE scheduled_tasks (
+  id INTEGER PRIMARY KEY,
+  group_folder TEXT,
+  chat_jid TEXT,
+  prompt TEXT,
+  schedule_type TEXT,   -- 'cron' | 'interval' | 'once'
+  schedule_value TEXT,  -- cron expression, ms value, or ISO date
+  context_mode TEXT,    -- 'group' | 'isolated'
+  next_run INTEGER,
+  status TEXT           -- 'active' | 'paused' | 'completed'
+);
+
+-- Task execution logs
+CREATE TABLE task_run_logs (
+  id INTEGER PRIMARY KEY,
+  task_id INTEGER,
+  started_at INTEGER,
+  duration_ms INTEGER,
+  status TEXT,
+  result TEXT,
+  error TEXT
+);
+
+-- Router state (JSON key-value)
+CREATE TABLE router_state (
+  key TEXT PRIMARY KEY,
+  value TEXT
+  -- last_timestamp: global last-processed timestamp
+  -- last_agent_timestamp: { groupFolder: timestamp } JSON
+);
+
+-- Group session IDs
+CREATE TABLE sessions (
+  group_folder TEXT PRIMARY KEY,
+  session_id TEXT
+);
+
+-- Registered groups
+CREATE TABLE registered_groups (
+  jid TEXT PRIMARY KEY,
+  name TEXT,
+  folder TEXT,
+  trigger TEXT,
+  is_main INTEGER,
+  added_at INTEGER
+);
+```
+
+### Core types
+
+```typescript
+// Message passed from channel to host
+interface NewMessage {
+  id: string
+  chat_jid: string // "1234567890@s.whatsapp.net"
+  sender: string
+  sender_name: string
+  content: string
+  timestamp: number
+  is_from_me?: boolean
+  is_bot_message?: boolean
+}
+
+// Group metadata stored in DB
+interface RegisteredGroup {
+  name: string
+  folder: string // "groups/family-chat"
+  trigger: string // "@Andy"
+  added_at: number
+  isMain?: boolean
+  requiresTrigger?: boolean
+  containerConfig?: ContainerConfig
+}
+
+// Scheduled task
+interface ScheduledTask {
+  id: number
+  group_folder: string
+  chat_jid: string
+  prompt: string
+  schedule_type: 'cron' | 'interval' | 'once'
+  schedule_value: string
+  context_mode: 'group' | 'isolated'
+  next_run: number
+  status: 'active' | 'paused' | 'completed'
+}
+```
+
+### Message XML format
+
+The format in which messages are passed to the container. More token-efficient than JSON.
+
+```xml
+<messages timezone="Asia/Seoul">
+  <message id="abc123" sender="+82101234567" sender_name="Alice" timestamp="2026-03-13T10:00:00+09:00">
+    <content>@Andy 오늘 날씨 어때?</content>
+  </message>
+  <message id="def456" sender="+82109876543" sender_name="Bob" timestamp="2026-03-13T10:01:00+09:00">
+    <content>나도 궁금해</content>
+  </message>
+</messages>
+```
+
+---
+
+## 12. Layer Dependency Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     Channel Layer                             │
+│  WhatsApp / Telegram / Slack / Discord / Gmail                │
+│  (self-registering, implements Channel interface)             │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ onMessage callback
+┌──────────────────────────────▼───────────────────────────────┐
+│                     Data Layer                                │
+│  src/db.ts (SQLite, better-sqlite3, synchronous)             │
+│  storeMessage / getNewMessages / getRegisteredGroups / ...    │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ DB read/write
+┌──────────────────────────────▼───────────────────────────────┐
+│                   Orchestration Layer                         │
+│  src/index.ts → src/group-queue.ts                           │
+│  Message loop / trigger check / queue management / concurrency│
+└──────────────────────────────┬───────────────────────────────┘
+                               │ spawn + stdin/stdout
+┌──────────────────────────────▼───────────────────────────────┐
+│                   Container Layer                             │
+│  src/container-runner.ts                                     │
+│  Volume mounts / credential proxy injection / skill sync     │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ Claude Agent SDK
+┌──────────────────────────────▼───────────────────────────────┐
+│                   Agent Layer                                 │
+│  container/agent-runner/src/index.ts                         │
+│  Claude Agent SDK / MCP server / IPC polling                 │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ HTTP (proxy)
+┌──────────────────────────────▼───────────────────────────────┐
+│                   External Layer                              │
+│  Anthropic API (api.anthropic.com)                           │
+└──────────────────────────────────────────────────────────────┘
+
+Parallel systems:
+  src/ipc.ts             ─── File IPC watcher (1-second poll)
+  src/task-scheduler.ts  ─── Scheduled tasks (60-second poll)
+  src/credential-proxy.ts ── HTTP proxy (port 3001)
+```
+
+---
+
+## 13. NanoClaw vs. OpenClaw
+
+| Attribute      | NanoClaw                              | OpenClaw                           |
+| -------------- | ------------------------------------- | ---------------------------------- |
+| Codebase size  | ~7,300 LOC                            | 500,000+ LOC                       |
+| Dependencies   | 5 (core)                              | Dozens                             |
+| AI runtime     | Claude Agent SDK (Anthropic official) | Pi Agent (custom implementation)   |
+| LLM support    | Claude only                           | 20+ LLMs                           |
+| Isolation      | OS containers (Docker/Apple)          | Application-level (sandbox policy) |
+| Extensibility  | Git branch skills                     | Plugin npm packages                |
+| Configuration  | Env vars + code edits                 | config.yml (hot-reload supported)  |
+| Communication  | File IPC + stdin/stdout               | WebSocket RPC                      |
+| Memory         | Per-group CLAUDE.md                   | Vector search memory               |
+| Scheduler      | Built-in (cron-parser)                | Built-in (croner)                  |
+| UI             | None (CLI only)                       | WebUI + macOS/iOS/Android apps     |
+| Learning curve | Low (edit code directly)              | High (must learn config system)    |
+| Hackability    | Very high                             | Low (many abstraction layers)      |
+
+---
+
+## 14. Directory Tree
+
+```
+nanoclaw/
+├── src/                          # Host process source
+│   ├── index.ts                  # Orchestrator (main entry)
+│   ├── channels/
+│   │   └── registry.ts           # Channel self-registration
+│   ├── router.ts                 # Message formatting & routing
+│   ├── config.ts                 # Environment-variable config
+│   ├── container-runner.ts       # Container spawning & mounts
+│   ├── group-queue.ts            # Per-group queue & concurrency
+│   ├── ipc.ts                    # File IPC watcher
+│   ├── task-scheduler.ts         # Scheduled tasks
+│   ├── db.ts                     # SQLite CRUD
+│   ├── credential-proxy.ts       # Credential isolation proxy
+│   ├── mount-security.ts         # Mount path validation
+│   └── types.ts                  # Shared type definitions
+│
+├── container/                    # Container-related files
+│   ├── Dockerfile                # Agent container image
+│   ├── entrypoint.sh             # Container entrypoint
+│   ├── build.sh                  # Image build script
+│   ├── agent-runner/             # In-container agent
+│   │   └── src/
+│   │       ├── index.ts          # Claude SDK execution
+│   │       └── ipc-mcp-stdio.ts  # MCP tools (scheduler, etc.)
+│   └── skills/                   # Skills injected into the agent
+│       └── agent-browser.md      # Browser automation guide
+│
+├── groups/                       # Per-group memory (isolated)
+│   ├── main/
+│   │   └── CLAUDE.md             # Main group memory
+│   └── global/
+│       └── CLAUDE.md             # Globally shared memory (read-only)
+│
+├── data/                         # Runtime data
+│   ├── messages.db               # SQLite database
+│   ├── sessions/                 # Per-group .claude/ sessions
+│   └── ipc/                      # File IPC directories
+│       └── {group}/
+│           ├── messages/         # Container → host commands
+│           └── input/            # Host → container follow-up messages
+│
+├── store/                        # Channel authentication state
+├── logs/                         # Log files
+├── launchd/                      # macOS service config
+│   └── com.nanoclaw.plist
+├── docs/
+│   ├── SPEC.md                   # Full specification (31.7k)
+│   ├── SECURITY.md               # Security model
+│   └── REQUIREMENTS.md           # Design decisions
+└── CLAUDE.md                     # Claude Code context
+```
+
+---
+
+## 15. Core Concepts
+
+### Group
+
+In NanoClaw, a "group" is a logical unit that maps 1:1 to a chat channel (a WhatsApp group, a Telegram chat, etc.). Each group has:
+
+- Its own `groups/{name}/` folder (containing a `CLAUDE.md`)
+- Its own `.claude/` session directory
+- Its own SQLite session ID
+- Its own IPC directory
+
+Containers are also spawned in per-group isolation.
+
+### Main group
+
+The Main group is a privileged group, typically assigned to a personal DM or an admin-only chat.
+
+- Responds to all messages without requiring a trigger
+- Has the project root mounted read-only (enabling code inspection)
+- Can manage tasks for other groups
+- Can send messages to any JID
+
+### Skill
+
+A skill is an extension package that lives as a Git branch. All extensibility — adding channels, modifying behavior — is achieved through skills.
+
+```bash
+# Example: installing the WhatsApp channel skill
+git remote add whatsapp https://github.com/qwibitai/nanoclaw-whatsapp.git
+git fetch whatsapp main
+git merge whatsapp/main
+npm run build
+```
+
+### Session continuity
+
+Containers are freshly spawned each time, but conversation context in the Claude Agent SDK is preserved via a `sessionId`.
+
+```
+First run:  sessionId = undefined → Claude creates a new session → returned sessionId is stored
+Second run: sessionId = "abc123"  → Claude resumes the existing session
+```
+
+---
+
+## 16. Q&A: Real-World Scenarios
+
+**Q: If I send "organize my tasks for today" on WhatsApp, how is it handled?**
+
+A: If it is the Main group, the message is processed immediately with no trigger required. In a non-Main group, the message must contain `@Andy`. The message is persisted to SQLite and picked up by the 2-second poll. A container is spawned, the Claude Agent SDK reads the context from `groups/{name}/CLAUDE.md`, generates a response, and sends it back to WhatsApp.
+
+**Q: Can I ask it to send me the weather every morning at 8 AM?**
+
+A: Yes. Tell Claude "send me the weather every morning at 8 AM," and the agent will issue a `schedule_task` IPC command via the MCP scheduler tool. The host scheduler detects this and registers a `cron: "0 8 * * *"` task in the database. From then on, a container is automatically spawned at 8 AM each day, fetches the weather, and sends it to the chat.
+
+**Q: What happens when multiple groups send messages simultaneously?**
+
+A: The concurrency control in `src/group-queue.ts` handles this. Up to `MAX_CONCURRENT_CONTAINERS` (default: 5) containers can run in parallel; beyond that, requests wait in a queue. Each group has its own independent queue, so a slow group never blocks another.
+
+**Q: Can a container access my home directory?**
+
+A: Access is controlled by the mount allowlist (`~/.config/nanoclaw/mount-allowlist.json`) and blocked patterns. Sensitive paths such as `.ssh`, `.aws`, and `.env` are blocked by default. Containers have read/write access only to `groups/{name}/` and `data/sessions/{name}/.claude/`.
+
+**Q: Could the agent accidentally delete an important file?**
+
+A: A container cannot access anything outside its mounted volumes. For the Main group, the project root is mounted **read-only**, so code cannot be modified. Only the group folder (`groups/{name}/`) is writable, and that folder holds the group's memory files.
+
+**Q: How do I add a new channel, such as LINE?**
+
+A: Run the `/customize` skill, or manually add a file to `src/channels/` that implements the `Channel` interface and calls `registerChannel('line', factory)`. If the channel is packaged as a skill, merging the Git branch is all it takes.
+
+**Q: Can messages be dropped or lost?**
+
+A: Messages are stored in SQLite, so unprocessed messages survive a service restart. During `src/index.ts` initialization, `getNewMessages()` checks for any messages that were unprocessed before a crash and reprocesses them. To prevent message loss, `lastAgentTimestamp` is persisted to the database per group.
+
+**Q: Is there any risk of my API key being exposed to the container?**
+
+A: No. Only placeholder credentials (`ANTHROPIC_API_KEY=placeholder`) are injected into the container. The real API key exists solely in the host's credential proxy (port 3001). Every API request from the container is routed through the proxy, where the host injects the real header.

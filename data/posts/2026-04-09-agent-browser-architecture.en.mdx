@@ -1,0 +1,591 @@
+---
+slug: '2026-04-09-agent-browser-architecture'
+title: 'agent-browser Architecture Analysis / A Browser Automation CLI for AI Agents'
+crawlertitle: 'agent-browser Architecture Analysis / A Browser Automation CLI for AI Agents'
+summary: "A deep-dive into the architecture of agent-browser, Vercel Labs' Rust-based browser automation CLI for AI agents — covering CDP-based control, the accessibility-tree Ref system, Provider abstraction, and the security model."
+date: 2026-04-09 00:00:00 +0900
+categories: posts
+tags: ['agent-browser', 'architecture', 'rust', 'browser-automation', 'ai-agent', 'cdp', 'vercel']
+author: MartianLee
+---
+
+_This article is mostly written by Claude Code_
+
+# agent-browser Architecture & Use Case Analysis Report
+
+> **Project:** [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser)
+> **Version:** 0.25.3 | **License:** Apache-2.0
+> **Analyzed:** 2026-04-09
+
+---
+
+## 1. Executive Summary
+
+agent-browser is a **browser automation CLI for AI agents** developed by Vercel Labs. It is a native binary written in Rust that controls the browser directly via the Chrome DevTools Protocol (CDP). It operates without a Node.js runtime, and its central innovation is a Ref system based on the Accessibility Tree — designed so that LLMs can navigate and manipulate the web efficiently.
+
+**Core value propositions:**
+
+- A standard interface through which AI agents can "read and interact with" the web
+- Native Rust performance (faster startup and lower memory footprint than Node.js)
+- Provider abstraction supporting both local and cloud browsers
+- Built-in security features (domain allowlist, action policies, encrypted auth vault)
+
+---
+
+## 2. High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    User / AI Agent                       │
+│              (Claude Code, LLM, Script)                  │
+└──────────────────────┬──────────────────────────────────┘
+                       │ CLI Commands / JSON
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│                   CLI Layer (Rust)                        │
+│  main.rs → commands.rs → flags.rs → connection.rs        │
+│  - Command parsing (170+ commands)                        │
+│  - IPC socket communication (Unix Domain Socket / TCP)   │
+│  - Output formatting (text / JSON)                        │
+└──────────────────────┬──────────────────────────────────┘
+                       │ IPC (Unix Socket)
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│                 Daemon Layer (Rust)                       │
+│  daemon.rs → actions.rs (314KB, core business logic)     │
+│  ┌─────────────┐ ┌──────────────┐ ┌──────────────────┐  │
+│  │ BrowserMgr  │ │  RefMap      │ │  StreamServer    │  │
+│  │ (browser.rs)│ │ (element.rs) │ │  (stream/)       │  │
+│  └──────┬──────┘ └──────────────┘ └──────────────────┘  │
+│  ┌──────┴──────┐ ┌──────────────┐ ┌──────────────────┐  │
+│  │ Snapshot    │ │  State       │ │  Recording       │  │
+│  │(snapshot.rs)│ │ (state.rs)   │ │ (recording.rs)   │  │
+│  └──────┬──────┘ └──────────────┘ └──────────────────┘  │
+│  ┌──────┴──────┐ ┌──────────────┐ ┌──────────────────┐  │
+│  │ Interaction │ │  Network     │ │  Auth Vault      │  │
+│  │(interact.rs)│ │ (network.rs) │ │  (auth.rs)       │  │
+│  └─────────────┘ └──────────────┘ └──────────────────┘  │
+└──────────────────────┬──────────────────────────────────┘
+                       │ CDP WebSocket
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│              CDP Client (cdp/client.rs)                   │
+│  - Async WebSocket (tokio-tungstenite)                   │
+│  - Message routing & event broadcasting                  │
+│  - Session scoping (browser/page level)                  │
+│  - Keepalive (30s ping)                                  │
+└──────────┬──────────────────┬───────────────────────────┘
+           │                  │
+     ┌─────▼─────┐    ┌──────▼──────┐
+     │  Chrome   │    │ Lightpanda  │    ┌──────────────┐
+     │ (local)   │    │  (local)    │    │ Cloud        │
+     │ cdp/      │    │ cdp/        │    │ Providers    │
+     │ chrome.rs │    │lightpanda.rs│    │(providers.rs)│
+     └───────────┘    └─────────────┘    └──────────────┘
+                                          - Browserbase
+                                          - Browserless
+                                          - Browser Use
+                                          - Kernel
+                                          - AgentCore(AWS)
+```
+
+---
+
+## 3. Monorepo Structure
+
+```
+agent-browser/
+├── cli/                    # Core Rust application (3.3MB)
+│   ├── Cargo.toml          # Rust dependency manifest
+│   ├── build.rs            # CDP protocol type code generation
+│   └── src/
+│       ├── main.rs         # Entry point
+│       └── native/
+│           ├── daemon.rs   # Async event loop, state management
+│           ├── actions.rs  # Command execution engine (314KB, 100+ actions)
+│           ├── browser.rs  # Browser process management
+│           ├── snapshot.rs # Accessibility tree extraction
+│           ├── element.rs  # Ref → DOM element mapping
+│           ├── interaction.rs  # Low-level actions: click, fill, type, etc.
+│           ├── state.rs    # Session state (cookies, localStorage)
+│           ├── network.rs  # Network tracing, HAR, domain filtering
+│           ├── auth.rs     # Encrypted auth vault
+│           ├── recording.rs # ffmpeg-based recording
+│           ├── policy.rs   # Action allow/deny/confirm policies
+│           ├── providers.rs # Cloud browser providers
+│           ├── cdp/        # Chrome DevTools Protocol client
+│           ├── stream/     # WebSocket streaming server
+│           └── webdriver/  # iOS Safari automation (Appium)
+├── packages/
+│   └── dashboard/          # Next.js 16 real-time monitoring dashboard
+│       ├── React 19 + Tailwind CSS 4 + Radix UI
+│       ├── jotai (state management)
+│       └── Vercel AI SDK (AI chat)
+├── docs/                   # Next.js documentation site (28+ MDX pages)
+├── skills/                 # Claude Code skill definitions
+│   ├── agent-browser/      # Core browser automation workflows
+│   ├── agentcore/          # AWS Bedrock integration
+│   ├── slack/              # Slack automation
+│   ├── electron/           # Electron app automation
+│   ├── dogfood/            # Internal testing
+│   └── vercel-sandbox/     # Vercel Sandbox integration
+├── examples/               # Example implementations
+├── benchmarks/             # Performance benchmarks
+├── bin/                    # Per-platform binary shims
+└── scripts/                # Build utilities
+```
+
+**Build targets (7 platforms):**
+| OS | Architecture | Notes |
+|---|---|---|
+| macOS | arm64 (Apple Silicon) | Native build |
+| macOS | x64 (Intel) | Cross-compiled |
+| Linux | arm64 (musl) | Docker build |
+| Linux | arm64 (gnu) | Docker build |
+| Linux | x64 (musl) | Docker build |
+| Linux | x64 (gnu) | Docker build |
+| Windows | x64 | Docker cross-compiled |
+
+---
+
+## 4. Core Technology Stack
+
+### 4.1 Runtime & Language
+
+| Technology           | Role                                  |
+| -------------------- | ------------------------------------- |
+| **Rust**             | Entire CLI and daemon (native binary) |
+| **Tokio**            | Async runtime (multi-threaded)        |
+| **TypeScript/React** | Dashboard UI                          |
+| **Next.js 16**       | Dashboard framework                   |
+
+### 4.2 Browser Automation
+
+| Technology                         | Role                                                 |
+| ---------------------------------- | ---------------------------------------------------- |
+| **CDP (Chrome DevTools Protocol)** | Core protocol for browser control                    |
+| **Chrome for Testing**             | Official automation-channel browser                  |
+| **Lightpanda**                     | Lightweight Rust-based headless browser (10x faster) |
+| **WebDriver/Appium**               | iOS Safari mobile automation                         |
+
+### 4.3 Networking & Security
+
+| Technology            | Role                                       |
+| --------------------- | ------------------------------------------ |
+| **tokio-tungstenite** | WebSocket client/server                    |
+| **reqwest**           | HTTP client                                |
+| **AES-256-GCM**       | Encryption for state files and credentials |
+| **rustls**            | TLS (using system certificates)            |
+
+### 4.4 AI Integration
+
+| Technology             | Role                            |
+| ---------------------- | ------------------------------- |
+| **Vercel AI Gateway**  | LLM proxy (multi-model support) |
+| **Vercel AI SDK**      | Dashboard chat UI               |
+| **Claude Code Skills** | AI agent workflow definitions   |
+
+---
+
+## 5. Core Design Patterns
+
+### 5.1 Client-Daemon Architecture
+
+```
+[CLI Process]  ──IPC──▶  [Daemon Process]  ──CDP──▶  [Browser]
+ (cmd parsing)            (state holder)               (Chrome)
+ (output fmt)             (session mgmt)
+ (lifetime: per-cmd)      (lifetime: per-session)
+```
+
+- The CLI runs as a new process for every command and connects to the daemon over IPC.
+- The daemon stays resident for the duration of a session, maintaining the browser connection, RefMap, network state, and more.
+- Communication uses a Unix Domain Socket (macOS/Linux) or TCP (Windows).
+
+### 5.2 Ref-Based Element Selection (AI-Optimized)
+
+This is the **most distinctive design decision** in the project. It is specifically engineered so that LLMs can understand and manipulate the DOM efficiently.
+
+```
+1. Run the snapshot command
+   └─▶ Accessibility.getFullAXTree (CDP)
+       └─▶ Receive AXNode tree
+           └─▶ Filter interactive nodes (button, link, textbox, checkbox...)
+               └─▶ Assign @e1, @e2, @e3... Refs
+                   └─▶ Store in RefMap (keyed by backend_node_id)
+
+2. Agent requests a click on @e3
+   └─▶ Look up @e3 → backend_node_id in RefMap
+       └─▶ Compute coordinates via DOM.getBoxModel
+           └─▶ Execute Input.dispatchMouseEvent
+```
+
+**Advantages:**
+
+- Maximizes **token efficiency** compared to CSS selectors (`@e1` vs `#main-content > div:nth-child(2) > button.submit`)
+- Accessibility-tree-based, so **hidden elements are also detected** (hidden radio buttons, checkboxes, etc.)
+- Automatic cross-frame resolution — elements inside iframes are accessed directly as `@eN`
+
+### 5.3 Provider Abstraction
+
+```rust
+// providers.rs - abstract interface
+Provider → connect() → returns CDP WebSocket URL
+
+// Implementations
+├── Local Chrome    (chrome.rs)
+├── Lightpanda      (lightpanda.rs)
+├── Browserbase     (REST API → CDP URL)
+├── Browserless     (REST API → CDP URL)
+├── Browser Use     (REST API v2 → CDP URL)
+├── Kernel          (REST API → CDP URL)
+└── AgentCore       (AWS Bedrock SigV4 → CDP URL)
+```
+
+Because every provider implements the same interface — returning a CDP WebSocket URL — switching between local Chrome and a cloud browser is a single flag change (`-p <provider>`).
+
+### 5.4 Streaming & Observability
+
+```
+[Daemon] ──CDP events──▶ [StreamServer] ──WebSocket──▶ [Dashboard UI]
+                              │
+                              ├── Page.screencastFrame (live viewport)
+                              ├── Activity Feed (command execution log)
+                              ├── Console Output (browser console)
+                              └── AI Chat (Vercel AI Gateway proxy)
+```
+
+Dashboard static assets are embedded directly into the Rust binary via `rust-embed`, so the entire dashboard is served from a single binary with no separate files to deploy.
+
+### 5.5 Security Model (Layered Defense)
+
+```
+┌─────────────────────────────────────┐
+│  Layer 1: Domain Allowlist           │  AGENT_BROWSER_ALLOWED_DOMAINS
+│  - Only permitted domains reachable  │  - Sub-resource requests also blocked
+├─────────────────────────────────────┤
+│  Layer 2: Action Policy              │  AGENT_BROWSER_ACTION_POLICY
+│  - Per-action allow/deny/confirm     │  - JSON policy file
+├─────────────────────────────────────┤
+│  Layer 3: Content Boundaries         │  AGENT_BROWSER_CONTENT_BOUNDARIES
+│  - Page content isolated by nonce    │  - Defends against LLM prompt injection
+├─────────────────────────────────────┤
+│  Layer 4: Output Limits              │  AGENT_BROWSER_MAX_OUTPUT
+│  - Output size cap                   │  - Prevents context flooding
+├─────────────────────────────────────┤
+│  Layer 5: Encrypted State            │  AGENT_BROWSER_ENCRYPTION_KEY
+│  - AES-256-GCM encryption            │  - Credentials, session state
+└─────────────────────────────────────┘
+```
+
+---
+
+## 6. Core Data Structures
+
+```rust
+// DaemonState - central state management hub
+pub struct DaemonState {
+    pub browser: Option<BrowserManager>,     // Browser process management
+    pub ref_map: RefMap,                     // @e1 → element mapping
+    pub routes: Vec<RouteEntry>,             // Network interception rules
+    pub policy: Option<ActionPolicy>,        // Action restriction policy
+    pub recording_state: RecordingState,     // Active recording state
+    pub tracing_state: TracingState,         // Performance tracing state
+    pub stream_server: Option<StreamServer>, // WebSocket server
+    pub iframe_sessions: HashMap<FrameId, SessionId>, // Cross-frame sessions
+}
+
+// RefMap - core interface for AI agents
+pub struct RefMap {
+    map: HashMap<String, RefEntry>,  // "@e1" → { backend_node_id, role, name }
+}
+
+// StorageState - session persistence
+pub struct StorageState {
+    pub cookies: Vec<Cookie>,
+    pub origins: Vec<OriginStorage>,  // per-origin localStorage + sessionStorage
+}
+```
+
+---
+
+## 7. Concurrency Model
+
+```
+Session 1                    Session 2
+┌──────────────────┐        ┌──────────────────┐
+│ DaemonState #1   │        │ DaemonState #2   │
+│ (sequential cmds)│        │ (sequential cmds)│
+│                  │        │                  │
+│ Background Tasks:│        │ Background Tasks:│
+│ - Recording      │        │ - Recording      │
+│ - Fetch intercept│        │ - Dialog handler │
+│ - Dialog handler │        │ - Streaming      │
+│ - Streaming      │        │                  │
+└──────────────────┘        └──────────────────┘
+        │                           │
+        └─────────┬─────────────────┘
+                  │
+          Tokio Runtime (multi-threaded)
+```
+
+- **Within a session:** Commands execute sequentially on a single thread (guaranteeing consistency).
+- **Across sessions:** Fully independent parallel execution.
+- **Background work:** Recording, streaming, dialog handling, and fetch interception each run as separate Tokio tasks.
+
+---
+
+## 8. AI Agent Integration Patterns
+
+### 8.1 Snapshot → Ref → Action Loop (Core Pattern)
+
+```
+AI Agent
+  │
+  ├─▶ agent-browser open https://example.com
+  │
+  ├─▶ agent-browser snapshot -i
+  │     └─ Response: @e1 [textbox] "Email", @e2 [textbox] "Password", @e3 [button] "Login"
+  │
+  ├─▶ (LLM reads the tree and decides what to do)
+  │
+  ├─▶ agent-browser fill @e1 "user@test.com"
+  ├─▶ agent-browser fill @e2 "secret123"
+  ├─▶ agent-browser click @e3
+  │
+  ├─▶ agent-browser snapshot -i  (re-snapshot after page change)
+  │     └─ New refs returned
+  │
+  └─▶ (repeat...)
+```
+
+### 8.2 Chat Mode (Natural Language Control)
+
+```bash
+# Single-command mode
+agent-browser chat "open google.com and search for cats"
+
+# Interactive REPL mode
+agent-browser chat
+```
+
+- Supports a wide range of LLM models via Vercel AI Gateway.
+- Default model: `anthropic/claude-sonnet-4.6`
+- The contents of `SKILL.md` files from the `skills/` directory are automatically injected into the system prompt.
+- The LLM translates natural language into agent-browser commands and executes them.
+
+### 8.3 Claude Code Plugin
+
+```json
+// .claude-plugin/marketplace.json
+// Auto-loaded as the "agent-browser" skill in Claude Code
+// Safe execution via Bash(agent-browser:*) allow pattern
+```
+
+The `SKILL.md` file is injected into Claude Code's system prompt, so Claude already "knows" how to do web automation when handling user requests.
+
+---
+
+## 9. Use Case Analysis
+
+### 9.1 Web Automation for AI Agents
+
+**Scenario:** An LLM-based agent interacts with a website.
+
+```bash
+# Agent checks an order status
+agent-browser --session order-check open https://shop.example.com
+agent-browser snapshot -i
+# LLM: @e1 is the login form, @e2 email, @e3 password, @e4 submit button
+agent-browser batch "fill @e2 'user@example.com'" "fill @e3 'pass'" "click @e4"
+agent-browser wait --url "**/dashboard"
+agent-browser snapshot -i
+# LLM: @e8 is the order table, @e9–@e15 are recent order items
+agent-browser get text @e9
+```
+
+**Why it fits:**
+
+- Accessibility-tree-based, so it is robust against visual layout changes.
+- JSON output lets the LLM parse structured data directly.
+- Session persistence eliminates repeated logins.
+
+### 9.2 Web Scraping & Data Extraction
+
+**Scenario:** Extract structured data from multiple pages.
+
+```bash
+# Collect URLs first
+agent-browser batch "open https://news.ycombinator.com" "snapshot -i --urls"
+# Visit each URL directly for data extraction
+agent-browser batch "open https://article-1.com" "snapshot -i --json"
+agent-browser batch "open https://article-2.com" "snapshot -i --json"
+```
+
+**Advantages:**
+
+- The `--urls` flag retrieves all link URLs in a single call (eliminates unnecessary navigation).
+- The `batch` command executes multiple commands in a single invocation.
+- Parallel sessions (`--session`) allow concurrent scraping.
+
+### 9.3 E2E Test Automation
+
+**Scenario:** E2E testing of a web app in a CI/CD pipeline.
+
+```bash
+# Fast headless test
+agent-browser open https://staging.example.com/login
+agent-browser snapshot -i
+agent-browser batch "fill @e1 '$TEST_USER'" "fill @e2 '$TEST_PASS'" "click @e3"
+agent-browser wait --url "**/dashboard"
+agent-browser diff snapshot  # compare against expected state
+
+# Visual regression test
+agent-browser screenshot baseline.png
+# ... after code changes ...
+agent-browser diff screenshot --baseline baseline.png
+# Returns a diff image + mismatch percentage
+```
+
+**Advantages:**
+
+- `diff snapshot` detects accessibility-tree changes (git-diff style).
+- `diff screenshot` performs pixel-level visual comparison.
+- `diff url` enables direct staging vs. production comparison.
+- The Lightpanda engine delivers 10x faster headless tests.
+
+### 9.4 Mobile Web Testing
+
+**Scenario:** Testing a mobile web app on iOS Safari.
+
+```bash
+agent-browser -p ios --device "iPhone 16 Pro" open https://m.example.com
+agent-browser -p ios snapshot -i
+agent-browser -p ios tap @e1
+agent-browser -p ios swipe up
+agent-browser -p ios screenshot mobile-test.png
+```
+
+**Advantages:**
+
+- Tests run on a real iOS simulator or device.
+- Same snapshot → ref → action workflow as desktop.
+- Mobile-specific gestures (tap, swipe) are supported.
+
+### 9.5 Automation Requiring Authentication
+
+**Scenario:** Repeated tasks that require a logged-in session.
+
+```bash
+# Method 1: Auth Vault (most secure — encrypted storage)
+echo "$PASSWORD" | agent-browser auth save myapp \
+  --url https://app.example.com/login \
+  --username user --password-stdin
+agent-browser auth login myapp  # automatic login
+
+# Method 2: Reuse an existing Chrome profile (no setup required)
+agent-browser --profile Default open https://gmail.com
+
+# Method 3: Session persistence (automatic cookie save/restore)
+agent-browser --session-name myapp open https://app.example.com
+```
+
+**Security characteristics:**
+
+- Auth Vault stores credentials encrypted with AES-256-GCM.
+- Passwords are never exposed to the LLM (the vault fills the form directly).
+- State file encryption is available as an option.
+
+### 9.6 Real-Time Monitoring & Debugging
+
+**Scenario:** Observing an AI agent's browser behavior in real time.
+
+```bash
+agent-browser dashboard start          # Start dashboard on port 4848
+agent-browser open https://example.com  # Automatically shown in dashboard
+
+# Dashboard features:
+# - Live browser viewport streaming
+# - Command execution activity feed
+# - Browser console output
+# - AI chat (Vercel AI Gateway)
+```
+
+### 9.7 Cloud Browser Scaling
+
+**Scenario:** Running large-scale parallel web tasks in the cloud.
+
+```bash
+# Use Browserbase cloud
+agent-browser -p browserbase open https://example.com
+
+# Use AWS Bedrock AgentCore
+agent-browser -p agentcore open https://example.com
+
+# Switching providers is a single flag change
+# Local ↔ cloud with no code changes
+```
+
+---
+
+## 10. Differentiation from Competing Tools
+
+| Characteristic          | agent-browser                   | Playwright              | Puppeteer   | Selenium       |
+| ----------------------- | ------------------------------- | ----------------------- | ----------- | -------------- |
+| **Language**            | Rust (native)                   | Node.js/Python          | Node.js     | Java/Python/JS |
+| **AI-optimized**        | Accessibility tree Ref system   | None                    | None        | None           |
+| **CLI-first**           | Core interface                  | API-first               | API-first   | API-first      |
+| **LLM chat**            | Built-in (AI Gateway)           | None                    | None        | None           |
+| **Mobile**              | iOS Safari (Appium)             | WebKit/Chromium         | Chrome only | Multiple       |
+| **Lightweight engine**  | Lightpanda support              | None                    | None        | None           |
+| **Cloud providers**     | 5 built-in                      | None (separate setup)   | None        | Grid           |
+| **Security policies**   | Domain/action policies built-in | None                    | None        | None           |
+| **Real-time dashboard** | Built-in (binary-embedded)      | Trace Viewer (post-hoc) | None        | None           |
+
+**Core differentiator:** agent-browser is designed as "a tool for AI agents to use the web," whereas existing tools are designed as "tools for developers to write tests." This difference in perspective drives design decisions such as the accessibility-tree-based Ref system, the CLI-first interface, and the layered security policy model.
+
+---
+
+## 11. Technical Insights
+
+### 11.1 Auto-Generated CDP Protocol Types
+
+`build.rs` parses the `cdp-protocol/*.json` spec files and automatically generates Rust types. This means that when the CDP protocol is updated, running the build script is all that is needed — no manual type authoring required.
+
+### 11.2 Dashboard Binary Embedding
+
+The `rust-embed` crate is used to embed the compiled Next.js static assets directly into the Rust binary. The dashboard can be served from a single binary with no separate file deployment.
+
+### 11.3 Cross-Frame Ref Resolution
+
+Elements inside iframes are accessible directly via `@eN` refs. Internally, a dedicated CDP session is created for each iframe using `Target.attachToTarget`, and these sessions are tracked in the `iframe_sessions` HashMap. This means agents never need to be aware of frame boundaries.
+
+### 11.4 Content Boundaries (Prompt Injection Defense)
+
+Page content is wrapped in nonce-bearing markers so that the LLM can distinguish between "tool output" and "page content." This defends against attempts by malicious websites to manipulate the LLM prompt through the accessibility tree.
+
+---
+
+## 12. Conclusion
+
+agent-browser is a production-grade tool built on Rust's performance and safety guarantees, with a clear vision: to serve as a **web browser interface for AI agents**.
+
+**Architectural strengths:**
+
+1. **Client-Daemon separation** cleanly decouples session state from command execution.
+2. **Accessibility-tree-based Ref system** provides an interface optimized for AI agents.
+3. **Provider abstraction** enables transparent switching between local and cloud browsers.
+4. **Multi-layered security model** enables safe web access for AI agents.
+5. **Single-binary deployment** (dashboard assets included).
+
+**High-value scenarios:**
+
+- Web task execution by LLM-based autonomous agents
+- AI-assisted web scraping and data extraction
+- E2E and visual regression testing in CI/CD pipelines
+- Large-scale parallel web automation using cloud browsers
+- Mobile web testing (iOS Safari)
+
+---
+
+_Generated by architecture analysis of [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) v0.25.3_

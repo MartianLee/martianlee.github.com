@@ -1,0 +1,1698 @@
+---
+slug: '2026-03-11-openclaw-architecture'
+title: 'OpenClaw Architecture Analysis / Real-World Scenario Q&A'
+crawlertitle: 'OpenClaw Architecture Analysis / Real-World Scenario Q&A'
+summary: 'A comprehensive architecture analysis of OpenClaw, a TypeScript-based Personal AI Assistant framework. Covers the technology stack, core modules, message pipeline, and channel system in detail.'
+date: 2026-03-11 01:14:00 +0900
+categories: posts
+tags: ['openclaw', 'architecture', 'typescript', 'ai', 'agent']
+author: MartianLee
+---
+
+> Analyzed: 2026-03-11
+> Version: v2026.3.8
+> Repository: https://github.com/openclaw/openclaw
+
+---
+
+_This article is mostly written by Claude Code_
+
+---
+
+## 1. Project Overview
+
+**OpenClaw** is a TypeScript-based Personal AI Assistant framework — a local-first AI assistant that runs directly on your own devices.
+
+- **Slogan:** "OpenClaw is the AI that actually does things. It runs on your devices, in your channels, with your rules."
+- **Core values:** Local execution, privacy, secure defaults, extensibility
+- **Supported channels:** WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, BlueBubbles, IRC, Microsoft Teams, Matrix, Feishu, LINE, Mattermost, Nextcloud Talk, Nostr, Synology Chat, Tlon, Twitch, Zalo, Zalo Personal, WebChat (22+)
+- **Supported platforms:** macOS, Linux, Windows (WSL2), Raspberry Pi + iOS/Android apps
+
+---
+
+## 2. Technology Stack
+
+| Area              | Technology                      |
+| ----------------- | ------------------------------- |
+| Language          | TypeScript (ES2023, ESM)        |
+| Runtime           | Node.js v22+ (optional Bun)     |
+| Package manager   | pnpm monorepo                   |
+| Build             | tsdown, esbuild                 |
+| Testing           | Vitest (70% coverage threshold) |
+| Linter/Formatter  | Oxlint + Oxfmt                  |
+| CLI framework     | Commander.js 14.0.3             |
+| HTTP server       | Express 5.2.1                   |
+| WebSocket         | ws 8.18.1                       |
+| AI runtime        | @mariozechner/pi-\* (Pi agent)  |
+| Web UI            | Lit 3.3.2 + Vite                |
+| Scheduler         | croner 10.0.1                   |
+| File watcher      | chokidar 5.0.0                  |
+| Schema validation | AJV 8.18.0 + Zod                |
+
+### Channel SDKs
+
+| Channel  | Library                            |
+| -------- | ---------------------------------- |
+| WhatsApp | @whiskeysockets/baileys 7.0.0-rc.9 |
+| Telegram | grammY 4.18.2                      |
+| Slack    | @slack/bolt 4.6.0                  |
+| Discord  | discord.js                         |
+| LINE     | @line/bot-sdk 10.6.0               |
+| Signal   | signal-cli (subprocess)            |
+
+---
+
+## 3. Overall Architecture
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                          OpenClaw System                                 ║
+║                                                                          ║
+║  ┌─────────────────────────────────────────────────────────────────┐    ║
+║  │                    CLI Entry Layer                               │    ║
+║  │  entry.ts → run-main.ts → program.ts → Commander.js commands    │    ║
+║  │  openclaw onboard / gateway / agent / send / doctor / config    │    ║
+║  └───────────────────────┬─────────────────────────────────────────┘    ║
+║                          │ start                                         ║
+║  ┌───────────────────────▼─────────────────────────────────────────┐    ║
+║  │                    Gateway (Control Plane)                       │    ║
+║  │   ws://127.0.0.1:18789  +  HTTP                                 │    ║
+║  │                                                                  │    ║
+║  │  server.impl.ts ──┬── server-http.ts (Express + WS)             │    ║
+║  │                   ├── server-chat.ts (ChatRunRegistry)           │    ║
+║  │                   ├── server-channels.ts (ChannelManager)        │    ║
+║  │                   ├── server-cron.ts (Croner scheduler)          │    ║
+║  │                   ├── server-plugins.ts (Plugin registry)        │    ║
+║  │                   └── server-methods/ (100+ RPC handlers)        │    ║
+║  └──────────┬─────────────────────────────┬───────────────────────┘    ║
+║             │ WebSocket frames             │ Channel events              ║
+║             ▼                             ▼                              ║
+║  ┌──────────────────┐         ┌──────────────────────────────────────┐  ║
+║  │   WS Clients     │         │         Channel Manager              │  ║
+║  │                  │         │                                      │  ║
+║  │ • Control UI     │         │  telegram/ discord/ slack/           │  ║
+║  │ • macOS app      │         │  signal/  imessage/ whatsapp/        │  ║
+║  │ • iOS/Android    │         │  line/    + 15 extensions            │  ║
+║  │ • WebChat        │         └──────────────┬───────────────────────┘  ║
+║  └──────────────────┘                        │ inbound/outbound          ║
+║                                              ▼                           ║
+║  ┌───────────────────────────────────────────────────────────────────┐  ║
+║  │                      Agent Engine                                 │  ║
+║  │                                                                   │  ║
+║  │  agent-scope.ts ──→ ResolvedAgentConfig                          │  ║
+║  │       │              (workspace, model, skills, heartbeat)        │  ║
+║  │       ▼                                                           │  ║
+║  │  pi-embedded-runner/ ──→ Pi Agent (RPC)                          │  ║
+║  │       │                                                           │  ║
+║  │       ├── tools/         (browser, canvas, cron, system)         │  ║
+║  │       ├── skills/        (notion, github, spotify...)            │  ║
+║  │       ├── memory/        (vector search, session files)          │  ║
+║  │       └── infra/agent-events.ts (EventBus)                      │  ║
+║  └───────────────────────────────────────────────────────────────────┘  ║
+║             │                                                            ║
+║             ▼                                                            ║
+║  ┌──────────────────────────┐                                           ║
+║  │   LLM Providers          │                                           ║
+║  │  OpenAI / Anthropic /    │                                           ║
+║  │  Google / 20+ others     │                                           ║
+║  └──────────────────────────┘                                           ║
+╚══════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 4. Core Module Structure
+
+| Module       | Role                                  | Key files                                                      |
+| ------------ | ------------------------------------- | -------------------------------------------------------------- |
+| **CLI**      | User interface                        | `entry.ts`, `cli/run-main.ts`, `cli/program.ts`                |
+| **Gateway**  | Central orchestration + WS server     | `gateway/server.impl.ts`, `server-http.ts`, `server-chat.ts`   |
+| **Agents**   | Agent lifecycle & execution           | `agents/agent-scope.ts`, `agents/pi-embedded-runner/`          |
+| **Channels** | Messaging channel plugins             | `channels/plugins/index.ts`, `channels/dock.ts`                |
+| **Config**   | Configuration management              | `config/config.ts`, `config/io.ts`, `config/sessions/`         |
+| **Protocol** | WebSocket frame definitions           | `gateway/protocol/index.ts`, `gateway/server/ws-connection.ts` |
+| **Infra**    | Common utilities (events, auth, exec) | `infra/agent-events.ts`, `infra/outbound/`                     |
+| **Secrets**  | Credential management                 | `secrets/command-config.ts`, `secrets/runtime.ts`              |
+| **Memory**   | Agent knowledge store                 | `memory/`, `memory/session-files.ts`                           |
+| **Process**  | Subprocess execution & approval       | `process/exec.ts`, `infra/exec-approval-forwarder.ts`          |
+
+---
+
+## 5. Message Processing Pipeline
+
+```
+[Incoming user WhatsApp message]
+        │
+        ▼
+src/web/ (WhatsApp Web handler)
+  └── Message parsing & normalization
+        │
+        ▼
+src/routing/session-key.ts
+  └── Session key generated: "agent:main:whatsapp/+1234567890"
+        │
+        ▼
+src/channels/allowlists/
+  └── dmPolicy check
+        ├── "pairing" → Request pairing code
+        ├── "open"    → Allow processing
+        └── "block"   → Block message
+              │ if allowed
+              ▼
+src/gateway/server-chat.ts (ChatRunRegistry)
+  └── Assign runId to session, enqueue
+        │
+        ▼
+src/agents/pi-embedded-runner/
+  └── Pi Agent RPC execution
+        ├── LLM API call (streaming)
+        └── Tool execution (if needed)
+              │ on completion
+              ▼
+src/infra/agent-events.ts (EventBus)
+  └── Publish AgentEventPayload
+      { stream: "assistant", data: "response text" }
+        │
+        ├── → gateway/server/ws-connection.ts
+        │         Deliver in real time to Control UI via WebSocket
+        │
+        └── → src/infra/outbound/
+                  └── Send response back to originating channel (WhatsApp)
+```
+
+### Queue Processing Modes
+
+| Mode   | Description                   |
+| ------ | ----------------------------- |
+| FIFO   | First-in, first-out (default) |
+| LIFO   | Last-in, first-out            |
+| Random | Random order                  |
+
+---
+
+## 6. Gateway Server Details
+
+### Initialization Sequence (`src/gateway/server.impl.ts`)
+
+```
+1. Load & validate config (config/config.ts)
+2. Initialize authentication (auth.ts)
+3. Load plugins (server-plugins.ts)
+4. Create channel manager (server-channels.ts)
+5. Create HTTP/HTTPS server (server-http.ts)
+6. Attach WebSocket server
+7. Register RPC methods (server-methods/)
+8. Start health monitoring
+9. Start cron service
+10. Start maintenance timer
+```
+
+### RPC Method Categories
+
+| Category           | Example methods             |
+| ------------------ | --------------------------- |
+| `chat.*`           | `chat.send`, `chat.history` |
+| `agents.*`         | Agent lifecycle management  |
+| `config.*`         | Configuration CRUD          |
+| `channels.*`       | Channel operations          |
+| `node.*`           | Remote node execution       |
+| `cron.*`           | Job scheduling              |
+| `device.pair.*`    | Device pairing              |
+| `exec-approvals.*` | System execution approval   |
+
+### WebSocket Frame Types (`src/gateway/protocol/index.ts`)
+
+```typescript
+GatewayFrame // Request/response (method calls)
+EventFrame // Broadcast events
+ChatEvent // Chat streaming updates
+AgentEvent // Agent state updates
+HelloOk // Connection handshake
+```
+
+---
+
+## 7. Agent Engine
+
+### Agent Configuration Chain
+
+```typescript
+OpenClawConfig.agents.list[n]
+  → ResolvedAgentConfig {
+      name,
+      workspace,    // ~/.openclaw/agents/<id>/
+      model,        // LLM model configuration
+      skills,       // List of available skills
+      heartbeat,    // Periodic execution settings
+      sandbox       // Sandbox policy
+    }
+  → AgentScope
+  → Agent execution context
+```
+
+### Agent Event Bus (`src/infra/agent-events.ts`)
+
+```typescript
+AgentEventPayload {
+  runId: string        // Execution unit ID
+  seq: number          // Monotonically increasing sequence number
+  stream:              // Event stream type
+    | "lifecycle"      // Agent start/stop
+    | "tool"           // Tool execution events
+    | "assistant"      // Response text
+    | "error"          // Error events
+  data: Record<string, unknown>
+  sessionKey?: string  // Session routing
+}
+```
+
+### Supported Tools
+
+| Tool           | Description                         |
+| -------------- | ----------------------------------- |
+| Browser        | Playwright-based web automation     |
+| Canvas         | A2UI agent control visualization UI |
+| Cron           | Time-based automated execution      |
+| Terminal (PTY) | Terminal command execution          |
+| Memory         | Vector search-backed memory         |
+| File I/O       | File read/write                     |
+
+---
+
+## 8. Channel System
+
+### Channel Config Resolution (`src/channels/channel-config.ts`)
+
+```typescript
+ChannelEntryMatch {
+  entry,           // Direct match (e.g. telegram/+1234)
+  wildcardEntry,   // Wildcard match (*)
+  parentEntry,     // Inherit parent channel config
+  matchSource      // Track match origin
+}
+```
+
+### Security Policy (DM Access)
+
+```yaml
+# config.yml
+channels:
+  telegram:
+    dmPolicy: 'pairing' # default: pairing code required
+    # dmPolicy: "open"    # explicit opt-in required
+    # dmPolicy: "block"   # block all
+    allowFrom:
+      - '+1234567890' # allowed contacts
+      # - "*"             # allow all (dangerous)
+```
+
+### Channel Runtime State
+
+```typescript
+ChannelRuntimeSnapshot {
+  channels: Map<channelId, ChannelPlugin>
+  channelAccounts: Map<accountId, ChannelAccountSnapshot>
+}
+
+ChannelAccountSnapshot {
+  accountId: string
+  defaultRuntime: ChannelRuntime
+  health: "ok" | "degraded" | "down"
+}
+```
+
+---
+
+## 9. Configuration System
+
+### Config File Locations
+
+```
+~/.openclaw/
+  ├── config.yml          # Main config (JSON5 format)
+  ├── credentials/        # Auth credentials (encrypted)
+  ├── sessions/           # Session records
+  │   ├── main.json
+  │   └── <agentId>.json
+  └── agents/
+      └── <agentId>/
+          └── sessions/*.jsonl
+```
+
+### Configuration Layers
+
+| Layer    | Description                              |
+| -------- | ---------------------------------------- |
+| Gateway  | Bind mode, auth, TLS, HTTP endpoints     |
+| Agents   | Agent list, workspace, model, skills     |
+| Channels | Per-channel config, defaults, allowlists |
+| Hooks    | Webhook handlers, auth, gating           |
+| Secrets  | Credential references & management       |
+| Memory   | Agent memory (vector search, etc.)       |
+| Cron     | Job definitions                          |
+| Plugins  | Per-plugin config                        |
+
+### Config Hot Reload (`src/gateway/config-reload.ts`)
+
+```
+Detect config.yml file change (chokidar)
+  → Reload plugins
+  → Restart channels (changed channels only)
+  → Update secrets
+  → Refresh memory index
+```
+
+---
+
+## 10. Plugin & Extension System
+
+### Extensions (42)
+
+```
+extensions/
+  ├── Channel plugins
+  │   ├── discord          # Discord extension
+  │   ├── line             # LINE messaging
+  │   ├── msteams          # Microsoft Teams
+  │   ├── matrix           # Matrix protocol
+  │   ├── feishu           # Feishu/Lark
+  │   ├── googlechat       # Google Chat
+  │   ├── irc              # IRC
+  │   ├── mattermost       # Mattermost
+  │   ├── nostr            # Nostr protocol
+  │   ├── zalo / zalouser  # Zalo (Vietnam)
+  │   ├── bluebubbles      # BlueBubbles (iMessage)
+  │   └── ...
+  ├── Memory plugins
+  │   ├── memory-core      # Basic memory
+  │   └── memory-lancedb   # LanceDB vector search
+  └── Integration plugins
+      ├── llm-task         # LLM tasks
+      ├── diagnostics-otel # OpenTelemetry
+      └── ...
+```
+
+### Skills (50+)
+
+```
+skills/
+  ├── Development
+  │   ├── coding-agent     # Coding automation
+  │   └── gh-issues        # GitHub issue management
+  ├── Productivity
+  │   ├── notion           # Notion integration
+  │   ├── obsidian         # Obsidian integration
+  │   ├── things-mac       # Things 3 (macOS)
+  │   └── trello           # Trello integration
+  ├── Content
+  │   ├── blogwatcher      # Blog monitoring
+  │   └── summarize        # Content summarization
+  └── System
+      ├── healthcheck      # System health check
+      ├── tmux             # tmux control
+      └── voice-call       # Voice calls
+```
+
+### Plugin Loading
+
+```typescript
+// plugins/registry.ts
+// Dynamically loaded from npm packages or local paths
+import { loadPlugin } from 'openclaw/plugin-sdk'
+
+// Plugin interface
+interface OpenClawPlugin {
+  id: string
+  channels?: ChannelPlugin[]
+  skills?: SkillPlugin[]
+  memory?: MemoryPlugin
+  cli?: CLIPlugin
+}
+```
+
+---
+
+## 11. Core Data Structures
+
+### Session Key Format
+
+```
+"agent:main:telegram/+1234567890"
+   │     │    └── channel/account
+   │     └── agentId ("main" or custom)
+   └── prefix
+
+Special cases:
+  "agent:main:__default"  # Default account
+  "cron:<jobId>"          # Cron job session
+  "acp:<id>"              # Agent Control Protocol
+```
+
+### Message Delivery Flow
+
+```
+ChannelId
+  → Agent
+    → SessionKey
+      → ChatRunEntry { sessionKey, clientRunId }
+        → AgentEventPayload (stream: lifecycle|tool|assistant)
+          → ChatEvent (WS frame)
+            → WebSocket Client (Control UI / channel response)
+```
+
+### Agent Execution Context
+
+```typescript
+AgentRunContext {
+  sessionKey: string
+  verboseLevel: "low" | "medium" | "high"
+  isHeartbeat: boolean
+  runId: string
+}
+```
+
+---
+
+## 12. Layer Dependency Graph
+
+```
+entry.ts
+  └── cli/run-main.ts
+        └── cli/program.ts (Commander.js)
+              └── commands/ (284 command handlers)
+                    └── gateway/server.impl.ts  ← core hub
+                          ├── config/config.ts         (config)
+                          ├── channels/plugins/        (channels)
+                          ├── agents/agent-scope.ts    (agents)
+                          ├── infra/agent-events.ts    (EventBus)
+                          ├── gateway/server-http.ts   (WS server)
+                          └── gateway/server-methods/  (RPC API)
+
+Dependency direction:
+  CLI → Gateway → {Channels, Agents, Config, Infra}
+  Agents → {LLM Providers, Tools, Memory}
+  Channels → {Channel SDKs, Gateway EventBus}
+  Config → {File System, Migration, Zod Schemas}
+```
+
+---
+
+## 13. Differentiators vs. Generic LLMs
+
+| Characteristic  | Generic LLM (ChatGPT etc.) | OpenClaw                                    |
+| --------------- | -------------------------- | ------------------------------------------- |
+| Where it runs   | External servers           | Your device (local-first)                   |
+| Access method   | Web/app directly           | Converse from your existing messenger       |
+| Execution scope | Text only                  | Real task execution (browser, files, CLI)   |
+| Memory          | Lost on session end        | Persistent memory (LanceDB vector search)   |
+| Always-on       | No                         | Runs as a daemon                            |
+| Automation      | Limited                    | Full automation via cron                    |
+| Integrations    | Official plugins only      | 50+ skills, 42+ extensions                  |
+| Security        | Platform-dependent         | DM pairing, allowlists, local encryption    |
+| Multi-channel   | Single interface           | 22+ messengers simultaneously               |
+| Voice           | Limited                    | Wake word (macOS/iOS) + Talk Mode (Android) |
+
+---
+
+## 14. Directory Tree
+
+```
+openclaw/
+├── src/                      # TypeScript source
+│   ├── entry.ts              # CLI entry point
+│   ├── index.ts              # Public API exports
+│   ├── cli/                  # CLI layer (168 files)
+│   │   ├── program/
+│   │   ├── daemon-cli/
+│   │   ├── gateway-cli/
+│   │   ├── run-main.ts
+│   │   └── argv.ts
+│   ├── gateway/              # Gateway server (236 files)
+│   │   ├── server.impl.ts    # Main server
+│   │   ├── server-http.ts    # HTTP/WS
+│   │   ├── server-chat.ts    # Chat events
+│   │   ├── server-channels.ts
+│   │   ├── protocol/         # WS frame schemas
+│   │   └── server-methods/   # RPC handlers (65 files)
+│   ├── agents/               # Agent engine (530 files)
+│   │   ├── agent-scope.ts
+│   │   ├── pi-embedded-runner/
+│   │   ├── auth-profiles/
+│   │   ├── skills/
+│   │   └── tools/
+│   ├── channels/             # Channel abstraction (65 files)
+│   │   ├── plugins/
+│   │   ├── allowlists/
+│   │   └── dock.ts
+│   ├── config/               # Config management (207 files)
+│   │   ├── config.ts
+│   │   ├── sessions/
+│   │   └── zod-schema.*.ts
+│   ├── infra/                # Infrastructure utilities (297 files)
+│   │   ├── agent-events.ts   # EventBus
+│   │   ├── outbound/
+│   │   └── heartbeat-runner.ts
+│   ├── memory/               # Memory system (97 files)
+│   ├── browser/              # Browser automation (127 files)
+│   ├── media/                # Media pipeline
+│   ├── routing/              # Message routing
+│   ├── secrets/              # Credential management
+│   ├── security/             # Security
+│   ├── commands/             # Command handlers (284 files)
+│   ├── telegram/             # Telegram implementation
+│   ├── discord/              # Discord implementation
+│   ├── slack/                # Slack implementation
+│   ├── signal/               # Signal implementation
+│   ├── imessage/             # iMessage implementation
+│   └── web/                  # WhatsApp Web implementation
+├── extensions/               # 42 plugins
+├── skills/                   # 50+ skills
+├── apps/                     # Native apps
+│   ├── macos/                # SwiftUI menu bar app
+│   ├── ios/                  # Swift/SwiftUI iOS
+│   ├── android/              # Kotlin Android
+│   └── shared/               # Cross-platform shared
+├── ui/                       # Web UI (Lit + Vite)
+├── docs/                     # Documentation (Mintlify)
+├── scripts/                  # Automation scripts (100+)
+├── packages/                 # Internal packages
+├── package.json
+├── pnpm-workspace.yaml
+└── tsconfig.json
+```
+
+---
+
+## References
+
+- Official docs: https://docs.openclaw.ai
+- GitHub: https://github.com/openclaw/openclaw
+- Discord: https://discord.gg/clawd
+- DeepWiki: https://deepwiki.com/openclaw/openclaw
+- Vision: `VISION.md`
+- Security policy: `SECURITY.md`
+- Contributing guide: `CONTRIBUTING.md`
+
+---
+
+## 15. Core Concept Explanations
+
+### 15-1. Playwright
+
+**Playwright** is a browser automation library created by Microsoft. OpenClaw uses it as an engine that moves the mouse and keyboard on behalf of the user.
+
+```
+What a human does                  What Playwright does
+────────────────────────────────────────────────────
+Open a Chrome window          →   chromium.launch()
+Type a URL in the address bar →   page.goto(url)
+Visually scan page structure  →   page.ariaSnapshot()
+Click a link                  →   locator.click()
+Type in a search box          →   locator.fill("search term")
+Run code in the JS console    →   page.evaluate(fn)
+Take a screenshot             →   page.screenshot()
+```
+
+**Playwright's place in OpenClaw:**
+
+```
+LLM (decision-making)
+  │
+  │  "I should click this button"
+  ▼
+Browser Tool (src/agents/tools/browser-tool.ts)
+  │
+  │  { action: "act", request: { kind: "click", ref: "e5" } }
+  ▼
+Playwright API (src/browser/pw-tools-core.interactions.ts)
+  │
+  │  locator.click({ timeout: 8000 })
+  ▼
+Chrome DevTools Protocol (CDP) via WebSocket
+  │
+  ▼
+Actual Chrome browser
+```
+
+**Key insight:** The LLM decides _what_ to do; Playwright handles _how_ to do it.
+
+---
+
+### 15-2. Tools
+
+A **Tool** is a functional unit that allows the LLM to perform real work beyond text generation. Because the LLM alone cannot read files or control a browser, it interacts with the outside world through tools.
+
+**Tool structure:**
+
+```typescript
+// Example from src/agents/tools/browser-tool.ts
+{
+  name: "browser",                    // Name the LLM calls
+  description: "Control a browser",  // Description that tells the LLM when to use it
+  inputSchema: {                      // Parameter definition the LLM must provide
+    action: "navigate | snapshot | act | screenshot ...",
+    url: "string",
+    ref: "string",
+  },
+  execute: async (toolCallId, args) => {  // Actual execution code
+    return result
+  }
+}
+```
+
+**Available tools in OpenClaw:**
+
+| Tool      | Role                                         | Key file                 |
+| --------- | -------------------------------------------- | ------------------------ |
+| `browser` | Chrome control (crawling, clicking, JS eval) | `tools/browser-tool.ts`  |
+| `read`    | Read local files                             | `tools/`                 |
+| `write`   | Create local files                           | `tools/`                 |
+| `edit`    | Edit local files (old→new replacement)       | `tools/`                 |
+| `exec`    | Execute terminal commands                    | `process/exec.ts`        |
+| `cron`    | Register scheduled jobs                      | `gateway/server-cron.ts` |
+| `canvas`  | Agent control visual UI                      | `canvas-host/`           |
+| `memory`  | Store/retrieve long-term memory              | `memory/`                |
+
+**Tool execution flow:**
+
+```
+LLM → generate tool_use block
+  │
+  ▼
+src/agents/pi-embedded-subscribe.handlers.ts
+  case "tool_execution_start" → publish tool execution start event
+  │
+  ▼
+src/agents/tools/<tool>.ts
+  execute(toolCallId, args) called
+  │
+  ▼
+src/infra/agent-events.ts (EventBus)
+  tool_execution_end → return result
+  │
+  ▼
+LLM → read result, decide next step
+```
+
+---
+
+### 15-3. Multi-turn
+
+**Multi-turn** is the pattern where the LLM does not stop at a single response but instead iterates through **multiple rounds**, incorporating tool execution results at each step.
+
+**Single-turn vs. multi-turn:**
+
+```
+[Single-turn — Generic LLM]
+User: "Crawl the Naver news"
+LLM:  "I can't access the internet directly, so I'm unable to crawl."
+End.
+
+[Multi-turn — OpenClaw]
+User: "Crawl the Naver sports news"
+
+Turn 1: LLM → browser.open("sports.naver.com")
+        Result: { url: "https://sports.naver.com", ok: true }
+
+Turn 2: LLM → browser.snapshot()
+        Result: { refs: { e1: "International Football", e5: "Article 1"... } }
+
+Turn 3: LLM → browser.act({ kind: "click", ref: "e1" })
+        Result: { ok: true }
+
+Turn 4: LLM → browser.act({ kind: "evaluate", fn: "..." })
+        Result: { articles: [...] }
+
+Turn 5: LLM → generate final response (no more tools needed)
+User: "Here are 3 articles: ..."
+```
+
+**Why multi-turn works:**
+
+```
+src/agents/pi-embedded-runner/run.ts
+
+while (true) {
+  response = await llm.send(messages + toolResults)
+
+  if (response.stopReason === "end_turn") break  // done
+
+  if (response.stopReason === "tool_use") {
+    result = await executeTool(response.toolCall)
+    messages.push({ role: "tool", content: result })
+    // continue to next turn
+  }
+}
+```
+
+**Turn limits and cost:**
+
+- More turns mean more LLM API calls → higher cost and latency
+- Complex tasks (shopping, coding) can run to 10–20 turns
+- Simple questions typically finish in 1–2 turns
+
+---
+
+### 15-4. Actions
+
+An **Action** is a specific command unit that the LLM issues to Playwright within the Browser Tool.
+
+**Full list of available actions:**
+
+```typescript
+// Browser management
+"status"     → Check browser running state
+"start"      → Start browser
+"stop"       → Stop browser
+
+// Tab management
+"open"       → Open a new tab (URL optional)
+"tabs"       → List open tabs
+"focus"      → Switch focus to a specific tab
+"close"      → Close a tab
+
+// Page inspection
+"navigate"   → Navigate to a URL
+"snapshot"   → Extract page structure (ARIA tree, generate refs)
+"screenshot" → Capture screen (save as PNG)
+"pdf"        → Save page as PDF
+
+// Interaction (act)
+"act" + kind:
+  "click"          → Click an element
+  "dblclick"       → Double-click
+  "hover"          → Mouse over
+  "type"           → Keyboard input
+  "fill"           → Fill a form field
+  "press"          → Press a specific key (Enter, Tab, etc.)
+  "select"         → Select a dropdown option
+  "drag"           → Drag and drop
+  "scrollIntoView" → Scroll element into view
+  "wait"           → Wait for a condition
+  "evaluate"       → Execute arbitrary JavaScript
+  "resize"         → Resize the viewport
+
+// File/dialog
+"upload"     → Upload a file
+"dialog"     → Handle browser dialogs
+"console"    → Execute JavaScript in developer console
+```
+
+**The ref system (connecting snapshot ↔ act):**
+
+```
+snapshot() called
+  → Convert all page elements to an ARIA tree
+  → Assign short ref IDs to each element: e1, e2, e3 ...
+  → Return to LLM
+
+LLM reads the snapshot:
+  "link 'International Football' <e1>"
+  "article 'Son Heung-min goal' <e5>"
+
+act(click, ref: "e5") called
+  → Dereference ref "e5" to the actual DOM element
+  → Convert to Playwright locator → execute click
+```
+
+---
+
+### 15-5. Concept Relationship Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Multi-turn loop                        │
+│                                                             │
+│  ┌──────────┐    tool_use     ┌──────────────────────────┐  │
+│  │          │ ─────────────→  │         Tool             │  │
+│  │   LLM    │                 │  (browser / read / exec) │  │
+│  │          │ ←─────────────  │                          │  │
+│  └──────────┘   tool_result   └────────────┬─────────────┘  │
+│       │                                    │                │
+│       │ (next turn)                        │ Action exec    │
+│       └────────────────────────────────────┘                │
+└─────────────────────────────────────────────────────────────┘
+                                │
+                    Action (navigate, snapshot, act ...)
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │      Playwright       │
+                    │  page.goto()          │
+                    │  page.ariaSnapshot()  │
+                    │  locator.click()      │
+                    │  page.evaluate()      │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                         Actual Chrome browser
+```
+
+| Concept        | One-line description                                             | Responsible code                   |
+| -------------- | ---------------------------------------------------------------- | ---------------------------------- |
+| **Playwright** | Library that controls Chrome programmatically                    | `src/browser/pw-*.ts`              |
+| **Tool**       | Functional unit through which the LLM performs real work         | `src/agents/tools/`                |
+| **Multi-turn** | Loop where the LLM iterates decisions incorporating tool results | `src/agents/pi-embedded-runner/`   |
+| **Action**     | Concrete command inside the Browser Tool (click, fill, ...)      | `src/agents/tools/browser-tool.ts` |
+
+---
+
+## 16. Technical Lineage & Emerging Trends
+
+### Before OpenClaw: What Came Before
+
+Before OpenClaw, there were projects that combined LLMs with tools. However, none simultaneously satisfied "always-on + messenger integration + consumer-grade UX."
+
+```
+2022 ──────────────────────────────────────────────────── 2026
+
+  [Gen 1: Experiments]  [Gen 2: Frameworks]  [Gen 3: Standards]  [Gen 4: Personal AI]
+         │                    │                    │                      │
+  2023.3 AutoGPT       2023   LangChain      2024.11 MCP          2025   OpenClaw
+  2023.4 BabyAGI       2023.6 Function      (Anthropic)           2026.1 NanoClaw
+  2023   AgentGPT            Calling                               2026   MicroClaw
+  2024   CrewAI        2024   AutoGen
+         SuperAGI
+```
+
+---
+
+### Generation 1 (Early 2023): Autonomous Agent Experiments — The AutoGPT Shock
+
+```
+AutoGPT (2023.3, 100K+ GitHub Stars explosion)
+  - "Give it a goal and the LLM plans, executes, and iterates on its own"
+  - Tool integrations: web search, file writes, code execution
+  - Structure: LLM → task decomposition → execution → incorporate results → repeat
+
+BabyAGI / AgentGPT (2023.4+)
+  - Derivative projects that simplified the task queue + LLM loop pattern
+  - BabyAGI: task creation → execution → priority reordering
+```
+
+**Limitations at the time:**
+
+- Run-once architecture (not an always-on server)
+- No messenger integration, scheduling, or personal memory
+- Hallucinations and infinite loops made real-world use impractical
+- Developer-only (inaccessible to ordinary users)
+
+---
+
+### Generation 2 (Mid 2023–2024): Framework Wars — LangChain & ReAct
+
+**Formalizing the ReAct pattern:**
+
+```
+ReAct = Reasoning + Acting
+
+LLM decides: "I need to know the weather"
+    │
+    ▼
+Tool call: weather_api("Seoul")
+    │
+    ▼
+Observation: "22°C, clear"
+    │
+    ▼
+LLM re-reasons: "I have enough information, generate a response"
+    │
+    ▼
+Final response
+```
+
+**Key frameworks:**
+
+| Framework           | Strengths                        | Limitations             |
+| ------------------- | -------------------------------- | ----------------------- |
+| LangChain           | 500+ tools, consistent interface | Developer-only library  |
+| CrewAI              | Multi-agent role division        | One-shot execution      |
+| AutoGen (Microsoft) | Agent-to-agent conversation      | Not an always-on server |
+| Semantic Kernel     | Enterprise AI orchestration      | Complex setup           |
+
+**Function Calling debuts (OpenAI, 2023.6):**
+
+```
+Before: LLM outputs text "I need to search the web" → developer parses it
+After:  LLM returns { "tool": "search", "query": "..." } structured output
+        → The beginning of standardized tool integration
+```
+
+---
+
+### Generation 3 (2024.11): Standards Emerge — MCP
+
+**Model Context Protocol (Anthropic, 2024.11):**
+
+```
+Before MCP:
+  Claude ──own way──→ Tool A
+  GPT-4  ──own way──→ Tool B  (every model has its own integration)
+  Gemini ──own way──→ Tool C
+
+After MCP:
+  Claude ─┐
+  GPT-4  ─┼──[MCP]──→ Tool A / Tool B / Tool C
+  Gemini ─┘           (common standard interface)
+```
+
+- Dubbed "USB-C for AI"
+- Officially adopted by OpenAI in March 2025 → de facto industry standard
+- LangChain, CrewAI, and AutoGen all integrated MCP
+
+**OpenClaw and MCP:** Supported via the `mcporter` bridge (separated from the core rather than embedded directly).
+
+---
+
+### Generation 4 (2025+): Always-On Personal AI — OpenClaw
+
+**Five ways OpenClaw was different:**
+
+```
+① Always-on
+   → Registered as a daemon, auto-starts at boot
+
+② Messenger-first
+   → Converse directly in 22+ messengers
+
+③ Secure defaults
+   → DM pairing, exec-approval blocks dangerous commands
+
+④ Consumer-grade UX
+   → Install with the openclaw onboard wizard, no coding knowledge needed
+
+⑤ Local-first
+   → Gateway runs on your device; your data never passes through OpenClaw servers
+```
+
+---
+
+### Generation 5 (2026+): NanoClaw and Derivative Projects
+
+#### NanoClaw (2026.1, MIT License)
+
+> "Reimplements OpenClaw's features with container isolation and a lightweight codebase"
+
+**Background:**
+
+- Developer: Gavriel Cohen (Israel)
+- Built using Anthropic Claude Code
+- 7,000+ GitHub Stars within one week of launch
+
+**Core differences from OpenClaw:**
+
+| Aspect         | OpenClaw              | NanoClaw                        |
+| -------------- | --------------------- | ------------------------------- |
+| Codebase       | ~500K lines           | Hundreds of lines (auditable)   |
+| Security model | App-level (allowlist) | OS-level (container isolation)  |
+| Agent runtime  | Custom Pi Agent       | Anthropic Agent SDK directly    |
+| Execution unit | Single Node process   | Independent container per agent |
+
+**Container isolation model:**
+
+```
+OpenClaw approach (app-level isolation):
+  Personal agent ─┐
+                  ├─ Single Node process (shared memory)
+  Work agent ─────┘
+
+NanoClaw approach (OS-level isolation):
+  Personal agent → Linux container A (independent filesystem)
+  Work agent     → Linux container B (independent filesystem)
+  → Apple Container (macOS) / Docker supported
+  → Containers are created fresh and discarded after each run (ephemeral)
+```
+
+**NanoClaw's inaugural feature: Agent Swarms**
+
+```
+Before: User → 1 agent → response
+
+Swarms:
+  User → Manager agent
+               ├─ Research agent (container A)
+               ├─ Coding agent   (container B)
+               └─ Review agent   (container C)
+            → Aggregate results → response
+```
+
+#### MicroClaw (2026, Rust)
+
+A Rust reimplementation of the NanoClaw design, targeting memory safety and native performance.
+
+---
+
+### Full Technology Timeline
+
+| Period  | Project/Technology | Key contribution                                 |
+| ------- | ------------------ | ------------------------------------------------ |
+| 2023.3  | AutoGPT            | Proved LLMs can execute autonomously             |
+| 2023.4  | BabyAGI            | Task queue + LLM loop pattern                    |
+| 2023    | LangChain          | Standardized tool integration framework          |
+| 2023.6  | Function Calling   | Structured tool calls (OpenAI)                   |
+| 2024    | CrewAI / AutoGen   | Multi-agent collaboration                        |
+| 2024.11 | MCP (Anthropic)    | Common standard for tool connectivity ("USB-C")  |
+| 2025.3  | MCP (OpenAI)       | De facto industry standard confirmed             |
+| 2025    | OpenClaw           | Always-on personal AI (consumer-targeted)        |
+| 2026.1  | NanoClaw           | Container isolation + lightweight + Agent Swarms |
+| 2026    | MicroClaw          | Rust reimplementation                            |
+
+---
+
+### Key Lessons from the Technology Arc
+
+```
+Gen 1 lesson: LLMs can execute autonomously, but reliability is the problem
+Gen 2 lesson: Without tool integration standards, ecosystems fragment
+Gen 3 lesson: A common protocol (MCP) causes explosive ecosystem growth
+Gen 4 lesson: UX matters more than tech (developer → consumer transition)
+Gen 5 lesson: Security must be solved at the OS level, not the app level
+              (OpenClaw → NanoClaw's container isolation)
+```
+
+---
+
+### Reference Links
+
+- [NanoClaw GitHub](https://github.com/qwibitai/nanoclaw)
+- [NanoClaw official](https://nanoclaws.io/)
+- [OpenClaw, but in containers: Meet NanoClaw • The Register](https://www.theregister.com/2026/03/01/nanoclaw_container_openclaw/)
+- [NanoClaw Security Model](https://nanoclaw.dev/blog/nanoclaw-security-model/)
+- [MicroClaw GitHub](https://github.com/microclaw/microclaw)
+- [Model Context Protocol - Wikipedia](https://en.wikipedia.org/wiki/Model_Context_Protocol)
+- [AI Agent Framework Landscape 2025](https://medium.com/@hieutrantrung.it/the-ai-agent-framework-landscape-in-2025-what-changed-and-what-matters-3cd9b07ef2c3)
+
+---
+
+## 17. Q&A: Real-World Usage Scenarios
+
+### Q1. What happens when a user requests a Naver sports news crawl?
+
+**Scenario:** User sends "Crawl the international football section of Naver sports news"
+
+#### Full Flow
+
+```
+User message
+    │
+    ▼
+Pi Agent (pi-embedded-runner/run.ts)
+→ LLM determines "browser tool needed"
+    │
+    ▼
+Browser Tool registered (src/agents/openclaw-tools.ts:125)
+    │
+    ▼
+Chrome launched (src/browser/chrome.ts)
+→ Run with --remote-debugging-port flag
+→ Wait for CDP WebSocket connection
+    │
+    ▼
+Playwright session connected (src/browser/pw-session.ts)
+    │
+    ▼
+Multi-turn execution loop
+```
+
+#### Multi-turn Execution Loop
+
+| Turn | Action          | Description                                                                  |
+| ---- | --------------- | ---------------------------------------------------------------------------- |
+| 1    | `open`          | Navigate to sports.naver.com, pass SSRF check                                |
+| 2    | `snapshot`      | Extract ARIA tree → `e1` (international football link), `e5` (article 1) ... |
+| 3    | `act: click`    | Click international football section via `ref: "e1"`                         |
+| 4    | `snapshot`      | Re-inspect article list                                                      |
+| 5    | `act: click`    | Click the first article                                                      |
+| 6    | `act: evaluate` | Extract title/date/content via JS execution                                  |
+| 7    | (repeat 2–6)    | Collect remaining articles                                                   |
+| Done | Response        | Return collected article list                                                |
+
+#### Key Code Locations
+
+| Step               | File                                        |
+| ------------------ | ------------------------------------------- |
+| Tool registration  | `src/agents/openclaw-tools.ts:125`          |
+| Chrome launch      | `src/browser/chrome.ts`                     |
+| Playwright session | `src/browser/pw-session.ts`                 |
+| Page snapshot      | `src/browser/pw-tools-core.snapshot.ts`     |
+| Click/JS eval      | `src/browser/pw-tools-core.interactions.ts` |
+| SSRF security      | `src/browser/navigation-guard.ts`           |
+
+---
+
+### Q2. What happens when a user requests shopping on Coupang via WhatsApp?
+
+**Scenario:** User sends "Buy the cheapest MacBook charger on Coupang" via WhatsApp
+
+#### Full Flow
+
+```
+📱 User (WhatsApp)
+        │
+        ▼
+1. WhatsApp channel receives message (src/web/, @whiskeysockets/baileys)
+        │
+        ▼
+2. Security check (dmPolicy = "pairing")
+   ├─ Registered number → allow ✅
+   └─ Unregistered number → request pairing code 🔒
+        │
+        ▼
+3. Session key generated: "agent:main:whatsapp/+1234567890"
+        │
+        ▼
+4. Pi Agent → LLM decides: "browser tool needed"
+        │
+        ▼
+5. Browser automation loop
+```
+
+#### Browser Automation Loop
+
+| Turn | Action          | Description                                 |
+| ---- | --------------- | ------------------------------------------- |
+| 1    | `open`          | Navigate to coupang.com                     |
+| 2    | `snapshot`      | Identify search box ref (`e1`)              |
+| 3    | `act: fill`     | Type "MacBook charger" into the search box  |
+| 4    | `snapshot`      | Inspect search result list                  |
+| 5    | `act: evaluate` | Extract product list via JS, sort by price  |
+| 6    | `act: click`    | Click the cheapest product                  |
+| ⚠️ 7 | `act: click`    | Cart/checkout → **exec-approval triggered** |
+
+#### Practical Limitations
+
+| Barrier            | Workaround                                             |
+| ------------------ | ------------------------------------------------------ |
+| Login required     | Reuse existing Chrome cookies with `profile: "chrome"` |
+| Bot detection      | Set `browser.headless: false`                          |
+| Auto-purchase gate | exec-approval requires manual user confirmation        |
+
+---
+
+### Q3. What happens when a user requests a feature addition to a local project via WhatsApp?
+
+**Scenario:** User sends "Add a completed-item filter to the todo-list project" via WhatsApp
+
+#### Multi-turn Coding Loop
+
+| Turn | Tool       | Action                                                  |
+| ---- | ---------- | ------------------------------------------------------- |
+| 1    | `read`     | Inspect directory structure of `~/workspace/todo-list/` |
+| 2    | `read`     | Read existing code in `src/components/TodoList.tsx`     |
+| 3    | `edit`     | Insert filter feature code (old → new replacement)      |
+| 4    | `exec`     | Run `npm run build` → **exec-approval triggered**       |
+| 5    | (on error) | Read build error log and auto-correct iteratively       |
+| Done | Response   | Send change summary back via WhatsApp                   |
+
+#### Tool Comparison: Crawling vs. File Editing
+
+| Scenario             | Tools used                |
+| -------------------- | ------------------------- |
+| Web crawling         | Browser Tool (Chrome CDP) |
+| Local file editing   | read / edit / write       |
+| Command execution    | exec (approval required)  |
+| Scheduled automation | cron                      |
+
+---
+
+### Q4. Why do tokens spike, and why do cron jobs misbehave after compaction?
+
+**Symptoms:**
+
+- Multiple cron jobs configured
+- Daily diary entries saved as MD files
+- Frequent casual questions
+- Even simple questions consuming 10,000+ tokens
+- Cron jobs not following instructions after Context Compaction
+
+#### Root Cause 1: Context included on every LLM call
+
+```
+LLM API call (once) = sum of all the following
+──────────────────────────────────────────────────────
+① System prompt                  ~5,000–15,000 tokens
+   - Agent instructions
+   - Workspace files (bootstrap)
+   - Skill descriptions
+
+② Tool schemas                   ~2,000–5,000 tokens
+   - browser, read, edit, exec, memory...
+   - Entire schema sent on every call
+
+③ Session history                variable (grows unboundedly)
+   - All past conversation turns
+   - Diary entries
+   - Cron job execution results
+
+④ Memory retrieval results       ~1,000–3,000 tokens
+
+Total → 10,000–20,000 tokens even for a trivial question
+```
+
+**Key file:** `src/agents/pi-embedded-runner/run/attempt.ts`
+
+```
+runEmbeddedAttempt()
+  → buildEmbeddedSystemPrompt()   ← ① rebuilt on every call
+  → SessionManager.open()         ← ③ loads full session file
+  → limitHistoryTurns()           ← trims only when DM limit is set
+```
+
+#### Root Cause 2: Diary entries bloat the session history
+
+```
+Session file: ~/.openclaw/agents/{agentId}/sessions/{sessionId}.jsonl
+
+One diary entry recorded
+  → Added as messages to the session (user + assistant + tool results)
+  → On the next question, this diary content is included in history
+
+30 diary entries accumulated
+  → Every question includes all 30 conversation entries in history
+  → Even a simple "What's the weather today?" carries the entire diary as context
+```
+
+#### Root Cause 3: Why compaction breaks cron jobs
+
+**What compaction does:**
+
+```
+src/agents/pi-embedded-runner/compact.ts
+
+compactEmbeddedPiSession()
+  → Load sessionId.jsonl (entire conversation record)
+  → contextEngine.assemble() to summarize/compress
+  → Replace file with compressed content (original deleted)
+  → Increment compactionCount++ in sessions.json
+```
+
+**Impact depending on where the cron job is defined:**
+
+```
+Case A: Cron job explicitly defined in config.yml
+  → Instructions live in config.yml, so they survive compaction ✅
+  → BUT: accumulated cron execution results are erased ⚠️
+
+Case B: Cron job instructed via conversation ("write a diary for me every morning")
+  → Agent "remembers" only through the session history
+  → After compaction, those instructions are deleted from history ❌
+  → Agent "forgets" the instruction → cron job misbehaves
+```
+
+#### Root Cause Summary Table
+
+| Problem                         | Cause                                                      | Relevant file                    |
+| ------------------------------- | ---------------------------------------------------------- | -------------------------------- |
+| 10K+ tokens for simple question | System prompt + tool schemas + full history on every call  | `run/attempt.ts`                 |
+| Slows down as diary grows       | Diary entries accumulate as messages in session JSONL      | `sessions/{id}.jsonl`            |
+| Cron breaks after compaction    | Conversational instructions are lost when history is wiped | `compact.ts`                     |
+| Cron result context lost        | Isolated sessions are also compacted                       | `cron/isolated-agent/session.ts` |
+
+#### Prevention and Remediation
+
+**1. Always define cron jobs explicitly in config.yml**
+
+```yaml
+# ~/.openclaw/config.yml
+cron:
+  jobs:
+    # ✅ Correct approach
+    - id: 'daily-diary'
+      name: 'Daily diary entry'
+      schedule:
+        kind: 'cron'
+        expr: '0 22 * * *'
+      payload:
+        kind: 'agentTurn'
+        message: 'Summarize today and save it as ~/diary/YYYY-MM-DD.md'
+      sessionKey: 'cron:daily-diary' # ← use an isolated session
+
+
+    # ❌ Wrong: instructed via conversation → forgotten after compaction
+```
+
+**2. Separate agent sessions by purpose**
+
+```yaml
+agents:
+  list:
+    - id: 'quick' # For everyday Q&A
+      model: { name: 'claude-haiku-4-5' }
+      session:
+        dmHistoryLimit: 5 # Keep only the last 5 turns
+
+    - id: 'main' # For coding / long tasks
+      model: { name: 'claude-sonnet-4-6' }
+      session:
+        dmHistoryLimit: 20
+```
+
+**3. Configure automatic session history pruning**
+
+```yaml
+agents:
+  defaults:
+    session:
+      pruning:
+        maxEntries: 50 # Cap total message count
+        pruneAfter: '7d' # Auto-delete messages older than 7 days
+      dmHistoryLimit: 10 # DM sessions: pass only the last 10 turns to the LLM
+```
+
+**4. Use the memory plugin to persist cron instructions**
+
+```
+User: "Save this instruction to memory:
+       'Every night at 10pm, summarize what I learned today and save it to the diary folder'"
+
+Saved to: ~/.openclaw/agents/{agentId}/memory/instructions.md
+→ Not subject to compaction (separate file)
+→ Retrievable again via memory_search tool
+```
+
+#### Token Consumption Before vs. After Optimization
+
+```
+[Before]
+One simple question:
+  System prompt:    8,000 tokens
+  Tool schemas:     3,000 tokens
+  Session history: 12,000 tokens (30 diary entries + cron results)
+  Memory results:   2,000 tokens
+  Total:           25,000 tokens
+
+[After] (quick agent, haiku model, dmHistoryLimit=3)
+  System prompt:    5,000 tokens
+  Tool schemas:     2,000 tokens
+  Session history:    800 tokens (last 3 turns only)
+  Memory results:       0 tokens
+  Total:            7,800 tokens  ← ~70% reduction
+```
+
+#### Key Related Files
+
+| File                                           | Role                             |
+| ---------------------------------------------- | -------------------------------- |
+| `src/agents/pi-embedded-runner/run/attempt.ts` | Assemble LLM context             |
+| `src/agents/pi-embedded-runner/compact.ts`     | Context compaction logic         |
+| `src/config/sessions/store.ts`                 | Load/save session metadata       |
+| `src/cron/isolated-agent/session.ts`           | Cron-specific session resolution |
+| `src/cron/isolated-agent/run.ts`               | Cron job execution               |
+| `src/config/zod-schema.session.ts`             | Session config schema            |
+
+---
+
+## 18. Deep Dive: Skill System
+
+### Tool vs. Skill: A Fundamental Distinction
+
+One of OpenClaw's most distinctive design decisions is the clear separation between **Tools** and **Skills**.
+
+| Aspect              | Tool                                                | Skill                                                       |
+| ------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| Nature              | Executable TypeScript code                          | `SKILL.md` text file                                        |
+| Registration        | Schema registered in `openclaw-tools.ts`            | Markdown file placed in the `skills/` directory             |
+| Relationship to LLM | LLM calls via JSON → code executes → returns result | Injected into system prompt → LLM reads and learns behavior |
+| Examples            | `browser`, `exec`, `memory_search`, `read_file`     | `gh-issues`, `coding-agent`, `healthcheck`                  |
+| How to extend       | Must write TypeScript code                          | Writing a markdown document is sufficient                   |
+
+**Core analogy:**
+
+- Tool = the LLM's "hands" (physical capability to actually execute things)
+- Skill = a "procedure manual" handed to the LLM (knowledge that teaches it how to behave)
+
+### SKILL.md Structure
+
+Every skill consists of a YAML front matter section and a markdown body:
+
+```yaml
+---
+name: skill-name
+version: "1.0"
+description: "What this skill does"
+
+# Activation conditions (gating)
+requires:
+  bins: ["gh", "git"]          # Activate only if these binaries exist
+  env: ["GITHUB_TOKEN"]        # Activate only if these env vars are set
+  config:                      # Conditions on config.yml values
+    - path: "features.github"
+      value: true
+  platform: ["darwin", "linux"] # Activate only on macOS/Linux
+---
+
+# Skill body (markdown instructions)
+
+When this skill is active, behave as follows:
+
+## When to use this skill
+- When the user requests ~
+
+## Step-by-step procedure
+1. First check X
+2. Then use tool Y
+3. Return the result in format Z
+```
+
+### Skill Loading & Injection Flow
+
+```
+agents/skills/workspace.ts
+  → Scan skills/ directory (54 bundled)
+  → Scan ~/.openclaw/skills/ (workspace/managed)
+  → Scan plugin skills
+  → Parse front matter of each SKILL.md
+  → Check gating conditions (bins/env/config/platform)
+  → Filter to skills that pass
+
+pi-embedded-runner/run/attempt.ts
+  → Call assembleContext()
+  → Inject active skill contents into system prompt
+  → Pass to LLM API call
+```
+
+**Skill priority (high → low):**
+
+```
+workspace > managed > plugin > bundled
+```
+
+If the same skill name exists in multiple locations, the highest-priority one is used. Users can override a built-in skill by placing a file with the same name in `~/.openclaw/skills/`.
+
+---
+
+### Three Real Skill Examples
+
+#### Example 1: `gh-issues` — Automated GitHub Issue Fix Workflow
+
+**File:** `skills/gh-issues/SKILL.md` (~34 KB)
+
+This skill teaches the LLM a **6-phase workflow** for automatically analyzing and fixing GitHub issues:
+
+```
+Phase 1: Understand the issue
+  → Read the issue body with gh issue view <number>
+  → Explore related code files (grep, find)
+  → Determine reproduction conditions
+
+Phase 2: Validate the environment
+  → Create branch: git checkout -b fix/issue-<number>
+  → Install dependencies, verify build works
+
+Phase 3: Root cause analysis
+  → Run related tests → confirm failures
+  → Analyze stack traces
+  → Trace the cause using the 5 Whys methodology
+
+Phase 4: Implement the fix
+  → Minimal-scope changes (no unrelated refactoring)
+  → Re-run tests after fixing → confirm they pass
+
+Phase 5: Submit PR
+  → Write commit message (Conventional Commit format)
+  → Create PR with gh pr create
+  → Auto-link issue number
+
+Phase 6: Validation
+  → Confirm CI passes
+  → Assign reviewer (refer to CODEOWNERS)
+```
+
+**Usage example:**
+
+```
+User: "Fix GitHub issue #1234"
+
+LLM follows gh-issues skill instructions:
+1. exec tool → gh issue view 1234
+2. read_file tool → read related files
+3. exec tool → git checkout -b fix/issue-1234
+4. write_file tool → apply code changes
+5. exec tool → pnpm test
+6. exec tool → gh pr create ...
+```
+
+#### Example 2: `coding-agent` — Delegating to Claude Code / Codex
+
+**File:** `skills/coding-agent/SKILL.md`
+
+This skill teaches OpenClaw how to **delegate complex coding tasks to an external AI coding agent**:
+
+This is where it diverges from [Hermes](/kb/2026-05-13-hermes-agent-architecture). OpenClaw is closer to teaching the LLM the procedure for calling external coding agents like Claude Code or Codex, while Hermes also has a structure where it directly spawns internal sub-agents via `delegate_task`.
+
+```markdown
+## Coding agent delegation guidelines
+
+For complex coding tasks (changes spanning hundreds of lines,
+architecture refactoring), delegate to a specialized coding agent
+rather than handling them directly.
+
+### Delegating to Claude Code
+
+Use the exec tool:
+claude --dangerously-skip-permissions \
+ -p "task instructions" \
+ /path/to/project
+
+### Pre-delegation checklist
+
+- [ ] Verify current git state (no uncommitted changes)
+- [ ] Clearly specify the target directory
+- [ ] Document success criteria (tests pass, build passes, etc.)
+
+### Post-delegation verification
+
+- Check the list of changed files
+- Confirm test execution results
+- Review git diff for unintended changes
+```
+
+Without this skill, the LLM tries to write code directly. With the skill injected, the LLM has clear criteria for **when to delegate to an external agent**.
+
+#### Example 3: `healthcheck` — 8-Step Security Audit
+
+**File:** `skills/healthcheck/SKILL.md`
+
+An 8-step audit procedure for checking the security posture of an OpenClaw installation:
+
+```
+Step 1: Check running processes
+  exec → ps aux | grep openclaw
+  → Detect unexpected processes
+
+Step 2: Network connection status
+  exec → ss -ltnp | grep 18789
+  → Confirm gateway port binding (loopback only?)
+
+Step 3: Config file permissions
+  exec → ls -la ~/.openclaw/config.yml
+  → Should be 0600 (owner read/write only)
+
+Step 4: Credential file inspection
+  exec → ls -la ~/.openclaw/credentials/
+  → Verify each file is 0600
+
+Step 5: exec-approval policy review
+  read_file → ~/.openclaw/config.yml
+  → Verify execApproval.mode is "always"
+
+Step 6: Plugin integrity
+  → Check list of installed plugins
+  → Warn for plugins from unknown sources
+
+Step 7: Session file size warning
+  → Detect abnormally large session files (sign of token spike)
+
+Step 8: Generate security report
+  write_file → ~/.openclaw/health-report.md
+  → Document findings and recommended actions
+```
+
+**Usage example:**
+
+```
+User: "Run a security check"
+
+LLM reads healthcheck skill instructions
+→ Executes the 8 steps in order using exec tool
+→ Analyzes each step's result
+→ Saves final report to file
+```
+
+---
+
+### Skill Ecosystem: Bundled vs. ClawHub
+
+#### Bundled Skills (54, `skills/` directory)
+
+| Category        | Example skills                              |
+| --------------- | ------------------------------------------- |
+| Developer tools | `gh-issues`, `coding-agent`, `git-workflow` |
+| Productivity    | `notion`, `summarize`, `translate`          |
+| Security        | `healthcheck`, `exec-review`                |
+| Media           | `image-gen`, `voice-memo`                   |
+| Data            | `csv-analyze`, `pdf-extract`                |
+
+The bar for adding a bundled skill is **high**. From the VISION.md policy:
+
+> "New skills should be published to ClawHub first (clawhub.ai), not added to core by default. Core skill additions should be rare and require a strong product or security reason."
+
+#### ClawHub (Community Marketplace)
+
+- **URL:** https://clawhub.ai
+- **Skill count:** 13,729+ (as of 2026.3)
+- **Install:** `openclaw skill install <skill-name>`
+- **Develop:** Write a `SKILL.md` in your own repository and submit it
+
+**Popular community skills:**
+
+```
+- pomodoro-timer: Pomodoro timer + task log
+- stock-monitor: Stock price monitoring + alerts
+- recipe-assistant: Recipe recommendations from fridge contents
+- meeting-notes: Auto-summarize meetings + save to Notion
+- github-reviewer: Automated PR code review comments
+```
+
+---
+
+### Tool vs. Skill Relationship Diagram
+
+```
+User message: "Fix GitHub issue #1234"
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│              LLM (Claude)                   │
+│                                             │
+│  Injected into system prompt:               │
+│  ┌─────────────────────────────────────┐    │
+│  │ [gh-issues SKILL.md contents]        │   │
+│  │ Phase 1: Read with gh issue view     │   │
+│  │ Phase 2: Create branch               │   │
+│  │ Phase 3: Root cause analysis         │   │
+│  │ Phase 4: Apply code changes          │   │
+│  │ Phase 5: Submit PR                   │   │
+│  │ Phase 6: Validation                  │   │
+│  └─────────────────────────────────────┘   │
+│                                             │
+│  LLM reads skill instructions and decides:  │
+│  → "I should run gh issue view 1234 via exec tool"   │
+│  → "I should read related files via read_file tool"  │
+│  → "I should run git checkout -b via exec tool"      │
+└─────────────────────────────────────────────┘
+         │
+         ▼ tool_use request
+┌─────────────────────────────────────────────┐
+│              Tool execution layer            │
+│  exec → actually run gh/git commands         │
+│  read_file → actually read files             │
+│  write_file → actually write files           │
+│  browser → actually open web pages           │
+└─────────────────────────────────────────────┘
+         │
+         ▼ tool_result returned
+  LLM receives result and continues to next step...
+```
+
+**Key takeaway:** Skills teach the LLM _what_ it should do; Tools execute what the LLM has decided to do. This separation means that writing a markdown document alone — with no code whatsoever — can completely change how the LLM behaves.
