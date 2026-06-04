@@ -5,10 +5,11 @@
   --font-family-mono: var(--font-jetbrains), '42dot Sans', ui-monospace, monospace;
   --font-family-serif: var(--font-newsreader), '42dot Sans', Georgia, serif;
 
-  /* Tailwind v4 builds the font-serif utility from the --font-* namespace. Map it to
-     the editorial serif stack (which includes 42dot Sans) so Korean text in `font-serif`
-     spots renders in 42dot Sans instead of a system serif (Batang) fallback. */
+  /* Tailwind v4 builds the font-serif/font-mono utilities from the --font-* namespace.
+     Map them to the editorial stacks (which include 42dot Sans) so Korean text in
+     `font-serif` / `font-mono` spots renders in 42dot Sans instead of a system fallback. */
   --font-serif: var(--font-newsreader), '42dot Sans', Georgia, serif;
+  --font-mono: var(--font-jetbrains), '42dot Sans', ui-monospace, monospace;
 
   /* Rust accent ramp (replaces Professional Blue) */
   --color-primary-50: #fef6f0;
