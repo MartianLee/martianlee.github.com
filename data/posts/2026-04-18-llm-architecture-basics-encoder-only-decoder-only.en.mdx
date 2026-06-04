@@ -1,0 +1,109 @@
+---
+title: 'LLM Architecture Basics: Encoder-only vs. Decoder-only'
+date: '2026-04-18'
+tags: ['llm', 'transformer', 'encoder-only', 'decoder-only', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'A comparison of encoder-only and decoder-only architectures that distinguish the BERT and GPT families.'
+---
+
+## Why Does This Matter
+
+When reading papers written after BERT, you frequently encounter the terms `encoder-only`, `decoder-only`, and `encoder-decoder`. Without understanding this distinction, it is hard to grasp why BERT and GPT evolved in such different directions.
+
+## The Core Concept and Attention Masks
+
+The structural difference between these architectures is most clearly expressed through the attention mask.
+
+In an encoder-only model, every input token can attend to every other input token.
+
+```txt
+token_i can attend to token_j for all i, j
+```
+
+In a decoder-only model, each position cannot attend to future tokens.
+
+```txt
+token_i can attend only to token_j where j <= i
+```
+
+This is called a causal mask.
+
+```txt
+allowed attention in decoder-only:
+1 -> 1
+2 -> 1, 2
+3 -> 1, 2, 3
+4 -> 1, 2, 3, 4
+```
+
+## First Interpretation: What the Architecture Implies
+
+An encoder-only model sees the entire input and builds a representation from it. This makes it a natural fit for tasks such as text classification, retrieval reranking, NER, and span-based question answering.
+
+A decoder-only model sees only the tokens produced so far and predicts the next one. This makes it a natural fit for long-form text generation, dialogue, and code generation.
+
+The difference is one of purpose.
+
+```txt
+Encoder-only: understanding-oriented
+Decoder-only: generation-oriented
+```
+
+## A Simple Analogy
+
+Think of exam formats.
+
+An encoder-only model is like a reading comprehension test.
+
+```txt
+Read the entire passage, then answer the question.
+```
+
+A decoder-only model is like dictation or free writing.
+
+```txt
+Look at what you have written so far, then write the next word.
+```
+
+In a reading comprehension test you are allowed to see the whole passage. But in a next-word prediction task, looking ahead at the answer would defeat the purpose.
+
+## How to Read Papers When You Encounter These Models
+
+When you see BERT, read it as:
+
+```txt
+An encoder-only model that reads the full input bidirectionally to produce rich representations.
+```
+
+When you see GPT-family models, read them as:
+
+```txt
+Decoder-only models that generate the next token by attending only to the left context.
+```
+
+When you see a model like T5, read it as:
+
+```txt
+An encoder-decoder model in which the encoder understands the input and the decoder generates the output.
+```
+
+## Comparison Table
+
+| Architecture    | Representative Models    | Strong Tasks                            | Key Limitation                                         |
+| --------------- | ------------------------ | --------------------------------------- | ------------------------------------------------------ |
+| Encoder-only    | BERT, RoBERTa            | Classification, NER, reranking, span QA | Not well-suited for long open-ended generation         |
+| Decoder-only    | GPT family, LLaMA        | Generation, dialogue, code writing      | Constrained for full bidirectional input understanding |
+| Encoder-decoder | T5, original Transformer | Translation, text-to-text tasks         | More complex architecture                              |
+
+## Common Misconceptions
+
+- Decoder-only models can still read long inputs; their attention simply follows the causal mask.
+- Encoder-only models can produce answers by adding an output head, but long free-form generation is not their intended use case.
+- Not every modern LLM is decoder-only. Architecture choice depends on the intended purpose.
+
+## Minimum Checkpoints
+
+- Encoder-only models attend over the full input bidirectionally.
+- Decoder-only models mask future tokens and predict the next token.
+- BERT is encoder-only, GPT/LLaMA are decoder-only, and T5 is encoder-decoder.

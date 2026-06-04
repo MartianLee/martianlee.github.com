@@ -1,0 +1,85 @@
+---
+title: 'LLM Basics: RNNs and Sequential Processing'
+date: '2026-04-18'
+tags: ['llm', 'rnn', 'sequence-modeling', 'paper-reading']
+topic: llm-research
+stage: seedling
+summary: 'Explains how RNNs — the dominant architecture before Transformers — process sequences token by token, and the fundamental limitations that motivated moving beyond them.'
+---
+
+## Why This Matters
+
+The _Attention Is All You Need_ paper makes a point of emphasizing that it does **not** use RNNs.
+To understand why that was significant, you first need to understand how RNNs process sentences.
+
+After reading this note, you will be less confused when you encounter the following sentence:
+
+```txt
+Recurrent models process sequences token by token and are difficult to parallelize.
+```
+
+## The Core Concept and Equations
+
+An RNN computes the current hidden state `h_t` using both the current input `x_t` and the previous hidden state `h_{t-1}`.
+
+```txt
+h_t = f(W_x x_t + W_h h_{t-1} + b)
+```
+
+The terms mean the following.
+
+- `x_t`: the input for the t-th token.
+- `h_{t-1}`: the memory carried forward from all tokens read so far.
+- `h_t`: the updated memory after reading the current token.
+- `f`: a non-linear activation function such as tanh.
+
+## First Pass: What the Equation Is Saying
+
+An RNN reads a sentence from left to right, one token at a time.
+
+```txt
+I -> had -> coffee -> today
+```
+
+To process token `t`, the model must first have the result from step `t-1`.
+This enforces strict sequential processing.
+
+The structure is intuitive — humans also read sentences from front to back.
+But it becomes a problem when you want to train large models quickly.
+
+## An Intuitive Example
+
+Think of a relay race.
+
+- The second runner cannot start until the first runner hands off the baton.
+- The third runner cannot start until the second runner hands off the baton.
+- No two runners can start at the same time.
+
+RNNs work the same way.
+Each token's computation must wait for the previous token's computation to finish.
+
+Transformer self-attention, by contrast, can compare all tokens in a sentence against each other simultaneously.
+This difference translates directly into a large gap in parallelized training throughput.
+
+## How to Read RNN Limitations in the Paper
+
+When the Attention paper discusses the limitations of RNNs, it typically refers to three things.
+
+1. Sequential processing makes parallelization difficult.
+2. Information between distant words must travel through many intermediate steps.
+3. The longer the sentence, the longer the information-propagation path.
+
+For example, if the first and last words of a sentence are related, the RNN must relay that relationship across many intermediate hidden states.
+Transformers can directly compare two positions via attention, regardless of how far apart they are.
+
+## Common Misconceptions
+
+- This does not mean RNNs are always a bad architecture.
+- For short sequences or smaller problems, they remain a clean and understandable baseline model.
+- The core reason Transformers replaced RNNs was not just raw performance, but parallel training efficiency and better handling of long-range dependencies.
+
+## Minimum Checkpoints
+
+- RNNs use the previous hidden state as memory when processing each new token.
+- Because each computation depends on the previous one, parallelization is difficult.
+- Transformers eliminate this bottleneck by using attention to directly compare all tokens at once.
