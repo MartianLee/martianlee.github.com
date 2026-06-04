@@ -67,7 +67,7 @@
 }
 
 .footnotes {
-  @apply mt-12 border-t border-gray-200 pt-8 dark:border-gray-700;
+  @apply border-line mt-12 border-t pt-8;
 }
 
 .data-footnote-backref {
@@ -233,23 +233,23 @@ input:-webkit-autofill:focus {
 
 /* Prose (MDX Content) Styling Improvements */
 .prose {
-  @apply text-gray-700 dark:text-gray-300;
+  @apply text-ink/85;
 }
 
 .prose h1 {
-  @apply mt-8 mb-6 text-3xl font-bold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-8 mb-6 text-3xl font-bold;
 }
 
 .prose h2 {
-  @apply mt-8 mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-8 mb-4 text-2xl font-bold;
 }
 
 .prose h3 {
-  @apply mt-6 mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-6 mb-3 text-xl font-semibold;
 }
 
 .prose h4 {
-  @apply mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-ink mt-4 mb-2 text-lg font-semibold;
 }
 
 .prose p {
@@ -278,7 +278,7 @@ input:-webkit-autofill:focus {
 }
 
 .prose blockquote {
-  @apply my-6 border-l-4 border-blue-500 bg-gray-50 py-3 pr-4 pl-4 text-gray-700 italic dark:border-blue-400 dark:bg-gray-800 dark:text-gray-300;
+  @apply border-accent bg-surface text-ink/80 my-6 border-l-[3px] py-3 pr-4 pl-5 italic;
 }
 
 .prose code {
@@ -295,12 +295,17 @@ input:-webkit-autofill:focus {
   color: #e9e3d5;
 }
 
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
 .prose a {
-  @apply font-medium text-blue-600 underline decoration-blue-600/30 underline-offset-2 transition-colors hover:text-blue-700 hover:decoration-blue-700/50 dark:text-blue-400 dark:decoration-blue-400/30 dark:hover:text-blue-300 dark:hover:decoration-blue-300/50;
+  @apply text-accent font-medium underline decoration-[color:var(--accent)]/30 underline-offset-2 transition-colors hover:decoration-[color:var(--accent)]/60;
 }
 
 .prose strong {
-  @apply font-bold text-gray-900 dark:text-gray-100;
+  @apply text-ink font-bold;
 }
 
 .prose strong a {
@@ -316,7 +321,7 @@ input:-webkit-autofill:focus {
 }
 
 .prose hr {
-  @apply my-8 border-gray-200 dark:border-gray-700;
+  @apply border-line my-8;
 }
 
 /* Mermaid diagrams are rendered as inline SVG at build time, so they do not
@@ -473,15 +478,15 @@ body.kb-active main {
 }
 
 .prose thead {
-  @apply border-b-2 border-gray-300 dark:border-gray-600;
+  @apply border-line border-b-2;
 }
 
 .prose th {
-  @apply px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-ink px-4 py-2 text-left font-semibold;
 }
 
 .prose td {
-  @apply border-b border-gray-200 px-4 py-2 dark:border-gray-700;
+  @apply border-line border-b px-4 py-2;
 }
 
 .prose tbody tr:last-child td {
