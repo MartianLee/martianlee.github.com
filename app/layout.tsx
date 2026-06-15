@@ -93,12 +93,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         href="https://cdn.jsdelivr.net/npm/@fontsource/42dot-sans@latest/index.css"
         precedence="default"
       />
-      <link rel="apple-touch-icon" sizes="76x76" href="/static/favicons/apple-touch-icon.png" />
+      <link rel="icon" type="image/svg+xml" href="/static/favicons/favicon.svg" />
+      <link rel="icon" href="/static/favicons/favicon.ico" sizes="any" />
+      <link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png" />
       <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png" />
       <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png" />
       <link rel="manifest" href="/static/favicons/site.webmanifest" />
-      <link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg" color="#5bbad5" />
-      <meta name="msapplication-TileColor" content="#000000" />
+      <link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg" color="#c2410c" />
+      <meta name="msapplication-TileColor" content="#f4efe4" />
       <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4efe4" />
       <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14110b" />
       <meta name="google-site-verification" content="l2zk4JY3T1ltE03043YiRwzZLUkoTLxHVqMyF-zyGAc" />
