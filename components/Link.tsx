@@ -1,6 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import type { LinkProps } from 'next/link'
 import { AnchorHTMLAttributes } from 'react'
+import { usePathname } from 'next/navigation'
 
 const ExternalLinkIcon = () => (
   <svg
@@ -16,17 +19,33 @@ const ExternalLinkIcon = () => (
   </svg>
 )
 
+/**
+ * Posts (`/posts`, `/ko/posts`) and the knowledge base (`/kb`) render the same
+ * MDX, whose in-content cross-links are authored as `/kb/<slug>`. When a reader
+ * is inside a blog post, a `/kb/` link would bounce them out into the KB view.
+ * Keep them in their current section by rewriting the `/kb/` prefix to match it.
+ * Slugs are shared across `/kb`, `/posts`, and `/ko/posts`, so it's a prefix swap.
+ */
+function resolveInternalHref(href: string, pathname: string | null): string {
+  if (!href.startsWith('/kb/') || !pathname) return href
+  const rest = href.slice('/kb/'.length)
+  if (pathname.startsWith('/ko/posts/')) return `/ko/posts/${rest}`
+  if (pathname.startsWith('/posts/')) return `/posts/${rest}`
+  return href
+}
+
 const CustomLink = ({
   href,
   children,
   ...rest
 }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => {
-  const isInternalLink = href && href.startsWith('/')
-  const isAnchorLink = href && href.startsWith('#')
+  const pathname = usePathname()
+  const isInternalLink = typeof href === 'string' && href.startsWith('/')
+  const isAnchorLink = typeof href === 'string' && href.startsWith('#')
 
   if (isInternalLink) {
     return (
-      <Link href={href} {...rest}>
+      <Link href={resolveInternalHref(href, pathname)} {...rest}>
         {children}
       </Link>
     )
@@ -34,14 +53,14 @@ const CustomLink = ({
 
   if (isAnchorLink) {
     return (
-      <a href={href} {...rest}>
+      <a href={href as string} {...rest}>
         {children}
       </a>
     )
   }
 
   return (
-    <a target="_blank" rel="noopener noreferrer" href={href} {...rest}>
+    <a target="_blank" rel="noopener noreferrer" href={href as string} {...rest}>
       {children}
       <ExternalLinkIcon />
     </a>
