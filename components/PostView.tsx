@@ -3,6 +3,7 @@ import { MDXLayoutRenderer } from 'pliny/mdx-components'
 import { components } from '@/components/MDXComponents'
 import { allAuthors } from '.contentlayer/generated'
 import type { Authors, Blog } from '.contentlayer/generated'
+import MermaidRenderer from '@/components/MermaidRenderer'
 import PostSimple from '@/layouts/PostSimple'
 import PostLayout from '@/layouts/PostLayout'
 import PostBanner from '@/layouts/PostBanner'
@@ -37,6 +38,7 @@ export default function PostView({
       <Layout content={mainContent} authorDetails={authorDetails} next={next} prev={prev}>
         <MDXLayoutRenderer code={post.body.code} components={components} toc={post.toc} />
       </Layout>
+      <MermaidRenderer />
     </>
   )
 }

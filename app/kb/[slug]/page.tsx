@@ -12,6 +12,7 @@ import KBContextPanel from '@/components/kb/KBContextPanel'
 import KBLinkStackPreview from '@/components/kb/KBLinkStackPreview'
 import kbData from 'app/kb-data.json'
 import Link from '@/components/Link'
+import MermaidRenderer from '@/components/MermaidRenderer'
 import type { KBData } from '@/components/kb/types'
 
 const data = kbData as KBData
@@ -128,6 +129,7 @@ export default async function KBNotePage(props: { params: Promise<{ slug: string
               <KBLinkStackPreview currentSlug={slug}>
                 <MDXLayoutRenderer code={post.body.code} components={components} toc={post.toc} />
               </KBLinkStackPreview>
+              <MermaidRenderer />
             </div>
 
             {/* Prev/Next in topic */}
