@@ -50,13 +50,13 @@ Ruflo는 이 변화를 아주 크게 밀어붙이는 프로젝트입니다. READ
 
 그런데 코드를 보면 단순한 랜딩 페이지 문구만은 아닙니다. Ruflo는 실제로 다음 다섯 가지를 하나의 운영 계층으로 엮으려는 저장소입니다.
 
-| 계층    | 역할                                                                  |
-| ------- | --------------------------------------------------------------------- |
-| CLI     | `ruflo init`, `swarm`, `memory`, `hooks`, `mcp` 같은 사용자 명령 표면 |
-| MCP     | Claude Code나 Web UI가 호출할 수 있는 도구 서버                       |
-| Swarm   | agent spawn, task assignment, topology, consensus, message bus        |
-| Memory  | SQLite, AgentDB, HNSW, ReasoningBank, pattern learning                |
-| Plugins | Claude Code plugin 단위로 명령, agent, skill, smoke contract를 배포   |
+| 계층    | 역할                                                                        |
+| ------- | --------------------------------------------------------------------------- |
+| CLI     | `ruflo init`, `swarm`, `memory`, `hooks`, `mcp` 같은 사용자 명령 인터페이스 |
+| MCP     | Claude Code나 Web UI가 호출할 수 있는 도구 서버                             |
+| Swarm   | agent spawn, task assignment, topology, consensus, message bus              |
+| Memory  | SQLite, AgentDB, HNSW, ReasoningBank, pattern learning                      |
+| Plugins | Claude Code plugin 단위로 명령, agent, skill, smoke contract를 배포         |
 
 그래서 Ruflo는 "Claude Code용 확장 플러그인" 정도로 보면 작게 보는 셈입니다. 더 정확하게는 **Claude Code 주변에 별도 에이전트 운영체제를 세우려는 프로젝트**에 가깝습니다.
 
@@ -66,7 +66,7 @@ Ruflo는 이 변화를 아주 크게 밀어붙이는 프로젝트입니다. READ
 
 | 글                                                       | 중심 문제                                           | Ruflo와의 관계                                                                                                         |
 | -------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| [Superpowers](/kb/2026-04-18-superpowers-architecture)   | 에이전트에게 개발 절차를 강제하는 skill 문서 시스템 | Ruflo plugin/skill 표면과 비슷하지만, Ruflo는 더 큰 실행 인프라를 포함합니다.                                          |
+| [Superpowers](/kb/2026-04-18-superpowers-architecture)   | 에이전트에게 개발 절차를 강제하는 skill 문서 시스템 | Ruflo plugin/skill 영역과 비슷하지만 Ruflo는 더 큰 실행 인프라를 포함합니다.                                           |
 | [agentmemory](/kb/2026-05-13-agentmemory-architecture)   | 여러 에이전트가 공유하는 장기 메모리 계층           | Ruflo의 AgentDB, memory bridge, hooks learning이 같은 문제를 더 넓은 orchestration 안에 넣습니다.                      |
 | [Hermes Agent](/kb/2026-05-13-hermes-agent-architecture) | Python 기반 tool-calling agent runtime              | Hermes가 하나의 에이전트 런타임 중심이라면, Ruflo는 Claude Code 주변의 coordination/runtime substrate 쪽에 가깝습니다. |
 | [OpenClaw](/kb/2026-03-11-openclaw-architecture)         | 개인용 AI 비서 운영체제                             | OpenClaw가 사용자 채널과 앱 쪽을 넓힌다면, Ruflo는 코딩 에이전트 운영과 팀 coordination 쪽을 넓힙니다.                 |
@@ -86,8 +86,8 @@ Ruflo는 이 변화를 아주 크게 밀어붙이는 프로젝트입니다. READ
 | 기억은 어디에 남기나요?            | `.swarm/memory.db`, AgentDB, HNSW vector index, ReasoningBank, pattern namespace를 사용합니다.       |
 | Claude Code에는 어떻게 붙나요?     | `ruflo init`이 `.claude/`, `.claude-flow/`, MCP 설정, hooks, skills, agents를 생성합니다.            |
 | 도구는 어떻게 노출하나요?          | MCP server와 `v3/@claude-flow/cli/src/mcp-tools/*` 도구군으로 노출합니다.                            |
-| 가볍게만 쓸 수 있나요?             | Claude Code plugin marketplace를 통해 slash command, agent, skill만 설치하는 경로가 있습니다.        |
-| CLI 밖에서도 쓰나요?               | RuVocal Web UI와 Goal Planner UI가 같은 MCP/agent 개념을 제품 표면으로 확장합니다.                   |
+| 가볍게만 쓸 수 있나요?             | Claude Code plugin marketplace로 slash command, agent, skill만 설치하는 경로가 있습니다.             |
+| CLI 밖에서도 쓰나요?               | RuVocal Web UI와 Goal Planner UI가 같은 MCP/agent 개념을 제품 영역으로 확장합니다.                   |
 
 핵심은 "모델에게 좋은 프롬프트를 주자"가 아닙니다. Ruflo는 **모델 주변의 실행 환경**을 만들려고 합니다. 어떤 에이전트가 어떤 일을 맡는지, 도구 호출은 어디로 가는지, 메모리는 어디에 남는지, 실패한 worker는 어떻게 처리하는지, plugin 단위로 무엇을 설치하는지를 시스템 문제로 다룹니다.
 
@@ -156,7 +156,7 @@ flowchart TD
 
 이 그림에서 중요한 점은 Ruflo가 "단일 agent loop"가 아니라는 것입니다. Hermes Agent처럼 `AIAgent.run_conversation()` 같은 하나의 중심 루프가 모든 것을 품는 형태가 아닙니다. Ruflo는 오히려 Claude Code를 기존 실행자로 두고, 그 주변에 다음을 얹습니다.
 
-1. MCP 도구 표면
+1. MCP 도구 인터페이스
 2. 파일 기반 runtime state
 3. hooks와 background worker
 4. AgentDB 기반 memory
@@ -177,7 +177,7 @@ Ruflo README에서 가장 먼저 구분하는 것은 설치 경로입니다. 이
 | workspace 변경 | 거의 없습니다.                     | 설정 파일과 runtime 디렉토리를 만듭니다.         |
 | 용도           | 가볍게 기능 단위로 사용            | hooks, memory, daemon까지 포함한 전체 loop       |
 
-이 구조는 현실적인 절충입니다. 모든 사용자가 처음부터 `.claude-flow/`, hooks, MCP, daemon을 원하지는 않습니다. 그래서 Ruflo는 제품 표면을 두 단계로 둡니다.
+이 구조는 현실적인 절충입니다. 모든 사용자가 처음부터 `.claude-flow/`, hooks, MCP, daemon을 원하지는 않습니다. 그래서 Ruflo는 제품 진입 경로를 두 단계로 둡니다.
 
 ```text
 가벼운 경로:
@@ -215,7 +215,7 @@ ruflo/
 │       └── scripts/                    # deploy/config/package scripts
 ├── v3/
 │   ├── @claude-flow/
-│   │   ├── cli/                        # 가장 큰 CLI 표면
+│   │   ├── cli/                        # 가장 큰 CLI 영역
 │   │   ├── cli-core/                   # memory/hooks 중심의 lite CLI
 │   │   ├── mcp/                        # MCP server package
 │   │   ├── memory/                     # AgentDB/SQLite/HNSW memory
@@ -291,7 +291,7 @@ Ruflo의 CLI 성능 문제가 실제 아키텍처 결정으로 이어진 예도 
 
 이런 구조는 "처음부터 완전히 깨끗한 모듈 경계"라기보다는, 큰 CLI 제품을 package 단위로 분해해 가는 과정에 가깝습니다.
 
-## 9. MCP 서버와 도구 표면
+## 9. MCP 서버와 도구 인터페이스
 
 Ruflo의 핵심 접점 중 하나는 MCP입니다. Claude Code나 Web UI는 Ruflo 내부 클래스를 직접 부르기보다 MCP tool을 호출합니다.
 
@@ -314,7 +314,7 @@ terminal-tools.ts
 ...
 ```
 
-각 도구는 대체로 다음 구조를 가집니다.
+각 도구는 대체로 다음과 같은 구조로 되어 있습니다.
 
 ```text
 MCPTool
@@ -350,7 +350,7 @@ sequenceDiagram
 
 이 방식은 장점과 단점이 모두 있습니다.
 
-장점은 Claude Code가 MCP tool만 알면 된다는 것입니다. 내부가 파일 저장소든 AgentDB든 worker daemon이든 호출 표면은 도구 이름으로 통일됩니다.
+장점은 Claude Code가 MCP tool만 알면 된다는 것입니다. 내부가 파일 저장소든 AgentDB든 worker daemon이든 호출 인터페이스는 도구 이름으로 통일됩니다.
 
 단점은 MCP tool description, 파일 기반 state, 실제 package 기능 사이의 일관성이 매우 중요해진다는 것입니다. Ruflo는 이 문제를 `scripts/audit-tool-descriptions.mjs`, plugin smoke, verification manifest 같은 방식으로 관리하려고 합니다.
 
@@ -427,7 +427,7 @@ flowchart LR
     R -->|hybrid| BOTH["SQLite + AgentDB merge"]
 ```
 
-CLI의 `memory-tools.ts`는 별도의 현실적인 복잡도를 가지고 있습니다.
+CLI의 `memory-tools.ts`에는 나름의 현실적인 복잡도가 있습니다.
 
 - legacy `.claude-flow/memory/store.json` migration
 - `.swarm/memory.db`로의 단일 source of truth 정리
@@ -517,7 +517,7 @@ ruflo-<name>/
   README.md
 ```
 
-이 설계는 Superpowers와 닮았습니다. `SKILL.md`와 agent definition을 통해 에이전트 행동을 바꾸는 문서 기반 인터페이스를 사용합니다. 다만 Ruflo plugin은 여기에 MCP tool, smoke script, package compatibility, namespace convention까지 함께 묶습니다.
+이 설계는 Superpowers와 닮았습니다. `SKILL.md`와 agent definition으로 에이전트 행동을 바꾸는 문서 기반 인터페이스를 사용합니다. 다만 Ruflo plugin은 여기에 MCP tool, smoke script, package compatibility, namespace convention까지 함께 묶습니다.
 
 좋은 예가 `ruflo-swarm`입니다. 이 plugin은 문서에서 자신이 감싸는 MCP surface를 명시합니다.
 
@@ -526,17 +526,17 @@ ruflo-<name>/
 | `swarm_*` | `swarm_init`, `swarm_status`, `swarm_shutdown`, `swarm_health`                                                                |
 | `agent_*` | `agent_spawn`, `agent_execute`, `agent_terminate`, `agent_status`, `agent_list`, `agent_pool`, `agent_health`, `agent_update` |
 
-그리고 smoke script를 contract로 둡니다. 즉, plugin README는 단순 사용 설명서가 아니라 **호환성 계약 문서**에 가깝습니다.
+smoke script를 contract로 두기도 합니다. 즉, plugin README는 단순 사용 설명서가 아니라 **호환성 계약 문서**에 가깝습니다.
 
 이 점은 Ruflo의 중요한 설계 철학처럼 보입니다.
 
 > 기능을 하나의 거대한 CLI help로만 노출하지 않고, Claude Code plugin 단위로 "설치 가능한 업무 묶음"을 만듭니다.
 
-이렇게 하면 사용자는 `ruflo-core + ruflo-swarm + ruflo-testgen + ruflo-ddd`처럼 목적별 stack을 조합할 수 있습니다. 반대로 개발자는 각 plugin의 smoke script와 README를 통해 표면을 regression-protect할 수 있습니다.
+이렇게 하면 사용자는 `ruflo-core + ruflo-swarm + ruflo-testgen + ruflo-ddd`처럼 목적별 stack을 조합할 수 있습니다. 반대로 개발자는 각 plugin의 smoke script와 README로 노출 영역을 regression-protect할 수 있습니다.
 
-## 14. RuVocal과 Goal UI: CLI 밖의 제품 표면
+## 14. RuVocal과 Goal UI: CLI 밖의 제품 영역
 
-Ruflo는 CLI와 plugin만 있는 프로젝트가 아닙니다. `ruflo/src/ruvocal/`과 `v3/goal_ui/`는 Ruflo가 제품 표면을 Web으로 넓히려는 흔적입니다.
+Ruflo는 CLI와 plugin만 있는 프로젝트가 아닙니다. `ruflo/src/ruvocal/`과 `v3/goal_ui/`는 Ruflo가 제품 영역을 Web으로 넓히려는 흔적입니다.
 
 ### RuVocal
 
@@ -571,9 +571,9 @@ RuVocal chat
 
 이 UI는 Ruflo의 또 다른 방향을 보여 줍니다. 단순히 "agent에게 일 시키기"가 아니라, 목표를 상태와 action으로 분해하고 실행 계획을 시각화하려는 방향입니다.
 
-정리하면 Ruflo는 세 가지 표면을 동시에 갖습니다.
+정리하면 Ruflo는 세 가지 갈래를 동시에 갖춥니다.
 
-| 표면               | 사용자 경험                                                   |
+| 갈래               | 사용자 경험                                                   |
 | ------------------ | ------------------------------------------------------------- |
 | CLI                | 개발자가 터미널에서 명령과 MCP를 설정합니다.                  |
 | Claude Code plugin | Claude Code 안에서 slash command, skill, agent를 씁니다.      |
@@ -587,7 +587,7 @@ Ruflo는 보안과 검증을 꽤 전면에 둡니다. 코드상 보이는 축은
 
 둘째, plugin과 MCP surface 검증입니다. `plugins/README.md`는 모든 MCP tool description이 "언제 native tool 대신 이 도구를 써야 하는지"를 설명해야 한다고 말합니다. 이를 `scripts/audit-tool-descriptions.mjs`로 검사합니다.
 
-셋째, verification witness입니다. `verification/` 아래에는 platform별 manifest, capabilities, results가 있습니다. README와 plugin 문서는 smoke test와 witness manifest를 계속 언급합니다. Ruflo처럼 표면이 넓은 프로젝트에서는 "어디까지 실제로 동작한다고 주장할 수 있는가"가 중요하기 때문에, 이런 증거 계층을 따로 둔 점은 좋게 보입니다.
+셋째, verification witness입니다. `verification/` 아래에는 platform별 manifest, capabilities, results가 있습니다. README와 plugin 문서는 smoke test와 witness manifest를 계속 언급합니다. Ruflo처럼 다루는 범위가 넓은 프로젝트에서는 "어디까지 실제로 동작한다고 주장할 수 있는가"가 중요하기 때문에, 이런 증거 계층을 따로 둔 점은 좋게 보입니다.
 
 다만 이 역시 양면적입니다. witness와 ADR이 많아질수록 문서와 실제 구현의 drift를 관리해야 합니다. Ruflo는 이 문제를 도구화하려고 하지만, 읽는 사람 입장에서는 어느 문서가 최신이고 어느 수치가 현재 package와 맞는지 확인해야 합니다.
 
@@ -597,7 +597,7 @@ Ruflo는 보안과 검증을 꽤 전면에 둡니다. 코드상 보이는 축은
 
 1. `README.md`
 
-   제품이 무엇을 주장하는지 먼저 봅니다. 단, 마케팅 수치는 그대로 믿기보다 어떤 코드 표면으로 이어지는지 확인하는 용도로 읽는 편이 좋습니다.
+   제품이 무엇을 주장하는지 먼저 봅니다. 단, 마케팅 수치는 그대로 믿기보다 어떤 코드 영역으로 이어지는지 확인하는 용도로 읽는 편이 좋습니다.
 
 2. `ruflo/bin/ruflo.js`
 
@@ -657,7 +657,7 @@ worker daemon과 swarm tool을 보면 PID liveness, orphan reconciliation, timeo
 
 ### 5. Web UI가 단순 demo가 아닙니다.
 
-RuVocal은 MCP server group, parallel tool calls, bring-your-own MCP server, MongoDB persistence를 품고 있습니다. CLI 기능을 그대로 Web에 노출하려는 제품 표면입니다.
+RuVocal은 MCP server group, parallel tool calls, bring-your-own MCP server, MongoDB persistence를 품고 있습니다. CLI 기능을 그대로 Web에 노출하려는 제품형 인터페이스입니다.
 
 ## 18. 주의해서 볼 지점
 
@@ -669,7 +669,7 @@ README, USERGUIDE, plugin README, package.json이 모두 빠르게 변합니다.
 
 MCP tool의 파일 기반 state, plugin smoke, memory bridge처럼 현실적으로 다듬어진 부분이 있습니다. 반면 일부 public API용 coordinator나 simulation성 consensus 코드는 아직 개념 구현에 가깝습니다. 어느 layer를 보고 있는지 구분해야 합니다.
 
-### 3. 표면적이 매우 넓습니다.
+### 3. 다루는 범위가 매우 넓습니다.
 
 CLI command, MCP tool, plugin, hooks, worker, AgentDB, RuVector, Web UI, federation, guidance가 한 저장소에 있습니다. 이 자체가 장점이지만, 신규 기여자에게는 큰 진입 장벽입니다. Ruflo를 읽을 때는 "전체를 이해한 뒤 쓰겠다"보다 "내가 쓸 plugin과 MCP surface부터 보겠다"가 현실적입니다.
 
@@ -699,6 +699,6 @@ Ruflo는 "Claude Code를 더 똑똑하게 쓰는 prompt 모음"이 아닙니다.
 2. 기억은 모델 안이 아니라 외부 substrate로 나옵니다.
 3. 도구는 CLI 명령이 아니라 MCP surface가 됩니다.
 4. workflow는 문서가 아니라 plugin과 hook으로 배포됩니다.
-5. 제품 표면은 terminal에서 Web UI로 확장됩니다.
+5. 제품 영역은 terminal에서 Web UI로 확장됩니다.
 
 이 다섯 가지가 앞으로 AI coding infrastructure의 반복되는 패턴이 될 가능성이 높습니다. Ruflo는 그 패턴을 조금 과감하고, 조금 복잡하고, 꽤 넓은 형태로 먼저 밀어붙이고 있는 프로젝트입니다.

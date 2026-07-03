@@ -339,13 +339,13 @@ OpenHands에서 event는 conversation의 실행 기록입니다. `openhands/app_
 5. GitHub API로 PR을 만듭니다.
 6. conversation metadata에 PR number를 저장합니다.
 
-이 구조는 "agent가 직접 GitHub token을 들고 PR을 연다"가 아닙니다. app server가 인증 문맥과 제품 문맥을 가진 상태에서 MCP tool을 제공합니다. GitLab MR, Bitbucket, Azure DevOps도 같은 방향으로 확장됩니다.
+이 구조는 "agent가 직접 GitHub token을 들고 PR을 연다"가 아닙니다. app server가 인증 문맥과 제품 문맥을 갖춘 상태에서 MCP tool을 제공합니다. GitLab MR, Bitbucket, Azure DevOps도 같은 방향으로 확장됩니다.
 
 또 하나 흥미로운 부분은 Tavily proxy입니다. Tavily API key가 설정되어 있으면 app server의 MCP server 아래에 Tavily MCP proxy를 mount합니다. 외부 검색 도구 key를 sandbox에 직접 노출하지 않고 app server가 중계하는 구조입니다.
 
 ## 14. Frontend: conversation workspace UI
 
-`frontend`는 React Router 7 기반 SPA입니다. route 목록을 보면 제품 표면이 잘 보입니다.
+`frontend`는 React Router 7 기반 SPA입니다. route 목록을 보면 제품이 다루는 범위가 잘 보입니다.
 
 ```text
 conversation
@@ -365,7 +365,7 @@ git-settings
 
 프론트엔드 API client는 `frontend/src/api`에 서비스별로 나뉘어 있습니다. `conversation-service/v1-conversation-service.api.ts`는 conversation 시작, start task polling, VSCode URL, pause/resume, ask_agent, profile switch를 담당합니다.
 
-흥미로운 점은 frontend가 app server API와 agent-server runtime API를 모두 이해한다는 점입니다. app server에서 conversation metadata를 받고, conversation URL을 통해 sandbox 내부 agent-server endpoint도 호출합니다.
+흥미로운 점은 frontend가 app server API와 agent-server runtime API를 모두 이해한다는 점입니다. app server에서 conversation metadata를 받고, conversation URL로 sandbox 내부 agent-server endpoint도 호출합니다.
 
 코딩 에이전트 UI는 일반 채팅 UI보다 넓습니다. terminal, browser, VSCode, file changes, planner, task list, settings가 한 workspace에 같이 있어야 합니다. OpenHands frontend 구조는 그 요구사항을 그대로 반영합니다.
 
@@ -382,7 +382,7 @@ skill source는 크게 두 가지입니다.
 
 `openhands/app_server/app_conversation/skill_loader.py`는 app server가 직접 모든 skill loading을 처리하지 않는다는 점을 강조합니다. app server는 org config와 sandbox config를 만들고, source-specific loading은 agent-server에 맡깁니다.
 
-이 구조는 Superpowers와 닮았습니다. Superpowers가 skill 문서를 통해 agent 절차를 강제했다면, OpenHands는 제품 안에서 repository, organization, built-in skill을 합쳐 agent context를 구성합니다.
+이 구조는 Superpowers와 닮았습니다. Superpowers가 skill 문서로 agent 절차를 강제했다면, OpenHands는 제품 안에서 repository, organization, built-in skill을 합쳐 agent context를 구성합니다.
 
 ## 16. Enterprise 디렉터리의 의미
 
@@ -405,7 +405,7 @@ README는 `enterprise/` 디렉터리가 source-available이라고 설명합니�
 
 1. `README.md`에서 SDK, CLI, Local GUI, Cloud, Enterprise 구분을 먼저 봅니다.
 2. `pyproject.toml`에서 `openhands-sdk`, `openhands-agent-server`, `openhands-tools` 의존성을 확인합니다.
-3. `openhands/app_server/app.py`와 `v1_router.py`로 FastAPI 표면을 봅니다.
+3. `openhands/app_server/app.py`와 `v1_router.py`로 FastAPI가 노출하는 부분을 봅니다.
 4. `openhands/app_server/config.py`로 service injector와 runtime 선택 방식을 봅니다.
 5. `openhands/app_server/app_conversation/live_status_app_conversation_service.py`로 conversation startup을 따라갑니다.
 6. `openhands/app_server/sandbox/docker_sandbox_service.py`로 sandbox와 exposed URL 구조를 봅니다.
