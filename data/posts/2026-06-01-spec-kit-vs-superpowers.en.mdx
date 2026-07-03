@@ -1,0 +1,347 @@
+---
+slug: '2026-06-01-spec-kit-vs-superpowers'
+title: 'spec-kit vs superpowers: Two Ways to Give a Coding Agent a "Process"'
+crawlertitle: 'spec-kit vs superpowers: Two Ways to Give a Coding Agent a Process'
+summary: "GitHub's spec-kit and Anthropic's superpowers plugin both force a workflow onto coding agents so they never drift into vibe coding. But one is a spec-first file system that leaves the specification behind as an artifact in a .specify/ directory, while the other is a collection of discipline prompts lazily loaded through the Skill tool. We compare the two projects across distribution model, artifact philosophy, token cost, and extensibility."
+date: 2026-06-01 00:00:00 +0900
+categories: posts
+tags:
+  [
+    'spec-kit',
+    'superpowers',
+    'claude-code',
+    'spec-driven-development',
+    'ai-agent',
+    'workflow',
+    'comparison',
+    'architecture',
+  ]
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+> Analysis date: 2026-06-01
+> spec-kit target commit: `3617cd9c0219092d778f81118110daf127918baf` (main)
+> spec-kit repository: https://github.com/github/spec-kit
+> spec-kit local path: `~/workspace/opensources/spec-kit`
+> superpowers target version: `5.0.7` (claude-plugins-official)
+> superpowers local path: `~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7`
+
+---
+
+_This article is partially written by Claude._
+
+## Table of Contents
+
+1. [Why Look at These Two Together](#1-why-look-at-these-two-together)
+2. [The One-Sentence Summary](#2-the-one-sentence-summary)
+3. [Distribution Model: CLI or Plugin](#3-distribution-model-cli-or-plugin)
+4. [Workflow Mapping](#4-workflow-mapping)
+5. [Artifact Philosophy: Files or Discipline](#5-artifact-philosophy-files-or-discipline)
+6. [Token and Context Cost](#6-token-and-context-cost)
+7. [Extensibility: Hooks, Presets, Integrations](#7-extensibility-hooks-presets-integrations)
+8. [Enforcement Mechanisms: Gates and the "Iron Law"](#8-enforcement-mechanisms-gates-and-the-iron-law)
+9. [Which One Should You Choose](#9-which-one-should-you-choose)
+10. [Conclusion](#10-conclusion)
+
+---
+
+## 1. Why Look at These Two Together
+
+In an era where a coding agent pours out code from a single line of input, how to keep it from sliding into "vibe coding" has become the theme of a new class of tools. These two projects solve the same problem from precisely opposite directions.
+
+- **GitHub spec-kit** turns _the specification itself into an artifact_. A constitution, spec, plan, tasks, and checklists all live as files in the `.specify/` directory and get committed to git. Code is the "last-mile" output of that specification.
+- **superpowers** turns _the agent's discipline itself_ into a tool. Its artifacts are light — about one design document and one plan — and instead skill prompts like brainstorming, TDD, and systematic-debugging get invoked at each step of the work.
+
+Both are tools for "dressing Claude Code (or another agent) in a process," but they differ in where that process lives. One inside the repo, the other at the agent's tool-call moment.
+
+## 2. The One-Sentence Summary
+
+> spec-kit provides _spec-as-artifact_; superpowers provides _discipline-as-tool_.
+
+This one sentence explains all the rest of the differences.
+
+## 3. Distribution Model: CLI or Plugin
+
+### spec-kit — an external Python CLI
+
+spec-kit is a Python CLI called `specify` that you install with `uv tool install`. You start from the project root with a command like `specify init my-project --integration copilot`, and it unpacks the following _into the project directory_.
+
+```text
+my-project/
+├── .claude/commands/        # slash command files (with claude integration)
+├── .specify/
+│   ├── memory/constitution.md
+│   ├── templates/
+│   └── extensions.yml       # user-defined hooks
+└── specs/
+    └── 001-user-auth/
+        ├── spec.md
+        ├── plan.md
+        ├── tasks.md
+        ├── research.md
+        ├── data-model.md
+        ├── contracts/
+        ├── quickstart.md
+        └── checklists/
+```
+
+The source tree (`src/specify_cli/`) contains full-blown modules: a workflow engine (`workflows/engine.py`), an integration catalog (`integrations/`), presets (`presets/`), and extensions (`extensions.py`). In other words, spec-kit is _a meta-framework that lives inside the project_.
+
+### superpowers — a Claude Code plugin
+
+superpowers is a Claude Code plugin installed from the marketplace. It installs into the user's home directory.
+
+```text
+~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/
+├── skills/
+│   ├── brainstorming/SKILL.md
+│   ├── writing-plans/SKILL.md
+│   ├── executing-plans/SKILL.md
+│   ├── test-driven-development/SKILL.md
+│   ├── systematic-debugging/SKILL.md
+│   ├── subagent-driven-development/SKILL.md
+│   ├── verification-before-completion/SKILL.md
+│   └── ... (14 in total)
+├── commands/
+│   ├── brainstorm.md
+│   ├── write-plan.md
+│   └── execute-plan.md
+├── hooks/session-start
+└── agents/
+```
+
+_Nothing gets installed into the project directory._ At most, when the brainstorming skill creates a design document, a single markdown file lands in `docs/superpowers/specs/`. superpowers is _a set of meta-skills that lives in the agent_.
+
+| Item           | spec-kit                                      | superpowers                                                            |
+| -------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| Install unit   | Project (`specify init`)                      | User (Claude Code plugin)                                              |
+| Where it lives | `.specify/` + `.claude/commands/` in the repo | `~/.claude/plugins/...`                                                |
+| Language       | Python CLI + Markdown templates               | Markdown skills + JS hooks                                             |
+| Agent coupling | A 30+ agent integration catalog               | SKILL-compatible environments (Claude Code / Codex / Gemini CLI, etc.) |
+
+## 4. Workflow Mapping
+
+The core steps map almost 1:1.
+
+| Step                 | spec-kit                                | superpowers                                          |
+| -------------------- | --------------------------------------- | ---------------------------------------------------- |
+| Define principles    | `/speckit.constitution`                 | (no separate step — delegated to CLAUDE.md / memory) |
+| Specify requirements | `/speckit.specify` + `/speckit.clarify` | the `brainstorming` skill                            |
+| Technical plan       | `/speckit.plan`                         | the `writing-plans` skill                            |
+| Task breakdown       | `/speckit.tasks`                        | `writing-plans` (folded into the plan)               |
+| Implementation       | `/speckit.implement`                    | `executing-plans` or `subagent-driven-development`   |
+| Consistency check    | `/speckit.analyze`                      | `verification-before-completion`                     |
+| Quality gate         | `/speckit.checklist`                    | `requesting-code-review` / `code-review`             |
+
+But the _underlying philosophy in the details_ differs.
+
+- **spec-kit splits the spec into multiple documents.** `/speckit.plan` generates not just a single `plan.md` but also `research.md` (a record of technical decisions), `data-model.md` (entities/relationships), `contracts/` (API specs), and `quickstart.md` (integration scenarios). In `tasks.md`, each user story carries a P1/P2/P3 priority and is broken down so that _each story is independently an MVP_.
+- **superpowers condenses the spec into a single page.** Roughly `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`. Instead, the brainstorming skill enforces a _conversational procedure_: "propose 2-3 approaches → explain the trade-offs → move to the next step only after the user approves."
+
+In other words, spec-kit performs the same decomposition **through document structure**, while superpowers does it **through conversational structure**.
+
+## 5. Artifact Philosophy: Files or Discipline
+
+The biggest difference is "where the specification lives."
+
+### spec-kit's philosophy: the spec lives in git
+
+The first sentence of SDD (Spec-Driven Development), as laid out in `spec-driven.md`, is blunt.
+
+> Spec-Driven Development flips the script on traditional software development. Specifications don't serve code—code serves specifications.
+
+This sentence drives every design decision in spec-kit.
+
+- **The constitution** keeps project principles as a _permanent file_. The plan template of `/speckit.plan` explicitly includes a `Constitution Check` gate, with the rule baked in that it "must pass before Phase 0 research, and is re-checked after Phase 1 design."
+- **Specs are branch-based.** Each feature is isolated in a `specs/<NNN>-<short-name>/` directory and matched to a git branch number (`branch_numbering: sequential` or `timestamp`).
+- **Changing the spec = regenerating the code.** Change a single line of the PRD and the affected technical decisions get flagged automatically. "Edit = update the spec, then regenerate" is the normal flow.
+
+This philosophy shows up directly in the number of artifact files. Per feature:
+
+```text
+spec.md  +  plan.md  +  tasks.md  +  research.md
+       +  data-model.md  +  contracts/*  +  quickstart.md
+       +  checklists/*.md  +  (memory/constitution.md, shared)
+```
+
+Eight to ten markdown files are the normal output.
+
+### superpowers's philosophy: discipline lives in the agent
+
+superpowers's key words are "gate" and "iron law." The brainstorming SKILL.md has a guard like this.
+
+```text
+<HARD-GATE>
+Do NOT invoke any implementation skill, write any code,
+scaffold any project, or take any implementation action
+until you have presented a design and the user has approved it.
+</HARD-GATE>
+```
+
+The test-driven-development SKILL.md has an "Iron Law" baked in.
+
+```text
+NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+```
+
+systematic-debugging is the same.
+
+```text
+NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
+```
+
+This enforcement lives _in the prompt, not in a file_. Even when a feature is finished, only about two documents — a design and a plan — remain on disk. This is exactly the opposite of spec-kit, where 8-10 files get permanently lodged into git.
+
+> To put it as an analogy, spec-kit is _an auditable revival of the waterfall_. Every decision is left as a document, and change happens through the spec. superpowers is _a pair programmer whose creed is Test-First and Root-Cause-First_. It cares about the consistency of the procedure more than the artifacts.
+
+## 6. Token and Context Cost
+
+This difference is reflected directly in token cost.
+
+### spec-kit's cost structure
+
+spec-kit's slash-command files are _static_. The command markdown unpacked into `.claude/commands/` is loaded almost wholesale into the model's context whenever the user invokes that slash command.
+
+```text
+templates/commands/specify.md   341 lines
+templates/commands/checklist.md 366 lines
+templates/commands/clarify.md   282 lines
+templates/commands/analyze.md   252 lines
+templates/commands/implement.md 216 lines
+templates/commands/plan.md      164 lines
+templates/commands/tasks.md     216 lines
+templates/commands/constitution.md 150 lines
+templates/commands/taskstoissues.md 100 lines
+                       total   ≈ 2,087 lines (commands only)
+```
+
+On top of that, when `/speckit.implement` starts, it additionally reads in _all_ of the following.
+
+```text
+- tasks.md       (REQUIRED)
+- plan.md        (REQUIRED)
+- data-model.md  (IF EXISTS)
+- contracts/*    (IF EXISTS)
+- research.md    (IF EXISTS)
+- memory/constitution.md (IF EXISTS)
+- quickstart.md  (IF EXISTS)
+```
+
+For a single real feature, the 8-10 markdown files add up to a conservative **15-40KB (roughly 5-15K tokens)**. On top of that comes the command's own 200-340-line prompt. As the implementation phase drags on, it gets re-referenced every turn and accumulates.
+
+### superpowers's cost structure
+
+superpowers _lazily loads_ through Claude Code's `Skill` tool. What goes into the system prompt is a single short line of description.
+
+```text
+- superpowers:brainstorming: You MUST use this before any creative work...
+- superpowers:writing-plans: Use when you have a spec or requirements...
+- superpowers:executing-plans: Use when you have a written implementation plan...
+...
+```
+
+A skill's body enters the context only when it's invoked. The body isn't short (all 14 skills sum to ≈ 3,159 lines), but _they are never all loaded at once_. During the brainstorming step, only brainstorming SKILL.md's 164 lines come in; during the TDD step, only TDD SKILL.md's 371 lines.
+
+### Comparison
+
+| Cost item                          | spec-kit                                                                           | superpowers                                                                 |
+| ---------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Baseline (when nothing is invoked) | Command files load on slash invocation. When inactive, nearly 0.                   | One line of description per skill for 14 skills in the system prompt ≈ 2KB. |
+| One spec step                      | Command prompt of 200-340 lines + templates + accumulating artifacts               | One skill body (~150-370 lines)                                             |
+| One implementation step            | tasks/plan/spec/research/data-model/contracts accumulating to 5-15K tokens         | executing-plans (70 lines) or subagent-driven-development (277 lines)       |
+| Cumulative growth                  | As the feature grows, artifact files grow with it and get re-referenced every turn | Artifacts stay small, so almost no accumulation                             |
+
+In short: **spec-kit spends tokens as the price of "leaving every decision as a document," while superpowers saves them through "lazy loading and short artifacts."**
+
+This difference isn't better or worse; it's a difference of _purpose_. spec-kit is expensive, but its artifacts are also read by humans and enter PR review. As a tool for team-level consensus, that cost is reasonable.
+
+## 7. Extensibility: Hooks, Presets, Integrations
+
+### spec-kit's extension points
+
+spec-kit has a full-blown extension system.
+
+- **`.specify/extensions.yml`** — you can hook user-defined actions into each command step (`before_specify`, `before_plan`, `before_tasks`, `before_implement`, `after_*`). Each command template _inlines_ a 30-40-line hook-check procedure (down to the `optional` vs `mandatory` branch, `condition` expressions, and the `EXECUTE_COMMAND` output format).
+- **`presets/`** — predefined configurations like `lean`, `scaffold`, and `self-test`. The project catalog (`catalog.json`) and the community catalog (`catalog.community.json`) are kept separate.
+- **`integrations/`** — 30+ agent integrations. They use the same command templates, but placeholders like `__SPECKIT_COMMAND_PLAN__` are substituted per agent.
+- **`workflows/`** — a workflow engine made of `engine.py`, `expressions.py`, and `catalog.py`. It expresses commands not as plain markdown but as a _graph_.
+
+You can see the effort put into turning it into a platform. As you'd expect from a GitHub-built tool, its primary goal is _to unify diverse agents under a single workflow_.
+
+### superpowers's extension points
+
+superpowers offers only _thinner_ extensions.
+
+- **`hooks/session-start`** — injects a "using-superpowers" skill notice at session start. The `SessionStart hook success: OK` you see at the top of this document is exactly that.
+- **`commands/brainstorm.md`, `write-plan.md`, `execute-plan.md`** — thin 5-line slash commands each. All the real logic lives inside the skills.
+- **`agents/`** — subagent definitions (a code reviewer, etc.).
+- **the `writing-skills` skill** — a meta-skill _for writing more skills_. Users can add skills tailored to their own project.
+
+superpowers is not a "platform" but a "collection of disciplines." Extension is handled by user-side skill additions or Claude Code configuration.
+
+| Extension aspect   | spec-kit                     | superpowers                                              |
+| ------------------ | ---------------------------- | -------------------------------------------------------- |
+| User-defined hooks | Multi-stage YAML-based hooks | Delegated to Claude Code's PreToolUse/PostToolUse, etc.  |
+| Multiple agents    | Catalog-based integration    | Per-environment variants (Claude/Codex/Gemini)           |
+| Workflow graph     | Expressed via engine.py      | Expressed via explicit call relationships between skills |
+
+## 8. Enforcement Mechanisms: Gates and the "Iron Law"
+
+Both projects explicitly install _a device that keeps the LLM from skipping a step_. But the mechanisms differ.
+
+### spec-kit — gates are baked into the template
+
+- The plan template's `Constitution Check` section: "GATE: Must pass before Phase 0 research. Re-check after Phase 1 design."
+- The implement command forces a check on _whether the checklist passed_ before it starts. If an incomplete checklist exists, it asks "proceed with implementation anyway? (yes/no)" and waits for the user's response.
+- Movement between commands is spelled out via `handoffs` metadata. `/speckit.specify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.implement` are linked by "send: true" handoffs.
+
+The gate is _the structure of the document itself_. It's hard for the model to ignore.
+
+### superpowers — gates are baked in with natural language
+
+- The `<HARD-GATE>` tag is lodged at the head of the brainstorming skill.
+- An absolute rule named `Iron Law` sits in the TDD and systematic-debugging skills.
+- Sentences like "Violating the letter of the rules is violating the spirit of the rules." recur.
+- The using-superpowers skill opens with a strong command: invoke a skill even if there's only a 1% chance it applies.
+
+The gate is _the rhetoric of the prompt_. At the tool-call moment, the model reads that rhetoric and follows it.
+
+> In other words, spec-kit works _like a compiler_, and superpowers _like a coach_. The former can't move to the next step if the form doesn't check out; the latter tells you "you have to do it this way" over and over, every time.
+
+## 9. Which One Should You Choose
+
+Because they overlap so heavily, _running both at full tilt is not recommended_. Both systems are "a meta-layer that controls the process," so turning them on together leaves the model wavering over whose discipline to follow. They're closer to _substitutes than complements_.
+
+### When spec-kit fits better
+
+- **Team-level work that needs a reviewable spec.** The artifacts themselves are the PR/audit deliverables.
+- **When requirements change often and the traceability of change matters.** The "change the spec = regenerate the code" philosophy fits naturally.
+- **When you need to bind several agents (Claude/Copilot/Cursor) into one workflow.** The integration catalog is a strength.
+- **When you want to enforce product-development patterns** like P1/P2/P3 user-story breakdowns and MVP-first development.
+
+### When superpowers fits better
+
+- **Solo or small-team work, where procedural consistency matters more than artifacts.**
+- **When you want to force disciplines like TDD/root-cause analysis onto the LLM.** The Iron Law pattern is direct.
+- **When you're sensitive to token cost.** Lazy loading keeps the baseline near 0.
+- **When you want to start lightweight in a Skill-compatible environment** like Claude Code / Codex / Gemini CLI.
+
+### A middle ground: spec-kit for docs, superpowers for implementation
+
+An experimentally viable combination looks like this.
+
+- Use only `/speckit.specify` + `/speckit.plan` to generate _review documents_.
+- For the actual implementation, tactically use superpowers's `test-driven-development`, `systematic-debugging`, and `verification-before-completion` instead of `/speckit.implement`.
+
+That said, avoid turning on `/speckit.implement` and superpowers's `executing-plans`/`subagent-driven-development` _at the same time_. Both are skills that "control the entire implementation flow," so they collide.
+
+## 10. Conclusion
+
+spec-kit and superpowers offer two answers to the same question — "how do you dress a coding agent in discipline?" — namely, **make the spec an artifact (spec-kit)** vs **make discipline a tool (superpowers)**.
+
+- spec-kit implements the SDD philosophy of _spec = source of truth_ through a file system and a workflow engine. The richer its artifacts, the higher its token and disk cost.
+- superpowers, with the philosophy of _discipline = a prompt at the tool-call moment_, bakes the Iron Law and HARD-GATE directly into the LLM. The lighter its artifacts, the lower its token cost, and the better it fits a solo workflow.
+
+The criterion for choosing comes down to "do you want a team to look at the spec together, or do you want a disciplined agent for yourself?" And if you do mix the two, the most important rule is _don't turn on each system's core step (implementation control) at the same time_.
