@@ -55,6 +55,32 @@ Third, ponytail **measures its own effect.** With an agentic benchmark that edit
 
 So if you see ponytail only as "a prompt that says write less code," you miss the point. More precisely, it is **a system that ships a single discipline, to every agent, in a measurable form.**
 
+## Quick Start: Install and Use
+
+Installing ponytail differs per agent, but the result is the same — once installed, the discipline is always on for every response.
+
+**Claude Code** (the install is two steps, so send it as two separate prompts):
+
+```text
+/plugin marketplace add DietrichGebert/ponytail
+/plugin install ponytail@ponytail
+```
+
+Other agents are similar: for opencode, add `{ "plugin": ["@dietrichgebert/ponytail"] }` to `opencode.json`; for Pi, `pi install git:github.com/DietrichGebert/ponytail`; Codex and Copilot CLI use their own `plugin marketplace add` commands.
+
+After installing, there's little to turn on — a hook injects the discipline right before every LLM call. The only thing you change is the intensity.
+
+- `/ponytail lite | full | ultra | off` — switch intensity (default is full)
+- Natural-language triggers work too — "ponytail," "be lazy," "yagni," "simplest solution"
+- Sub-commands — `/ponytail-review` (review for over-engineering only), `/ponytail-audit` (the whole repo), `/ponytail-debt` (debt ledger), `/ponytail-gain` (savings scoreboard), `/ponytail-help`
+
+The effect shows in one line. Ask for a date input and a typical agent installs a picker library, writes a wrapper component and a stylesheet, then starts discussing timezones. With ponytail on, it ends like this:
+
+```html
+<!-- ponytail: browser has one -->
+<input type="date" />
+```
+
 ## 2. Where Does It Sit Among the Previous Articles?
 
 Placed next to the skill/agent articles I've analyzed recently, ponytail's position comes into focus.

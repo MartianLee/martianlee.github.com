@@ -55,6 +55,32 @@ ponytail은 그 시니어 개발자를 **여러분의 AI 에이전트 안에 넣
 
 그래서 ponytail을 "코드 줄이라는 프롬프트"라고만 보면 핵심을 놓칩니다. 더 정확하게는 **한 가지 규율을, 모든 에이전트에, 측정 가능한 형태로 배포하는 시스템**입니다.
 
+## 빠르게 써 보기: 설치와 사용
+
+ponytail의 설치는 에이전트마다 방식이 다르지만, 결과는 같습니다 — 한 번 설치하면 따로 부르지 않아도 모든 응답에 규율이 적용됩니다.
+
+**Claude Code** (설치가 두 단계라, 프롬프트를 두 번에 나눠 보냅니다):
+
+```text
+/plugin marketplace add DietrichGebert/ponytail
+/plugin install ponytail@ponytail
+```
+
+다른 에이전트도 비슷합니다. opencode는 `opencode.json`에 `{ "plugin": ["@dietrichgebert/ponytail"] }`를 더하고, Pi는 `pi install git:github.com/DietrichGebert/ponytail`, Codex·Copilot CLI는 각자의 `plugin marketplace add` 명령을 씁니다.
+
+설치하고 나면 따로 켤 일이 거의 없습니다. 훅이 매 LLM 호출 직전에 규율을 주입하기 때문입니다. 이후엔 강도만 조절하면 됩니다.
+
+- `/ponytail lite | full | ultra | off` — 강도 전환(기본은 full)
+- 자연어 트리거도 됩니다 — "ponytail", "be lazy", "yagni", "simplest solution" 같은 말
+- 보조 커맨드 — `/ponytail-review`(과잉 설계만 보는 리뷰), `/ponytail-audit`(저장소 전체), `/ponytail-debt`(부채 장부), `/ponytail-gain`(절감 점수판), `/ponytail-help`
+
+다음 한 줄이 그 효과를 잘 보여 줍니다. 날짜 입력을 요청하면 보통의 에이전트는 픽커 라이브러리를 깔고, 래퍼 컴포넌트와 스타일시트를 만든 뒤, 타임존을 논의하기 시작합니다. ponytail이 켜져 있으면 이렇게 끝냅니다.
+
+```html
+<!-- ponytail: browser has one -->
+<input type="date" />
+```
+
 ## 2. 기존 글들과 어디에 놓이나요?
 
 최근 분석한 스킬·에이전트 글들과 나란히 놓으면 ponytail의 위치가 또렷해집니다.
@@ -150,7 +176,7 @@ ponytail은 강도를 세 단계로 둡니다.
 
 ## 8. 보조 스킬 6종
 
-ponytail은 메인 스킬 외에 다섯 개의 보조 스킬을 둡니다. 모두 같은 철학의 변주입니다.
+ponytail은 메인 스킬 외에 다섯 개의 보조 스킬을 둡니다. 모두 같은 철학을 조금씩 다르게 푼 것입니다.
 
 | 스킬              | 역할                                                         |
 | ----------------- | ------------------------------------------------------------ |
