@@ -1,0 +1,241 @@
+---
+slug: '2026-07-10-floci-architecture'
+title: 'Floci 프로젝트 분석: AWS 68개 서비스를 컨테이너 하나에 담으려면 어떤 구조가 되나요?'
+crawlertitle: 'Floci 프로젝트 분석: AWS 68개 서비스를 컨테이너 하나에 담으려면 어떤 구조가 되나요?'
+summary: 'Floci는 계정도 토큰도 기능 게이트도 없는, 항상 무료인 오픈소스 로컬 AWS 에뮬레이터입니다. Quarkus + GraalVM 네이티브 단일 컨테이너가 포트 4566 하나에서 68개 AWS 서비스를 흉내 냅니다. Smithy 규격에 따른 프로토콜 라우팅, 디스크립터 기반 서비스 카탈로그, 네 가지 스토리지 모드, 실제 Docker 실행을 LocalStack과 대조하며 분석합니다.'
+date: 2026-07-10 18:00:00 +0900
+categories: posts
+tags: ['floci', 'localstack', 'aws', 'quarkus', 'graalvm', 'testing', 'backend', 'architecture']
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+> 분석 일자: 2026-07-10
+> 대상 패키지: `floci` `1.5.31` (MIT)
+> 대상 커밋: `efc9453` (`main` 브랜치, 2026-07-09)
+> 저장소: https://github.com/floci-io/floci
+> 로컬 분석 경로: `~/workspace/opensources/floci`
+
+---
+
+_This article is partially written by Claude Code_
+
+{/* 섬네일 슬롯: `docker compose up` 후 `aws --endpoint-url=http://localhost:4566 s3 ...` 실행 화면을 public/static/post-images/에 넣고 파일명을 주시면 frontmatter images 와 본문에 연결하겠습니다. */}
+
+## 목차
+
+1. [왜 Floci인가요?](#1-왜-floci인가요)
+2. [기존 글들과 어디에 놓이나요?](#2-기존-글들과-어디에-놓이나요)
+3. [프로젝트를 한 문장으로 이해하기](#3-프로젝트를-한-문장으로-이해하기)
+4. [기술 스택과 규모](#4-기술-스택과-규모)
+5. [핵심 문제: 한 포트에 68개 서비스](#5-핵심-문제-한-포트에-68개-서비스)
+6. [요청 라우팅: 프로토콜을 먼저 알아냅니다](#6-요청-라우팅-프로토콜을-먼저-알아냅니다)
+7. [인증은 장식입니다](#7-인증은-장식입니다)
+8. [서비스 모듈: 디스크립터 기반 카탈로그](#8-서비스-모듈-디스크립터-기반-카탈로그)
+9. [상태 저장: 네 가지 모드와 계정 격리](#9-상태-저장-네-가지-모드와-계정-격리)
+10. [진짜로 흉내 냅니다](#10-진짜로-흉내-냅니다)
+11. [LocalStack 드롭인 호환](#11-localstack-드롭인-호환)
+12. [테스트와 호환성](#12-테스트와-호환성)
+13. [LocalStack과 비교](#13-localstack과-비교)
+14. [인상적인 설계 포인트](#14-인상적인-설계-포인트)
+15. [주의해서 볼 지점](#15-주의해서-볼-지점)
+16. [결론](#16-결론)
+
+---
+
+## 1. 왜 Floci인가요?
+
+Floci는 README에서 자신을 이렇게 소개합니다. **"Light, fluffy, and always free. No account. No auth token. No feature gates. Just `docker compose up`."** 계정도, 인증 토큰도, 유료 기능 게이트도 없이 `docker compose up` 한 번이면 되는, **항상 무료인 오픈소스 로컬 AWS 에뮬레이터**입니다. 이름은 팝콘처럼 생긴 구름(floccus)에서 왔습니다.
+
+이 도구가 필요한 이유는 개발·테스트·CI에서 진짜 AWS를 쓰기가 번거롭기 때문입니다. 클라우드 계정, 비용, 느린 왕복, 정리하기 어려운 리소스. Floci는 AWS SDK·CLI·Terraform·CDK·OpenTofu를 `http://localhost:4566`으로 향하게만 하면, 내 노트북에서 AWS 모양의 서비스를 그대로 쓰게 해 줍니다.
+
+겉으로는 또 하나의 목(mock) 라이브러리로 보입니다. 하지만 저장소를 열면 Floci를 특별하게 만드는 두 가지가 보입니다.
+
+첫째, Floci는 **컨테이너 하나에 68개 AWS 서비스를 담습니다.** 서비스마다 프로세스를 띄우는 대신, 단일 Quarkus 앱이 포트 4566 하나에서 S3·DynamoDB·SQS·Lambda·IAM·API Gateway를 전부 받아 냅니다.
+
+둘째, Floci는 **자바인데도 GraalVM 네이티브 바이너리로 배포됩니다.** JVM이 아니라 네이티브 이미지라, 밀리초 만에 뜨고 유휴 메모리가 낮습니다. 뜨고 지는 일이 잦은 CI와 Testcontainers에 맞춘 선택입니다.
+
+그래서 Floci를 "AWS를 흉내 내는 목"이라고만 보면 절반만 본 셈입니다. 더 정확하게는 **한 포트 뒤에서 수십 개 AWS 프로토콜을 분간해 서비스로 넘기고, 그 전부를 네이티브 바이너리 하나로 압축한 에뮬레이터**입니다.
+
+## 2. 기존 글들과 어디에 놓이나요?
+
+이 글은 최근 AI·에이전트 시리즈에서 벗어나, 백엔드·로컬 인프라 갈래에 섭니다. 블로그에 직접 대응하는 글은 없고, 가장 자연스러운 비교 대상은 **LocalStack**입니다.
+
+| 대상                                                        | 중심 문제                          | Floci와의 관계                                                                               |
+| ----------------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| **LocalStack**                                              | 로컬 AWS 에뮬레이션(프리미엄 모델) | Floci는 LocalStack Community의 드롭인 대체재입니다. 항상 무료·게이트 없음·GraalVM 네이티브.  |
+| [RedisBloom](/kb/2026-04-18-redisbloom-signup-architecture) | 백엔드 인프라 컴포넌트             | 둘 다 개발자 인프라이지만, RedisBloom이 한 자료구조라면 Floci는 클라우드 전체를 흉내 냅니다. |
+
+핵심은 Floci가 "AWS 목 라이브러리"로 설명되지 않는다는 점입니다. LocalStack이 던진 질문은 "AWS를 로컬에서 어떻게 흉내 낼까"였습니다. Floci가 그 자리에서 다시 던지는 질문은 두 가지입니다 — **어떻게 게이트 없이 무료로**, 그리고 **어떻게 자바 모놀리스를 네이티브로 가볍게** 그 일을 할 것인가.
+
+## 3. 프로젝트를 한 문장으로 이해하기
+
+**Floci**는 Quarkus + GraalVM 네이티브로 컴파일한 단일 컨테이너로, 포트 4566 하나에서 요청의 와이어 프로토콜을 먼저 알아내 알맞은 서비스 핸들러로 넘기고, 디스크립터 기반 카탈로그로 68개 AWS 서비스를 흉내 내는 **항상 무료인 로컬 AWS 에뮬레이터**입니다.
+
+질문으로 바꾸면 이렇습니다.
+
+| 질문                            | Floci의 답                                                                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 어떻게 실행하나요?              | `docker compose up`. 네이티브 이미지가 밀리초 만에 뜨고, 엔드포인트는 `http://localhost:4566`입니다.      |
+| 한 포트가 어떻게 여러 서비스를? | `ProtocolClaimer`가 요청의 프로토콜(JSON RPC·query·REST·CBOR)을 알아내고, 컨트롤러가 서비스로 분기합니다. |
+| 인증은 어떻게 하나요?           | SigV4 서명을 검증하지 않습니다. 라우팅과 계정 식별에만 파싱합니다. 자격 증명은 아무 값이나 됩니다.        |
+| 서비스는 어떻게 늘리나요?       | `services/<name>/` 패키지 + 카탈로그 디스크립터 한 줄. 강제 상속 없이 도구를 조합합니다.                  |
+| 상태는 어디 사나요?             | 기본은 메모리 맵. `persistent`·`hybrid`·`wal` 모드로 디스크에도 남길 수 있고, 계정 ID로 격리됩니다.       |
+| LocalStack에서 옮길 수 있나요?  | 이미지만 바꾸면 됩니다. 포트·자격 증명·`/_localstack` 엔드포인트·`Ready.` 로그까지 같습니다.              |
+
+## 4. 기술 스택과 규모
+
+| 영역                | 기술                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 프레임워크          | **Quarkus 3.36.3** (Quarkus REST/RESTEasy Reactive + Vert.x), JAX-RS 필터·프로바이더                                    |
+| 언어                | **Java 25** (`maven-enforcer`가 `[25,26)` 강제)                                                                         |
+| 배포 산출물         | **GraalVM 네이티브 이미지**(Mandrel, amd64·arm64, ubi9-minimal). JVM 이미지는 개발용                                    |
+| 빌드                | 단일 모듈 Maven(루트 `pom.xml` 하나)                                                                                    |
+| 충실도용 라이브러리 | Velocity(API Gateway VTL), graphql-java(AppSync), JSONata(Step Functions), docker-java(실제 실행), BouncyCastle(ACM) 등 |
+| 스토리지            | 자체 `StorageBackend` — memory·persistent·hybrid·wal                                                                    |
+| 라이선스            | **MIT**                                                                                                                 |
+
+로컬 체크아웃 기준 규모는 이렇습니다.
+
+| 항목             |    수치 |
+| ---------------- | ------: |
+| Git 추적 파일 수 | 2,002개 |
+| Java 파일        | 1,656개 |
+| AWS 서비스       |   ~68개 |
+| 기본 포트        |    4566 |
+
+## 5. 핵심 문제: 한 포트에 68개 서비스
+
+Floci를 이해하는 열쇠는 하나의 제약입니다. **모든 서비스가 포트 4566을 공유합니다.** 진짜 AWS는 서비스마다 다른 엔드포인트를 쓰지만, 로컬 에뮬레이터는 한 주소로 다 받아야 합니다. 그래서 Floci는 들어온 요청이 *어느 서비스의 어느 오퍼레이션*인지를 스스로 되짚어야 합니다.
+
+이게 왜 어렵냐면, AWS SDK가 서비스마다 다른 와이어 프로토콜을 쓰기 때문입니다. DynamoDB·SQS는 JSON RPC(`X-Amz-Target` 헤더), EC2·IAM은 query(폼 인코딩), S3는 REST-XML, 최신 서비스는 CBOR을 씁니다. 하나의 `POST /`가 이 중 무엇이든 될 수 있습니다.
+
+Floci의 답은 마이크로서비스로 쪼개는 것이 아니라, **엣지에서 프로토콜을 정확히 알아내는 것**입니다. 그리고 그 판별을 직접 짠 규칙이 아니라 **AWS의 Smithy 와이어 프로토콜 선택 규격**을 그대로 따라 구현했습니다.
+
+## 6. 요청 라우팅: 프로토콜을 먼저 알아냅니다
+
+라우팅은 `core/common/`에서 두 단계로 일어납니다.
+
+**1단계 — 프로토콜 클레이밍.** `ProtocolClaimer`가 페이로드를 건드리지 않고 메서드·경로·`Content-Type`·`X-Amz-Target`·`Authorization`만 정해진 우선순위로 살펴, 프로토콜(rpcv2Cbor → rpcv2Json → awsJson1.0 → awsJson1.1 → awsQuery → REST)을 판정합니다. `@PreMatching` 필터가 이를 돌려 요청 속성에 심어 둡니다.
+
+- **DynamoDB·SQS·SNS·SSM** → `POST /` + `application/x-amz-json-1.x` + `X-Amz-Target`. 타깃 접두사(`DynamoDB_20120810.` 등)를 카탈로그와 맞춥니다.
+- **EC2·IAM·STS·CloudFormation** → 폼 인코딩 query. 서비스는 **SigV4 자격 증명 스코프**에서 되찾습니다(`Credential=…/…/<service>/aws4_request`).
+- **S3·API Gateway·Lambda URL** → REST.
+
+**2단계 — 서비스로 분기.** 프로토콜별 컨트롤러가 `@Path("/")`에서 서비스 키로 갈라집니다. `AwsJsonController`는 `X-Amz-Target`을 풀어 `switch`로 DynamoDB·SQS·SNS 핸들러에, `AwsQueryController`는 `Action` 파라미터와 자격 증명 스코프로 IAM·EC2·STS 핸들러에 넘깁니다. 응답은 프로토콜에 맞는 XML·JSON으로 돌려줍니다.
+
+여기에 현실의 지저분함을 처리하는 필터들이 붙습니다. `SqsQueueUrlRouterFilter`는 최신 SDK가 큐 URL 경로(`/{accountId}/{queueName}`)로 POST하는 것을 감지해 `POST /`로 되돌리고(S3의 `/{bucket}/{key}`와 충돌하지 않게 조심하며), SDK v1이 본문에서 빠뜨린 `QueueUrl`을 다시 끼워 넣기까지 합니다. `S3VirtualHostFilter`는 가상 호스트(`bucket.s3.…`)를 경로 스타일로 바꿉니다.
+
+## 7. 인증은 장식입니다
+
+Floci에서 눈여겨볼 결정 하나. **SigV4 서명을 암호학적으로 검증하지 않습니다.** `Authorization` 헤더는 오직 두 가지를 위해 파싱됩니다 — 라우팅에 쓸 **서비스 이름**과, 상태를 격리할 **계정 ID**. 그래서 README가 "자격 증명은 아무 비어 있지 않은 값이면 된다"고 말합니다.
+
+IAM 정책 *집행*도 있긴 합니다(`IamEnforcementFilter`). 하지만 기본은 꺼져 있고(`services.iam.enforcement-enabled: false`), 켜도 접근 키 `test`(루트 대역)나 모르는 키, 매핑 안 된 액션은 통과시킵니다. 의도적으로 관대한 자세입니다. 로컬 개발에서 인증은 방해물이지 목적이 아니라는 관점입니다.
+
+## 8. 서비스 모듈: 디스크립터 기반 카탈로그
+
+한 서비스는 `services/<name>/` 패키지에 살고, 일정한 모양을 따릅니다. API Gateway를 예로 들면 — 엣지 컨트롤러(관리 API + 배포된 API를 실제로 실행하는 데이터 플레인), 비즈니스 로직 `Service`, 다른 서비스나 프로토콜이 부를 수 있는 `<Name>JsonHandler`/`<Name>QueryHandler`(공통 시그니처 `handle(action, request, region)`), `TagHandler`, `model/`의 POJO들입니다.
+
+흥미로운 점은 **서비스마다 강제되는 상위 클래스가 없다**는 것입니다. 대신 `core/common/`에 공통 도구가 있고, 서비스는 그것을 조합합니다. 중심은 `ServiceDescriptor`(외부 키·설정 키·타깃 접두사·자격 스코프·프로토콜·스토리지 모드를 기술하는 레코드)와 이를 모은 `ServiceCatalog`/`ResolvedServiceCatalog`입니다. 라우팅이 참조하는 단일 레지스트리가 이 카탈로그이고, 서비스는 프로토콜과 스토리지를 **선언적으로** 고릅니다. 그래서 새 서비스를 붙이는 일이 "패키지 하나 + 디스크립터 한 줄"로 끝납니다.
+
+## 9. 상태 저장: 네 가지 모드와 계정 격리
+
+상태는 `StorageBackend<K,V>` 뒤에 추상화돼 있고, `StorageFactory`가 네 모드 중 하나를 만듭니다.
+
+- **memory**(기본) — 순수 RAM 맵.
+- **persistent** — 서비스별 JSON 파일, 쓸 때마다 플러시.
+- **hybrid** — RAM + 주기적 비동기 플러시(약 5초).
+- **wal** — write-ahead 로그 + 스냅샷 + 컴팩션.
+
+모든 백엔드는 `AccountAwareStorageBackend`로 감싸여, **모든 키를 호출자의 계정 ID로 네임스페이스**합니다. 멀티 계정 격리가 공짜로 따라옵니다. 초기화는 `/_localstack/state/reset`이 모든 `Resettable` 빈의 `clear()`를 돌려 처리합니다.
+
+## 10. 진짜로 흉내 냅니다
+
+Floci의 충실도는 목치고 놀랍습니다.
+
+- **API Gateway VTL** — 진짜 Apache Velocity 엔진으로 `$input`·`$util`·`$context`·`$stageVariables`를 노출해 매핑 템플릿을 평가합니다. JSON 스키마 검증과 OpenAPI 임포트도 붙습니다.
+- **크로스 서비스 이벤트가 목이 아니라 진짜입니다.** `S3Service`가 `LambdaService`·`SnsService`·`SqsService`·`EventBridgeService`를 주입받아, S3 이벤트 알림이 실제로 Lambda·SNS·SQS·EventBridge로 퍼집니다. `SnsService`도 SQS·Lambda·HTTP로 실제 전달을 합니다. SNS→SQS/Lambda 구독이 끝까지 동작합니다.
+- **실제 Docker 실행** — Lambda·RDS·Neptune·ElastiCache·MSK·ECS·EC2·EKS·OpenSearch·CodeBuild은 얕은 목이 아니라 `docker-java`로 진짜 컨테이너를 띄웁니다.
+- **프로토콜에 맞춘 에러** — 같은 AccessDenied라도 S3-XML·query-XML·JSON을 요청에 맞춰 골라 냅니다. 심지어 DynamoDB 응답에 `X-Amz-Crc32`를 다시 붙입니다 — Go SDK가 이 값을 검증하기 때문입니다.
+
+이 와이어 수준의 집착이 반복해서 나타납니다. "AWS 모양만 흉내 내는 것"과 "SDK가 진짜라고 믿게 만드는 것"은 다르고, Floci는 후자를 노립니다.
+
+## 11. LocalStack 드롭인 호환
+
+Floci는 LocalStack 호환을 곁다리가 아니라 1급 기능으로 다룹니다. `_localstack` 접두사 요청을 받고(`/_localstack/health`·`/init`·`/info`·`/state/reset`), 상태를 물으면 `"edition":"community"`(원래는 `floci-always-free`)라고 답해 LocalStack용 도구를 만족시킵니다. `/etc/localstack/init/` 초기화 스크립트를 존중하고, `LOCALSTACK_*` 환경 변수를 번역하며, 기동 완료에 LocalStack과 같은 `Ready.` 로그를 찍어 `LocalStackContainer`의 기본 대기 전략이 그대로 먹히게 합니다.
+
+즉 마이그레이션이 "이미지만 바꾸기"가 되도록 공을 들였습니다. 포트도, "아무 자격 증명이나" 동작도, 엔드포인트도 같습니다.
+
+## 12. 테스트와 호환성
+
+`compatibility-tests/`에는 8개 하네스가 있고, **실제 클라이언트를 살아 있는 Floci 컨테이너에 물려** 돌립니다(목 없음). 자바 SDK v2(약 352개 테스트)·Node SDK v3·boto3·Go SDK·AWS CLI(bats), 그리고 Terraform v6·OpenTofu·CDK v2까지. Terraform/CDK 스택은 S3+버전관리, SQS+DLQ, SNS→SQS, DynamoDB GSI/LSI, RDS Postgres, Cognito, VPC+ALB 같은 현실적인 다중 서비스 구성을 세웁니다.
+
+여기에 `src/test/`의 약 543개 자바 테스트(약 296개 `@QuarkusTest`가 RestAssured로 살아 있는 HTTP를 두드림), 그리고 별도 배포되는 Testcontainers 모듈(자바·Node·Python)이 더해집니다. CI는 이 8개 스위트를 **네이티브 이미지에** 대고 병렬로 돌립니다.
+
+## 13. LocalStack과 비교
+
+이 글의 출발점이 LocalStack 대조였으니 정리해 두겠습니다.
+
+| 축            | LocalStack                                    | Floci                                                 |
+| ------------- | --------------------------------------------- | ----------------------------------------------------- |
+| 라이선스·모델 | 프리미엄 — 고급 서비스·기능은 유료 Pro 게이트 | **MIT·항상 무료·게이트 없음**                         |
+| 런타임        | Python                                        | **Java 25 + GraalVM 네이티브 단일 바이너리**          |
+| 기동/메모리   | 상대적으로 무거움                             | 밀리초 기동, 낮은 유휴 메모리(CI·Testcontainers 친화) |
+| 서비스 판별   | (자체 방식)                                   | **Smithy 규격에 따른 프로토콜 클레이밍**              |
+| 호환          | —                                             | LocalStack 드롭인(포트·자격·`/_localstack`·`Ready.`)  |
+| 계기          | Community 에디션 2026-03 일몰                 | "no-strings-attached" 대체재로 자리매김               |
+
+요지는 이렇습니다. LocalStack이 파이썬으로 폭넓게 흉내 내되 일부를 유료로 가둔다면, Floci는 **자바 모놀리스를 네이티브로 컴파일해 가볍게, 그리고 전부 무료로** 같은 폭(약 68개 서비스)을 노립니다. 도박은 "정적으로 컴파일된 카탈로그 기반 자바 한 덩어리가 LocalStack만큼 넓으면서, 더 빨리 뜨고, 더 작고, 아무것도 게이트하지 않을 수 있다"는 것입니다.
+
+## 14. 인상적인 설계 포인트
+
+### 1. 일부러 모놀리스입니다.
+
+1,656개 자바 파일, 68개 서비스가 한 앱·한 컨테이너·한 포트에 있습니다. "서비스를 어떻게 구분하나"라는 문제를 프로세스 분리가 아니라 엣지의 프로토콜 판별로 풉니다.
+
+### 2. 규격을 그대로 따릅니다.
+
+프로토콜 판별을 감으로 짜지 않고 AWS Smithy 와이어 프로토콜 선택 규격을 그대로 구현했습니다. 의도적 예외까지 문서대로 둡니다.
+
+### 3. 서비스 통합이 인프로세스입니다.
+
+API Gateway·Step Functions·S3 이벤트가 다른 서비스의 핸들러를 직접 호출합니다. 루프백 HTTP를 거치지 않아 빠릅니다.
+
+### 4. 자바인데 네이티브가 제품입니다.
+
+이 규모의 자바 프로젝트가 GraalVM 네이티브를 배포 산출물로 삼는 건 드뭅니다. 밀리초 기동·저메모리를 얻는 대신, 곳곳에 `@RegisterForReflection`과 네이티브 빌드 인자를 깔아야 하는 규율을 감수합니다.
+
+### 5. 인증을 장식으로 둡니다.
+
+SigV4는 라우팅·계정 식별에만 파싱하고 검증하지 않습니다. 로컬 개발의 목적에 맞춘, 의도된 관대함입니다.
+
+## 15. 주의해서 볼 지점
+
+### 1. "68개 서비스"는 폭이지 깊이가 아닙니다.
+
+카탈로그는 71개 디스크립터, 디렉터리는 67개, README는 68개라고 합니다. 하지만 각 서비스의 _오퍼레이션 커버리지_(실제로 동작하는 API)는 별개입니다. 특정 오퍼레이션이 필요하다면 지원 여부를 직접 확인해야 합니다.
+
+### 2. 네이티브 빌드가 진입 장벽입니다.
+
+GraalVM 네이티브는 리플렉션·리소스 힌트에 예민합니다. 기여하거나 포크하려면 `@RegisterForReflection`과 `quarkus.native.additional-build-args`의 규율을 먼저 잡아야 합니다.
+
+### 3. 일부 서비스는 실제 Docker에 의존합니다.
+
+Lambda·RDS 등은 진짜 컨테이너를 띄웁니다. 충실도는 높지만, Docker 소켓 접근과 추가 포트가 필요해 CI 환경 설정이 그만큼 늘어납니다.
+
+### 4. 인증이 없다는 것은 양날입니다.
+
+편하지만, IAM 권한 경계를 로컬에서 검증하고 싶다면 기본값으로는 안 됩니다. 집행을 켜도 관대하므로, 보안 정책 테스트에는 한계가 있습니다.
+
+## 16. 결론
+
+Floci는 "AWS를 흉내 내는 목"보다 큰 프로젝트입니다. 실제 구조는 **한 포트 뒤에서 수십 개 AWS 프로토콜을 규격대로 분간해 서비스로 넘기고, 그 전부를 네이티브 바이너리 하나로 압축한, 항상 무료인 에뮬레이터**입니다.
+
+LocalStack이 파이썬으로 로컬 AWS를 흉내 내되 일부를 유료로 가둔다면, Floci는 같은 폭을 자바 네이티브로 가볍게, 그리고 전부 무료로 노립니다. 그 뒤에는 Smithy 프로토콜 클레이밍, 디스크립터 기반 카탈로그, 네 가지 스토리지, 그리고 SDK가 진짜라고 믿게 만드는 와이어 수준의 집착이 있습니다.
+
+Floci를 볼 때 가장 중요한 질문은 "어떤 서비스를 지원하나요?"가 아닙니다. 더 중요한 질문은 이것입니다.
+
+> 한 포트, 한 프로세스로 수십 개 AWS 서비스를 받아 내면서, 각 SDK가 진짜 AWS라고 믿게 하려면 무엇을 만들어야 하나요?
+
+Floci의 답은 `ProtocolClaimer`의 규격 기반 판별, `ServiceCatalog`의 디스크립터, 계정별 스토리지, 네이티브로 압축한 Quarkus 모놀리스입니다. 이 경계들을 이해하면, Floci가 단순한 목이 아니라 **클라우드 하나를 컨테이너에 접어 넣은 에뮬레이터**라는 것이 보입니다.

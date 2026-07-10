@@ -1,0 +1,241 @@
+---
+slug: '2026-07-10-floci-architecture'
+title: 'Analyzing Floci: What Does It Take to Fit 68 AWS Services Into One Container?'
+crawlertitle: 'Analyzing Floci: What Does It Take to Fit 68 AWS Services Into One Container?'
+summary: 'Floci is an always-free, open-source local AWS emulator with no account, no auth token, and no feature gates. A single Quarkus + GraalVM native container emulates 68 AWS services behind one port, 4566. We analyze its Smithy-spec protocol routing, descriptor-driven service catalog, four storage modes, and real Docker execution — against LocalStack.'
+date: 2026-07-10 18:00:00 +0900
+categories: posts
+tags: ['floci', 'localstack', 'aws', 'quarkus', 'graalvm', 'testing', 'backend', 'architecture']
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+> Analysis date: 2026-07-10
+> Target package: `floci` `1.5.31` (MIT)
+> Target commit: `efc9453` (`main` branch, 2026-07-09)
+> Repository: https://github.com/floci-io/floci
+> Local analysis path: `~/workspace/opensources/floci`
+
+---
+
+_This article is partially written by Claude Code_
+
+{/* Thumbnail slot: capture a `docker compose up` + `aws --endpoint-url=http://localhost:4566 s3 ...` session into public/static/post-images/ and give me the filename; I'll wire it into frontmatter images and the body. */}
+
+## Table of Contents
+
+1. [Why Floci?](#1-why-floci)
+2. [Where Does It Sit Among the Previous Articles?](#2-where-does-it-sit-among-the-previous-articles)
+3. [Understanding the Project in One Sentence](#3-understanding-the-project-in-one-sentence)
+4. [Tech Stack and Scale](#4-tech-stack-and-scale)
+5. [The Core Problem: 68 Services on One Port](#5-the-core-problem-68-services-on-one-port)
+6. [Request Routing: Figure Out the Protocol First](#6-request-routing-figure-out-the-protocol-first)
+7. [Auth Is Decorative](#7-auth-is-decorative)
+8. [Service Modules: A Descriptor-Driven Catalog](#8-service-modules-a-descriptor-driven-catalog)
+9. [State: Four Modes and Account Isolation](#9-state-four-modes-and-account-isolation)
+10. [It Emulates for Real](#10-it-emulates-for-real)
+11. [Drop-In LocalStack Compatibility](#11-drop-in-localstack-compatibility)
+12. [Testing and Compatibility](#12-testing-and-compatibility)
+13. [Comparison With LocalStack](#13-comparison-with-localstack)
+14. [Notable Design Decisions](#14-notable-design-decisions)
+15. [Things to Watch Out For](#15-things-to-watch-out-for)
+16. [Conclusion](#16-conclusion)
+
+---
+
+## 1. Why Floci?
+
+Floci introduces itself in the README like this: **"Light, fluffy, and always free. No account. No auth token. No feature gates. Just `docker compose up`."** It's an **always-free, open-source local AWS emulator** that needs no account, no auth token, and no paid feature gates — just one `docker compose up`. The name comes from _floccus_, the cloud formation that looks like popcorn.
+
+The reason it's needed is that using real AWS in dev/test/CI is a hassle: a cloud account, cost, slow round trips, and resources that are hard to clean up. Point your AWS SDK, CLI, Terraform, CDK, or OpenTofu at `http://localhost:4566` and Floci gives you AWS-shaped services right on your laptop.
+
+On the surface it looks like yet another mock library. But open the repository and two things set Floci apart.
+
+First, Floci **fits 68 AWS services into one container.** Instead of a process per service, a single Quarkus app receives S3, DynamoDB, SQS, Lambda, IAM, and API Gateway all on one port, 4566.
+
+Second, Floci **ships as a GraalVM native binary despite being Java.** It's a native image, not a JVM, so it starts in milliseconds and keeps idle memory low. That's a choice tuned for CI and Testcontainers, where things start and stop often.
+
+So if you see Floci only as "a mock that imitates AWS," you've seen half of it. More precisely, it is **an emulator that, behind one port, tells dozens of AWS protocols apart and hands them to services — all compressed into a single native binary.**
+
+## 2. Where Does It Sit Among the Previous Articles?
+
+This article steps out of the recent AI/agent series into the backend / local-infrastructure thread. There's no direct analog on this blog, and the natural comparison is **LocalStack.**
+
+| Subject                                                     | Central problem                      | Relationship to Floci                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **LocalStack**                                              | Local AWS emulation (freemium model) | Floci is a drop-in replacement for LocalStack Community — always free, no gates, GraalVM native.             |
+| [RedisBloom](/kb/2026-04-18-redisbloom-signup-architecture) | A backend infrastructure component   | Both are developer infrastructure, but where RedisBloom is one data structure, Floci emulates a whole cloud. |
+
+The key is that Floci is not explained as an "AWS mock library." The question LocalStack posed was "how do you emulate AWS locally?" Floci re-poses it in two ways: **how do you do it for free, with no gates**, and **how do you make a Java monolith light via native compilation.**
+
+## 3. Understanding the Project in One Sentence
+
+**Floci** is an always-free local AWS emulator: a single container compiled with Quarkus + GraalVM native that, on one port (4566), first figures out a request's wire protocol, hands it to the right service handler, and emulates 68 AWS services via a descriptor-driven catalog.
+
+As questions:
+
+| Question                               | Floci's answer                                                                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| How do you run it?                     | `docker compose up`. The native image starts in milliseconds; the endpoint is `http://localhost:4566`.                   |
+| How does one port serve many services? | `ProtocolClaimer` figures out the request's protocol (JSON RPC/query/REST/CBOR), and controllers branch by service.      |
+| How is auth handled?                   | It doesn't validate SigV4 signatures. It parses them only for routing and account identity. Credentials can be anything. |
+| How do you add a service?              | A `services/<name>/` package + one catalog descriptor. No forced inheritance — it composes tools.                        |
+| Where does state live?                 | In-memory maps by default; `persistent`/`hybrid`/`wal` modes can keep it on disk, and it's isolated by account ID.       |
+| Can you migrate from LocalStack?       | Just swap the image. The port, credentials, `/_localstack` endpoints, and `Ready.` log are all the same.                 |
+
+## 4. Tech Stack and Scale
+
+| Area               | Technology                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Framework          | **Quarkus 3.36.3** (Quarkus REST/RESTEasy Reactive + Vert.x), JAX-RS filters/providers                                         |
+| Language           | **Java 25** (`maven-enforcer` requires `[25,26)`)                                                                              |
+| Shipped artifact   | **GraalVM native image** (Mandrel, amd64/arm64, ubi9-minimal). The JVM image is for dev                                        |
+| Build              | Single-module Maven (one root `pom.xml`)                                                                                       |
+| Fidelity libraries | Velocity (API Gateway VTL), graphql-java (AppSync), JSONata (Step Functions), docker-java (real execution), BouncyCastle (ACM) |
+| Storage            | A custom `StorageBackend` — memory/persistent/hybrid/wal                                                                       |
+| License            | **MIT**                                                                                                                        |
+
+The scale of the local checkout:
+
+| Item              | Count |
+| ----------------- | ----: |
+| Git-tracked files | 2,002 |
+| Java files        | 1,656 |
+| AWS services      |   ~68 |
+| Default port      |  4566 |
+
+## 5. The Core Problem: 68 Services on One Port
+
+The key to understanding Floci is one constraint. **Every service shares port 4566.** Real AWS uses a different endpoint per service, but a local emulator has to take everything at one address. So Floci must reconstruct, for each incoming request, _which service and which operation_ it is.
+
+Why is that hard? Because the AWS SDK uses a different wire protocol per service. DynamoDB and SQS use JSON RPC (an `X-Amz-Target` header); EC2 and IAM use query (form-encoded); S3 uses REST-XML; newer services use CBOR. A single `POST /` could be any of these.
+
+Floci's answer isn't to split into microservices but to **figure out the protocol precisely at the edge.** And it implements that decision not with hand-rolled rules but by following **AWS's Smithy wire-protocol-selection spec** to the letter.
+
+## 6. Request Routing: Figure Out the Protocol First
+
+Routing happens in two stages, both in `core/common/`.
+
+**Stage 1 — protocol claiming.** `ProtocolClaimer` inspects only the method, path, `Content-Type`, `X-Amz-Target`, and `Authorization` — without touching the payload — in a fixed precedence, and decides a protocol (rpcv2Cbor → rpcv2Json → awsJson1.0 → awsJson1.1 → awsQuery → REST). A `@PreMatching` filter runs it and stashes the claim as a request property.
+
+- **DynamoDB / SQS / SNS / SSM** → `POST /` + `application/x-amz-json-1.x` + `X-Amz-Target`. The target prefix (e.g. `DynamoDB_20120810.`) is matched against the catalog.
+- **EC2 / IAM / STS / CloudFormation** → form-encoded query. The service is recovered from the **SigV4 credential scope** (`Credential=…/…/<service>/aws4_request`).
+- **S3 / API Gateway / Lambda URLs** → REST.
+
+**Stage 2 — dispatch to a service.** Protocol-specific controllers branch by service key at `@Path("/")`. `AwsJsonController` resolves `X-Amz-Target` and `switch`es to the DynamoDB/SQS/SNS handlers; `AwsQueryController` uses the `Action` param and the credential scope to reach the IAM/EC2/STS handlers. Responses come back as protocol-appropriate XML/JSON.
+
+On top of this sit filters that handle the messiness of the real world. `SqsQueueUrlRouterFilter` detects newer SDKs POSTing to a queue-URL path (`/{accountId}/{queueName}`) and rewrites it to `POST /` (carefully avoiding a clash with S3's `/{bucket}/{key}`), even re-injecting the `QueueUrl` that SDK v1 omits from the body. `S3VirtualHostFilter` converts virtual-host style (`bucket.s3.…`) to path style.
+
+## 7. Auth Is Decorative
+
+One decision worth noting in Floci: **it doesn't cryptographically validate SigV4 signatures.** The `Authorization` header is parsed for just two things — the **service name** for routing, and the **account ID** to isolate state. That's why the README says "credentials can be any non-empty values."
+
+There is IAM policy _enforcement_ (`IamEnforcementFilter`), but it's off by default (`services.iam.enforcement-enabled: false`), and even when on it lets through the access key `test` (the root stand-in), unknown keys, and unmapped actions. It's a deliberately permissive posture — the view that, in local development, auth is an obstacle, not the point.
+
+## 8. Service Modules: A Descriptor-Driven Catalog
+
+A service lives in a `services/<name>/` package and follows a consistent shape. Take API Gateway: edge controllers (the management API plus a data plane that actually _executes_ deployed APIs), a business-logic `Service`, a `<Name>JsonHandler`/`<Name>QueryHandler` that other services or protocols can call (a uniform `handle(action, request, region)` signature), a `TagHandler`, and POJOs under `model/`.
+
+What's interesting is that **there's no forced superclass per service.** Instead, `core/common/` holds shared tools, and services compose them. At the center are `ServiceDescriptor` (a record describing external key, config key, target prefixes, credential scopes, protocols, storage mode) and the `ServiceCatalog`/`ResolvedServiceCatalog` that collect them. Routing consults this single registry, and services pick their protocols and storage **declaratively.** So adding a new service ends at "one package + one descriptor line."
+
+## 9. State: Four Modes and Account Isolation
+
+State is abstracted behind `StorageBackend<K,V>`, and `StorageFactory` builds one of four modes.
+
+- **memory** (default) — pure RAM maps.
+- **persistent** — a JSON file per service, flushed on every write.
+- **hybrid** — RAM + periodic async flush (~5s).
+- **wal** — a write-ahead log + snapshot + compaction.
+
+Every backend is wrapped in `AccountAwareStorageBackend`, which **namespaces all keys by the caller's account ID.** Multi-account isolation comes for free. Reset is handled by `/_localstack/state/reset`, which calls `clear()` on every `Resettable` bean.
+
+## 10. It Emulates for Real
+
+Floci's fidelity is surprising for a mock.
+
+- **API Gateway VTL** — a real Apache Velocity engine exposes `$input`, `$util`, `$context`, and `$stageVariables` to evaluate mapping templates. JSON-Schema validation and OpenAPI import are attached too.
+- **Cross-service events are real, not mocked.** `S3Service` injects `LambdaService`, `SnsService`, `SqsService`, and `EventBridgeService`, so S3 event notifications actually fan out to Lambda/SNS/SQS/EventBridge. `SnsService` delivers to SQS/Lambda/HTTP for real, so SNS→SQS/Lambda subscriptions work end to end.
+- **Real Docker execution** — Lambda, RDS, Neptune, ElastiCache, MSK, ECS, EC2, EKS, OpenSearch, and CodeBuild aren't shallow mocks; they spin up real containers via `docker-java`.
+- **Protocol-shaped errors** — even the same AccessDenied is emitted as S3-XML, query-XML, or JSON depending on the request. It even re-attaches `X-Amz-Crc32` to DynamoDB responses, because the Go SDK verifies it.
+
+This wire-level obsession recurs. "Imitating the shape of AWS" and "making an SDK believe it's real" are different, and Floci aims for the latter.
+
+## 11. Drop-In LocalStack Compatibility
+
+Floci treats LocalStack compatibility as a first-class feature, not an afterthought. It answers `_localstack`-prefixed requests (`/_localstack/health`, `/init`, `/info`, `/state/reset`) and, when asked for state, reports `"edition":"community"` (originally `floci-always-free`) to satisfy LocalStack-aware tooling. It honors `/etc/localstack/init/` init scripts, translates `LOCALSTACK_*` env vars, and prints the same `Ready.` log line as LocalStack so `LocalStackContainer`'s default wait strategy works unchanged.
+
+In other words, it went to real lengths to make migration "just swap the image." The port, the "any credentials" behavior, and the endpoints are all the same.
+
+## 12. Testing and Compatibility
+
+`compatibility-tests/` has 8 harnesses that run **real clients against a live Floci container** (no mocks): Java SDK v2 (~352 tests), Node SDK v3, boto3, Go SDK, AWS CLI (bats), plus Terraform v6, OpenTofu, and CDK v2. The Terraform/CDK stacks stand up realistic multi-service topologies — S3 + versioning, SQS + DLQ, SNS→SQS, DynamoDB GSI/LSI, RDS Postgres, Cognito, VPC + ALB.
+
+On top of that are ~543 Java tests in `src/test/` (about 296 `@QuarkusTest` hitting the live HTTP surface via RestAssured), plus separately published Testcontainers modules (Java, Node, Python). CI runs all 8 suites **against the native image** in parallel.
+
+## 13. Comparison With LocalStack
+
+Since this article started from a LocalStack contrast, let me lay it out.
+
+| Axis              | LocalStack                                                   | Floci                                                             |
+| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| License / model   | Freemium — advanced services/features behind a paid Pro gate | **MIT, always free, no gates**                                    |
+| Runtime           | Python                                                       | **Java 25 + a single GraalVM native binary**                      |
+| Startup / memory  | Relatively heavy                                             | Millisecond startup, low idle memory (CI/Testcontainers-friendly) |
+| Service detection | (its own approach)                                           | **Protocol claiming that follows the Smithy spec**                |
+| Compatibility     | —                                                            | Drop-in for LocalStack (port, creds, `/_localstack`, `Ready.`)    |
+| Timing            | Community edition sunsets March 2026                         | Positions as the "no-strings-attached" alternative                |
+
+The gist: where LocalStack emulates broadly in Python but gates some of it behind a paywall, Floci aims for the same breadth (~68 services) **light via native compilation, and all for free.** The wager is that a statically compiled, catalog-driven Java monolith can match LocalStack's breadth while starting faster, staying smaller, and gating nothing.
+
+## 14. Notable Design Decisions
+
+### 1. A monolith on purpose.
+
+1,656 Java files and 68 services in one app, one container, one port. The "how do you tell services apart?" problem is solved by protocol detection at the edge, not by separate processes.
+
+### 2. Following the spec literally.
+
+It doesn't hand-roll protocol detection; it implements AWS's Smithy wire-protocol-selection spec, keeping even the deliberate exceptions as documented.
+
+### 3. In-process service integration.
+
+API Gateway, Step Functions, and S3 events call other services' handlers directly. No loopback HTTP, so it's fast.
+
+### 4. Native is the product, for a Java project.
+
+It's rare for a Java project this size to ship a GraalVM native image as its artifact. It gains millisecond startup and low memory, at the cost of the discipline of pervasive `@RegisterForReflection` and native build args.
+
+### 5. Auth as decoration.
+
+SigV4 is parsed only for routing and account identity, never validated. A deliberate permissiveness tuned to what local development is for.
+
+## 15. Things to Watch Out For
+
+### 1. "68 services" is breadth, not depth.
+
+The catalog declares 71 descriptors, there are 67 directories, and the README says 68. But the _operation coverage_ of each service (which APIs actually work) is a separate matter. If you need a specific operation, verify it's supported.
+
+### 2. The native build is a barrier.
+
+GraalVM native is sensitive to reflection and resource hints. To contribute or fork, you first have to master the discipline of `@RegisterForReflection` and `quarkus.native.additional-build-args`.
+
+### 3. Some services depend on real Docker.
+
+Lambda, RDS, and others spin up real containers. Fidelity is high, but it needs Docker-socket access and extra ports, which adds CI setup.
+
+### 4. No auth cuts both ways.
+
+Convenient, but if you want to validate IAM permission boundaries locally, the defaults won't. Even with enforcement on, it's permissive, so it has limits for security-policy testing.
+
+## 16. Conclusion
+
+Floci is a larger project than "a mock that imitates AWS." Its actual structure is **an always-free emulator that, behind one port, tells dozens of AWS protocols apart per the spec and hands them to services — all compressed into a single native binary.**
+
+Where LocalStack emulates local AWS in Python but gates some of it behind a paywall, Floci aims for the same breadth light via Java-native compilation, and all for free. Behind it are Smithy protocol claiming, a descriptor-driven catalog, four storage modes, and a wire-level obsession that makes an SDK believe it's real.
+
+When looking at Floci, the most important question is not "which services does it support?" The more important question is this:
+
+> To take dozens of AWS services on one port and one process while making each SDK believe it's really AWS, what do you have to build?
+
+Floci's answer is the spec-based detection in `ProtocolClaimer`, the descriptors in `ServiceCatalog`, per-account storage, and a Quarkus monolith compressed into a native binary. Understand these boundaries and you can see that Floci is not merely a mock but **an emulator that folds a whole cloud into a container.**
