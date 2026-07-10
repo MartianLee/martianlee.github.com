@@ -9,6 +9,7 @@ tags: ['floci', 'localstack', 'aws', 'quarkus', 'graalvm', 'testing', 'backend',
 topic: ai-infrastructure
 stage: budding
 author: MartianLee
+images: ['/static/images/floci-start.png']
 ---
 
 > Analysis date: 2026-07-10
@@ -21,7 +22,9 @@ author: MartianLee
 
 _This article is partially written by Claude Code_
 
-{/* Thumbnail slot: capture a `docker compose up` + `aws --endpoint-url=http://localhost:4566 s3 ...` session into public/static/post-images/ and give me the filename; I'll wire it into frontmatter images and the body. */}
+![A real session bringing Floci up with `docker compose up` and checking it via the AWS CLI](/static/images/floci-start.png)
+
+> **A note from actually running it.** My first attempt failed. The reason was mundane: the Docker daemon (OrbStack) simply wasn't running on my Mac. Once I started OrbStack and brought it back up, it came online immediately. Given that Floci ships as a container and spins up real Docker for some services like Lambda and RDS ([§10](#10-it-emulates-for-real)), it's worth remembering up front that the Docker daemon has to be running.
 
 ## Table of Contents
 
@@ -162,6 +165,8 @@ Floci's fidelity is surprising for a mock.
 This wire-level obsession recurs. "Imitating the shape of AWS" and "making an SDK believe it's real" are different, and Floci aims for the latter.
 
 ## 11. Drop-In LocalStack Compatibility
+
+![Checking Floci's status after bringing it up](/static/images/floci-status.png)
 
 Floci treats LocalStack compatibility as a first-class feature, not an afterthought. It answers `_localstack`-prefixed requests (`/_localstack/health`, `/init`, `/info`, `/state/reset`) and, when asked for state, reports `"edition":"community"` (originally `floci-always-free`) to satisfy LocalStack-aware tooling. It honors `/etc/localstack/init/` init scripts, translates `LOCALSTACK_*` env vars, and prints the same `Ready.` log line as LocalStack so `LocalStackContainer`'s default wait strategy works unchanged.
 

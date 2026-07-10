@@ -9,6 +9,7 @@ tags: ['floci', 'localstack', 'aws', 'quarkus', 'graalvm', 'testing', 'backend',
 topic: ai-infrastructure
 stage: budding
 author: MartianLee
+images: ['/static/images/floci-start.png']
 ---
 
 > 분석 일자: 2026-07-10
@@ -21,7 +22,9 @@ author: MartianLee
 
 _This article is partially written by Claude Code_
 
-{/* 섬네일 슬롯: `docker compose up` 후 `aws --endpoint-url=http://localhost:4566 s3 ...` 실행 화면을 public/static/post-images/에 넣고 파일명을 주시면 frontmatter images 와 본문에 연결하겠습니다. */}
+![Floci를 `docker compose up`으로 띄우고 AWS CLI로 확인한 실제 실행 화면](/static/images/floci-start.png)
+
+> **직접 띄워 본 메모.** 첫 실행은 실패했습니다. 이유는 단순했는데, 맥에서 Docker 데몬(OrbStack)이 꺼져 있었을 뿐입니다. OrbStack을 켜고 다시 올리니 곧바로 떴습니다. Floci 자체가 컨테이너로 배포되는 데다 Lambda·RDS 같은 일부 서비스는 진짜 Docker로 띄우는 구조([§10](#10-진짜로-흉내-냅니다))라, Docker 데몬이 켜져 있어야 한다는 점은 처음부터 챙겨 두면 좋습니다.
 
 ## 목차
 
@@ -162,6 +165,8 @@ Floci의 충실도는 목치고 놀랍습니다.
 이 와이어 수준의 집착이 반복해서 나타납니다. "AWS 모양만 흉내 내는 것"과 "SDK가 진짜라고 믿게 만드는 것"은 다르고, Floci는 후자를 노립니다.
 
 ## 11. LocalStack 드롭인 호환
+
+![Floci를 띄운 뒤 상태를 확인한 화면](/static/images/floci-status.png)
 
 Floci는 LocalStack 호환을 곁다리가 아니라 1급 기능으로 다룹니다. `_localstack` 접두사 요청을 받고(`/_localstack/health`·`/init`·`/info`·`/state/reset`), 상태를 물으면 `"edition":"community"`(원래는 `floci-always-free`)라고 답해 LocalStack용 도구를 만족시킵니다. `/etc/localstack/init/` 초기화 스크립트를 존중하고, `LOCALSTACK_*` 환경 변수를 번역하며, 기동 완료에 LocalStack과 같은 `Ready.` 로그를 찍어 `LocalStackContainer`의 기본 대기 전략이 그대로 먹히게 합니다.
 
