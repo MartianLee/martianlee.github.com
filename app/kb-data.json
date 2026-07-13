@@ -70,7 +70,7 @@
     {
       "id": "llm-research",
       "label": "LLM Research",
-      "count": 34,
+      "count": 36,
       "slugs": [
         "2026-04-17-attention-is-all-you-need-paper-note",
         "2026-04-17-attention-is-all-you-need-paper-note",
@@ -105,7 +105,9 @@
         "2026-06-29-instructgpt-paper-note",
         "2026-06-29-instructgpt-paper-note",
         "2026-07-10-llama-paper-note",
-        "2026-07-10-llama-paper-note"
+        "2026-07-10-llama-paper-note",
+        "2026-07-13-llama-2-paper-note",
+        "2026-07-13-llama-2-paper-note"
       ]
     },
     {
@@ -392,6 +394,10 @@
       {
         "slug": "2026-07-10-llama-paper-note",
         "title": "LLaMA (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
       }
     ],
     "2026-04-17-llm-math-basics-vector-dot-product": [
@@ -554,6 +560,10 @@
       {
         "slug": "2026-07-10-llama-paper-note",
         "title": "LLaMA (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
       }
     ],
     "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
@@ -630,6 +640,10 @@
       {
         "slug": "2026-07-10-llama-paper-note",
         "title": "LLaMA (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
       }
     ],
     "2026-04-16-browser-automation-comparison": [
@@ -836,6 +850,10 @@
       {
         "slug": "2026-06-29-instructgpt-paper-note",
         "title": "InstructGPT (2022) Paper Notes"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
       }
     ],
     "2026-06-29-opencode-architecture": [
@@ -884,6 +902,12 @@
       {
         "slug": "2026-07-10-floci-architecture",
         "title": "Analyzing Floci: What Does It Take to Fit 68 AWS Services Into One Container?"
+      }
+    ],
+    "2026-07-13-llama-2-paper-note": [
+      {
+        "slug": "2026-07-10-llama-paper-note",
+        "title": "LLaMA (2023) Paper Notes"
       }
     ]
   },
@@ -1140,7 +1164,14 @@
       "2026-04-17-transformer-basics-residual-layernorm-ffn",
       "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
       "2026-04-18-llm-learning-basics-pretraining-finetuning",
-      "2026-06-29-instructgpt-paper-note"
+      "2026-06-29-instructgpt-paper-note",
+      "2026-07-13-llama-2-paper-note"
+    ],
+    "2026-07-13-llama-2-paper-note": [
+      "2026-07-10-llama-paper-note",
+      "2026-06-29-instructgpt-paper-note",
+      "2026-06-21-gpt-3-paper-note",
+      "2026-04-17-transformer-basics-qkv-intuition"
     ]
   },
   "postIndex": [
@@ -3241,7 +3272,43 @@
         "meta"
       ],
       "summary": "LLaMA 논문의 핵심인 \"공개 데이터만으로, 추론 효율에 맞춰 더 작은 모델을 더 오래 학습\"하는 전략, 13B가 175B GPT-3를 이기는 결과, RMSNorm·SwiGLU·RoPE 아키텍처 변경, 2048 A100 학습 규모, 오픈 LLM 생태계를 연 의미를 정리한 논문 노트."
+    },
+    {
+      "slug": "2026-07-13-llama-2-paper-note",
+      "title": "Llama 2 (2023) Paper Notes",
+      "date": "2026-07-13T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": [
+        "llm",
+        "paper-reading",
+        "transformer",
+        "llama-2",
+        "rlhf",
+        "alignment",
+        "open-source",
+        "meta"
+      ],
+      "summary": "Paper notes on Llama 2 covering its commercial license, a base model scaled to 2T tokens with 4k context and GQA, and the Llama 2-Chat alignment pipeline (SFT → two reward models → iterative RLHF with rejection sampling + PPO → GAtt). It fuses LLaMA's open base lineage with InstructGPT's RLHF at production quality."
+    },
+    {
+      "slug": "2026-07-13-llama-2-paper-note",
+      "title": "Llama 2 (2023) 논문 노트",
+      "date": "2026-07-13T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": [
+        "llm",
+        "paper-reading",
+        "transformer",
+        "llama-2",
+        "rlhf",
+        "alignment",
+        "open-source",
+        "meta"
+      ],
+      "summary": "Llama 2 논문의 핵심인 상업 이용 허용, 2조 토큰·4k 컨텍스트·GQA로 키운 베이스 모델, 그리고 Llama 2-Chat의 정렬 파이프라인(SFT → 두 개의 보상 모델 → rejection sampling + PPO 반복 RLHF → GAtt)을 정리한 논문 노트. LLaMA의 베이스 계보와 InstructGPT의 RLHF를 제품 수준으로 합친 논문입니다."
     }
   ],
-  "generatedAt": "2026-07-10T15:26:04.513Z"
+  "generatedAt": "2026-07-13T11:44:20.177Z"
 }
