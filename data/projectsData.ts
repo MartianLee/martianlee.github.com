@@ -95,9 +95,9 @@ const projectsData: Project[] = [
     kind: 'Web App',
     kindKo: '웹 앱',
     description:
-      'A web app to calculate and track bag weight — a smart bag-weight checker for healthier shoulders.',
+      'A web app to calculate and track bag weight — a smart bag-weight checker for healthier shoulders. You can save your own bags for later.',
     descriptionKo:
-      '가방 무게를 계산하고 추적하는 웹 앱입니다. 어깨 건강을 위한 똑똑한 가방 무게 체커예요.',
+      '가방 무게를 계산하고 추적하는 웹 앱입니다. 어깨 건강을 위한 똑똑한 가방 무게 체커예요. 나만의 가방을 저장해 놓을 수 있어요.',
     category: 'non-game',
     techStack: ['React', 'TypeScript', 'Next.js'],
     demo: 'https://www.shoulder-check.cloud/',
@@ -120,6 +120,29 @@ const projectsData: Project[] = [
     demo: 'https://martianlee.github.io/godot-first-defense/',
     github: 'https://github.com/MartianLee/godot-first-defense',
     imgSrc: '/static/projects/first-defense-thumbnail.png',
+    featured: true,
+  },
+  {
+    title: 'Gukbap Tools',
+    slug: 'gukbap-tools',
+    kind: 'Web Service',
+    kindKo: '웹 서비스',
+    description:
+      'A vibe-coded collection of 90+ free Korean web tools for office and everyday life — random pickers, roulette, ladder games, tournament brackets, timers, and calculators. No login, no install — just open and use.',
+    descriptionKo:
+      '바이브 코딩으로 만든 90개 이상의 무료 웹 도구 모음입니다. 랜덤 뽑기, 룰렛, 사다리 타기, 대진표, 타이머, 각종 계산기를 로그인·설치 없이 바로 쓸 수 있습니다.',
+    category: 'non-game',
+    techStack: [
+      'Next.js 16 (Static Export)',
+      'TypeScript',
+      'Tailwind CSS 4',
+      'Vitest',
+      'Cloudflare Pages',
+    ],
+    workflow: ['Static Export → Cloudflare Pages'],
+    aiTools: ['Claude Code (Vibe-Coded Full Build, Custom add-tool Skill)'],
+    demo: 'https://gukbap-tools.com/',
+    imgSrc: '/static/projects/gukbap-tools.png',
     featured: true,
   },
   {
