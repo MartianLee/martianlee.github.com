@@ -70,7 +70,7 @@
     {
       "id": "llm-research",
       "label": "LLM Research",
-      "count": 36,
+      "count": 38,
       "slugs": [
         "2026-04-17-attention-is-all-you-need-paper-note",
         "2026-04-17-attention-is-all-you-need-paper-note",
@@ -107,7 +107,9 @@
         "2026-07-10-llama-paper-note",
         "2026-07-10-llama-paper-note",
         "2026-07-13-llama-2-paper-note",
-        "2026-07-13-llama-2-paper-note"
+        "2026-07-13-llama-2-paper-note",
+        "2026-07-24-llama-3-paper-note",
+        "2026-07-24-llama-3-paper-note"
       ]
     },
     {
@@ -564,6 +566,74 @@
       {
         "slug": "2026-07-13-llama-2-paper-note",
         "title": "Llama 2 (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-24-llama-3-paper-note",
+        "title": "Llama 3 (2024) Paper Notes"
+      }
+    ],
+    "2026-06-29-instructgpt-paper-note": [
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM Paper Evolution Map (MOC)"
+      },
+      {
+        "slug": "2026-06-21-gpt-3-paper-note",
+        "title": "GPT-3 (2020) Paper Notes"
+      },
+      {
+        "slug": "2026-07-10-llama-paper-note",
+        "title": "LLaMA (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-24-llama-3-paper-note",
+        "title": "Llama 3 (2024) Paper Notes"
+      }
+    ],
+    "2026-07-10-llama-paper-note": [
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM Paper Evolution Map (MOC)"
+      },
+      {
+        "slug": "2026-06-29-instructgpt-paper-note",
+        "title": "InstructGPT (2022) Paper Notes"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-24-llama-3-paper-note",
+        "title": "Llama 3 (2024) Paper Notes"
+      }
+    ],
+    "2026-07-13-llama-2-paper-note": [
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM Paper Evolution Map (MOC)"
+      },
+      {
+        "slug": "2026-07-10-llama-paper-note",
+        "title": "LLaMA (2023) Paper Notes"
+      },
+      {
+        "slug": "2026-07-24-llama-3-paper-note",
+        "title": "Llama 3 (2024) Paper Notes"
+      }
+    ],
+    "2026-07-24-llama-3-paper-note": [
+      {
+        "slug": "2026-04-17-llm-paper-evolution-moc",
+        "title": "LLM Paper Evolution Map (MOC)"
+      },
+      {
+        "slug": "2026-07-13-llama-2-paper-note",
+        "title": "Llama 2 (2023) Paper Notes"
       }
     ],
     "2026-04-17-llm-learning-basics-cross-entropy-perplexity": [
@@ -626,24 +696,6 @@
       {
         "slug": "2026-05-17-gpt-2-paper-note",
         "title": "GPT-2 (2019) Paper Notes"
-      }
-    ],
-    "2026-06-29-instructgpt-paper-note": [
-      {
-        "slug": "2026-04-17-llm-paper-evolution-moc",
-        "title": "LLM 논문 진화 지도 (MOC)"
-      },
-      {
-        "slug": "2026-06-21-gpt-3-paper-note",
-        "title": "GPT-3 (2020) Paper Notes"
-      },
-      {
-        "slug": "2026-07-10-llama-paper-note",
-        "title": "LLaMA (2023) Paper Notes"
-      },
-      {
-        "slug": "2026-07-13-llama-2-paper-note",
-        "title": "Llama 2 (2023) Paper Notes"
       }
     ],
     "2026-04-16-browser-automation-comparison": [
@@ -846,16 +898,6 @@
         "title": "Analyzing SkillSpector: How Do You Check Whether an Agent Skill Is Safe?"
       }
     ],
-    "2026-07-10-llama-paper-note": [
-      {
-        "slug": "2026-06-29-instructgpt-paper-note",
-        "title": "InstructGPT (2022) Paper Notes"
-      },
-      {
-        "slug": "2026-07-13-llama-2-paper-note",
-        "title": "Llama 2 (2023) Paper Notes"
-      }
-    ],
     "2026-06-29-opencode-architecture": [
       {
         "slug": "2026-06-30-browser-use-architecture",
@@ -902,12 +944,6 @@
       {
         "slug": "2026-07-10-floci-architecture",
         "title": "Analyzing Floci: What Does It Take to Fit 68 AWS Services Into One Container?"
-      }
-    ],
-    "2026-07-13-llama-2-paper-note": [
-      {
-        "slug": "2026-07-10-llama-paper-note",
-        "title": "LLaMA (2023) Paper Notes"
       }
     ]
   },
@@ -989,6 +1025,9 @@
       "2026-05-17-gpt-2-paper-note",
       "2026-06-21-gpt-3-paper-note",
       "2026-06-29-instructgpt-paper-note",
+      "2026-07-10-llama-paper-note",
+      "2026-07-13-llama-2-paper-note",
+      "2026-07-24-llama-3-paper-note",
       "2026-04-17-llm-math-basics-vector-dot-product",
       "2026-04-17-llm-math-basics-softmax",
       "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
@@ -1171,7 +1210,14 @@
       "2026-07-10-llama-paper-note",
       "2026-06-29-instructgpt-paper-note",
       "2026-06-21-gpt-3-paper-note",
-      "2026-04-17-transformer-basics-qkv-intuition"
+      "2026-04-17-transformer-basics-qkv-intuition",
+      "2026-07-24-llama-3-paper-note"
+    ],
+    "2026-07-24-llama-3-paper-note": [
+      "2026-07-13-llama-2-paper-note",
+      "2026-07-10-llama-paper-note",
+      "2026-06-29-instructgpt-paper-note",
+      "2026-06-21-gpt-3-paper-note"
     ]
   },
   "postIndex": [
@@ -3308,7 +3354,43 @@
         "meta"
       ],
       "summary": "Llama 2 논문의 핵심인 상업 이용 허용, 2조 토큰·4k 컨텍스트·GQA로 키운 베이스 모델, 그리고 Llama 2-Chat의 정렬 파이프라인(SFT → 두 개의 보상 모델 → rejection sampling + PPO 반복 RLHF → GAtt)을 정리한 논문 노트. LLaMA의 베이스 계보와 InstructGPT의 RLHF를 제품 수준으로 합친 논문입니다."
+    },
+    {
+      "slug": "2026-07-24-llama-3-paper-note",
+      "title": "Llama 3 (2024) Paper Notes",
+      "date": "2026-07-24T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": [
+        "llm",
+        "paper-reading",
+        "transformer",
+        "llama-3",
+        "dpo",
+        "alignment",
+        "open-source",
+        "meta"
+      ],
+      "summary": "Paper notes on The Llama 3 Herd of Models: 15T tokens, a 405B flagship, 128K context, and a design philosophy of 'managing complexity' (dense over MoE, SFT → rejection sampling → DPO instead of PPO) — the paper where an open-weight model first reaches GPT-4-class performance. It completes Llama 2's skeleton through scale, data, and simplicity."
+    },
+    {
+      "slug": "2026-07-24-llama-3-paper-note",
+      "title": "Llama 3 (2024) 논문 노트",
+      "date": "2026-07-24T00:00:00.000Z",
+      "topic": "llm-research",
+      "stage": "seedling",
+      "tags": [
+        "llm",
+        "paper-reading",
+        "transformer",
+        "llama-3",
+        "dpo",
+        "alignment",
+        "open-source",
+        "meta"
+      ],
+      "summary": "Llama 3 논문(The Llama 3 Herd of Models)의 핵심인 15조 토큰·405B 플래그십·128K 컨텍스트, \"관리 가능한 복잡도\"라는 설계 철학(MoE 대신 밀집 모델, PPO 대신 SFT → rejection sampling → DPO 반복), 그리고 GPT-4와 대등해진 오픈 모델의 도달점을 정리한 논문 노트. Llama 2의 골격을 규모·데이터·단순함으로 완성한 논문입니다."
     }
   ],
-  "generatedAt": "2026-07-13T11:44:20.177Z"
+  "generatedAt": "2026-07-23T17:12:50.838Z"
 }
