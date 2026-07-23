@@ -42,12 +42,12 @@ export default function ProjectDetail({ project }: { project: Project }) {
 
       <div className="mt-7 flex flex-wrap gap-3 font-mono text-sm">
         {demo && (
-          <a href={demo} className="ghost-btn">
+          <a href={demo} target="_blank" rel="noopener noreferrer" className="ghost-btn">
             {ui.projectsPage.liveDemo}
           </a>
         )}
         {github && (
-          <a href={github} className="ghost-btn">
+          <a href={github} target="_blank" rel="noopener noreferrer" className="ghost-btn">
             GitHub ↗
           </a>
         )}
