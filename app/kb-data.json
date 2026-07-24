@@ -3,7 +3,7 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 60,
+      "count": 62,
       "slugs": [
         "2020-06-28-manjum-result",
         "2020-06-28-manjum-result",
@@ -64,7 +64,9 @@
         "2026-07-06-firecrawl-architecture",
         "2026-07-06-firecrawl-architecture",
         "2026-07-10-floci-architecture",
-        "2026-07-10-floci-architecture"
+        "2026-07-10-floci-architecture",
+        "2026-07-24-hallmark-architecture",
+        "2026-07-24-hallmark-architecture"
       ]
     },
     {
@@ -360,6 +362,10 @@
       {
         "slug": "2026-07-03-skillspector-architecture",
         "title": "Analyzing SkillSpector: How Do You Check Whether an Agent Skill Is Safe?"
+      },
+      {
+        "slug": "2026-07-24-hallmark-architecture",
+        "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?"
       }
     ],
     "2026-04-18-llm-basics-rnn-sequential-processing": [
@@ -804,6 +810,10 @@
       {
         "slug": "2026-06-04-codegraph-architecture",
         "title": "CodeGraph Architecture Analysis: How Is the Code Intelligence Layer Beneath Coding Agents Built?"
+      },
+      {
+        "slug": "2026-07-24-hallmark-architecture",
+        "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?"
       }
     ],
     "2026-05-17-openhands-architecture": [
@@ -944,6 +954,12 @@
       {
         "slug": "2026-07-10-floci-architecture",
         "title": "Analyzing Floci: What Does It Take to Fit 68 AWS Services Into One Container?"
+      }
+    ],
+    "2026-07-03-skillspector-architecture": [
+      {
+        "slug": "2026-07-24-hallmark-architecture",
+        "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?"
       }
     ]
   },
@@ -1212,6 +1228,11 @@
       "2026-06-21-gpt-3-paper-note",
       "2026-04-17-transformer-basics-qkv-intuition",
       "2026-07-24-llama-3-paper-note"
+    ],
+    "2026-07-24-hallmark-architecture": [
+      "2026-04-18-superpowers-architecture",
+      "2026-07-03-skillspector-architecture",
+      "2026-05-13-agentmemory-architecture"
     ],
     "2026-07-24-llama-3-paper-note": [
       "2026-07-13-llama-2-paper-note",
@@ -3356,6 +3377,42 @@
       "summary": "Llama 2 논문의 핵심인 상업 이용 허용, 2조 토큰·4k 컨텍스트·GQA로 키운 베이스 모델, 그리고 Llama 2-Chat의 정렬 파이프라인(SFT → 두 개의 보상 모델 → rejection sampling + PPO 반복 RLHF → GAtt)을 정리한 논문 노트. LLaMA의 베이스 계보와 InstructGPT의 RLHF를 제품 수준으로 합친 논문입니다."
     },
     {
+      "slug": "2026-07-24-hallmark-architecture",
+      "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?",
+      "date": "2026-07-24T09:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "hallmark",
+        "prompt-engineering",
+        "ai-agent",
+        "skills",
+        "design",
+        "claude-code",
+        "llm",
+        "architecture"
+      ],
+      "summary": "Hallmark is Together AI’s anti-AI-slop design skill. It ships almost no executable code — its entire intelligence lives in 106 markdown files. This piece dissects the SKILL.md router and its progressive context loading, the narrowing decision pipeline, and — at its center — the 58 slop-test gates, contrasting it with skill-injecting projects like Superpowers and SkillSpector."
+    },
+    {
+      "slug": "2026-07-24-hallmark-architecture",
+      "title": "Hallmark 프로젝트 분석: 'AI스러운' 디자인을 프롬프트로 어떻게 막나요?",
+      "date": "2026-07-24T09:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "hallmark",
+        "prompt-engineering",
+        "ai-agent",
+        "skills",
+        "design",
+        "claude-code",
+        "llm",
+        "architecture"
+      ],
+      "summary": "Hallmark은 Together AI가 만든 안티-AI-슬롭 디자인 스킬입니다. 실행 코드는 거의 없고, 지능 전체가 106개의 마크다운 파일에 인코딩되어 있습니다. SKILL.md 라우터와 점진적 컨텍스트 로딩, 좁혀 가는 결정 파이프라인, 그리고 이 글의 중심인 58개 슬롭 테스트 게이트를, 스킬을 주입하는 Superpowers·SkillSpector와 대조하며 분석합니다."
+    },
+    {
       "slug": "2026-07-24-llama-3-paper-note",
       "title": "Llama 3 (2024) Paper Notes",
       "date": "2026-07-24T00:00:00.000Z",
@@ -3392,5 +3449,5 @@
       "summary": "Llama 3 논문(The Llama 3 Herd of Models)의 핵심인 15조 토큰·405B 플래그십·128K 컨텍스트, \"관리 가능한 복잡도\"라는 설계 철학(MoE 대신 밀집 모델, PPO 대신 SFT → rejection sampling → DPO 반복), 그리고 GPT-4와 대등해진 오픈 모델의 도달점을 정리한 논문 노트. Llama 2의 골격을 규모·데이터·단순함으로 완성한 논문입니다."
     }
   ],
-  "generatedAt": "2026-07-23T17:12:50.838Z"
+  "generatedAt": "2026-07-24T18:21:00.986Z"
 }
