@@ -162,6 +162,23 @@ const projectsData: Project[] = [
     imgSrc: '/static/projects/side-project-tracker.png',
     featured: true,
   },
+  {
+    title: 'SonTab',
+    slug: 'sontab',
+    kind: 'Chrome Extension',
+    kindKo: '크롬 확장 프로그램',
+    description:
+      'A lightweight, OneTab-style tab manager for Chrome. One click saves every tab in the window into a group and closes them — with catalog and by-domain views, search, starred tabs, OneTab import/export, and 5 languages. Local-only, no tracking, zero runtime dependencies.',
+    descriptionKo:
+      '가볍게 만든 OneTab 스타일의 크롬 탭 매니저입니다. 클릭 한 번으로 창의 모든 탭을 그룹으로 저장하고 닫아줍니다. 카탈로그·도메인별 보기, 검색, 별표 탭, OneTab 가져오기/내보내기, 5개 언어를 지원하며, 백엔드와 추적 없이 모든 데이터를 로컬에만 저장합니다.',
+    category: 'non-game',
+    techStack: ['Svelte 5', 'TypeScript', 'Vite', 'Chrome Manifest V3', 'Vitest'],
+    aiTools: ['Claude Code (Primary Build)'],
+    demo: 'https://martianlee.github.io/sontab/',
+    github: 'https://github.com/MartianLee/sontab',
+    imgSrc: '/static/projects/sontab.png',
+    featured: true,
+  },
 ]
 
 export default projectsData
