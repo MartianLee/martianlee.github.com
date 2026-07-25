@@ -238,12 +238,14 @@
     {
       "id": "backend-architecture",
       "label": "backend-architecture",
-      "count": 4,
+      "count": 6,
       "slugs": [
         "2026-04-18-bloom-filter-membership-check-at-scale",
         "2026-04-18-bloom-filter-membership-check-at-scale",
         "2026-04-18-redisbloom-signup-architecture",
-        "2026-04-18-redisbloom-signup-architecture"
+        "2026-04-18-redisbloom-signup-architecture",
+        "2026-07-25-bitchat-architecture",
+        "2026-07-25-bitchat-architecture"
       ]
     },
     {
@@ -814,6 +816,10 @@
       {
         "slug": "2026-07-24-hallmark-architecture",
         "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?"
+      },
+      {
+        "slug": "2026-07-25-bitchat-architecture",
+        "title": "bitchat Architecture: How Do You Deliver a Message With No Internet and No Radio Range?"
       }
     ],
     "2026-05-17-openhands-architecture": [
@@ -960,6 +966,18 @@
       {
         "slug": "2026-07-24-hallmark-architecture",
         "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?"
+      }
+    ],
+    "2026-04-18-bloom-filter-membership-check-at-scale": [
+      {
+        "slug": "2026-07-25-bitchat-architecture",
+        "title": "bitchat Architecture: How Do You Deliver a Message With No Internet and No Radio Range?"
+      }
+    ],
+    "2026-07-06-firecrawl-architecture": [
+      {
+        "slug": "2026-07-25-bitchat-architecture",
+        "title": "bitchat Architecture: How Do You Deliver a Message With No Internet and No Radio Range?"
       }
     ]
   },
@@ -1239,6 +1257,11 @@
       "2026-07-10-llama-paper-note",
       "2026-06-29-instructgpt-paper-note",
       "2026-06-21-gpt-3-paper-note"
+    ],
+    "2026-07-25-bitchat-architecture": [
+      "2026-04-18-bloom-filter-membership-check-at-scale",
+      "2026-05-13-agentmemory-architecture",
+      "2026-07-06-firecrawl-architecture"
     ]
   },
   "postIndex": [
@@ -3447,7 +3470,43 @@
         "meta"
       ],
       "summary": "Llama 3 논문(The Llama 3 Herd of Models)의 핵심인 15조 토큰·405B 플래그십·128K 컨텍스트, \"관리 가능한 복잡도\"라는 설계 철학(MoE 대신 밀집 모델, PPO 대신 SFT → rejection sampling → DPO 반복), 그리고 GPT-4와 대등해진 오픈 모델의 도달점을 정리한 논문 노트. Llama 2의 골격을 규모·데이터·단순함으로 완성한 논문입니다."
+    },
+    {
+      "slug": "2026-07-25-bitchat-architecture",
+      "title": "bitchat Architecture: How Do You Deliver a Message With No Internet and No Radio Range?",
+      "date": "2026-07-25T09:00:00.000Z",
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "tags": [
+        "bitchat",
+        "bluetooth-mesh",
+        "nostr",
+        "noise-protocol",
+        "p2p",
+        "store-and-forward",
+        "swift",
+        "architecture"
+      ],
+      "summary": "bitchat is a P2P messenger with no accounts and no servers. Nearby devices form a BLE mesh; distant peers are reached over Nostr. The center of this piece is the four-layer store-and-forward stack that answers \"the recipient is not here right now\" — a sealed outbox, courier envelopes addressed by nothing but an HMAC tag plus spray-and-wait, GCS-filter public history sync, and Nostr mailboxes — traced through the code."
+    },
+    {
+      "slug": "2026-07-25-bitchat-architecture",
+      "title": "bitchat 아키텍처 분석: 인터넷도, 전파도 없을 때 메시지를 어떻게 배달하나요?",
+      "date": "2026-07-25T09:00:00.000Z",
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "tags": [
+        "bitchat",
+        "bluetooth-mesh",
+        "nostr",
+        "noise-protocol",
+        "p2p",
+        "store-and-forward",
+        "swift",
+        "architecture"
+      ],
+      "summary": "bitchat은 계정도 서버도 없는 P2P 메신저입니다. 근처 기기는 BLE 메시로 묶고, 먼 상대는 Nostr로 잇습니다. 이 글의 중심은 \"받는 사람이 지금 여기 없다\"를 푸는 4계층 store-and-forward 스택입니다 — 봉인된 outbox, HMAC 태그로만 주소를 적는 courier와 spray-and-wait, GCS 필터 기반 공개 히스토리 동기화, 그리고 Nostr 메일박스를 코드로 따라갑니다."
     }
   ],
-  "generatedAt": "2026-07-24T18:21:00.986Z"
+  "generatedAt": "2026-07-25T06:02:37.897Z"
 }
