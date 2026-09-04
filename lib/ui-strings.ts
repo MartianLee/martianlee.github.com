@@ -112,7 +112,7 @@ export const ui: Record<Lang, UIStrings> = {
       writingIntro: '거대한 코드베이스를 뜯어보고, 실제로 어떻게 동작하는지 기록합니다.',
     },
     contact: {
-      open: '시니어 / 스태프 엔지니어 포지션을 글로벌하게 찾고 있습니다.',
+      open: '시니어 / 스태프 엔지니어 포지션이라면 국내외 어디든 열려 있습니다.',
       email: '이메일 ↗',
     },
     list: { tags: '태그', all: '전체', newer: '← 최신', older: '이전 →' },

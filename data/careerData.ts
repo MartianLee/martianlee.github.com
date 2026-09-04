@@ -23,17 +23,17 @@ const careerData: Career[] = [
     href: 'https://ujet.cx/',
   },
   {
-    company: 'Stepping',
-    role: 'Founder / CTO',
-    roleKo: '창업자 / CTO',
+    company: 'TomorrowUse',
+    role: 'Co-founder / CTO',
+    roleKo: '공동창업자 / CTO',
     period: '2021 - 2023',
     description:
-      'Stepping helps companies and brands navigate complex carbon-neutral processes and climate action projects to build a sustainable future.',
+      'Climate-tech startup (product: Stepping). Sole engineer on a three-person founding team; built carbon-measurement and offset products end-to-end: app, infra, and CI/CD.',
     descriptionKo:
-      'Stepping은 복잡한 탄소중립 프로세스와 기후 행동 프로젝트를 기업·브랜드가 헤쳐나가도록 도와 지속가능한 미래를 만듭니다.',
+      '기후테크 스타트업입니다(제품: Stepping). 3인 창업팀의 유일한 개발자로 탄소 측정·상쇄 제품을 앱부터 인프라, CI/CD까지 만들어 출시했습니다.',
     techStack: ['Next.js', 'React', 'Nest.js', 'PostgreSQL', 'AWS', '0to1'],
     imgSrc: '/static/projects/stepping-logo.png',
-    href: 'https://stepping.co.kr/',
+    href: '/climate',
   },
   {
     company: 'Miso',
