@@ -3,7 +3,7 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 64,
+      "count": 66,
       "slugs": [
         "2020-06-28-manjum-result",
         "2020-06-28-manjum-result",
@@ -68,7 +68,9 @@
         "2026-07-24-hallmark-architecture",
         "2026-07-24-hallmark-architecture",
         "2026-09-05-deepseek-harness-architecture",
-        "2026-09-05-deepseek-harness-architecture"
+        "2026-09-05-deepseek-harness-architecture",
+        "2026-09-05-webmcp-explained",
+        "2026-09-05-webmcp-explained"
       ]
     },
     {
@@ -311,6 +313,10 @@
       {
         "slug": "2026-07-06-firecrawl-architecture",
         "title": "Analyzing Firecrawl: How Do You Build an API That Turns the Web Into LLM-Ready Markdown?"
+      },
+      {
+        "slug": "2026-09-05-webmcp-explained",
+        "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
       }
     ],
     "2026-04-09-agent-browser-architecture": [
@@ -321,12 +327,20 @@
       {
         "slug": "2026-04-17-playwright-architecture",
         "title": "Playwright Architecture Explained — Why It Became the E2E Testing Standard"
+      },
+      {
+        "slug": "2026-09-05-webmcp-explained",
+        "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
       }
     ],
     "2026-03-13-lightpanda-architecture": [
       {
         "slug": "2026-04-16-browser-automation-comparison",
         "title": "Playwright vs agent-browser vs Lightpanda — Which Browser Automation Tool Should You Use?"
+      },
+      {
+        "slug": "2026-09-05-webmcp-explained",
+        "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
       }
     ],
     "2026-04-18-superpowers-architecture": [
@@ -731,6 +745,10 @@
       {
         "slug": "2026-06-30-browser-use-architecture",
         "title": "Analyzing Browser Use: How Do You Show a Web Page to an LLM So It Can Drive a Browser?"
+      },
+      {
+        "slug": "2026-09-05-webmcp-explained",
+        "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
       }
     ],
     "2026-04-13-beads-architecture": [
@@ -987,6 +1005,10 @@
       {
         "slug": "2026-07-06-firecrawl-architecture",
         "title": "Analyzing Firecrawl: How Do You Build an API That Turns the Web Into LLM-Ready Markdown?"
+      },
+      {
+        "slug": "2026-09-05-webmcp-explained",
+        "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
       }
     ],
     "2026-04-18-redisbloom-signup-architecture": [
@@ -1011,6 +1033,10 @@
       {
         "slug": "2026-07-25-bitchat-architecture",
         "title": "bitchat Architecture: How Do You Deliver a Message With No Internet and No Radio Range?"
+      },
+      {
+        "slug": "2026-09-05-webmcp-explained",
+        "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
       }
     ]
   },
@@ -1308,6 +1334,14 @@
       "2026-05-17-ruflo-architecture",
       "2026-04-18-superpowers-architecture",
       "2026-05-13-agentmemory-architecture"
+    ],
+    "2026-09-05-webmcp-explained": [
+      "2026-04-17-playwright-architecture",
+      "2026-04-09-agent-browser-architecture",
+      "2026-06-30-browser-use-architecture",
+      "2026-03-13-lightpanda-architecture",
+      "2026-07-06-firecrawl-architecture",
+      "2026-04-16-browser-automation-comparison"
     ]
   },
   "postIndex": [
@@ -4242,7 +4276,43 @@
         "architecture"
       ],
       "summary": "DeepSeek Harness(dsh)는 모델 어댑터, 도구 레지스트리, 세션 로그, 에이전트 루프까지 전부를 Cordis 플러그인으로 만들고, 빈 트리 위에 패치 계층을 쌓아 제품을 조립하는 오픈소스 에이전트 하네스입니다. 공개 2주 만에 스타 20만을 넘긴 이 프로젝트의 커널(Cordis), 프로필·번들 조립, 세션 로그를 진실의 원천으로 두는 규칙, 능력 seam, 자기 수정 도구, 그리고 Claude Code와 Codex를 서브에이전트로 부리는 구조를 소스 기준으로 분석합니다."
+    },
+    {
+      "slug": "2026-09-05-webmcp-explained",
+      "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?",
+      "date": "2026-09-05T11:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "webmcp",
+        "browser-automation",
+        "ai-agent",
+        "chrome",
+        "web-standards",
+        "agent-browser",
+        "mcp",
+        "e2e"
+      ],
+      "summary": "WebMCP is a W3C Community Group proposal in which a web page registers JavaScript functions and HTML forms as \"tools\" on document.modelContext, and the browser mediates those tools to the user's agent. This article lays out the imperative and declarative APIs and the boundaries the browser guarantees, straight from the spec, then calls real tools with Chrome 152 and agent-browser 0.36 to see how it differs from accessibility-tree automation."
+    },
+    {
+      "slug": "2026-09-05-webmcp-explained",
+      "title": "WebMCP 해설: 웹페이지가 AI 에이전트에게 도구를 직접 건네주면 브라우저 자동화는 어떻게 달라지나요?",
+      "date": "2026-09-05T11:00:00.000Z",
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "tags": [
+        "webmcp",
+        "browser-automation",
+        "ai-agent",
+        "chrome",
+        "web-standards",
+        "agent-browser",
+        "mcp",
+        "e2e"
+      ],
+      "summary": "WebMCP는 웹페이지가 document.modelContext에 JavaScript 함수와 HTML 폼을 \"도구\"로 등록하고, 브라우저가 그 도구를 에이전트에게 중개하는 W3C 커뮤니티 그룹 제안 표준입니다. 명령형·선언형 API와 브라우저가 보장하는 경계를 스펙 기준으로 정리하고, Chrome 152와 agent-browser 0.36으로 직접 호출해 접근성 트리 방식과 무엇이 다른지 확인합니다."
     }
   ],
-  "generatedAt": "2026-09-05T13:38:23.670Z"
+  "generatedAt": "2026-09-05T13:38:28.531Z"
 }
