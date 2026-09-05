@@ -14,12 +14,15 @@ export interface Source {
 
 /**
  * V1: 전 세계 온실가스 구성(CO₂e 기준, %)
- * 검증: WebSearch로 OWID "Greenhouse gas emissions"(Climate Watch 데이터) 교차 확인.
- * 여러 검색에서 "CO2 약 72~75%, 메탄 17~19%, 아산화질소 5~6%, F-가스 2~2.3%"로
- * 일관되게 나왔고, 브리프의 수치(74.4/17.3/6.2/2.1)는 합이 정확히 100.0으로 떨어져
- * 실제 OWID 차트 값과 부합하는 것으로 판단해 그대로 채택한다. OWID 페이지 자체를
- * WebFetch했을 때는 정확한 소수점 값이 텍스트로 노출되지 않아 원본 CSV 재확인은
- * 못했다(연도 2021도 브리프 값을 유지, self-review 항목 참고).
+ * 출처: Our World in Data "Greenhouse gas emissions"(ourworldindata.org/greenhouse-gas-emissions
+ * 의 "By gas" 섹션, Climate Watch/CAIT 데이터), 2016년 기준 수치.
+ * 검증: OWID의 현재 "by gas" 인터랙티브 차트(grapher/ghg-emissions-by-gas)는 국가별
+ * 시계열(CO2/CH4/N2O만, F-가스 미포함)이라 4종 비중이 텍스트로 노출되지 않는다. 대신
+ * 동일한 Climate Watch/CAIT 데이터를 쓰는 WRI의 "World Greenhouse Gas Emissions: 2016"
+ * Sankey 차트(wri.org/data/world-greenhouse-gas-emissions-2016)가 CO2 74.4%, 메탄
+ * 17.3%, 아산화질소 6.2%로 명시하고 있어(WebFetch로 확인), 브리프 수치(74.4/17.3/6.2/2.1,
+ * 합 100.0)가 2016년 데이터와 일치함을 교차 확인했다. OWID 쪽에 더 최신 연도의 4종 비중
+ * 재집계본은 없어 값은 그대로 두고 연도만 2016으로 확정한다.
  */
 export interface GasShare {
   id: 'co2' | 'ch4' | 'n2o' | 'fgas'
@@ -36,7 +39,7 @@ export const gasMix: { shares: GasShare[]; source: Source } = {
   source: {
     name: 'Our World in Data (Climate Watch)',
     url: 'https://ourworldindata.org/greenhouse-gas-emissions',
-    year: 2021,
+    year: 2016,
   },
 }
 
@@ -179,7 +182,13 @@ export const CO2_M3_PER_KG = 0.535
 /**
  * V4: 활동별 kg CO₂e. 음수는 흡수.
  * 스마트폰 1대 생산 항목은 Step 3 shape/Labels.tonne에 슬롯이 없어(브리프 최소 구성에도
- * 없음) 최종 목록에서 제외했다. 그 외 8개 항목은 모두 아래와 같이 실제 출처로 검증했다.
+ * 없음) 최종 목록에서 제외했다. 그 외 항목은 모두 아래와 같이 실제 출처로 검증했다.
+ * flight(김포-제주 항공편) 항목은 기존 Curb6 수치(140.7kg)가 방법론 미공개였고, 대체
+ * 출처로 (a) 국내 항공사 노선별 계산기, (b) Google 항공편 배출량 추정치를 인용한
+ * 자료, (c) ICAO Carbon Emissions Calculator의 GMP-CJU 결과를 명시한 자료를 모두
+ * 찾아봤으나 non-CO2 승수 없이 1인 기준 kg 수치를 명확한 출처와 함께 제시하는 자료를
+ * 찾지 못해(WebSearch/WebFetch로 확인, 2026-09-05) 항목 자체를 제거했다. t.en.tonne /
+ * t.ko.tonne의 flight 라벨도 함께 제거해 1:1 대응을 유지한다.
  */
 export interface TonneItem {
   id: string
@@ -214,18 +223,6 @@ export const tonneItems: TonneItem[] = [
     },
   },
   {
-    // ICAO 계산기(icec.icao.int)는 대화형 JS 폼이라 이번 조사 도구로는 직접 조회하지
-    // 못했다. 동일 방법론(거리 기반 + ICAO 승수 3.16)을 표방하는 항공 탄소계산기
-    // Curb6에서 김포(GMP)->제주(CJU) 편도 이코노미 1인 결과를 대신 인용했다.
-    id: 'flight',
-    kg: 140.7,
-    source: {
-      name: 'Curb6 항공 탄소발자국 계산기 (김포 to 제주, 편도 이코노미)',
-      url: 'https://curb6.com/footprint/flights/cheju-cju/seoul-gmp',
-      year: 2025,
-    },
-  },
-  {
     // OWID "food-choice-vs-eating-local" 기사에 "Producing a kilogram of beef emits
     // 60 kilograms of greenhouse gases"로 Poore & Nemecek(2018)을 인용해 명시.
     id: 'beef',
@@ -237,14 +234,13 @@ export const tonneItems: TonneItem[] = [
     },
   },
   {
-    // 가구 월평균 사용량 295kWh(2020, 한국전력 통계 x 통계청 가구수 추정치) x 전력
-    // 배출계수 0.4173 kgCO2/kWh(2023년도, 기후에너지환경부가 2025-12-17 국가온실가스
-    // 통계관리위원회에서 확정 공표). 295 x 0.4173 = 123.1kg.
-    // 가구 사용량 쪽은 단일 공식 통계 URL을 확정하지 못해 근사치로 표기(self-review 참고).
+    // 가구 월평균 사용량(295kWh, 출처 불명확) 주장 대신 정해진 양인 "전기 300 kWh"를
+    // 기준으로 삼는다. 300 x 0.4173(국가 전력배출계수, 2023년도, 기후에너지환경부가
+    // 2025-12-17 국가온실가스 통계관리위원회에서 확정 공표) = 125.19 -> 125.2kg.
     id: 'electricity',
-    kg: 123.1,
+    kg: 125.2,
     source: {
-      name: '온실가스종합정보센터 전력배출계수(2023) x 한국전력 가구평균 전력사용량(2020년 추정)',
+      name: '전기 300 kWh x 국가 전력 배출계수 0.4173 kgCO₂/kWh (온실가스종합정보센터, 2023)',
       url: 'https://www.kharn.kr/mobile/article.html?no=29600',
       year: 2023,
     },
@@ -327,9 +323,8 @@ export const t: Record<Lang, Labels> = {
     tonne: {
       tree: 'One tree absorbs in a year',
       car100km: 'Petrol car, 100 km',
-      flight: 'Seoul to Jeju, one flight',
       beef: '1 kg of beef',
-      electricity: 'A home, one month of electricity',
+      electricity: '300 kWh of electricity (roughly a home for a month)',
       tonne: 'One tonne',
       worldPerCapita: 'World average, one person, one year',
       koreaPerCapita: 'Korea average, one person, one year',
@@ -365,9 +360,8 @@ export const t: Record<Lang, Labels> = {
     tonne: {
       tree: '나무 한 그루가 1년간 흡수',
       car100km: '휘발유차 100 km',
-      flight: '서울에서 제주, 항공 편도 1인',
       beef: '소고기 1 kg',
-      electricity: '한 가정의 한 달 전기',
+      electricity: '전기 300 kWh (한 가정의 한 달 정도)',
       tonne: '1톤',
       worldPerCapita: '세계 평균 1인 1년',
       koreaPerCapita: '한국 평균 1인 1년',
