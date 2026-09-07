@@ -19,13 +19,13 @@ v1에서 **하지 않는 것**: 노드 드래그, 노트별 로컬 그래프, 3D
 
 ## 2. 현재 데이터가 말해주는 것
 
-| 항목                                           | 값  |
-| ---------------------------------------------- | --- |
-| 고유 노트                                      | 100 |
-| 명시 링크 엣지                                 | 171 |
-| 링크로 연결된 노트                             | 52  |
-| 고립 노트 (링크 0)                             | 48  |
-| 태그 노드(3개 이상 노트) 추가 후에도 완전 고립 | 19  |
+| 항목 | 값 |
+|---|---|
+| 고유 노트 | 100 |
+| 명시 링크 엣지 | 171 |
+| 링크로 연결된 노트 | 52 |
+| 고립 노트 (링크 0) | 48 |
+| 태그 노드(3개 이상 노트) 추가 후에도 완전 고립 | 19 |
 
 - 연결된 노트는 AI Infrastructure(33개 중 30개)와 LLM Research(19개 전부)에 몰려 있습니다. LLM Research의 허브는 MOC 글입니다.
 - 고립 48개는 전부 AI 이전 글입니다. Dev Life, Web Frontend, Backend, Algorithms, DevOps & Cloud는 연결이 0개입니다.
@@ -55,7 +55,7 @@ v1에서 **하지 않는 것**: 노드 드래그, 노트별 로컬 그래프, 3D
 
 1. 정본 문서의 frontmatter `shortTitle`이 있으면 그대로. 정본에 없고 다른 언어판에 있으면 그것을 씁니다. (32자 초과 시 3번 규칙으로 자름.)
 2. 없으면 제목에서 파생합니다.
-   - 구분자에서 나눕니다: `: `, `： `, `—`, `–`, `-`, `/`, 그리고 `?` 뒤의 공백.
+   - 구분자에서 나눕니다: `: `, `： `, ` — `, ` – `, ` - `, ` / `, 그리고 `?` 뒤의 공백.
    - 앞부분(head)을 씁니다. 단, head가 **다른 정본 노트의 head와 겹치거나** 6자 미만이면 뒷부분(tail)을 씁니다.
      - 예: "Transformer Basics: Q, K, V Intuition"은 head "Transformer Basics"가 3개 노트에서 겹치므로 "Q, K, V Intuition".
      - 예: "TIL: Ruby on Rails …"는 head가 짧아서 tail.
@@ -68,17 +68,8 @@ v1에서 **하지 않는 것**: 노드 드래그, 노트별 로컬 그래프, 3D
 
 ```ts
 graph: {
-  tagNodes: {
-    id: string
-    label: string
-    count: number
-  }
-  ;[] // id = 'tag:' + label
-  tagLinks: {
-    source: string
-    target: string
-  }
-  ;[] // source = note slug, target = tag id
+  tagNodes: { id: string; label: string; count: number }[]   // id = 'tag:' + label
+  tagLinks: { source: string; target: string }[]             // source = note slug, target = tag id
 }
 ```
 
@@ -98,19 +89,9 @@ export interface KBPostEntry {
   tags: string[]
   summary: string
 }
-export interface KBTagNode {
-  id: string
-  label: string
-  count: number
-}
-export interface KBTagLink {
-  source: string
-  target: string
-}
-export interface KBGraphData {
-  tagNodes: KBTagNode[]
-  tagLinks: KBTagLink[]
-}
+export interface KBTagNode { id: string; label: string; count: number }
+export interface KBTagLink { source: string; target: string }
+export interface KBGraphData { tagNodes: KBTagNode[]; tagLinks: KBTagLink[] }
 export interface KBData {
   topics: KBTopic[]
   backlinks: Record<string, KBBacklink[]>
@@ -138,59 +119,23 @@ export interface KBData {
 
 ```ts
 export interface GraphNode {
-  id: string
-  kind: 'note' | 'tag'
-  label: string
-  topic?: string
-  stage?: string
-  date?: string
-  inDegree: number
-  outDegree: number
-  degree: number // 명시 링크 기준. tag 노드는 count를 degree에
+  id: string; kind: 'note' | 'tag'; label: string
+  topic?: string; stage?: string; date?: string
+  inDegree: number; outDegree: number; degree: number   // 명시 링크 기준. tag 노드는 count를 degree에
   radius: number
 }
-export interface GraphLink {
-  source: string
-  target: string
-  kind: 'link' | 'tag'
-}
-export interface GraphFilters {
-  topics: Set<string>
-  stage: 'all' | 'seedling' | 'budding' | 'evergreen'
-  tags: boolean
-}
+export interface GraphLink { source: string; target: string; kind: 'link' | 'tag' }
+export interface GraphFilters { topics: Set<string>; stage: 'all' | 'seedling' | 'budding' | 'evergreen'; tags: boolean }
 
-export function buildGraph(
-  data: KBData,
-  filters: GraphFilters
-): { nodes: GraphNode[]; links: GraphLink[] }
+export function buildGraph(data: KBData, filters: GraphFilters): { nodes: GraphNode[]; links: GraphLink[] }
 export function neighbourIds(links: GraphLink[], id: string): Set<string>
-export function orphanIds(data: KBData): string[] // inDegree + outDegree === 0
-export function isolatedIds(data: KBData): string[] // orphan이면서 tag 노드 멤버도 아님
-export function hubIds(data: KBData, n = 8): string[] // backlinks 수 내림차순, 동률이면 degree
-export function relatedUnlinked(
-  data: KBData,
-  slug: string,
-  opts = { minShared: 2, limit: 5 }
-): { slug: string; title: string; sharedTags: string[] }[] // 양방향 링크 없음, 공유 태그 수 내림차순, 날짜 내림차순
-export function labelTier(
-  node: GraphNode,
-  k: number,
-  forced: boolean,
-  hubs: Set<string>
-): 0 | 1 | 2 | 3 | null
-export function placeLabels(
-  candidates: {
-    id: string
-    tier: number
-    priority: number
-    x: number
-    y: number
-    radius: number
-    text: string
-  }[],
-  k: number
-): Set<string>
+export function orphanIds(data: KBData): string[]          // inDegree + outDegree === 0
+export function isolatedIds(data: KBData): string[]        // orphan이면서 tag 노드 멤버도 아님
+export function hubIds(data: KBData, n = 8): string[]      // backlinks 수 내림차순, 동률이면 degree
+export function relatedUnlinked(data: KBData, slug: string, opts = { minShared: 2, limit: 5 }):
+  { slug: string; title: string; sharedTags: string[] }[]  // 양방향 링크 없음, 공유 태그 수 내림차순, 날짜 내림차순
+export function labelTier(node: GraphNode, k: number, forced: boolean, hubs: Set<string>): 0 | 1 | 2 | 3 | null
+export function placeLabels(candidates: { id: string; tier: number; priority: number; x: number; y: number; radius: number; text: string }[], k: number): Set<string>
 export function nodeRadius(node: { kind: 'note' | 'tag'; degree: number }): number
 ```
 
@@ -223,20 +168,20 @@ export function nodeRadius(node: { kind: 'note' | 'tag'; degree: number }): numb
 - 상태 클래스: `dim`(불투명도 0.12), `sel`(강한 테두리 + 반투명 링), `hover`, `match`(액센트 테두리). 선택·호버 강조는 **색이 아니라 테두리와 흐림**으로 표현해 토픽 색과 충돌하지 않게 합니다.
 - 색 토큰은 `css/tailwind.css`의 `.kb-theme`(다크)와 `:where(.light, .light *) .kb-theme`(라이트) 블록에 추가합니다.
 
-| 토큰              | 토픽                                       | 다크      | 라이트    |
-| ----------------- | ------------------------------------------ | --------- | --------- |
-| `--kb-topic-1`    | ai-infrastructure                          | `#3987e5` | `#2a78d6` |
-| `--kb-topic-2`    | llm-research                               | `#d95926` | `#eb6834` |
-| `--kb-topic-3`    | dev-life                                   | `#199e70` | `#1baf7a` |
-| `--kb-topic-4`    | web-frontend                               | `#c98500` | `#eda100` |
-| `--kb-topic-5`    | backend                                    | `#d55181` | `#e87ba4` |
-| `--kb-topic-6`    | algorithms                                 | `#008300` | `#008300` |
-| `--kb-topic-7`    | backend-architecture                       | `#9085e9` | `#4a3aa7` |
-| `--kb-topic-8`    | devops-cloud                               | `#e66767` | `#e34948` |
-| `--kb-topic-0`    | software-engineering, uncategorized, 그 외 | `#6b7186` | `#8a8a8a` |
-| `--kb-graph-edge` | 엣지·태그 테두리                           | `#7c8296` | `#5a5751` |
+| 토큰 | 토픽 | 다크 | 라이트 |
+|---|---|---|---|
+| `--kb-topic-1` | ai-infrastructure | `#3987e5` | `#2a78d6` |
+| `--kb-topic-2` | llm-research | `#d95926` | `#eb6834` |
+| `--kb-topic-3` | dev-life | `#199e70` | `#1baf7a` |
+| `--kb-topic-4` | web-frontend | `#c98500` | `#eda100` |
+| `--kb-topic-5` | backend | `#d55181` | `#e87ba4` |
+| `--kb-topic-6` | algorithms | `#008300` | `#008300` |
+| `--kb-topic-7` | backend-architecture | `#9085e9` | `#4a3aa7` |
+| `--kb-topic-8` | devops-cloud | `#e66767` | `#e34948` |
+| `--kb-topic-0` | software-engineering, uncategorized, 그 외 | `#6b7186` | `#8a8a8a` |
+| `--kb-graph-edge` | 엣지·태그 테두리 | `#7c8296` | `#5a5751` |
 
-이 8색은 KB 다크(`#0a0e1a`)·라이트(`#f8f7f4`) 배경에서 색각 이상 분리도와 대비를 검증기로 확인해 통과한 팔레트입니다. 라이트 배경에서 대비 3:1 미만인 색이 4개 있어서, 툴팁·칩·패널 목록이 색을 보조합니다. 매핑은 `components/kb/graph/topicColors.ts`의 `TOPIC_SLOT` 상수 하나에서 관리합니다. 새 토픽이 생기면 슬롯 0(회색)으로 갑니다.
+  이 8색은 KB 다크(`#0a0e1a`)·라이트(`#f8f7f4`) 배경에서 색각 이상 분리도와 대비를 검증기로 확인해 통과한 팔레트입니다. 라이트 배경에서 대비 3:1 미만인 색이 4개 있어서, 툴팁·칩·패널 목록이 색을 보조합니다. 매핑은 `components/kb/graph/topicColors.ts`의 `TOPIC_SLOT` 상수 하나에서 관리합니다. 새 토픽이 생기면 슬롯 0(회색)으로 갑니다.
 
 ### 5.4 상호작용
 
