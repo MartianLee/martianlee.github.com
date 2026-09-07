@@ -149,7 +149,7 @@ export default function KBGraphSvg() {
       const p = positions.get(n.id)
       if (!p) continue
       if (focus && !focus.has(n.id)) continue
-      if (match && !match.has(n.id)) continue
+      if (!focus && match && !match.has(n.id)) continue
       const forced = Boolean((focus && focus.has(n.id)) || (match && match.has(n.id)))
       const tier = labelTier(n, view.k, forced, g.hubs)
       if (tier === null) continue
@@ -308,7 +308,7 @@ export default function KBGraphSvg() {
               )
             })}
           </g>
-          <g>
+          <g aria-hidden="true">
             {g.nodes.map((n) => {
               if (!shownLabels.has(n.id)) return null
               const p = positions.get(n.id)
