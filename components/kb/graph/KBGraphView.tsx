@@ -15,6 +15,7 @@ import {
   orphanIds,
   type GraphFilters,
 } from './graphModel'
+import KBGraphSvg from './KBGraphSvg'
 
 const data = kbData as KBData
 const HUBS = new Set(hubIds(data))
@@ -36,29 +37,32 @@ export default function KBGraphView() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedId(null)
+      if (e.key === 'Escape') select(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [select])
 
-  const state: KBGraphState = {
-    data,
-    nodes: graph.nodes,
-    links: graph.links,
-    filters,
-    setFilters,
-    query,
-    setQuery,
-    hoverId,
-    setHoverId,
-    selectedId,
-    select,
-    focusRequest,
-    hubs: HUBS,
-    orphans: ORPHANS,
-    isolated: ISOLATED,
-  }
+  const state = useMemo<KBGraphState>(
+    () => ({
+      data,
+      nodes: graph.nodes,
+      links: graph.links,
+      filters,
+      setFilters,
+      query,
+      setQuery,
+      hoverId,
+      setHoverId,
+      selectedId,
+      select,
+      focusRequest,
+      hubs: HUBS,
+      orphans: ORPHANS,
+      isolated: ISOLATED,
+    }),
+    [graph, filters, query, hoverId, selectedId, select, focusRequest]
+  )
   const linked = data.postIndex.length - ORPHANS.length
 
   return (
@@ -67,11 +71,8 @@ export default function KBGraphView() {
         <KBShell
           sidebar={<KBSidebar activeSlug={selectedId ?? undefined} />}
           main={
-            <div
-              className="flex h-full items-center justify-center text-xs"
-              style={{ color: 'var(--kb-text-muted)' }}
-            >
-              Graph view is being assembled.
+            <div className="flex h-full min-h-0 flex-col">
+              <KBGraphSvg />
             </div>
           }
           breadcrumb={<span style={{ color: 'var(--kb-text-strong)' }}>Graph</span>}
