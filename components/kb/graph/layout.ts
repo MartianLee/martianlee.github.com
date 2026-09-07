@@ -59,7 +59,7 @@ interface SimLink extends SimulationLinkDatum<SimNode> {
 
 function anchorStrength(d: SimNode): number {
   if (d.kind !== 'note') return 0.005
-  return d.degree === 0 ? 0.03 : 0.005
+  return d.degree === 0 ? 0.05 : 0.005
 }
 
 /**
@@ -92,7 +92,7 @@ export function computeLayout(
 
   const sim = forceSimulation<SimNode>(simNodes)
     .randomSource(rnd)
-    .force('charge', forceManyBody<SimNode>().strength(-70).distanceMax(400))
+    .force('charge', forceManyBody<SimNode>().strength(-55).distanceMax(320))
     .force(
       'link',
       forceLink<SimNode, SimLink>(simLinks)

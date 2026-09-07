@@ -54,3 +54,4 @@ yarn-error.log*
 app/tag-data.json
 next-env.d.ts
 .vscode/*
+tsconfig.tsbuildinfo

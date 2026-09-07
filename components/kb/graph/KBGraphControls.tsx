@@ -47,7 +47,7 @@ export default function KBGraphControls() {
       style={{ borderBottom: '1px solid var(--kb-border)', color: 'var(--kb-text)' }}
     >
       <label
-        className="flex h-6 min-w-[200px] items-center gap-1.5 rounded border px-2"
+        className="flex h-6 min-w-[260px] items-center gap-1.5 rounded border px-2"
         style={{ borderColor: 'var(--kb-border)', background: 'var(--kb-surface)' }}
       >
         <span className="sr-only">Highlight notes</span>
@@ -72,6 +72,7 @@ export default function KBGraphControls() {
           style={{ color: 'var(--kb-text-strong)' }}
         />
         <kbd
+          aria-hidden="true"
           className="rounded border px-1 text-[10px]"
           style={{ borderColor: 'var(--kb-border)', color: 'var(--kb-text-muted)' }}
         >
