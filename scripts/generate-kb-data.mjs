@@ -1,5 +1,10 @@
 import { writeFileSync } from 'fs'
 
+export const TAG_NODE_MIN_NOTES = 3
+export const TAG_BLOCKLIST = ['post', 'develop']
+export const SHORT_TITLE_MAX = 32
+
+// --- topic inference (unchanged rules) -------------------------------------
 const TOPIC_RULES = [
   {
     topic: 'llm-research',
@@ -134,9 +139,11 @@ const TOPIC_LABELS = {
   'ai-infrastructure': 'AI Infrastructure',
   'web-frontend': 'Web Frontend',
   backend: 'Backend',
+  'backend-architecture': 'Backend Architecture',
   'devops-cloud': 'DevOps & Cloud',
   'dev-life': 'Dev Life',
   algorithms: 'Algorithms',
+  'software-engineering': 'Software Engineering',
   uncategorized: 'Uncategorized',
 }
 
@@ -148,127 +155,100 @@ function inferTopic(post) {
   return 'uncategorized'
 }
 
-export function generateKBData(allBlogs) {
-  const posts = allBlogs
-    .filter((p) => p.type === 'Blog' && !p.draft)
-    .map((p) => ({
-      slug: p.slug || p._raw?.flattenedPath?.replace(/^.+?(\/)/, ''),
-      title: p.title,
-      date: p.date,
-      tags: p.tags || [],
-      topic: p.topic,
-      stage: p.stage || 'budding',
-      summary: p.summary || '',
-      body: p.body?.raw || '',
-    }))
+// --- canonical documents ----------------------------------------------------
 
-  // Assign topics
-  const topicMap = {}
-  for (const post of posts) {
-    post.topic = inferTopic(post)
-    if (!topicMap[post.topic]) {
-      topicMap[post.topic] = []
-    }
-    topicMap[post.topic].push(post.slug)
+/**
+ * One document per slug: the English version when it exists, otherwise Korean.
+ * Same rule as createTagCount / createSearchIndex in contentlayer.config.ts.
+ */
+export function pickCanonical(docs) {
+  const bySlug = new Map()
+  for (const d of docs) {
+    const existing = bySlug.get(d.slug)
+    if (!existing || (d.language === 'en' && existing.language !== 'en')) bySlug.set(d.slug, d)
   }
+  return [...bySlug.values()]
+}
 
-  // Scan for [[wiki-links]] and internal /posts/ links to build backlinks
-  const backlinks = {}
-  const forwardLinks = {}
-  const slugSet = new Set(posts.map((p) => p.slug))
+// --- links ------------------------------------------------------------------
 
-  for (const post of posts) {
-    forwardLinks[post.slug] = []
+const LINK_PATTERNS = [
+  /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, // [[slug]] or [[slug|display]]
+  /href=["']\/posts\/([^"']+)["']/g, // href="/posts/slug"
+  /\]\(\/kb\/([^)]+)\)/g, // [text](/kb/slug)
+]
 
-    // Match [[slug]] or [[slug|display]]
-    const wikiLinkRegex = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g
-    let match
-    while ((match = wikiLinkRegex.exec(post.body)) !== null) {
-      const targetSlug = match[1].trim()
-      if (slugSet.has(targetSlug) && targetSlug !== post.slug) {
-        forwardLinks[post.slug].push(targetSlug)
-        if (!backlinks[targetSlug]) backlinks[targetSlug] = []
-        backlinks[targetSlug].push({
-          slug: post.slug,
-          title: post.title,
-        })
-      }
-    }
-
-    // Also match internal href="/posts/SLUG" links
-    const hrefRegex = /href=["']\/posts\/([^"']+)["']/g
-    while ((match = hrefRegex.exec(post.body)) !== null) {
-      const targetSlug = match[1].trim()
-      if (slugSet.has(targetSlug) && targetSlug !== post.slug) {
-        forwardLinks[post.slug].push(targetSlug)
-        if (!backlinks[targetSlug]) backlinks[targetSlug] = []
-        backlinks[targetSlug].push({
-          slug: post.slug,
-          title: post.title,
-        })
-      }
-    }
-
-    // Also match markdown links to /kb/SLUG, e.g. [text](/kb/some-slug)
-    const kbLinkRegex = /\]\(\/kb\/([^)]+)\)/g
-    while ((match = kbLinkRegex.exec(post.body)) !== null) {
-      const targetSlug = match[1].trim()
-      if (slugSet.has(targetSlug) && targetSlug !== post.slug) {
-        forwardLinks[post.slug].push(targetSlug)
-        if (!backlinks[targetSlug]) backlinks[targetSlug] = []
-        backlinks[targetSlug].push({
-          slug: post.slug,
-          title: post.title,
-        })
-      }
-    }
+/** Every link target mentioned in a body, in document order, not deduplicated. */
+export function extractLinks(bodyRaw) {
+  const out = []
+  for (const re of LINK_PATTERNS) {
+    re.lastIndex = 0
+    let m
+    while ((m = re.exec(bodyRaw)) !== null) out.push(m[1].trim())
   }
+  return out
+}
 
-  // Deduplicate backlinks
-  for (const slug of Object.keys(backlinks)) {
-    const seen = new Set()
-    backlinks[slug] = backlinks[slug].filter((bl) => {
-      if (seen.has(bl.slug)) return false
-      seen.add(bl.slug)
-      return true
-    })
-  }
+// --- build ------------------------------------------------------------------
 
-  // Deduplicate forwardLinks
-  for (const slug of Object.keys(forwardLinks)) {
-    forwardLinks[slug] = [...new Set(forwardLinks[slug])]
-  }
+export function buildKBData(allDocuments, now = new Date()) {
+  const blogs = allDocuments.filter((p) => p.type === 'Blog' && !p.draft)
+  const canonical = pickCanonical(blogs)
+  const slugSet = new Set(canonical.map((p) => p.slug))
 
-  const topics = Object.entries(topicMap)
-    .map(([id, slugs]) => ({
-      id,
-      label: TOPIC_LABELS[id] || id,
-      count: slugs.length,
-      slugs,
-    }))
-    .sort((a, b) => b.count - a.count)
-
-  // Post index (lightweight, for sidebar/listing)
-  const postIndex = posts.map((p) => ({
+  const posts = canonical.map((p) => ({
     slug: p.slug,
     title: p.title,
     date: p.date,
-    topic: p.topic,
-    stage: p.stage,
-    tags: p.tags,
-    summary: p.summary,
+    tags: p.tags || [],
+    topic: inferTopic(p),
+    stage: p.stage || 'budding',
+    summary: p.summary || '',
   }))
+  const titleOf = new Map(posts.map((p) => [p.slug, p.title]))
 
-  const kbData = {
+  // Forward links: union over every language version of a slug, deduplicated, no self links.
+  const forwardLinks = {}
+  for (const slug of slugSet) forwardLinks[slug] = []
+  for (const docItem of blogs) {
+    const list = forwardLinks[docItem.slug]
+    if (!list) continue
+    for (const target of extractLinks(docItem.body?.raw || '')) {
+      if (!slugSet.has(target) || target === docItem.slug || list.includes(target)) continue
+      list.push(target)
+    }
+  }
+
+  const backlinks = {}
+  for (const [source, targets] of Object.entries(forwardLinks)) {
+    for (const target of targets) {
+      if (!backlinks[target]) backlinks[target] = []
+      backlinks[target].push({ slug: source, title: titleOf.get(source) })
+    }
+  }
+
+  const topicMap = {}
+  for (const post of posts) {
+    if (!topicMap[post.topic]) topicMap[post.topic] = []
+    topicMap[post.topic].push(post.slug)
+  }
+  const topics = Object.entries(topicMap)
+    .map(([id, slugs]) => ({ id, label: TOPIC_LABELS[id] || id, count: slugs.length, slugs }))
+    .sort((a, b) => b.count - a.count)
+
+  return {
     topics,
     backlinks,
     forwardLinks,
-    postIndex,
-    generatedAt: new Date().toISOString(),
+    postIndex: posts,
+    generatedAt: now.toISOString(),
   }
+}
 
+export function generateKBData(allDocuments) {
+  const kbData = buildKBData(allDocuments)
   writeFileSync('./app/kb-data.json', JSON.stringify(kbData, null, 2))
   console.log(
-    `KB data generated: ${posts.length} notes, ${topics.length} topics, ${Object.keys(backlinks).length} notes with backlinks`
+    `KB data generated: ${kbData.postIndex.length} notes, ${kbData.topics.length} topics, ${Object.keys(kbData.backlinks).length} notes with backlinks`
   )
 }
