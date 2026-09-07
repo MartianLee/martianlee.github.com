@@ -7,11 +7,15 @@ import {
   degreesOf,
   hubIds,
   isolatedIds,
+  labelTier,
   neighbourIds,
   nodeRadius,
   orphanIds,
+  placeLabels,
   relatedUnlinked,
+  searchIds,
 } from './graphModel.ts'
+import type { GraphNode } from './graphModel.ts'
 
 function post(over: Partial<KBPostEntry> & { slug: string }): KBPostEntry {
   return {
@@ -164,4 +168,64 @@ test('relatedUnlinked returns unlinked notes sharing 2+ tags, best first', () =>
     ['d']
   )
   assert.deepEqual(relatedUnlinked(data, 'missing'), [])
+})
+
+function node(over: Partial<GraphNode> & { id: string }): GraphNode {
+  return {
+    kind: 'note',
+    label: over.id,
+    title: over.id,
+    tags: [],
+    inDegree: 0,
+    outDegree: 0,
+    degree: 0,
+    radius: 4,
+    ...over,
+  }
+}
+
+test('searchIds matches title, label, id and tags case-insensitively; empty query = null', () => {
+  const nodes = [
+    node({
+      id: '2026-01-01-webmcp',
+      title: 'WebMCP Explained',
+      label: 'WebMCP',
+      tags: ['browser-automation'],
+    }),
+    node({ id: 'tag:llm', kind: 'tag', title: 'llm', label: '#llm' }),
+    node({ id: 'other', title: 'Other', label: 'Other', tags: ['react'] }),
+  ]
+  assert.equal(searchIds(nodes, '   '), null)
+  assert.deepEqual([...searchIds(nodes, 'webmcp')!], ['2026-01-01-webmcp'])
+  assert.deepEqual([...searchIds(nodes, 'AUTOMATION')!], ['2026-01-01-webmcp'])
+  assert.deepEqual([...searchIds(nodes, 'llm')!], ['tag:llm'])
+})
+
+test('labelTier: forced > hubs/big tags > zoom tiers', () => {
+  const hubs = new Set(['hub'])
+  assert.equal(labelTier(node({ id: 'x', degree: 9 }), 1, true, hubs), 0)
+  assert.equal(labelTier(node({ id: 'hub', degree: 9 }), 1, false, hubs), 1)
+  assert.equal(labelTier(node({ id: 't', kind: 'tag', degree: 5 }), 1, false, hubs), 1)
+  assert.equal(labelTier(node({ id: 'x', degree: 3 }), 1, false, hubs), null)
+  assert.equal(labelTier(node({ id: 'x', degree: 2 }), 1.3, false, hubs), 2)
+  assert.equal(labelTier(node({ id: 'x', degree: 1 }), 1.3, false, hubs), null)
+  assert.equal(labelTier(node({ id: 't', kind: 'tag', degree: 3 }), 1.3, false, hubs), 2)
+  assert.equal(labelTier(node({ id: 'x', degree: 0 }), 2.2, false, hubs), 3)
+})
+
+test('placeLabels drops overlapping lower-priority labels and keeps them apart', () => {
+  const near = [
+    { id: 'big', tier: 1, priority: 9, x: 0, y: 0, radius: 5, text: 'Big hub label' },
+    { id: 'small', tier: 2, priority: 1, x: 10, y: 4, radius: 3, text: 'Small one' },
+    { id: 'far', tier: 2, priority: 1, x: 300, y: 300, radius: 3, text: 'Far away' },
+  ]
+  assert.deepEqual([...placeLabels(near, 1)].sort(), ['big', 'far'])
+  // At 4x zoom the boxes shrink in graph units and no longer collide.
+  assert.deepEqual([...placeLabels(near, 4)].sort(), ['big', 'far', 'small'])
+  // Tier wins over priority.
+  const tie = [
+    { id: 'p', tier: 2, priority: 99, x: 0, y: 0, radius: 5, text: 'aaaaaaaa' },
+    { id: 'f', tier: 0, priority: 0, x: 2, y: 2, radius: 5, text: 'bbbbbbbb' },
+  ]
+  assert.deepEqual([...placeLabels(tie, 1)], ['f'])
 })

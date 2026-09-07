@@ -214,3 +214,74 @@ export function relatedUnlinked(
     .slice(0, limit)
     .map(({ slug: s, title, sharedTags }) => ({ slug: s, title, sharedTags }))
 }
+
+/** Ids matching a free-text query against title, label, id and tags. `null` when the query is blank. */
+export function searchIds(nodes: GraphNode[], query: string): Set<string> | null {
+  const q = query.trim().toLowerCase()
+  if (!q) return null
+  const out = new Set<string>()
+  for (const n of nodes) {
+    const hay = [n.title, n.label, n.id, ...n.tags].join('\n').toLowerCase()
+    if (hay.includes(q)) out.add(n.id)
+  }
+  return out
+}
+
+export type LabelTier = 0 | 1 | 2 | 3
+
+/**
+ * 0 = forced (hover/selection neighbourhood, search match), 1 = hubs and tags on 5+ notes,
+ * 2 = at 1.3x zoom: notes with 2+ links / tags on 3+ notes, 3 = at 2.2x zoom: everything.
+ */
+export function labelTier(
+  node: GraphNode,
+  k: number,
+  forced: boolean,
+  hubs: Set<string>
+): LabelTier | null {
+  if (forced) return 0
+  if (node.kind === 'tag' ? node.degree >= 5 : hubs.has(node.id)) return 1
+  if (k >= 2.2) return 3
+  if (k >= 1.3 && (node.kind === 'tag' ? node.degree >= 3 : node.degree >= 2)) return 2
+  return null
+}
+
+export const LABEL_FONT_PX = 10
+export const LABEL_CHAR_W = 6.3
+export const LABEL_LINE_H = 13
+export const LABEL_GAP = 3
+
+export interface LabelCandidate {
+  id: string
+  tier: number
+  priority: number
+  x: number
+  y: number
+  radius: number
+  text: string
+}
+
+/**
+ * Greedy label placement in graph units. Labels keep a constant on-screen size, so their
+ * boxes shrink by 1/k as the view zooms in. Lower tier first, then higher priority.
+ */
+export function placeLabels(candidates: LabelCandidate[], k: number): Set<string> {
+  const sorted = [...candidates].sort(
+    (a, b) => a.tier - b.tier || b.priority - a.priority || a.id.localeCompare(b.id)
+  )
+  const placed: { x0: number; y0: number; x1: number; y1: number }[] = []
+  const shown = new Set<string>()
+  for (const c of sorted) {
+    const w = (c.text.length * LABEL_CHAR_W) / k
+    const h = LABEL_LINE_H / k
+    const x0 = c.x + c.radius + LABEL_GAP
+    const box = { x0, y0: c.y - h / 2, x1: x0 + w, y1: c.y + h / 2 }
+    const overlaps = placed.some(
+      (b) => !(box.x1 < b.x0 || box.x0 > b.x1 || box.y1 < b.y0 || box.y0 > b.y1)
+    )
+    if (overlaps) continue
+    placed.push(box)
+    shown.add(c.id)
+  }
+  return shown
+}
