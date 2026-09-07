@@ -69,7 +69,8 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     if (p.kg >= 0) group.add(new THREE.Mesh(geo, cubeMat))
     group.add(new THREE.LineSegments(edges, p.kg >= 0 ? edgeMat : absorbMat))
     root.add(group)
-    anchors.push({ obj: group, y: p.size / 2 + 0.6 })
+    // 작은 큐브들이 붙어 있어 라벨 높이를 3단으로 어긋나게 둔다
+    anchors.push({ obj: group, y: p.size / 2 + 0.6 + (anchors.length % 3) * 1.1 })
   }
 
   // 기준 물체: 사람(1.7 m)과 자동차, 1 t 큐브 앞에
@@ -80,7 +81,7 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
   car.position.set(tonne.x - tonne.size / 2 - 4.6, 0.75, 1.6)
   disposables.push(human.geometry, car.geometry)
   root.add(human, car)
-  anchors.push({ obj: human, y: 1.4 }, { obj: car, y: 1.2 })
+  anchors.push({ obj: human, y: 2.6 }, { obj: car, y: 1.2 })
 
   const v = new THREE.Vector3()
   const project = () => {
@@ -102,10 +103,12 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     render(ts) {
       // 카메라가 왼쪽 끝에서 오른쪽 끝까지 천천히 왕복
       const p = (Math.sin(ts * 0.00008 - Math.PI / 2) + 1) / 2
-      const cx = -4 + p * (totalWidth + 8)
+      const cx = -2 + p * (totalWidth + 4)
       const big = placed[placed.length - 1].size
-      camera.position.set(cx + 6, 6 + p * big * 0.6, 22 + p * big * 1.4)
-      camera.lookAt(cx, 2 + p * big * 0.25, 0)
+      // 큰 큐브 쪽으로 갈수록 카메라를 뒤로 빼서 큐브 안으로 들어가지 않게 한다
+      const dist = 26 + p * big * 2.6
+      camera.position.set(cx + dist * 0.35, 4 + p * big * 0.9, dist)
+      camera.lookAt(cx, 1.5 + p * big * 0.3, 0)
       renderer.render(scene, camera)
       project()
     },

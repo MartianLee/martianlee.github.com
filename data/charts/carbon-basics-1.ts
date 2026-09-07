@@ -24,7 +24,7 @@ export interface Source {
  * 정적 HTML/WebFetch 텍스트에는 74.4/17.3/6.2 숫자가 그대로 노출되지 않는다(WebFetch로
  * 두 차례 확인, 매번 "페이지 텍스트에 퍼센트 없음"). 이 숫자는 WebSearch 결과(이
  * URL을 출처로 명시하며 "carbon dioxide (74.4%), methane (17.3%), and nitrous oxide
- * (6.2%)"를 그대로 인용)로 교차 확인했다 — 즉 URL은 검색 결과 기준으로 확정했고,
+ * (6.2%)"를 그대로 인용)로 교차 확인했다: 즉 URL은 검색 결과 기준으로 확정했고,
  * 퍼센트 수치 자체는 페이지 텍스트에서 직접 읽은 게 아니라 검색 결과 인용으로 확인한
  * 것이다. OWID의 "by gas" 인터랙티브 차트(grapher/ghg-emissions-by-gas)는 국가별
  * 시계열(CO2/CH4/N2O만, F-가스 미포함)이라 이 4종 비중 스냅샷의 대안 출처가 되지

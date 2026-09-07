@@ -71,22 +71,25 @@ export default function VizFrame({
           )}
         </span>
       </figcaption>
-      <table className={failed ? 'mt-4 w-full text-sm' : 'sr-only'}>
-        <thead>
-          <tr>
-            <th className="text-left">{fallback.columns[0]}</th>
-            <th className="text-right">{fallback.columns[1]}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {fallback.rows.map((r) => (
-            <tr key={r.label}>
-              <td>{r.label}</td>
-              <td className="text-right tabular-nums">{r.value}</td>
+      {/* sr-only는 table 박스를 clip하지 못해(행이 문서 폭을 늘림) div로 감싼다 */}
+      <div className={failed ? 'mt-4 w-full overflow-x-auto' : 'sr-only'}>
+        <table className="w-full text-sm">
+          <thead>
+            <tr>
+              <th className="text-left">{fallback.columns[0]}</th>
+              <th className="text-right">{fallback.columns[1]}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {fallback.rows.map((r) => (
+              <tr key={r.label}>
+                <td>{r.label}</td>
+                <td className="text-right tabular-nums">{r.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   )
 }

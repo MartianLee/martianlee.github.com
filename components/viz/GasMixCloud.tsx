@@ -6,7 +6,7 @@ import { useThreeScene, type SceneBuilder } from './useThreeScene'
 import { discSprite, makePoints, disposePoints } from './three-utils'
 import VizFrame from './VizFrame'
 
-const COUNT = 1800
+const COUNT = 2600
 
 const build: SceneBuilder = (THREE, _canvas, renderer) => {
   const scene = new THREE.Scene()
@@ -46,7 +46,7 @@ const build: SceneBuilder = (THREE, _canvas, renderer) => {
     start += width + gap
   }
   const cloud = makePoints(THREE, pos, {
-    size: 0.075,
+    size: 0.085,
     sprite,
     vertexColors: col,
     opacity: 0.9,

@@ -39,6 +39,11 @@ const build: SceneBuilder = (THREE, _canvas, renderer) => {
   earth.setHazeLevel(levelOf(shared.year))
   let lastYear = shared.year
   return {
+    // reduced-motion: 단일 프레임이므로 현재(마지막 연도) 상태로 고정한다
+    settle() {
+      shared.playing = false
+      shared.year = LAST
+    },
     render(ts) {
       if (shared.playing) {
         if (!shared.t0) shared.t0 = ts - ((shared.year - FIRST) / (LAST - FIRST)) * CYCLE_MS
@@ -110,7 +115,7 @@ export default function AtmosphereTimeline({ lang }: { lang: Lang }) {
             <button
               type="button"
               onClick={toggle}
-              className="rounded-full border border-[rgba(244,239,228,.4)] px-3 py-1 font-mono text-[11px] tracking-wide uppercase"
+              className="rounded-full border border-[rgba(244,239,228,.4)] px-3 py-1 font-mono text-[11px] tracking-wide whitespace-nowrap uppercase"
             >
               {playing ? L.pause : L.play}
             </button>

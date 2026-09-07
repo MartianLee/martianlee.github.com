@@ -7,8 +7,8 @@ import { useThreeScene, type SceneBuilder } from './useThreeScene'
 import { discSprite, makePoints, disposePoints } from './three-utils'
 import VizFrame from './VizFrame'
 
-const USED = 3000
-const FREE = 500
+const USED = 5000
+const FREE = 700
 const R = 1.0
 const H = 2.4
 const FILL_MS = 3000
@@ -46,17 +46,17 @@ const build: SceneBuilder = (THREE, _canvas, renderer) => {
 
   const fillTop = -H / 2 + H * usedRatio
   const usedPts = makePoints(THREE, cylinderPoints(USED, -H / 2, fillTop), {
-    size: 0.05,
+    size: 0.075,
     sprite,
     color: '#cf7a3d',
-    opacity: 0.85,
+    opacity: 0.9,
     additive: true,
   })
   const freePts = makePoints(THREE, cylinderPoints(FREE, fillTop, H / 2), {
-    size: 0.045,
+    size: 0.06,
     sprite,
     color: '#a8bd74',
-    opacity: 0.55,
+    opacity: 0.6,
     additive: true,
   })
   root.add(usedPts, freePts)
@@ -74,6 +74,10 @@ const build: SceneBuilder = (THREE, _canvas, renderer) => {
 
   let t0 = 0
   return {
+    // reduced-motion: 단일 프레임이므로 차오른 상태(94%)로 바로 그린다
+    settle() {
+      t0 = -FILL_MS
+    },
     render(ts) {
       if (!t0) t0 = ts
       const p = Math.min(1, (ts - t0) / FILL_MS)

@@ -10,6 +10,8 @@ export interface SceneHandle {
   /** 캔버스 CSS 크기 변경 시 호출(카메라 aspect 갱신용) */
   resize: (w: number, h: number) => void
   dispose: () => void
+  /** reduced-motion일 때 첫(유일한) 프레임 전에 호출: 애니메이션의 최종 상태로 맞춘다 */
+  settle?: () => void
 }
 
 export type SceneBuilder = (
@@ -76,6 +78,7 @@ export function useThreeScene(
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         handle = build(THREE, canvas, renderer)
         resize()
+        if (reduce) handle.settle?.()
         handle.render(0, 0)
         setStatus(reduce ? 'static' : 'live')
         if (!reduce) {
