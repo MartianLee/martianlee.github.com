@@ -3942,7 +3942,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-force@npm:*":
+"@types/d3-force@npm:*, @types/d3-force@npm:^3.0.10":
   version: 3.0.10
   resolution: "@types/d3-force@npm:3.0.10"
   checksum: 0faf1321ddd85f7bf25769ee97513b380a897791ad1cd6c4282f09e0108e566132fad80f4c73cdb592a352139b22388d3c77458298a00f92ef72e27019fb33c7
@@ -5723,7 +5723,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"d3-force@npm:3":
+"d3-force@npm:3, d3-force@npm:^3.0.0":
   version: 3.0.0
   resolution: "d3-force@npm:3.0.0"
   dependencies:
@@ -13002,6 +13002,7 @@ __metadata:
     "@tailwindcss/forms": ^0.5.9
     "@tailwindcss/postcss": ^4.1.17
     "@tailwindcss/typography": ^0.5.15
+    "@types/d3-force": ^3.0.10
     "@types/mdx": latest
     "@types/react": latest
     "@types/three": ^0.185.4
@@ -13010,6 +13011,7 @@ __metadata:
     autoprefixer: latest
     contentlayer2: latest
     cross-env: ^7.0.3
+    d3-force: ^3.0.0
     esbuild: ^0.25.0
     eslint: latest
     eslint-config-next: latest
