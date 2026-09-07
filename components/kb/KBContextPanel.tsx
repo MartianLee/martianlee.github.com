@@ -3,6 +3,7 @@
 import Link from '@/components/Link'
 import kbData from 'app/kb-data.json'
 import type { KBData, KBBacklink, KBPostEntry } from '@/components/kb/types'
+import { relatedUnlinked } from '@/components/kb/graph/graphModel'
 
 const data = kbData as KBData
 
@@ -18,6 +19,7 @@ export default function KBContextPanel({ slug, toc }: KBContextPanelProps) {
     .filter((p): p is KBPostEntry => Boolean(p))
 
   const note = data.postIndex.find((p) => p.slug === slug)
+  const related = relatedUnlinked(data, slug)
 
   return (
     <div className="flex h-full flex-col text-xs" style={{ color: 'var(--kb-text-strong)' }}>
@@ -94,6 +96,39 @@ export default function KBContextPanel({ slug, toc }: KBContextPanelProps) {
           </div>
         </section>
       )}
+
+      {/* Related, not linked */}
+      <section className="border-b px-3 py-3" style={{ borderColor: 'var(--kb-border)' }}>
+        <h3
+          className="mb-2 text-[10px] font-semibold tracking-wider uppercase"
+          style={{ color: 'var(--kb-text-muted)' }}
+        >
+          {`Related, not linked (${related.length})`}
+        </h3>
+        {related.length === 0 ? (
+          <p className="italic" style={{ color: 'var(--kb-text-muted)' }}>
+            No unlinked note shares 2+ tags.
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {related.map((r) => (
+              <Link
+                key={r.slug}
+                href={`/kb/${r.slug}`}
+                className="block rounded px-1.5 py-1 transition-colors hover:bg-[var(--kb-accent-dim)] hover:text-[var(--kb-accent)]"
+              >
+                <span className="block truncate font-medium">{r.title}</span>
+                <span className="block truncate text-[10px]" style={{ color: 'var(--kb-accent)' }}>
+                  {r.sharedTags.slice(0, 2).join(' · ')}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+        <p className="mt-2 text-[10px] leading-snug" style={{ color: 'var(--kb-text-muted)' }}>
+          Shares two or more tags with this note but is not linked either way.
+        </p>
+      </section>
 
       {/* Properties */}
       {note && (

@@ -31,9 +31,11 @@ const TOPIC_PRIORITY: Record<string, number> = {
 
 interface KBSidebarProps {
   activeSlug?: string
+  /** When set, clicking a note calls this instead of navigating (used by the graph page). */
+  onSelect?: (slug: string) => void
 }
 
-export default function KBSidebar({ activeSlug }: KBSidebarProps) {
+export default function KBSidebar({ activeSlug, onSelect }: KBSidebarProps) {
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(() => {
     if (activeSlug) {
       const activePost = data.postIndex.find((p) => p.slug === activeSlug)
@@ -111,21 +113,37 @@ export default function KBSidebar({ activeSlug }: KBSidebarProps) {
                   <div className="ml-3">
                     {notes.map((note) => {
                       const isActive = note.slug === activeSlug
-                      return (
-                        <Link
-                          key={note.slug}
-                          href={`/kb/${note.slug}`}
-                          className={`flex items-center gap-1.5 py-1 pr-2 pl-3 text-[12.5px] transition-colors ${
-                            isActive
-                              ? 'bg-[var(--kb-accent-dim)] text-[var(--kb-accent)]'
-                              : 'hover:bg-[var(--kb-accent-dim)]'
-                          }`}
-                          title={note.title}
-                        >
+                      const className = `flex w-full items-center gap-1.5 py-1 pr-2 pl-3 text-left text-[12.5px] transition-colors ${
+                        isActive
+                          ? 'bg-[var(--kb-accent-dim)] text-[var(--kb-accent)]'
+                          : 'hover:bg-[var(--kb-accent-dim)]'
+                      }`
+                      const inner = (
+                        <>
                           <span className="shrink-0 text-[10px]">
                             {STAGE_ICON[note.stage] || '\u{1F33F}'}
                           </span>
                           <span className="truncate">{note.title}</span>
+                        </>
+                      )
+                      return onSelect ? (
+                        <button
+                          key={note.slug}
+                          type="button"
+                          onClick={() => onSelect(note.slug)}
+                          className={className}
+                          title={note.title}
+                        >
+                          {inner}
+                        </button>
+                      ) : (
+                        <Link
+                          key={note.slug}
+                          href={`/kb/${note.slug}`}
+                          className={className}
+                          title={note.title}
+                        >
+                          {inner}
                         </Link>
                       )
                     })}

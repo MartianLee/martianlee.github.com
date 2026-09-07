@@ -71,7 +71,12 @@ export default function KBGraphView() {
     <KBGraphContext.Provider value={state}>
       <div className="kb-breakout">
         <KBShell
-          sidebar={<KBSidebar activeSlug={selectedId ?? undefined} />}
+          sidebar={
+            <KBSidebar
+              activeSlug={selectedId ?? undefined}
+              onSelect={(slug) => select(slug, { focus: true })}
+            />
+          }
           main={
             <div className="flex h-full min-h-0 flex-col">
               <KBGraphControls />
