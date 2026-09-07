@@ -78,6 +78,7 @@ export function buildEarthScene(THREE: Three, opts: EarthSceneOpts = {}): EarthS
 
   root.rotation.z = 0.28
   let level = 1
+  // 허브 원본 룩: opacity 0.5 ± 0.1 (level 1일 때 동일해야 한다)
   let baseOpacity = 0.5
 
   return {
@@ -86,13 +87,13 @@ export function buildEarthScene(THREE: Three, opts: EarthSceneOpts = {}): EarthS
     setHazeLevel(l) {
       level = Math.max(0, Math.min(1, l))
       haze.geometry.setDrawRange(0, Math.max(1, Math.round(hazeCount * (0.15 + 0.85 * level))))
-      baseOpacity = 0.2 + 0.4 * level
+      baseOpacity = 0.2 + 0.3 * level
     },
     render(renderer, ts) {
       root.rotation.y = ts * 0.00006
       haze.rotation.y = -ts * 0.00003
       haze.rotation.x = Math.sin(ts * 0.00004) * 0.08
-      hazeMat.opacity = baseOpacity - 0.08 + Math.sin(ts * 0.0005) * 0.1
+      hazeMat.opacity = baseOpacity + Math.sin(ts * 0.0005) * 0.1
       renderer.render(scene, camera)
     },
     resize(w, h) {

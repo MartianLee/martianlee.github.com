@@ -78,16 +78,20 @@ export function useThreeScene(
         resize()
         handle.render(0, 0)
         setStatus(reduce ? 'static' : 'live')
-        io = new IntersectionObserver(
-          (entries) => {
-            visible = entries[0]?.isIntersecting ?? false
-            if (visible) start()
-          },
-          { threshold: 0.05 }
-        )
-        io.observe(canvas)
+        if (!reduce) {
+          // reduced-motion: 첫 프레임만. observer를 두지 않아야 가시성 변화로 두 번째 프레임이 그려지지 않는다.
+          io = new IntersectionObserver(
+            (entries) => {
+              visible = entries[0]?.isIntersecting ?? false
+              if (visible) start()
+            },
+            { threshold: 0.05 }
+          )
+          io.observe(canvas)
+        }
         window.addEventListener('resize', resize)
-      } catch {
+      } catch (err) {
+        console.warn('[useThreeScene] 3D scene unavailable, showing fallback', err)
         setStatus('failed')
       }
     }
@@ -98,8 +102,11 @@ export function useThreeScene(
       io?.disconnect()
       if (raf) cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
-      handle?.dispose()
-      renderer?.dispose()
+      try {
+        handle?.dispose()
+      } finally {
+        renderer?.dispose()
+      }
     }
   }, [canvasRef, build])
 

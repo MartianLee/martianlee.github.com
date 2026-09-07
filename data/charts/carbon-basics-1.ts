@@ -14,15 +14,21 @@ export interface Source {
 
 /**
  * V1: 전 세계 온실가스 구성(CO₂e 기준, %)
- * 출처: Our World in Data "Greenhouse gas emissions"(ourworldindata.org/greenhouse-gas-emissions
- * 의 "By gas" 섹션, Climate Watch/CAIT 데이터), 2016년 기준 수치.
- * 검증: OWID의 현재 "by gas" 인터랙티브 차트(grapher/ghg-emissions-by-gas)는 국가별
- * 시계열(CO2/CH4/N2O만, F-가스 미포함)이라 4종 비중이 텍스트로 노출되지 않는다. 대신
- * 동일한 Climate Watch/CAIT 데이터를 쓰는 WRI의 "World Greenhouse Gas Emissions: 2016"
- * Sankey 차트(wri.org/data/world-greenhouse-gas-emissions-2016)가 CO2 74.4%, 메탄
- * 17.3%, 아산화질소 6.2%로 명시하고 있어(WebFetch로 확인), 브리프 수치(74.4/17.3/6.2/2.1,
- * 합 100.0)가 2016년 데이터와 일치함을 교차 확인했다. OWID 쪽에 더 최신 연도의 4종 비중
- * 재집계본은 없어 값은 그대로 두고 연도만 2016으로 확정한다.
+ * 출처: WRI / Climate Watch, "World Greenhouse Gas Emissions: 2016" Sankey 차트
+ * (wri.org/data/world-greenhouse-gas-emissions-2016 안에 임베드된 Flourish
+ * visualisation 1124101, "World Greenhouse Gas Emissions in 2016 (Sector | End Use |
+ * Gas)")가 CO2 74.4%, 메탄 17.3%, 아산화질소 6.2%(나머지 F-가스 2.1%)로 밝힌 값을 그대로
+ * 옮겼다.
+ * 검증: curl로 페이지 원본 HTML을 직접 받아 200 OK, 제목·Flourish 임베드 ID(1124101)까지
+ * 확인했다. 다만 차트 자체는 Flourish 위젯이 별도로 데이터를 불러와 그리는 방식이라
+ * 정적 HTML/WebFetch 텍스트에는 74.4/17.3/6.2 숫자가 그대로 노출되지 않는다(WebFetch로
+ * 두 차례 확인, 매번 "페이지 텍스트에 퍼센트 없음"). 이 숫자는 WebSearch 결과(이
+ * URL을 출처로 명시하며 "carbon dioxide (74.4%), methane (17.3%), and nitrous oxide
+ * (6.2%)"를 그대로 인용)로 교차 확인했다 — 즉 URL은 검색 결과 기준으로 확정했고,
+ * 퍼센트 수치 자체는 페이지 텍스트에서 직접 읽은 게 아니라 검색 결과 인용으로 확인한
+ * 것이다. OWID의 "by gas" 인터랙티브 차트(grapher/ghg-emissions-by-gas)는 국가별
+ * 시계열(CO2/CH4/N2O만, F-가스 미포함)이라 이 4종 비중 스냅샷의 대안 출처가 되지
+ * 못한다.
  */
 export interface GasShare {
   id: 'co2' | 'ch4' | 'n2o' | 'fgas'
@@ -37,8 +43,8 @@ export const gasMix: { shares: GasShare[]; source: Source } = {
     { id: 'fgas', share: 2.1, color: '#f4efe4' },
   ],
   source: {
-    name: 'Our World in Data (Climate Watch)',
-    url: 'https://ourworldindata.org/greenhouse-gas-emissions',
+    name: 'WRI / Climate Watch, World Greenhouse Gas Emissions in 2016',
+    url: 'https://www.wri.org/data/world-greenhouse-gas-emissions-2016',
     year: 2016,
   },
 }
@@ -240,7 +246,7 @@ export const tonneItems: TonneItem[] = [
     id: 'electricity',
     kg: 125.2,
     source: {
-      name: '전기 300 kWh x 국가 전력 배출계수 0.4173 kgCO₂/kWh (온실가스종합정보센터, 2023)',
+      name: '온실가스종합정보센터 전력 배출계수 2023 (300 kWh 환산)',
       url: 'https://www.kharn.kr/mobile/article.html?no=29600',
       year: 2023,
     },
@@ -253,7 +259,7 @@ export const tonneItems: TonneItem[] = [
     kg: 4729,
     source: {
       name: 'Our World in Data',
-      url: 'https://ourworldindata.org/co2-emissions',
+      url: 'https://ourworldindata.org/grapher/co-emissions-per-capita',
       year: 2024,
     },
   },
@@ -264,7 +270,7 @@ export const tonneItems: TonneItem[] = [
     kg: 11286,
     source: {
       name: 'Our World in Data',
-      url: 'https://ourworldindata.org/co2-emissions',
+      url: 'https://ourworldindata.org/grapher/co-emissions-per-capita',
       year: 2024,
     },
   },
