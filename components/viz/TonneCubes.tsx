@@ -69,8 +69,11 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     if (p.kg >= 0) group.add(new THREE.Mesh(geo, cubeMat))
     group.add(new THREE.LineSegments(edges, p.kg >= 0 ? edgeMat : absorbMat))
     root.add(group)
-    // 작은 큐브들이 붙어 있어 라벨 높이를 3단으로 어긋나게 둔다
-    anchors.push({ obj: group, y: p.size / 2 + 0.6 + (anchors.length % 3) * 1.1 })
+    // 작은 큐브 4개는 붙어 있어 라벨을 2 m 간격 사다리로 올려 겹치지 않게 한다
+    anchors.push({
+      obj: group,
+      y: p.size / 2 + 0.8 + (anchors.length < 4 ? anchors.length * 2.0 : 0),
+    })
   }
 
   // 기준 물체: 사람(1.7 m)과 자동차, 1 t 큐브 앞에
