@@ -16,6 +16,7 @@ import {
   type GraphFilters,
 } from './graphModel'
 import KBGraphSvg from './KBGraphSvg'
+import KBGraphControls from './KBGraphControls'
 
 const data = kbData as KBData
 const HUBS = new Set(hubIds(data))
@@ -72,6 +73,7 @@ export default function KBGraphView() {
           sidebar={<KBSidebar activeSlug={selectedId ?? undefined} />}
           main={
             <div className="flex h-full min-h-0 flex-col">
+              <KBGraphControls />
               <KBGraphSvg />
             </div>
           }
