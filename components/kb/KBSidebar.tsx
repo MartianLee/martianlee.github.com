@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from '@/components/Link'
 import kbData from 'app/kb-data.json'
 import type { KBData } from '@/components/kb/types'
@@ -43,6 +43,14 @@ export default function KBSidebar({ activeSlug, onSelect }: KBSidebarProps) {
     }
     return new Set()
   })
+
+  // Keep the active note's topic open when the selection changes from outside (graph page).
+  useEffect(() => {
+    if (!activeSlug) return
+    const post = data.postIndex.find((p) => p.slug === activeSlug)
+    if (!post) return
+    setExpandedTopics((prev) => (prev.has(post.topic) ? prev : new Set(prev).add(post.topic)))
+  }, [activeSlug])
 
   const toggleTopic = (topicId: string) => {
     setExpandedTopics((prev) => {

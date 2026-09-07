@@ -15,7 +15,7 @@ import {
   relatedUnlinked,
   searchIds,
 } from './graphModel.ts'
-import type { GraphNode } from './graphModel.ts'
+import type { GraphNode, LabelCandidate } from './graphModel.ts'
 
 function post(over: Partial<KBPostEntry> & { slug: string }): KBPostEntry {
   return {
@@ -214,7 +214,7 @@ test('labelTier: forced > hubs/big tags > zoom tiers', () => {
 })
 
 test('placeLabels drops overlapping lower-priority labels and keeps them apart', () => {
-  const near = [
+  const near: LabelCandidate[] = [
     { id: 'big', tier: 1, priority: 9, x: 0, y: 0, radius: 5, text: 'Big hub label' },
     { id: 'small', tier: 2, priority: 1, x: 10, y: 4, radius: 3, text: 'Small one' },
     { id: 'far', tier: 2, priority: 1, x: 300, y: 300, radius: 3, text: 'Far away' },
@@ -223,7 +223,7 @@ test('placeLabels drops overlapping lower-priority labels and keeps them apart',
   // At 4x zoom the boxes shrink in graph units and no longer collide.
   assert.deepEqual([...placeLabels(near, 4)].sort(), ['big', 'far', 'small'])
   // Tier wins over priority.
-  const tie = [
+  const tie: LabelCandidate[] = [
     { id: 'p', tier: 2, priority: 99, x: 0, y: 0, radius: 5, text: 'aaaaaaaa' },
     { id: 'f', tier: 0, priority: 0, x: 2, y: 2, radius: 5, text: 'bbbbbbbb' },
   ]

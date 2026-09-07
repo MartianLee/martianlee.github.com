@@ -265,9 +265,14 @@ export function buildKBData(allDocuments, now = new Date()) {
     const parts = splitTitle(p.title)
     if (parts.length > 1) headCount.set(parts[0], (headCount.get(parts[0]) || 0) + 1)
   }
-  const overrideFor = (slug) =>
-    blogs.find((d) => d.slug === slug && d.language === 'en' && d.shortTitle)?.shortTitle ||
-    blogs.find((d) => d.slug === slug && d.shortTitle)?.shortTitle
+  // frontmatter shortTitle: English file first, then any language file of the same slug
+  const overrides = new Map()
+  for (const d of blogs) {
+    if (!d.shortTitle) continue
+    const existing = overrides.get(d.slug)
+    if (!existing || (d.language === 'en' && existing.language !== 'en')) overrides.set(d.slug, d)
+  }
+  const overrideFor = (slug) => overrides.get(slug)?.shortTitle
 
   const posts = canonical.map((p) => {
     const override = overrideFor(p.slug)

@@ -253,7 +253,7 @@ export const LABEL_GAP = 3
 
 export interface LabelCandidate {
   id: string
-  tier: number
+  tier: LabelTier
   priority: number
   x: number
   y: number

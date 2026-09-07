@@ -20,6 +20,11 @@ import {
 } from './graphModel'
 import { STAGE_ICON, topicColor, topicLabel } from './topicColors'
 
+// Scale notes (measured 2026-09-07): computeLayout takes ~55 ms for 129 nodes / 398 links and
+// ~260 ms for ~530 nodes; every pointer move re-renders all SVG children. Past ~300 notes, split
+// edges/nodes/labels into React.memo components, drive the tooltip from a ref instead of state,
+// and chunk the layout ticks across requestAnimationFrame.
+
 interface View {
   k: number
   x: number
@@ -63,6 +68,7 @@ export default function KBGraphSvg() {
   const svgRef = useRef<SVGSVGElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const positionsRef = useRef<Map<string, Point>>(new Map())
+  const layoutCache = useRef(new Map<string, Map<string, Point>>())
   const [positions, setPositions] = useState<Map<string, Point>>(new Map())
   const [view, setView] = useState<View>({ k: 1, x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
@@ -71,10 +77,10 @@ export default function KBGraphSvg() {
   )
   const [tip, setTip] = useState<{ node: GraphNode; x: number; y: number } | null>(null)
 
-  const size = useCallback(
-    () => ({ w: svgRef.current?.clientWidth || 800, h: svgRef.current?.clientHeight || 600 }),
-    []
-  )
+  const size = useCallback(() => {
+    const r = wrapRef.current?.getBoundingClientRect()
+    return { w: r?.width || 800, h: r?.height || 600 }
+  }, [])
 
   const fit = useCallback(
     (pos: Map<string, Point>) => {
@@ -106,12 +112,16 @@ export default function KBGraphSvg() {
   }, [])
 
   // Recompute the layout whenever the node/link set changes; surviving nodes keep their place.
+  // Layouts are cached per filter combination so re-toggling a chip is free.
   useEffect(() => {
-    const next = computeLayout(g.nodes, g.links, positionsRef.current)
+    const key = JSON.stringify([[...g.filters.topics].sort(), g.filters.stage, g.filters.tags])
+    const cached = layoutCache.current.get(key)
+    const next = cached ?? computeLayout(g.nodes, g.links, positionsRef.current)
+    layoutCache.current.set(key, next)
     positionsRef.current = next
     setPositions(next)
     fit(next)
-  }, [g.nodes, g.links, fit])
+  }, [g.nodes, g.links, g.filters, fit])
 
   // Zoom to a node when the panel or sidebar asks for it.
   useEffect(() => {
@@ -134,6 +144,15 @@ export default function KBGraphSvg() {
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
   }, [zoomAt])
+
+  // Re-fit when the pane changes size (orientation change, panel toggles).
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => fit(positionsRef.current))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [fit])
 
   const focusId = g.hoverId ?? g.selectedId
   const nodeIds = useMemo(() => new Set(g.nodes.map((n) => n.id)), [g.nodes])
@@ -169,7 +188,7 @@ export default function KBGraphSvg() {
   const nodeClass = (n: GraphNode) => {
     const inFocus = focus ? focus.has(n.id) : true
     const inMatch = match ? match.has(n.id) : true
-    const dim = !inFocus || (match !== null && !inMatch && !(focus && focus.has(n.id)))
+    const dim = !inFocus || (focus === null && match !== null && !inMatch)
     return [
       'kb-graph-node',
       n.kind,
@@ -240,6 +259,20 @@ export default function KBGraphSvg() {
 
   return (
     <div ref={wrapRef} className="relative min-h-0 flex-1">
+      <div className="absolute right-3 bottom-3 flex flex-col gap-0.5">
+        <ZoomButton
+          label="+"
+          title="Zoom in"
+          onClick={() => zoomAt(1.3, size().w / 2, size().h / 2)}
+        />
+        <ZoomButton
+          label="−"
+          title="Zoom out"
+          onClick={() => zoomAt(1 / 1.3, size().w / 2, size().h / 2)}
+        />
+        <ZoomButton label="⤢" title="Fit to view" onClick={() => fit(positionsRef.current)} />
+      </div>
+
       <svg
         ref={svgRef}
         role="application"
@@ -291,6 +324,8 @@ export default function KBGraphSvg() {
                     g.setHoverId(null)
                     setTip(null)
                   }}
+                  onFocus={() => g.setHoverId(n.id)}
+                  onBlur={() => g.setHoverId(null)}
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleSelect(n)
@@ -357,20 +392,6 @@ export default function KBGraphSvg() {
           No notes match the current filters.
         </div>
       )}
-
-      <div className="absolute right-3 bottom-3 flex flex-col gap-0.5">
-        <ZoomButton
-          label="+"
-          title="Zoom in"
-          onClick={() => zoomAt(1.3, size().w / 2, size().h / 2)}
-        />
-        <ZoomButton
-          label="−"
-          title="Zoom out"
-          onClick={() => zoomAt(1 / 1.3, size().w / 2, size().h / 2)}
-        />
-        <ZoomButton label="⤢" title="Fit to view" onClick={() => fit(positionsRef.current)} />
-      </div>
     </div>
   )
 }
