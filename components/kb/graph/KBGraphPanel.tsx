@@ -8,6 +8,16 @@ import { useKBGraph } from './KBGraphContext'
 import { degreesOf, noteMatchesFilters, relatedUnlinked } from './graphModel'
 import { STAGE_ICON, sortTopics, topicColor, topicLabel } from './topicColors'
 
+function usePostById(): Map<string, KBPostEntry> {
+  const g = useKBGraph()
+  return useMemo(() => new Map(g.data.postIndex.map((p) => [p.slug, p])), [g.data])
+}
+
+function useDegrees() {
+  const g = useKBGraph()
+  return useMemo(() => degreesOf(g.data), [g.data])
+}
+
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h3
@@ -103,11 +113,20 @@ function BackButton() {
 
 function Overview() {
   const g = useKBGraph()
-  const deg = useMemo(() => degreesOf(g.data), [g.data])
+  const deg = useDegrees()
+  const byId = usePostById()
+  const linkedIds = useMemo(() => {
+    const s = new Set<string>()
+    for (const l of g.links) {
+      if (l.kind !== 'link') continue
+      s.add(l.source)
+      s.add(l.target)
+    }
+    return s
+  }, [g.links])
   const filtered = g.filters.topics.size > 0 || g.filters.stage !== 'all'
   const visible = g.data.postIndex.filter((p) => noteMatchesFilters(p, g.filters))
   const visibleIds = new Set(visible.map((p) => p.slug))
-  const byId = new Map(g.data.postIndex.map((p) => [p.slug, p]))
   const hubs = [...g.hubs].map((id) => byId.get(id)).filter((p): p is KBPostEntry => Boolean(p))
   const maxIn = Math.max(1, ...hubs.map((p) => deg.get(p.slug)?.inDegree ?? 0))
   const orphanNotes = g.orphans
@@ -124,10 +143,7 @@ function Overview() {
   const shownOrphans = orphanGroups.reduce((n, grp) => n + grp.list.length, 0)
   const shownIsolated = [...g.isolated].filter((id) => !filtered || visibleIds.has(id)).length
   const explicit = g.links.filter((l) => l.kind === 'link').length
-  const linked = visible.filter((p) => {
-    const d = deg.get(p.slug)
-    return d && d.inDegree + d.outDegree > 0
-  }).length
+  const linked = visible.filter((p) => linkedIds.has(p.slug)).length
 
   const stat = (value: number, label: string, warn = false) => (
     <div className="flex flex-col">
@@ -239,8 +255,8 @@ function Overview() {
 
 function NoteMode({ note }: { note: KBPostEntry }) {
   const g = useKBGraph()
-  const deg = g.data.postIndex.length ? degreesOf(g.data).get(note.slug) : undefined
-  const byId = new Map(g.data.postIndex.map((p) => [p.slug, p]))
+  const deg = useDegrees().get(note.slug)
+  const byId = usePostById()
   const backlinks = (g.data.backlinks[note.slug] || [])
     .map((b) => byId.get(b.slug))
     .filter((p): p is KBPostEntry => Boolean(p))
@@ -372,8 +388,8 @@ function NoteMode({ note }: { note: KBPostEntry }) {
 function TagMode({ id }: { id: string }) {
   const g = useKBGraph()
   const tag = g.data.graph.tagNodes.find((t) => t.id === id)
-  const byId = new Map(g.data.postIndex.map((p) => [p.slug, p]))
-  const orphanSet = new Set(g.orphans)
+  const byId = usePostById()
+  const orphanSet = useMemo(() => new Set(g.orphans), [g.orphans])
   const members = g.data.graph.tagLinks
     .filter((l) => l.target === id)
     .map((l) => byId.get(l.source))
