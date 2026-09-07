@@ -137,6 +137,7 @@ const TOPIC_LABELS = {
   'devops-cloud': 'DevOps & Cloud',
   'dev-life': 'Dev Life',
   algorithms: 'Algorithms',
+  climate: 'Climate',
   uncategorized: 'Uncategorized',
 }
 

@@ -253,6 +253,15 @@
       "label": "software-engineering",
       "count": 2,
       "slugs": ["2026-06-05-markdown-source-of-truth", "2026-06-05-markdown-source-of-truth"]
+    },
+    {
+      "id": "climate",
+      "label": "Climate",
+      "count": 2,
+      "slugs": [
+        "2026-09-05-carbon-basics-what-is-carbon",
+        "2026-09-05-carbon-basics-what-is-carbon"
+      ]
     }
   ],
   "backlinks": {
@@ -1262,7 +1271,8 @@
       "2026-04-18-bloom-filter-membership-check-at-scale",
       "2026-05-13-agentmemory-architecture",
       "2026-07-06-firecrawl-architecture"
-    ]
+    ],
+    "2026-09-05-carbon-basics-what-is-carbon": []
   },
   "postIndex": [
     {
@@ -1973,7 +1983,7 @@
       "date": "2024-01-24T02:37:15.000Z",
       "topic": "algorithms",
       "stage": "budding",
-      "tags": ["javascript", "leetcode", "post"],
+      "tags": ["javascript", "leetcode", "algorithm", "post"],
       "summary": "leetcode-1239 solutions"
     },
     {
@@ -1982,7 +1992,7 @@
       "date": "2024-01-24T02:37:15.000Z",
       "topic": "algorithms",
       "stage": "budding",
-      "tags": ["javascript", "leetcode", "post"],
+      "tags": ["javascript", "leetcode", "algorithm", "post"],
       "summary": "leetcode-1239 solutions"
     },
     {
@@ -2009,7 +2019,7 @@
       "date": "2024-02-21T07:16:16.000Z",
       "topic": "algorithms",
       "stage": "budding",
-      "tags": ["javascript", "leetcode", "post", "bit manipulation"],
+      "tags": ["javascript", "leetcode", "algorithm", "post", "bit manipulation"],
       "summary": "LeetCode 201 solutions #bit manipulation #number theory"
     },
     {
@@ -2018,7 +2028,7 @@
       "date": "2024-02-21T07:16:16.000Z",
       "topic": "algorithms",
       "stage": "budding",
-      "tags": ["javascript", "leetcode", "post", "bit manipulation"],
+      "tags": ["javascript", "leetcode", "algorithm", "post", "bit manipulation"],
       "summary": "leetcode-201 solutions #bit manipulation #number theory"
     },
     {
@@ -3506,7 +3516,25 @@
         "architecture"
       ],
       "summary": "bitchat은 계정도 서버도 없는 P2P 메신저입니다. 근처 기기는 BLE 메시로 묶고, 먼 상대는 Nostr로 잇습니다. 이 글의 중심은 \"받는 사람이 지금 여기 없다\"를 푸는 4계층 store-and-forward 스택입니다 — 봉인된 outbox, HMAC 태그로만 주소를 적는 courier와 spray-and-wait, GCS 필터 기반 공개 히스토리 동기화, 그리고 Nostr 메일박스를 코드로 따라갑니다."
+    },
+    {
+      "slug": "2026-09-05-carbon-basics-what-is-carbon",
+      "title": "Carbon Basics 1: What carbon is, and why it matters",
+      "date": "2026-09-05T09:00:00.000Z",
+      "topic": "climate",
+      "stage": "budding",
+      "tags": ["climate", "carbon", "co2e", "carbon-basics"],
+      "summary": "What CO₂e means, how much CO₂ has built up in the air, how much of the 1.5 °C budget is left, and how big a tonne really is, shown in four 3D scenes instead of paragraphs."
+    },
+    {
+      "slug": "2026-09-05-carbon-basics-what-is-carbon",
+      "title": "탄소 기초 1: 탄소란 무엇이고, 왜 중요한가",
+      "date": "2026-09-05T09:00:00.000Z",
+      "topic": "climate",
+      "stage": "budding",
+      "tags": ["climate", "carbon", "co2e", "carbon-basics"],
+      "summary": "CO₂e가 무엇인지, 대기 중 CO₂가 얼마나 쌓였는지, 1.5°C 예산이 얼마나 남았는지, 그리고 1톤이 실제로 얼마나 큰지를 글 대신 3D 장면 네 개로 보여줍니다."
     }
   ],
-  "generatedAt": "2026-07-25T06:02:37.897Z"
+  "generatedAt": "2026-09-07T14:56:27.262Z"
 }

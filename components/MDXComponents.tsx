@@ -5,6 +5,10 @@ import type { MDXComponents } from 'mdx/types'
 import Image from './Image'
 import CustomLink from './Link'
 import TableWrapper from './TableWrapper'
+import GasMixCloud from './viz/GasMixCloud'
+import AtmosphereTimeline from './viz/AtmosphereTimeline'
+import BudgetTank from './viz/BudgetTank'
+import TonneCubes from './viz/TonneCubes'
 
 export const components: MDXComponents = {
   Image,
@@ -13,4 +17,8 @@ export const components: MDXComponents = {
   pre: Pre,
   table: TableWrapper,
   BlogNewsletterForm,
+  GasMixCloud,
+  AtmosphereTimeline,
+  BudgetTank,
+  TonneCubes,
 }
