@@ -1385,6 +1385,13 @@ export const TOPIC_PRIORITY: Record<string, number> = {
   'ai-infrastructure': 1,
 }
 
+/** Digital-garden stage icons, shared by every graph component. */
+export const STAGE_ICON: Record<string, string> = {
+  seedling: '\u{1F331}',
+  budding: '\u{1F33F}',
+  evergreen: '\u{1F333}',
+}
+
 export function topicSlot(topic?: string): number {
   return (topic && TOPIC_SLOT[topic]) || 0
 }
@@ -1954,7 +1961,7 @@ import {
   type GraphNode,
   type LabelCandidate,
 } from './graphModel'
-import { topicColor, topicLabel } from './topicColors'
+import { STAGE_ICON, topicColor, topicLabel } from './topicColors'
 
 interface View {
   k: number
@@ -1966,11 +1973,6 @@ const MIN_K = 0.25
 const MAX_K = 4
 const FOCUS_K = 2
 const TIP_W = 300
-const STAGE_ICON: Record<string, string> = {
-  seedling: '\u{1F331}',
-  budding: '\u{1F33F}',
-  evergreen: '\u{1F333}',
-}
 
 function ZoomButton({ label, title, onClick }: { label: string; title: string; onClick: () => void }) {
   return (
@@ -2347,14 +2349,9 @@ Claude-Session: https://claude.ai/code/session_015NjCtzvswXHmJa8LiqjQGZ"
 
 import { useEffect, useRef } from 'react'
 import { useKBGraph } from './KBGraphContext'
-import { sortTopics, topicColor } from './topicColors'
+import { STAGE_ICON, sortTopics, topicColor } from './topicColors'
 
 const STAGE_ORDER = ['seedling', 'budding', 'evergreen']
-const STAGE_ICON: Record<string, string> = {
-  seedling: '\u{1F331}',
-  budding: '\u{1F33F}',
-  evergreen: '\u{1F333}',
-}
 
 export default function KBGraphControls() {
   const g = useKBGraph()
@@ -2602,13 +2599,7 @@ import Link from '@/components/Link'
 import type { KBPostEntry } from '@/components/kb/types'
 import { useKBGraph } from './KBGraphContext'
 import { degreesOf, noteMatchesFilters, relatedUnlinked } from './graphModel'
-import { sortTopics, topicColor, topicLabel } from './topicColors'
-
-const STAGE_ICON: Record<string, string> = {
-  seedling: '\u{1F331}',
-  budding: '\u{1F33F}',
-  evergreen: '\u{1F333}',
-}
+import { STAGE_ICON, sortTopics, topicColor, topicLabel } from './topicColors'
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
