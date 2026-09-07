@@ -2,6 +2,7 @@
 
 import { useState, useEffect, ReactNode } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface KBShellProps {
   sidebar: ReactNode
@@ -15,6 +16,8 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
   // null = not yet hydrated, use CSS to control visibility
   const [sidebarOpen, setSidebarOpen] = useState<boolean | null>(null)
   const [contextOpen, setContextOpen] = useState<boolean | null>(null)
+  const pathname = usePathname()
+  const onGraph = pathname === '/kb/graph'
 
   useEffect(() => {
     const isDesktop = window.matchMedia('(min-width: 768px)').matches
@@ -69,6 +72,27 @@ export default function KBShell({ sidebar, main, context, statusBar, breadcrumb 
             </svg>
             <span className="hidden sm:inline">Explorer</span>
           </button>
+          <Link
+            href="/kb/graph"
+            title="Graph view"
+            aria-current={onGraph ? 'page' : undefined}
+            className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-colors hover:bg-[var(--kb-accent-dim)] hover:text-[var(--kb-accent)] ${
+              onGraph ? 'bg-[var(--kb-accent-dim)] text-[var(--kb-accent)]' : ''
+            }`}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="3" cy="8" r="2" />
+              <circle cx="12" cy="3" r="2" />
+              <circle cx="12" cy="13" r="2" />
+              <path
+                d="M4.6 7.1l5.8-3.2M4.6 8.9l5.8 3.2"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                fill="none"
+              />
+            </svg>
+            <span className="hidden sm:inline">Graph</span>
+          </Link>
         </div>
 
         {/* Breadcrumb */}

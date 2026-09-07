@@ -425,6 +425,113 @@ input:-webkit-autofill:focus {
   --kb-red: #dc2626;
 }
 
+/* KB Graph — topic palette (8 slots validated for CVD separation and contrast on both grounds) */
+.kb-theme {
+  --kb-topic-0: #6b7186;
+  --kb-topic-1: #3987e5;
+  --kb-topic-2: #d95926;
+  --kb-topic-3: #199e70;
+  --kb-topic-4: #c98500;
+  --kb-topic-5: #d55181;
+  --kb-topic-6: #008300;
+  --kb-topic-7: #9085e9;
+  --kb-topic-8: #e66767;
+  --kb-graph-edge: #7c8296;
+}
+
+:where(.light, .light *) .kb-theme {
+  --kb-topic-0: #8a8a8a;
+  --kb-topic-1: #2a78d6;
+  --kb-topic-2: #eb6834;
+  --kb-topic-3: #1baf7a;
+  --kb-topic-4: #eda100;
+  --kb-topic-5: #e87ba4;
+  --kb-topic-6: #008300;
+  --kb-topic-7: #4a3aa7;
+  --kb-topic-8: #e34948;
+  --kb-graph-edge: #5a5751;
+}
+
+/* KB Graph — SVG marks. --kb-graph-k is the current zoom; labels divide by it to stay a constant screen size. */
+.kb-graph {
+  --kb-graph-k: 1;
+}
+.kb-graph-edge {
+  stroke: var(--kb-graph-edge);
+  stroke-width: 1;
+  stroke-opacity: 0.55;
+}
+.kb-graph-edge.tag {
+  stroke-opacity: 0.22;
+  stroke-width: 0.8;
+  stroke-dasharray: 2 3;
+}
+.kb-graph-edge.hi {
+  stroke: var(--kb-text-strong);
+  stroke-opacity: 0.95;
+  stroke-width: 1.4;
+}
+.kb-graph-edge.tag.hi {
+  stroke-opacity: 0.6;
+}
+.kb-graph-edge.dim {
+  stroke-opacity: 0.05;
+}
+.kb-graph-node {
+  cursor: pointer;
+  outline: none;
+}
+.kb-graph-node .hit {
+  fill: transparent;
+}
+.kb-graph-node .mark {
+  stroke: var(--kb-bg);
+  stroke-width: 1.5;
+}
+.kb-graph-node.tag .mark {
+  fill: var(--kb-surface);
+  stroke: var(--kb-graph-edge);
+  stroke-width: 1.2;
+}
+.kb-graph-node.dim .mark {
+  opacity: 0.12;
+}
+.kb-graph-node.sel .mark,
+.kb-graph-node.hover .mark,
+.kb-graph-node:focus-visible .mark {
+  stroke: var(--kb-text-strong);
+  stroke-width: 2.2;
+}
+.kb-graph-node.match .mark {
+  stroke: var(--kb-accent);
+  stroke-width: 2.4;
+}
+.kb-graph-node .ring {
+  fill: none;
+  stroke: var(--kb-text-strong);
+  stroke-opacity: 0.25;
+  stroke-width: 6;
+  display: none;
+}
+.kb-graph-node.sel .ring {
+  display: block;
+}
+.kb-graph-label {
+  font-family: var(--font-family-mono);
+  font-size: calc(10px / var(--kb-graph-k));
+  fill: var(--kb-text-strong);
+  paint-order: stroke;
+  stroke: var(--kb-bg);
+  stroke-width: calc(3px / var(--kb-graph-k));
+  stroke-linejoin: round;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.kb-graph-label.tag {
+  fill: var(--kb-text-muted);
+  font-size: calc(9px / var(--kb-graph-k));
+}
+
 /* KB Full-screen — hide blog chrome and take over the viewport */
 body.kb-active > section {
   max-width: none !important;
