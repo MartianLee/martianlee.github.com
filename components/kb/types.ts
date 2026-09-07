@@ -1,6 +1,7 @@
 export interface KBPostEntry {
   slug: string
   title: string
+  shortTitle: string
   date: string
   topic: string
   stage: string

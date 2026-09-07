@@ -4,6 +4,43 @@ export const TAG_NODE_MIN_NOTES = 3
 export const TAG_BLOCKLIST = ['post', 'develop']
 export const SHORT_TITLE_MAX = 32
 
+// --- short titles -----------------------------------------------------------
+
+/** Split points: ": ", "： ", " — ", " – ", " - ", " / ", and the space after a "?". */
+export const SHORT_TITLE_SEPARATOR = /\s*[:：—–]\s+|\s+[-/]\s+|(?<=\?)\s+/
+
+export function splitTitle(title) {
+  return String(title)
+    .split(SHORT_TITLE_SEPARATOR)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+/** Clip to `max` characters including the ellipsis, preferring a word boundary. */
+export function clipLabel(s, max = SHORT_TITLE_MAX) {
+  const text = String(s).trim()
+  if (text.length <= max) return text
+  const head = text.slice(0, max - 1)
+  const boundary = text[max - 1] === ' ' ? head.length : head.lastIndexOf(' ')
+  const cut = boundary > (max - 1) * 0.6 ? head.slice(0, boundary) : head
+  return cut.trimEnd() + '…'
+}
+
+/**
+ * Head of the title unless that head is shared by other notes (headCount > 1)
+ * or is shorter than 6 characters; then the tail. Always clipped.
+ */
+export function deriveShortTitle(title, headCount = new Map()) {
+  const parts = splitTitle(title)
+  let label = String(title)
+  if (parts.length > 1) {
+    const head = parts[0]
+    const ambiguous = (headCount.get(head) || 0) > 1 || head.length < 6
+    label = ambiguous ? parts.slice(1).join(' ') : head
+  }
+  return clipLabel(label)
+}
+
 // --- topic inference (unchanged rules) -------------------------------------
 const TOPIC_RULES = [
   {
@@ -196,15 +233,28 @@ export function buildKBData(allDocuments, now = new Date()) {
   const canonical = pickCanonical(blogs)
   const slugSet = new Set(canonical.map((p) => p.slug))
 
-  const posts = canonical.map((p) => ({
-    slug: p.slug,
-    title: p.title,
-    date: p.date,
-    tags: p.tags || [],
-    topic: inferTopic(p),
-    stage: p.stage || 'budding',
-    summary: p.summary || '',
-  }))
+  const headCount = new Map()
+  for (const p of canonical) {
+    const parts = splitTitle(p.title)
+    if (parts.length > 1) headCount.set(parts[0], (headCount.get(parts[0]) || 0) + 1)
+  }
+  const overrideFor = (slug) =>
+    blogs.find((d) => d.slug === slug && d.language === 'en' && d.shortTitle)?.shortTitle ||
+    blogs.find((d) => d.slug === slug && d.shortTitle)?.shortTitle
+
+  const posts = canonical.map((p) => {
+    const override = overrideFor(p.slug)
+    return {
+      slug: p.slug,
+      title: p.title,
+      shortTitle: override ? clipLabel(override) : deriveShortTitle(p.title, headCount),
+      date: p.date,
+      tags: p.tags || [],
+      topic: inferTopic(p),
+      stage: p.stage || 'budding',
+      summary: p.summary || '',
+    }
+  })
   const titleOf = new Map(posts.map((p) => [p.slug, p.title]))
 
   // Forward links: union over every language version of a slug, deduplicated, no self links.

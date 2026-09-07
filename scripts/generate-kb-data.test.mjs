@@ -1,6 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildKBData, extractLinks, pickCanonical } from './generate-kb-data.mjs'
+import {
+  buildKBData,
+  extractLinks,
+  pickCanonical,
+  clipLabel,
+  deriveShortTitle,
+} from './generate-kb-data.mjs'
 
 function doc(over) {
   return {
@@ -81,4 +87,53 @@ test('topic labels cover every rule topic', () => {
     'Backend Architecture',
     'Software Engineering',
   ])
+})
+
+test('clipLabel keeps short strings and cuts long ones at a word boundary', () => {
+  assert.equal(clipLabel('Short title'), 'Short title')
+  assert.equal(
+    clipLabel('Fixing the Problem of Not Being Able to Access Specific Pages'),
+    'Fixing the Problem of Not Being…'
+  )
+  assert.equal(
+    clipLabel('abcdefghijklmnopqrstuvwxyzabcdefghij'),
+    'abcdefghijklmnopqrstuvwxyzabcde…'
+  )
+})
+
+test('deriveShortTitle keeps the head before a separator', () => {
+  assert.equal(
+    deriveShortTitle('Analyzing DeepSeek Harness: How Do You Build an Agent Harness?'),
+    'Analyzing DeepSeek Harness'
+  )
+  assert.equal(deriveShortTitle('Is Rails Slow? I Built the Same Blog API'), 'Is Rails Slow?')
+  assert.equal(
+    deriveShortTitle('Beads (bd) Project Analysis Report / A Distributed Graph Issue Tracker'),
+    'Beads (bd) Project Analysis…'
+  )
+  assert.equal(deriveShortTitle('GPT-2 (2019) Paper Notes'), 'GPT-2 (2019) Paper Notes')
+})
+
+test('deriveShortTitle uses the tail when the head is shared or too short', () => {
+  const headCount = new Map([['Transformer Basics', 3]])
+  assert.equal(
+    deriveShortTitle('Transformer Basics: Q, K, V Intuition', headCount),
+    'Q, K, V Intuition'
+  )
+  assert.equal(deriveShortTitle('TIL: Ruby on Rails'), 'Ruby on Rails')
+})
+
+test('buildKBData fills shortTitle from frontmatter first, either language, then derives', () => {
+  const data = buildKBData([
+    doc({ slug: 'a', title: 'A: long subtitle', language: 'en', shortTitle: 'Custom A' }),
+    doc({ slug: 'b', title: 'B: long subtitle', language: 'en' }),
+    doc({ slug: 'b', title: '비: 부제', language: 'ko', shortTitle: 'Korean-side override' }),
+    doc({ slug: 'c', title: 'C Basics: One', language: 'en' }),
+    doc({ slug: 'd', title: 'C Basics: Two', language: 'en' }),
+  ])
+  const by = Object.fromEntries(data.postIndex.map((p) => [p.slug, p.shortTitle]))
+  assert.equal(by.a, 'Custom A')
+  assert.equal(by.b, 'Korean-side override')
+  assert.equal(by.c, 'One')
+  assert.equal(by.d, 'Two')
 })

@@ -113,6 +113,7 @@ export const Blog = defineDocumentType(() => ({
     layout: { type: 'string' },
     bibliography: { type: 'string' },
     canonicalUrl: { type: 'string' },
+    shortTitle: { type: 'string' },
     topic: { type: 'string' },
     stage: { type: 'enum', options: ['seedling', 'budding', 'evergreen'], default: 'budding' },
   },

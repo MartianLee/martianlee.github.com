@@ -24,7 +24,7 @@ MartianLee's personal blog / digital garden. Next.js App Router + Contentlayer2 
   author: MartianLee
   ---
   ```
-- Optional fields: `draft: true` (unpublished), `lastmod`, `stage` (seedling | budding | evergreen — digital-garden maturity, default budding), `topic`, `canonicalUrl`, `bibliography`.
+- Optional fields: `draft: true` (unpublished), `lastmod`, `stage` (seedling | budding | evergreen — digital-garden maturity, default budding), `topic`, `canonicalUrl`, `bibliography`, `shortTitle` (≤ 32 chars, label shown on the /kb/graph node; write it in the English file — the KB derives one from the title when absent).
 
 ## Writing tone (hard rule)
 

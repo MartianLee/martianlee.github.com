@@ -1243,6 +1243,7 @@
     {
       "slug": "2017-01-29-blogging-tools",
       "title": "Comparing Blogging Tools",
+      "shortTitle": "Comparing Blogging Tools",
       "date": "2017-01-28T17:28:31.000Z",
       "tags": ["jekyll"],
       "topic": "dev-life",
@@ -1252,6 +1253,7 @@
     {
       "slug": "2017-04-28-book-review",
       "title": "React Book Review",
+      "shortTitle": "React Book Review",
       "date": "2017-04-27T16:48:31.000Z",
       "tags": ["book"],
       "topic": "dev-life",
@@ -1261,6 +1263,7 @@
     {
       "slug": "2017-04-28-django-template-for-loop",
       "title": "Django Template Numeric For Loop",
+      "shortTitle": "Django Template Numeric For Loop",
       "date": "2017-04-27T17:38:15.000Z",
       "tags": ["develop"],
       "topic": "backend",
@@ -1270,6 +1273,7 @@
     {
       "slug": "2017-09-09-first-vue",
       "title": "Getting Started with VueJS Frontend Framework",
+      "shortTitle": "Getting Started with VueJS…",
       "date": "2017-09-09T10:08:16.000Z",
       "tags": ["front-end"],
       "topic": "web-frontend",
@@ -1279,6 +1283,7 @@
     {
       "slug": "2018-01-29-parti-union",
       "title": "Joining Parti",
+      "shortTitle": "Joining Parti",
       "date": "2018-01-29T14:24:17.000Z",
       "tags": ["develop", "job", "daily"],
       "topic": "dev-life",
@@ -1288,6 +1293,7 @@
     {
       "slug": "2019-03-12-ssh-github",
       "title": "Adding an SSH Key to GitHub",
+      "shortTitle": "Adding an SSH Key to GitHub",
       "date": "2019-03-12T06:13:19.000Z",
       "tags": ["develop", "github"],
       "topic": "devops-cloud",
@@ -1297,6 +1303,7 @@
     {
       "slug": "2019-03-30-spring-tutorial",
       "title": "Getting Started with Spring Boot",
+      "shortTitle": "Getting Started with Spring Boot",
       "date": "2019-03-29T17:04:32.000Z",
       "tags": ["develop"],
       "topic": "backend",
@@ -1306,6 +1313,7 @@
     {
       "slug": "2019-04-04-question",
       "title": "190404",
+      "shortTitle": "190404",
       "date": "2019-04-04T12:10:29.000Z",
       "tags": ["question"],
       "topic": "dev-life",
@@ -1315,6 +1323,7 @@
     {
       "slug": "2019-04-09-JWT-springboot-login",
       "title": "Implementing Login with JWT in Spring Boot + Vue.js",
+      "shortTitle": "Implementing Login with JWT in…",
       "date": "2019-04-08T21:07:15.000Z",
       "tags": ["develop"],
       "topic": "backend",
@@ -1324,6 +1333,7 @@
     {
       "slug": "2019-04-11-dart-game",
       "title": "Samsung Codeground Practice Problem: Dart Game Solution",
+      "shortTitle": "Samsung Codeground Practice…",
       "date": "2019-04-11T10:03:48.000Z",
       "tags": ["algorithm"],
       "topic": "algorithms",
@@ -1333,6 +1343,7 @@
     {
       "slug": "2019-04-15-jekyll-blog",
       "title": "Customizing Your GitHub Blog with Jekyll",
+      "shortTitle": "Customizing Your GitHub Blog…",
       "date": "2019-04-15T10:12:17.000Z",
       "tags": ["develop", "jekyll"],
       "topic": "dev-life",
@@ -1342,6 +1353,7 @@
     {
       "slug": "2019-04-17-renwal-sccc-page",
       "title": "SCCC Homepage Renewal",
+      "shortTitle": "SCCC Homepage Renewal",
       "date": "2019-04-17T09:27:41.000Z",
       "tags": ["develop", "jekyll"],
       "topic": "dev-life",
@@ -1351,6 +1363,7 @@
     {
       "slug": "2019-04-22-kakao-interview-review",
       "title": "KAKAO Technical Interview Review",
+      "shortTitle": "KAKAO Technical Interview Review",
       "date": "2019-04-22T07:08:45.000Z",
       "tags": ["develop", "interview"],
       "topic": "dev-life",
@@ -1360,6 +1373,7 @@
     {
       "slug": "2019-04-22-naver-interview-review",
       "title": "NAVER Technical Interview Review",
+      "shortTitle": "NAVER Technical Interview Review",
       "date": "2019-04-22T07:08:45.000Z",
       "tags": ["develop", "interview"],
       "topic": "dev-life",
@@ -1369,6 +1383,7 @@
     {
       "slug": "2019-05-07-NDC-review",
       "title": "NDC 2019 Review",
+      "shortTitle": "NDC 2019 Review",
       "date": "2019-05-07T11:20:12.000Z",
       "tags": ["develop", "conference"],
       "topic": "dev-life",
@@ -1378,6 +1393,7 @@
     {
       "slug": "2019-06-12-angular-form",
       "title": "Setting a Default Value for AngularJS Form Binding Input",
+      "shortTitle": "Setting a Default Value for…",
       "date": "2019-06-12T11:16:32.000Z",
       "tags": ["develop", "frontend"],
       "topic": "web-frontend",
@@ -1387,6 +1403,7 @@
     {
       "slug": "2019-06-25-rails-remote",
       "title": "Async Server Requests with Rails remote",
+      "shortTitle": "Async Server Requests with…",
       "date": "2019-06-25T11:16:32.000Z",
       "tags": ["develop", "rails"],
       "topic": "backend",
@@ -1396,6 +1413,7 @@
     {
       "slug": "2019-07-25-angular-architecture",
       "title": "Understanding the Architecture of AngularJS 7",
+      "shortTitle": "Understanding the Architecture…",
       "date": "2019-07-25T13:42:15.000Z",
       "tags": ["develop", "AngularJS"],
       "topic": "web-frontend",
@@ -1405,6 +1423,7 @@
     {
       "slug": "2019-07-25-react-architecture",
       "title": "Setting Up a ReactJS Project",
+      "shortTitle": "Setting Up a ReactJS Project",
       "date": "2019-09-10T09:22:34.000Z",
       "tags": ["develop", "ReactJS"],
       "topic": "web-frontend",
@@ -1414,6 +1433,7 @@
     {
       "slug": "2020-02-09-django-gae-deploy",
       "title": "Creating a Django Project and Deploying to Google App Engine 1",
+      "shortTitle": "Creating a Django Project and…",
       "date": "2020-02-09T13:18:49.000Z",
       "tags": ["develop", "django", "GCP"],
       "topic": "backend",
@@ -1423,6 +1443,7 @@
     {
       "slug": "2020-04-06-react-native-kakao-login-ios",
       "title": "Problems and Solutions When Integrating Kakao SDK on iOS with React Native",
+      "shortTitle": "Problems and Solutions When…",
       "date": "2020-04-06T13:34:32.000Z",
       "tags": ["develop", "react-native", "iOS"],
       "topic": "web-frontend",
@@ -1432,6 +1453,7 @@
     {
       "slug": "2020-05-25-TIL-first",
       "title": "200525 TIL",
+      "shortTitle": "200525 TIL",
       "date": "2020-05-25T13:46:51.000Z",
       "tags": ["question"],
       "topic": "dev-life",
@@ -1441,6 +1463,7 @@
     {
       "slug": "2020-05-31-TIL-react-native",
       "title": "200531 TIL",
+      "shortTitle": "200531 TIL",
       "date": "2020-05-31T12:20:12.000Z",
       "tags": ["question"],
       "topic": "dev-life",
@@ -1450,6 +1473,7 @@
     {
       "slug": "2020-06-28-manjum-result",
       "title": "Sentiment Analysis on News Data Using Machine Learning",
+      "shortTitle": "Sentiment Analysis on News Data…",
       "date": "2020-06-28T12:20:12.000Z",
       "tags": ["ML", "keras", "뉴스 머신러닝", "뉴스 크롤링", "빅카인즈"],
       "topic": "ai-infrastructure",
@@ -1459,6 +1483,7 @@
     {
       "slug": "2021-01-23-Angular-9-to-10",
       "title": "Angular 9 to 10",
+      "shortTitle": "Angular 9 to 10",
       "date": "2021-01-23T13:07:33.000Z",
       "tags": ["Angular", "frontend"],
       "topic": "web-frontend",
@@ -1468,6 +1493,7 @@
     {
       "slug": "2021-06-14-jekyll-erro",
       "title": "Jekyll openssl and webrick errors after upgrading to Ruby 3",
+      "shortTitle": "Jekyll openssl and webrick…",
       "date": "2021-06-14T10:20:12.000Z",
       "tags": ["지킬", "jekyll", "에러", "bundle"],
       "topic": "dev-life",
@@ -1477,6 +1503,7 @@
     {
       "slug": "2022-01-20-react-hook-form",
       "title": "Getting Started with react-hook-form 1",
+      "shortTitle": "Getting Started with…",
       "date": "2022-01-20T14:26:34.000Z",
       "tags": ["javascript", "form", "react", "hook"],
       "topic": "web-frontend",
@@ -1486,6 +1513,7 @@
     {
       "slug": "2022-03-13-TIL-css-grid",
       "title": "220313 TIL",
+      "shortTitle": "220313 TIL",
       "date": "2022-03-13T11:16:45.000Z",
       "tags": ["question"],
       "topic": "dev-life",
@@ -1495,6 +1523,7 @@
     {
       "slug": "2022-04-21-react-native-testing-library",
       "title": "Setting Up react-native-testing-library",
+      "shortTitle": "Setting Up react-native-testing…",
       "date": "2022-04-21T14:42:15.000Z",
       "tags": ["javascript", "react", "react-native", "test"],
       "topic": "web-frontend",
@@ -1504,6 +1533,7 @@
     {
       "slug": "2022-07-17-link-manage-service-plan",
       "title": "Link Management Service Plan",
+      "shortTitle": "Link Management Service Plan",
       "date": "2022-07-17T10:56:23.000Z",
       "tags": ["javascript", "react", "product", "toy project"],
       "topic": "web-frontend",
@@ -1513,6 +1543,7 @@
     {
       "slug": "2022-07-29-aspect-ratio",
       "title": "Maintaining image aspect ratio with CSS",
+      "shortTitle": "Maintaining image aspect ratio…",
       "date": "2022-07-29T08:26:45.000Z",
       "tags": ["javascript", "react", "html", "css"],
       "topic": "web-frontend",
@@ -1522,6 +1553,7 @@
     {
       "slug": "2022-07-29-custom-dropdown",
       "title": "Custom Dropdown for Selectbox",
+      "shortTitle": "Custom Dropdown for Selectbox",
       "date": "2022-07-29T08:26:45.000Z",
       "tags": ["javascript", "react", "html", "css"],
       "topic": "web-frontend",
@@ -1531,6 +1563,7 @@
     {
       "slug": "2022-10-10-gatsby-migration",
       "title": "Migrating My GitHub Blog from Jekyll to Gatsby",
+      "shortTitle": "Migrating My GitHub Blog from…",
       "date": "2022-10-10T03:47:22.000Z",
       "tags": ["javascript", "react", "gatsby", "jekyll", "github blog", "migration"],
       "topic": "web-frontend",
@@ -1540,6 +1573,7 @@
     {
       "slug": "2023-01-30-aws-imweb-domain",
       "title": "Connecting Your Own Domain to an Imweb Landing Page via AWS Route 53",
+      "shortTitle": "Connecting Your Own Domain to…",
       "date": "2023-01-29T16:04:18.000Z",
       "tags": ["infra", "domain", "aws", "route53", "아임웹"],
       "topic": "devops-cloud",
@@ -1549,6 +1583,7 @@
     {
       "slug": "2023-02-25-github-author-problem",
       "title": "When You Have a Large Number of Commits with the Wrong Author on GitHub",
+      "shortTitle": "When You Have a Large Number of…",
       "date": "2023-02-25T06:06:17.000Z",
       "tags": ["git", "github", "bash", "script"],
       "topic": "devops-cloud",
@@ -1558,6 +1593,7 @@
     {
       "slug": "2023-03-02-gatsby-v5-to-v4",
       "title": "Gatsby v5 to v4 and MDX v1 to v2",
+      "shortTitle": "Gatsby v5 to v4 and MDX v1 to v2",
       "date": "2023-03-02T14:22:57.000Z",
       "tags": ["git", "github", "bash", "script"],
       "topic": "web-frontend",
@@ -1567,6 +1603,7 @@
     {
       "slug": "2023-06-01-pg-duplicate-key-voilates",
       "title": "How to Fix the postgresql duplicate key value violates unique constraint Error",
+      "shortTitle": "How to Fix the postgresql…",
       "date": "2023-06-01T13:46:51.000Z",
       "tags": ["postgresql", "orm", "react-native", "error"],
       "topic": "backend",
@@ -1576,6 +1613,7 @@
     {
       "slug": "2023-06-08-open-gov-hacking",
       "title": "Fixing the Problem of Not Being Able to Access Specific Pages on the Open Government Portal",
+      "shortTitle": "Fixing the Problem of Not Being…",
       "date": "2023-06-08T14:38:14.000Z",
       "tags": ["civic hacking", "post"],
       "topic": "dev-life",
@@ -1585,6 +1623,7 @@
     {
       "slug": "2024-01-21-firebase-functions-reference-problem",
       "title": "Object Reference Problem in Firebase Functions",
+      "shortTitle": "Object Reference Problem in…",
       "date": "2024-01-20T15:29:14.000Z",
       "tags": ["javascript", "firebase", "post"],
       "topic": "web-frontend",
@@ -1594,6 +1633,7 @@
     {
       "slug": "2024-01-24-leetcode-1239",
       "title": "leetcode-1239 solutions",
+      "shortTitle": "leetcode-1239 solutions",
       "date": "2024-01-24T02:37:15.000Z",
       "tags": ["javascript", "leetcode", "post"],
       "topic": "algorithms",
@@ -1603,6 +1643,7 @@
     {
       "slug": "2024-01-31-js-small-tricks-for-ps-1",
       "title": "JS Small Tricks for Problem Solving 1 - Iterating",
+      "shortTitle": "JS Small Tricks for Problem…",
       "date": "2024-01-31T08:52:15.000Z",
       "tags": ["javascript", "problemsolving", "post"],
       "topic": "algorithms",
@@ -1612,6 +1653,7 @@
     {
       "slug": "2024-02-21-leetcode-201",
       "title": "LeetCode 201 Solutions",
+      "shortTitle": "LeetCode 201 Solutions",
       "date": "2024-02-21T07:16:16.000Z",
       "tags": ["javascript", "leetcode", "post", "bit manipulation"],
       "topic": "algorithms",
@@ -1621,6 +1663,7 @@
     {
       "slug": "2024-09-16-til-ruby-rails",
       "title": "TIL: Ruby and Rails Knowledges 1",
+      "shortTitle": "Ruby and Rails Knowledges 1",
       "date": "2024-09-16T07:16:16.000Z",
       "tags": ["ruby", "rails", "post", "TIL"],
       "topic": "backend",
@@ -1630,6 +1673,7 @@
     {
       "slug": "2026-03-11-openclaw-architecture",
       "title": "OpenClaw Architecture Analysis / Real-World Scenario Q&A",
+      "shortTitle": "OpenClaw Architecture Analysis",
       "date": "2026-03-10T16:14:00.000Z",
       "tags": ["openclaw", "architecture", "typescript", "ai", "agent"],
       "topic": "ai-infrastructure",
@@ -1639,6 +1683,7 @@
     {
       "slug": "2026-03-13-langchain-architecture",
       "title": "LangChain Python Monorepo Architecture Analysis Report",
+      "shortTitle": "LangChain Python Monorepo…",
       "date": "2026-03-12T15:00:00.000Z",
       "tags": ["langchain", "architecture", "python", "llm", "ai"],
       "topic": "ai-infrastructure",
@@ -1648,6 +1693,7 @@
     {
       "slug": "2026-03-13-lightpanda-architecture",
       "title": "Lightpanda Browser Architecture Analysis Report",
+      "shortTitle": "Lightpanda Browser Architecture…",
       "date": "2026-03-11T15:29:00.000Z",
       "tags": ["lightpanda", "architecture", "zig", "browser", "headless", "cdp", "v8"],
       "topic": "ai-infrastructure",
@@ -1657,6 +1703,7 @@
     {
       "slug": "2026-03-13-nanoclaw-architecture",
       "title": "NanoClaw Architecture Analysis / Real-World Scenario Q&A",
+      "shortTitle": "NanoClaw Architecture Analysis",
       "date": "2026-03-12T15:00:00.000Z",
       "tags": ["nanoclaw", "architecture", "typescript", "ai", "agent", "claude"],
       "topic": "ai-infrastructure",
@@ -1666,6 +1713,7 @@
     {
       "slug": "2026-03-15-ollama-architecture",
       "title": "Ollama Architecture Analysis / Real-World Q&A",
+      "shortTitle": "Ollama Architecture Analysis",
       "date": "2026-03-14T15:00:00.000Z",
       "tags": ["ollama", "architecture", "go", "llm", "llama.cpp", "local-ai"],
       "topic": "ai-infrastructure",
@@ -1675,6 +1723,7 @@
     {
       "slug": "2026-04-09-agent-browser-architecture",
       "title": "agent-browser Architecture Analysis / A Browser Automation CLI for AI Agents",
+      "shortTitle": "agent-browser Architecture…",
       "date": "2026-04-08T15:00:00.000Z",
       "tags": [
         "agent-browser",
@@ -1692,6 +1741,7 @@
     {
       "slug": "2026-04-13-adding-mermaid-to-nextjs-blog",
       "title": "Adding Mermaid Diagram Support to a Next.js Blog",
+      "shortTitle": "Adding Mermaid Diagram Support…",
       "date": "2026-04-13T09:00:00.000Z",
       "tags": ["nextjs", "mermaid", "contentlayer", "rehype", "blog"],
       "topic": "dev-life",
@@ -1701,6 +1751,7 @@
     {
       "slug": "2026-04-13-beads-architecture",
       "title": "Beads (bd) Project Analysis Report / A Distributed Graph Issue Tracker for AI Agents",
+      "shortTitle": "Beads (bd) Project Analysis…",
       "date": "2026-04-12T15:00:00.000Z",
       "tags": [
         "beads",
@@ -1718,6 +1769,7 @@
     {
       "slug": "2026-04-15-paperclip-architecture",
       "title": "Paperclip Architecture Analysis - AI Agent Virtual Company Orchestration",
+      "shortTitle": "Paperclip Architecture Analysis",
       "date": "2026-04-15T09:00:00.000Z",
       "tags": ["ai-agent", "orchestration", "architecture", "paperclip", "open-source"],
       "topic": "ai-infrastructure",
@@ -1727,6 +1779,7 @@
     {
       "slug": "2026-04-16-browser-automation-comparison",
       "title": "Playwright vs agent-browser vs Lightpanda — Which Browser Automation Tool Should You Use?",
+      "shortTitle": "Playwright vs agent-browser vs…",
       "date": "2026-04-16T09:00:00.000Z",
       "tags": [
         "playwright",
@@ -1743,6 +1796,7 @@
     {
       "slug": "2026-04-17-attention-is-all-you-need-paper-note",
       "title": "Attention Is All You Need (2017) — Paper Notes",
+      "shortTitle": "Attention Is All You Need (2017)",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "paper-reading", "transformer", "arxiv"],
       "topic": "llm-research",
@@ -1752,6 +1806,7 @@
     {
       "slug": "2026-04-17-llm-learning-basics-cross-entropy-perplexity",
       "title": "LLM Learning Basics: cross-entropy and perplexity",
+      "shortTitle": "cross-entropy and perplexity",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "loss", "cross-entropy", "perplexity", "paper-reading"],
       "topic": "llm-research",
@@ -1761,6 +1816,7 @@
     {
       "slug": "2026-04-17-llm-math-basics-softmax",
       "title": "LLM Math Basics 2: Softmax and Probability Interpretation",
+      "shortTitle": "LLM Math Basics 2",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "math", "softmax", "probability", "paper-reading"],
       "topic": "llm-research",
@@ -1770,6 +1826,7 @@
     {
       "slug": "2026-04-17-llm-math-basics-vector-dot-product",
       "title": "LLM Math Basics 1: Vectors and the Dot Product",
+      "shortTitle": "LLM Math Basics 1",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "math", "vector", "dot-product", "paper-reading"],
       "topic": "llm-research",
@@ -1779,6 +1836,7 @@
     {
       "slug": "2026-04-17-llm-paper-evolution-moc",
       "title": "LLM Paper Evolution Map (MOC)",
+      "shortTitle": "LLM Paper Evolution Map (MOC)",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "paper-reading", "moc", "research"],
       "topic": "llm-research",
@@ -1788,6 +1846,7 @@
     {
       "slug": "2026-04-17-playwright-architecture",
       "title": "Playwright Architecture Explained — Why It Became the E2E Testing Standard",
+      "shortTitle": "Playwright Architecture…",
       "date": "2026-04-17T09:00:00.000Z",
       "tags": ["playwright", "architecture", "browser-automation", "e2e", "testing", "ai-agent"],
       "topic": "ai-infrastructure",
@@ -1797,6 +1856,7 @@
     {
       "slug": "2026-04-17-transformer-basics-qkv-intuition",
       "title": "Transformer Basics: Intuition Behind Q, K, and V",
+      "shortTitle": "Intuition Behind Q, K, and V",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "transformer", "attention", "qkv", "paper-reading"],
       "topic": "llm-research",
@@ -1806,6 +1866,7 @@
     {
       "slug": "2026-04-17-transformer-basics-residual-layernorm-ffn",
       "title": "Transformer Basics: Residual, LayerNorm, FFN",
+      "shortTitle": "Residual, LayerNorm, FFN",
       "date": "2026-04-17T00:00:00.000Z",
       "tags": ["llm", "transformer", "residual", "layernorm", "ffn", "paper-reading"],
       "topic": "llm-research",
@@ -1815,6 +1876,7 @@
     {
       "slug": "2026-04-18-bert-paper-note",
       "title": "BERT (2018) Paper Notes",
+      "shortTitle": "BERT (2018) Paper Notes",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["llm", "paper-reading", "transformer", "bert", "arxiv"],
       "topic": "llm-research",
@@ -1824,6 +1886,7 @@
     {
       "slug": "2026-04-18-bloom-filter-membership-check-at-scale",
       "title": "Checking Duplicate IDs Among Billions — Is a Bloom Filter Really the Answer?",
+      "shortTitle": "Checking Duplicate IDs Among…",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["bloom-filter", "redis", "database", "backend", "scaling"],
       "topic": "backend-architecture",
@@ -1833,6 +1896,7 @@
     {
       "slug": "2026-04-18-claude-code-game-studios-architecture",
       "title": "Claude Code Game Studios Architecture Analysis: Running Claude Code Like a Game Development Studio",
+      "shortTitle": "Claude Code Game Studios…",
       "date": "2026-04-18T12:40:00.000Z",
       "tags": ["claude-code", "game-dev", "agent", "skills", "ai", "architecture"],
       "topic": "ai-infrastructure",
@@ -1842,6 +1906,7 @@
     {
       "slug": "2026-04-18-llm-architecture-basics-encoder-only-decoder-only",
       "title": "LLM Architecture Basics: Encoder-only vs. Decoder-only",
+      "shortTitle": "LLM Architecture Basics",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["llm", "transformer", "encoder-only", "decoder-only", "paper-reading"],
       "topic": "llm-research",
@@ -1851,6 +1916,7 @@
     {
       "slug": "2026-04-18-llm-basics-rnn-sequential-processing",
       "title": "LLM Basics: RNNs and Sequential Processing",
+      "shortTitle": "LLM Basics",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["llm", "rnn", "sequence-modeling", "paper-reading"],
       "topic": "llm-research",
@@ -1860,6 +1926,7 @@
     {
       "slug": "2026-04-18-llm-learning-basics-masked-language-model",
       "title": "LLM Learning Basics: Masked Language Model",
+      "shortTitle": "Masked Language Model",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["llm", "masked-language-model", "mlm", "bert", "paper-reading"],
       "topic": "llm-research",
@@ -1869,6 +1936,7 @@
     {
       "slug": "2026-04-18-llm-learning-basics-pretraining-finetuning",
       "title": "LLM Learning Basics: Pre-training and Fine-tuning",
+      "shortTitle": "Pre-training and Fine-tuning",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["llm", "pre-training", "fine-tuning", "training", "paper-reading"],
       "topic": "llm-research",
@@ -1878,6 +1946,7 @@
     {
       "slug": "2026-04-18-redisbloom-signup-architecture",
       "title": "RedisBloom in Production: Fast, Safe Duplicate-ID Checking for User Signup",
+      "shortTitle": "RedisBloom in Production",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["redisbloom", "redis", "signup", "backend", "architecture"],
       "topic": "backend-architecture",
@@ -1887,6 +1956,7 @@
     {
       "slug": "2026-04-18-superpowers-architecture",
       "title": "Using Superpowers: Changing How I Work with Agents",
+      "shortTitle": "Using Superpowers",
       "date": "2026-04-17T16:30:00.000Z",
       "tags": ["superpowers", "skills", "agent", "codex", "claude-code", "ai"],
       "topic": "ai-infrastructure",
@@ -1896,6 +1966,7 @@
     {
       "slug": "2026-04-18-transformer-basics-encoder-decoder",
       "title": "Transformer Basics: Encoder and Decoder",
+      "shortTitle": "Encoder and Decoder",
       "date": "2026-04-18T00:00:00.000Z",
       "tags": ["llm", "transformer", "encoder", "decoder", "paper-reading"],
       "topic": "llm-research",
@@ -1905,6 +1976,7 @@
     {
       "slug": "2026-05-13-agentmemory-architecture",
       "title": "agentmemory Architecture Analysis: Why Coding Agents Now Need a Dedicated Memory Layer",
+      "shortTitle": "agentmemory Architecture…",
       "date": "2026-05-12T15:00:00.000Z",
       "tags": [
         "agentmemory",
@@ -1923,6 +1995,7 @@
     {
       "slug": "2026-05-13-hermes-agent-architecture",
       "title": "Hermes Agent Architecture: An AI Agent That Learns on Its Own, Lives in Messengers, and Uses Tools",
+      "shortTitle": "Hermes Agent Architecture",
       "date": "2026-05-12T15:00:00.000Z",
       "tags": [
         "hermes-agent",
@@ -1941,6 +2014,7 @@
     {
       "slug": "2026-05-17-dify-architecture",
       "title": "Dify Project Analysis: How Far Has This LLM App Platform Been Productized?",
+      "shortTitle": "Dify Project Analysis",
       "date": "2026-05-16T15:00:00.000Z",
       "tags": [
         "dify",
@@ -1961,6 +2035,7 @@
     {
       "slug": "2026-05-17-gpt-2-paper-note",
       "title": "GPT-2 (2019) Paper Notes",
+      "shortTitle": "GPT-2 (2019) Paper Notes",
       "date": "2026-05-17T00:00:00.000Z",
       "tags": ["llm", "paper-reading", "transformer", "gpt-2", "zero-shot", "openai"],
       "topic": "llm-research",
@@ -1970,6 +2045,7 @@
     {
       "slug": "2026-05-17-openhands-architecture",
       "title": "OpenHands Project Analysis: The Boundaries of Running a Coding Agent as a Product",
+      "shortTitle": "OpenHands Project Analysis",
       "date": "2026-05-16T15:00:00.000Z",
       "tags": [
         "openhands",
@@ -1988,6 +2064,7 @@
     {
       "slug": "2026-05-17-qwen-code-architecture",
       "title": "Analyzing Qwen Code: How Far Has a Terminal Coding Agent Become a Platform?",
+      "shortTitle": "Analyzing Qwen Code",
       "date": "2026-05-16T15:00:00.000Z",
       "tags": [
         "qwen-code",
@@ -2007,6 +2084,7 @@
     {
       "slug": "2026-05-17-ruflo-architecture",
       "title": "Ruflo Architecture: Building an Agent Operating System on Top of Claude Code",
+      "shortTitle": "Ruflo Architecture",
       "date": "2026-05-16T15:00:00.000Z",
       "tags": [
         "ruflo",
@@ -2026,6 +2104,7 @@
     {
       "slug": "2026-05-30-weknora-architecture",
       "title": "WeKnora Architecture Analysis: What Does a Framework Look Like When It Combines RAG, ReAct Agent, and Wiki Mode?",
+      "shortTitle": "WeKnora Architecture Analysis",
       "date": "2026-05-29T15:00:00.000Z",
       "tags": [
         "weknora",
@@ -2046,6 +2125,7 @@
     {
       "slug": "2026-06-01-spec-kit-vs-superpowers",
       "title": "spec-kit vs superpowers: Two Ways to Give a Coding Agent a \"Process\"",
+      "shortTitle": "spec-kit vs superpowers",
       "date": "2026-05-31T15:00:00.000Z",
       "tags": [
         "spec-kit",
@@ -2064,6 +2144,7 @@
     {
       "slug": "2026-06-04-codegraph-architecture",
       "title": "CodeGraph Architecture Analysis: How Is the Code Intelligence Layer Beneath Coding Agents Built?",
+      "shortTitle": "CodeGraph Architecture Analysis",
       "date": "2026-06-03T15:00:00.000Z",
       "tags": [
         "codegraph",
@@ -2083,6 +2164,7 @@
     {
       "slug": "2026-06-04-semble-architecture",
       "title": "Semble Architecture Analysis: How an Agent-Oriented RAG Solves Code Search with Static Embeddings",
+      "shortTitle": "Semble Architecture Analysis",
       "date": "2026-06-03T16:00:00.000Z",
       "tags": [
         "semble",
@@ -2104,6 +2186,7 @@
     {
       "slug": "2026-06-05-markdown-source-of-truth",
       "title": "Why I Made Markdown the Source of Truth — Building a Dashboard with an AI Agent",
+      "shortTitle": "Why I Made Markdown the Source…",
       "date": "2026-06-04T17:00:00.000Z",
       "tags": [
         "tauri",
@@ -2123,6 +2206,7 @@
     {
       "slug": "2026-06-21-gpt-3-paper-note",
       "title": "GPT-3 (2020) Paper Notes",
+      "shortTitle": "GPT-3 (2020) Paper Notes",
       "date": "2026-06-21T00:00:00.000Z",
       "tags": [
         "llm",
@@ -2140,6 +2224,7 @@
     {
       "slug": "2026-06-29-instructgpt-paper-note",
       "title": "InstructGPT (2022) Paper Notes",
+      "shortTitle": "InstructGPT (2022) Paper Notes",
       "date": "2026-06-29T00:00:00.000Z",
       "tags": ["llm", "paper-reading", "transformer", "instructgpt", "rlhf", "alignment", "openai"],
       "topic": "llm-research",
@@ -2149,6 +2234,7 @@
     {
       "slug": "2026-06-29-opencode-architecture",
       "title": "Analyzing OpenCode: What Does a Coding Agent Look Like When You Make It a Provider-Agnostic Headless Engine?",
+      "shortTitle": "Analyzing OpenCode",
       "date": "2026-06-29T09:00:00.000Z",
       "tags": [
         "opencode",
@@ -2167,6 +2253,7 @@
     {
       "slug": "2026-06-30-browser-use-architecture",
       "title": "Analyzing Browser Use: How Do You Show a Web Page to an LLM So It Can Drive a Browser?",
+      "shortTitle": "Analyzing Browser Use",
       "date": "2026-06-30T12:00:00.000Z",
       "tags": [
         "browser-use",
@@ -2185,6 +2272,7 @@
     {
       "slug": "2026-06-30-cline-architecture",
       "title": "Analyzing Cline: How Does a Coding Agent That Lives in Your Editor Detach Its Core From the Host?",
+      "shortTitle": "Analyzing Cline",
       "date": "2026-06-30T09:00:00.000Z",
       "tags": [
         "cline",
@@ -2203,6 +2291,7 @@
     {
       "slug": "2026-06-30-ponytail-architecture",
       "title": "Analyzing ponytail: How Does a Skill That Makes Agents \"Write Less Code\" Ship to 16 Agents?",
+      "shortTitle": "Analyzing ponytail",
       "date": "2026-06-30T13:00:00.000Z",
       "tags": [
         "ponytail",
@@ -2220,6 +2309,7 @@
     {
       "slug": "2026-07-03-skillspector-architecture",
       "title": "Analyzing SkillSpector: How Do You Check Whether an Agent Skill Is Safe?",
+      "shortTitle": "Analyzing SkillSpector",
       "date": "2026-07-03T09:00:00.000Z",
       "tags": [
         "skillspector",
@@ -2238,6 +2328,7 @@
     {
       "slug": "2026-07-06-firecrawl-architecture",
       "title": "Analyzing Firecrawl: How Do You Build an API That Turns the Web Into LLM-Ready Markdown?",
+      "shortTitle": "Analyzing Firecrawl",
       "date": "2026-07-06T09:00:00.000Z",
       "tags": [
         "firecrawl",
@@ -2256,6 +2347,7 @@
     {
       "slug": "2026-07-10-floci-architecture",
       "title": "Analyzing Floci: What Does It Take to Fit 68 AWS Services Into One Container?",
+      "shortTitle": "Analyzing Floci",
       "date": "2026-07-10T09:00:00.000Z",
       "tags": [
         "floci",
@@ -2274,6 +2366,7 @@
     {
       "slug": "2026-07-10-llama-paper-note",
       "title": "LLaMA (2023) Paper Notes",
+      "shortTitle": "LLaMA (2023) Paper Notes",
       "date": "2026-07-10T00:00:00.000Z",
       "tags": [
         "llm",
@@ -2292,6 +2385,7 @@
     {
       "slug": "2026-07-13-llama-2-paper-note",
       "title": "Llama 2 (2023) Paper Notes",
+      "shortTitle": "Llama 2 (2023) Paper Notes",
       "date": "2026-07-13T00:00:00.000Z",
       "tags": [
         "llm",
@@ -2310,6 +2404,7 @@
     {
       "slug": "2026-07-24-hallmark-architecture",
       "title": "Hallmark Architecture: How Do You Stop Designs From Looking 'AI-Generated' — With a Prompt?",
+      "shortTitle": "Hallmark Architecture",
       "date": "2026-07-24T09:00:00.000Z",
       "tags": [
         "hallmark",
@@ -2328,6 +2423,7 @@
     {
       "slug": "2026-07-24-llama-3-paper-note",
       "title": "Llama 3 (2024) Paper Notes",
+      "shortTitle": "Llama 3 (2024) Paper Notes",
       "date": "2026-07-24T00:00:00.000Z",
       "tags": [
         "llm",
@@ -2346,6 +2442,7 @@
     {
       "slug": "2026-07-25-bitchat-architecture",
       "title": "bitchat Architecture: How Do You Deliver a Message With No Internet and No Radio Range?",
+      "shortTitle": "bitchat Architecture",
       "date": "2026-07-25T09:00:00.000Z",
       "tags": [
         "bitchat",
@@ -2364,6 +2461,7 @@
     {
       "slug": "2026-09-05-deepseek-harness-architecture",
       "title": "Analyzing DeepSeek Harness: How Do You Build an Agent Harness Where \"Everything Is a Plugin\"?",
+      "shortTitle": "Analyzing DeepSeek Harness",
       "date": "2026-09-05T09:00:00.000Z",
       "tags": [
         "deepseek-harness",
@@ -2383,6 +2481,7 @@
     {
       "slug": "2026-09-05-webmcp-explained",
       "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?",
+      "shortTitle": "WebMCP Explained",
       "date": "2026-09-05T11:00:00.000Z",
       "tags": [
         "webmcp",
@@ -2399,5 +2498,5 @@
       "summary": "WebMCP is a W3C Community Group proposal in which a web page registers JavaScript functions and HTML forms as \"tools\" on document.modelContext, and the browser mediates those tools to the user's agent. This article lays out the imperative and declarative APIs and the boundaries the browser guarantees, straight from the spec, then calls real tools with Chrome 152 and agent-browser 0.36 to see how it differs from accessibility-tree automation."
     }
   ],
-  "generatedAt": "2026-09-07T02:51:33.142Z"
+  "generatedAt": "2026-09-07T02:59:50.661Z"
 }
