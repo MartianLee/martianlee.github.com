@@ -6,6 +6,7 @@ import {
   pickCanonical,
   clipLabel,
   deriveShortTitle,
+  buildTagGraph,
 } from './generate-kb-data.mjs'
 
 function doc(over) {
@@ -136,4 +137,40 @@ test('buildKBData fills shortTitle from frontmatter first, either language, then
   assert.equal(by.b, 'Korean-side override')
   assert.equal(by.c, 'One')
   assert.equal(by.d, 'Two')
+})
+
+test('buildTagGraph keeps tags on 3+ notes, lowercases, drops the blocklist', () => {
+  const posts = [
+    { slug: 'a', tags: ['React', 'post', 'llm'] },
+    { slug: 'b', tags: ['react', 'post', 'llm'] },
+    { slug: 'c', tags: ['react', 'develop'] },
+    { slug: 'd', tags: ['llm'] },
+    { slug: 'e', tags: ['rare'] },
+  ]
+  const { tagNodes, tagLinks } = buildTagGraph(posts)
+  assert.deepEqual(tagNodes, [
+    { id: 'tag:llm', label: 'llm', count: 3 },
+    { id: 'tag:react', label: 'react', count: 3 },
+  ])
+  assert.deepEqual(
+    tagLinks.filter((l) => l.source === 'a'),
+    [
+      { source: 'a', target: 'tag:react' },
+      { source: 'a', target: 'tag:llm' },
+    ]
+  )
+  assert.equal(
+    tagLinks.some((l) => l.target === 'tag:rare'),
+    false
+  )
+})
+
+test('buildKBData exposes graph.tagNodes and graph.tagLinks', () => {
+  const data = buildKBData([
+    doc({ slug: 'a', title: 'A', language: 'en', tags: ['x'] }),
+    doc({ slug: 'b', title: 'B', language: 'en', tags: ['x'] }),
+    doc({ slug: 'c', title: 'C', language: 'en', tags: ['x'] }),
+  ])
+  assert.deepEqual(data.graph.tagNodes, [{ id: 'tag:x', label: 'x', count: 3 }])
+  assert.equal(data.graph.tagLinks.length, 3)
 })

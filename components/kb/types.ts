@@ -21,10 +21,27 @@ export interface KBBacklink {
   title: string
 }
 
+export interface KBTagNode {
+  id: string
+  label: string
+  count: number
+}
+
+export interface KBTagLink {
+  source: string
+  target: string
+}
+
+export interface KBGraphData {
+  tagNodes: KBTagNode[]
+  tagLinks: KBTagLink[]
+}
+
 export interface KBData {
   topics: KBTopic[]
   backlinks: Record<string, KBBacklink[]>
   forwardLinks: Record<string, string[]>
   postIndex: KBPostEntry[]
+  graph: KBGraphData
   generatedAt: string
 }

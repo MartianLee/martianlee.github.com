@@ -226,6 +226,33 @@ export function extractLinks(bodyRaw) {
   return out
 }
 
+// --- tag graph --------------------------------------------------------------
+
+/** Tag nodes for tags attached to at least TAG_NODE_MIN_NOTES canonical notes. */
+export function buildTagGraph(posts) {
+  const count = new Map()
+  const membership = new Map()
+  for (const p of posts) {
+    const tags = new Set(
+      (p.tags || []).map((t) => String(t).toLowerCase().trim()).filter((t) => t.length > 0)
+    )
+    membership.set(p.slug, tags)
+    for (const t of tags) count.set(t, (count.get(t) || 0) + 1)
+  }
+  const tagNodes = [...count.entries()]
+    .filter(([tag, c]) => c >= TAG_NODE_MIN_NOTES && !TAG_BLOCKLIST.includes(tag))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([label, c]) => ({ id: `tag:${label}`, label, count: c }))
+  const ids = new Set(tagNodes.map((n) => n.id))
+  const tagLinks = []
+  for (const p of posts) {
+    for (const t of membership.get(p.slug)) {
+      if (ids.has(`tag:${t}`)) tagLinks.push({ source: p.slug, target: `tag:${t}` })
+    }
+  }
+  return { tagNodes, tagLinks }
+}
+
 // --- build ------------------------------------------------------------------
 
 export function buildKBData(allDocuments, now = new Date()) {
@@ -291,6 +318,7 @@ export function buildKBData(allDocuments, now = new Date()) {
     backlinks,
     forwardLinks,
     postIndex: posts,
+    graph: buildTagGraph(posts),
     generatedAt: now.toISOString(),
   }
 }
