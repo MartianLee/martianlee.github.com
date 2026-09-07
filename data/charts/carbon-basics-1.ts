@@ -251,7 +251,7 @@ export const tonneItems: TonneItem[] = [
       year: 2023,
     },
   },
-  { id: 'tonne', kg: 1000, source: { name: 'reference', url: '', year: 2025 } },
+  { id: 'tonne', kg: 1000, source: { name: '', url: '', year: 2025 } },
   {
     // Our World in Data per-capita CO2 그래퍼(co-emissions-per-capita) 2024년 값
     // 4.729075 t -> 4729kg. curl로 그래퍼 CSV를 직접 받아 확인.

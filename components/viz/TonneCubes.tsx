@@ -161,7 +161,7 @@ export default function TonneCubes({ lang }: { lang: Lang }) {
         </>
       }
       fallback={{
-        columns: [L.year === 'Year' ? 'Activity' : '활동', L.kg],
+        columns: [lang === 'ko' ? '활동' : 'Activity', L.kg],
         rows: placed.map((p) => ({ label: L.tonne[p.id], value: fmt(p.kg) })),
         note: L.fallbackNote,
       }}

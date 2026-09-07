@@ -1,7 +1,7 @@
 // components/viz/AtmosphereTimeline.tsx
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { co2Annual, t, type Lang } from '@/data/charts/carbon-basics-1'
 import { useThreeScene, type SceneBuilder } from './useThreeScene'
 import { buildEarthScene } from './earthScene'
@@ -14,7 +14,10 @@ const MAX_PPM = series[series.length - 1][1]
 const CYCLE_MS = 14000
 const HOLD_MS = 3000
 
-/** 렌더 루프와 React 사이의 공유 상태(리렌더 없이 매 프레임 읽음) */
+/**
+ * 렌더 루프와 React 사이의 공유 상태(리렌더 없이 매 프레임 읽음).
+ * 모듈 싱글턴이라 컴포넌트가 마운트될 때마다 초기값으로 리셋한다(페이지당 인스턴스 하나 가정).
+ */
 interface Shared {
   year: number
   playing: boolean
@@ -38,7 +41,7 @@ const build: SceneBuilder = (THREE, _canvas, renderer) => {
   return {
     render(ts) {
       if (shared.playing) {
-        if (!shared.t0) shared.t0 = ts
+        if (!shared.t0) shared.t0 = ts - ((shared.year - FIRST) / (LAST - FIRST)) * CYCLE_MS
         const el = (ts - shared.t0) % (CYCLE_MS + HOLD_MS)
         const p = Math.min(1, el / CYCLE_MS)
         shared.year = Math.round(FIRST + p * (LAST - FIRST))
@@ -59,10 +62,18 @@ export default function AtmosphereTimeline({ lang }: { lang: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [year, setYear] = useState(FIRST)
   const [playing, setPlaying] = useState(true)
-  shared.onYear = setYear
+  useEffect(() => {
+    shared.year = FIRST
+    shared.playing = true
+    shared.t0 = 0
+    shared.onYear = setYear
+    return () => {
+      shared.onYear = undefined
+    }
+  }, [])
   const status = useThreeScene(canvasRef, build)
   const L = t[lang]
-  const ppm = useMemo(() => ppmOf(year), [year])
+  const ppm = ppmOf(year)
 
   const scrub = (y: number) => {
     shared.playing = false

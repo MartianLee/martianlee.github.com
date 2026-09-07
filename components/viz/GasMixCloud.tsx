@@ -24,8 +24,12 @@ const build: SceneBuilder = (THREE, _canvas, renderer) => {
   const gap = (2 * Math.PI) / 180
   let start = 0
   let idx = 0
-  for (const g of gasMix.shares) {
-    const n = Math.round((g.share / total) * COUNT)
+  let allocated = 0
+  for (const [i, g] of gasMix.shares.entries()) {
+    // 마지막 조각이 반올림 잔여를 흡수해 원점에 빈 슬롯이 남지 않게 한다
+    const n =
+      i === gasMix.shares.length - 1 ? COUNT - allocated : Math.round((g.share / total) * COUNT)
+    allocated += n
     const width = (g.share / total) * 2 * Math.PI - gap
     const c = new THREE.Color(g.color)
     for (let k = 0; k < n && idx < COUNT; k++, idx++) {
@@ -95,7 +99,7 @@ export default function GasMixCloud({ lang }: { lang: Lang }) {
         </ul>
       }
       fallback={{
-        columns: [L.year === 'Year' ? 'Gas' : '가스', '%'],
+        columns: [lang === 'ko' ? '가스' : 'Gas', '%'],
         rows: gasMix.shares.map((g) => ({ label: L.gas[g.id], value: `${g.share}%` })),
         note: L.fallbackNote,
       }}

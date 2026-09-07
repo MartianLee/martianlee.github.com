@@ -123,7 +123,7 @@ export default function BudgetTank({ lang }: { lang: Lang }) {
         </div>
       }
       fallback={{
-        columns: [L.year === 'Year' ? 'Budget' : '예산', 'Gt CO₂'],
+        columns: [lang === 'ko' ? '예산' : 'Budget', 'Gt CO₂'],
         rows: [
           { label: L.used, value: String(carbonBudget.usedGt) },
           { label: L.remaining, value: String(carbonBudget.remainingGt) },
