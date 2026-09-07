@@ -17,7 +17,7 @@
 - three는 항상 `useEffect` 안에서 `await import('three')` (SSR/빌드에 관여 금지). `THREE.ColorManagement.enabled = false` + `renderer.outputColorSpace = LinearSRGBColorSpace`(허브 룩과 동일).
 - 차트/장면 코드를 쓰기 전에 **`dataviz` 스킬을 로드**한다(색·눈금·접근성 규칙).
 - 수치는 웹에서 검증한 값만 쓴다. 확인 안 되면 항목을 뺀다(추정치로 채우지 않음).
-- 장면 배경은 허브와 같은 어두운 대기 그라데이션 `radial-gradient(120% 120% at 62% 38%, #3a2413 0%, #241708 45%, #150d05 100%)`, 입자 색은 CO₂ `#e6a760`, CH₄ `#a8bd74`, N₂O `#c8642f`, F-gas `#f4efe4`, 강조 `#cf7a3d`.
+- 장면 배경은 허브와 같은 어두운 대기 그라데이션 `radial-gradient(120% 120% at 62% 38%, #3a2413 0%, #241708 45%, #150d05 100%)`, 입자 색은 CO₂ `#e6a760`, CH₄ `#a8bd74`, N₂O `#cf7a3d`, F-gas `#f4efe4`, 글로우/윤곽 `#c8642f`.
 - dev 서버 포트 3456 고정. 커밋 전 `yarn lint` 통과(husky). 배포는 main 머지 시 자동이므로 **main에 직접 커밋하지 않고** `feat/carbon-basics-1` 브랜치에 커밋한다.
 
 ---
@@ -508,16 +508,20 @@ export function useThreeScene(
         resize()
         handle.render(0, 0)
         setStatus(reduce ? 'static' : 'live')
-        io = new IntersectionObserver(
-          (entries) => {
-            visible = entries[0]?.isIntersecting ?? false
-            if (visible) start()
-          },
-          { threshold: 0.05 }
-        )
-        io.observe(canvas)
+        // reduced-motion: 첫 프레임만. observer를 아예 두지 않아야 가시성 변화로 두 번째 프레임이 그려지지 않는다.
+        if (!reduce) {
+          io = new IntersectionObserver(
+            (entries) => {
+              visible = entries[0]?.isIntersecting ?? false
+              if (visible) start()
+            },
+            { threshold: 0.05 }
+          )
+          io.observe(canvas)
+        }
         window.addEventListener('resize', resize)
-      } catch {
+      } catch (err) {
+        console.warn('[useThreeScene] 3D scene unavailable, showing fallback', err)
         setStatus('failed')
       }
     }
@@ -528,8 +532,11 @@ export function useThreeScene(
       io?.disconnect()
       if (raf) cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
-      handle?.dispose()
-      renderer?.dispose()
+      try {
+        handle?.dispose()
+      } finally {
+        renderer?.dispose()
+      }
     }
   }, [canvasRef, build])
 
@@ -766,6 +773,7 @@ export function buildEarthScene(THREE: Three, opts: EarthSceneOpts = {}): EarthS
 
   root.rotation.z = 0.28
   let level = 1
+  // 허브 원본 룩: opacity 0.5 ± 0.1 (level 1일 때 동일해야 한다)
   let baseOpacity = 0.5
 
   return {
@@ -774,13 +782,13 @@ export function buildEarthScene(THREE: Three, opts: EarthSceneOpts = {}): EarthS
     setHazeLevel(l) {
       level = Math.max(0, Math.min(1, l))
       haze.geometry.setDrawRange(0, Math.max(1, Math.round(hazeCount * (0.15 + 0.85 * level))))
-      baseOpacity = 0.2 + 0.4 * level
+      baseOpacity = 0.2 + 0.3 * level
     },
     render(renderer, ts) {
       root.rotation.y = ts * 0.00006
       haze.rotation.y = -ts * 0.00003
       haze.rotation.x = Math.sin(ts * 0.00004) * 0.08
-      hazeMat.opacity = baseOpacity - 0.08 + Math.sin(ts * 0.0005) * 0.1
+      hazeMat.opacity = baseOpacity + Math.sin(ts * 0.0005) * 0.1
       renderer.render(scene, camera)
     },
     resize(w, h) {
