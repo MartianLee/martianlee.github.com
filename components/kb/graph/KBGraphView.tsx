@@ -17,6 +17,7 @@ import {
 } from './graphModel'
 import KBGraphSvg from './KBGraphSvg'
 import KBGraphControls from './KBGraphControls'
+import KBGraphPanel from './KBGraphPanel'
 
 const data = kbData as KBData
 const HUBS = new Set(hubIds(data))
@@ -77,6 +78,7 @@ export default function KBGraphView() {
               <KBGraphSvg />
             </div>
           }
+          context={<KBGraphPanel />}
           breadcrumb={<span style={{ color: 'var(--kb-text-strong)' }}>Graph</span>}
           statusBar={
             <div className="flex w-full items-center gap-3">
