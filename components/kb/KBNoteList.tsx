@@ -56,12 +56,33 @@ export default function KBNoteList() {
         className="shrink-0 px-6 pt-6 pb-4"
         style={{ borderBottom: '1px solid var(--kb-border)' }}
       >
-        <h1
-          className="mb-4 text-2xl font-normal tracking-tight"
-          style={{ color: 'var(--kb-text-strong)', fontFamily: 'var(--font-family-serif)' }}
-        >
-          Knowledge Base
-        </h1>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h1
+            className="text-2xl font-normal tracking-tight"
+            style={{ color: 'var(--kb-text-strong)', fontFamily: 'var(--font-family-serif)' }}
+          >
+            Knowledge Base
+          </h1>
+          <Link
+            href="/kb/graph"
+            title="See every note, its links and shared tags as a graph"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-[var(--kb-accent-dim)]"
+            style={{ borderColor: 'var(--kb-accent)', color: 'var(--kb-accent)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <circle cx="3" cy="8" r="2" />
+              <circle cx="12" cy="3" r="2" />
+              <circle cx="12" cy="13" r="2" />
+              <path
+                d="M4.6 7.1l5.8-3.2M4.6 8.9l5.8 3.2"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                fill="none"
+              />
+            </svg>
+            Graph view
+          </Link>
+        </div>
 
         {/* Topic Filter Chips */}
         <div className="mb-3 flex flex-wrap gap-1.5">
