@@ -3,7 +3,7 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 33,
+      "count": 34,
       "slugs": [
         "2020-06-28-manjum-result",
         "2026-03-11-openclaw-architecture",
@@ -37,7 +37,8 @@
         "2026-07-10-floci-architecture",
         "2026-07-24-hallmark-architecture",
         "2026-09-05-deepseek-harness-architecture",
-        "2026-09-05-webmcp-explained"
+        "2026-09-05-webmcp-explained",
+        "2026-09-09-deepseek-harness-hands-on"
       ]
     },
     {
@@ -682,6 +683,10 @@
       {
         "slug": "2026-09-05-deepseek-harness-architecture",
         "title": "Analyzing DeepSeek Harness: How Do You Build an Agent Harness Where \"Everything Is a Plugin\"?"
+      },
+      {
+        "slug": "2026-09-09-deepseek-harness-hands-on",
+        "title": "DeepSeek Harness Hands-On: Dumping the Boot Tree and Swapping Rows With Patches"
       }
     ],
     "2026-04-15-paperclip-architecture": [
@@ -882,6 +887,10 @@
       {
         "slug": "2026-09-05-deepseek-harness-architecture",
         "title": "Analyzing DeepSeek Harness: How Do You Build an Agent Harness Where \"Everything Is a Plugin\"?"
+      },
+      {
+        "slug": "2026-09-09-deepseek-harness-hands-on",
+        "title": "DeepSeek Harness Hands-On: Dumping the Boot Tree and Swapping Rows With Patches"
       }
     ],
     "2026-06-30-cline-architecture": [
@@ -896,6 +905,10 @@
       {
         "slug": "2026-09-05-deepseek-harness-architecture",
         "title": "Analyzing DeepSeek Harness: How Do You Build an Agent Harness Where \"Everything Is a Plugin\"?"
+      },
+      {
+        "slug": "2026-09-09-deepseek-harness-hands-on",
+        "title": "DeepSeek Harness Hands-On: Dumping the Boot Tree and Swapping Rows With Patches"
       }
     ],
     "2026-06-30-ponytail-architecture": [
@@ -946,6 +959,12 @@
       {
         "slug": "2026-09-05-webmcp-explained",
         "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
+      }
+    ],
+    "2026-09-05-deepseek-harness-architecture": [
+      {
+        "slug": "2026-09-09-deepseek-harness-hands-on",
+        "title": "DeepSeek Harness Hands-On: Dumping the Boot Tree and Swapping Rows With Patches"
       }
     ]
   },
@@ -1252,6 +1271,12 @@
       "2026-03-13-lightpanda-architecture",
       "2026-07-06-firecrawl-architecture",
       "2026-04-16-browser-automation-comparison"
+    ],
+    "2026-09-09-deepseek-harness-hands-on": [
+      "2026-09-05-deepseek-harness-architecture",
+      "2026-06-29-opencode-architecture",
+      "2026-06-30-cline-architecture",
+      "2026-03-11-openclaw-architecture"
     ]
   },
   "postIndex": [
@@ -2852,6 +2877,26 @@
       "topic": "ai-infrastructure",
       "stage": "budding",
       "summary": "WebMCP is a W3C Community Group proposal in which a web page registers JavaScript functions and HTML forms as \"tools\" on document.modelContext, and the browser mediates those tools to the user's agent. This article lays out the imperative and declarative APIs and the boundaries the browser guarantees, straight from the spec, then calls real tools with Chrome 152 and agent-browser 0.36 to see how it differs from accessibility-tree automation."
+    },
+    {
+      "slug": "2026-09-09-deepseek-harness-hands-on",
+      "title": "DeepSeek Harness Hands-On: Dumping the Boot Tree and Swapping Rows With Patches",
+      "shortTitle": "DeepSeek Harness Hands-On",
+      "date": "2026-09-09T09:00:00.000Z",
+      "tags": [
+        "deepseek-harness",
+        "deepseek",
+        "cordis",
+        "coding-agent",
+        "ai-agent",
+        "plugin-architecture",
+        "harness",
+        "hands-on",
+        "cli"
+      ],
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "summary": "I booted DeepSeek Harness with a single npx command and no API key, dumped its 145-row boot tree with --dump-config, and edited the patch layer by hand. The web profile ships with every model-facing tool switched off, and the reason turns out to be interesting. I also walked straight into the trap where patching a row config silently kills a CLI flag."
     }
   ],
   "graph": {
@@ -2869,7 +2914,7 @@
       {
         "id": "tag:ai-agent",
         "label": "ai-agent",
-        "count": 22
+        "count": 23
       },
       {
         "id": "tag:paper-reading",
@@ -2892,6 +2937,11 @@
         "count": 10
       },
       {
+        "id": "tag:coding-agent",
+        "label": "coding-agent",
+        "count": 7
+      },
+      {
         "id": "tag:react",
         "label": "react",
         "count": 7
@@ -2899,11 +2949,6 @@
       {
         "id": "tag:claude-code",
         "label": "claude-code",
-        "count": 6
-      },
-      {
-        "id": "tag:coding-agent",
-        "label": "coding-agent",
         "count": 6
       },
       {
@@ -3915,8 +3960,16 @@
       {
         "source": "2026-09-05-webmcp-explained",
         "target": "tag:e2e"
+      },
+      {
+        "source": "2026-09-09-deepseek-harness-hands-on",
+        "target": "tag:coding-agent"
+      },
+      {
+        "source": "2026-09-09-deepseek-harness-hands-on",
+        "target": "tag:ai-agent"
       }
     ]
   },
-  "generatedAt": "2026-09-09T09:01:26.555Z"
+  "generatedAt": "2026-09-09T16:33:05.363Z"
 }
