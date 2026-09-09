@@ -43,7 +43,7 @@ export interface ClimateStrings {
     label: string
     sub: string
     badge: string
-    items: { num: string; title: string; desc: string }[]
+    items: { num: string; title: string; desc: string; slug?: string }[]
   }
   cta: {
     label: string
@@ -143,6 +143,7 @@ export const climateCopy: Record<'en' | 'ko', ClimateStrings> = {
           num: '1',
           title: 'What is carbon, and why it matters',
           desc: 'CO₂e and the scale of the problem, made tangible',
+          slug: '2026-09-05-carbon-basics-what-is-carbon',
         },
         {
           num: '2',
@@ -251,7 +252,8 @@ export const climateCopy: Record<'en' | 'ko', ClimateStrings> = {
         {
           num: '1',
           title: '탄소란 무엇이고, 왜 중요한가',
-          desc: 'CO₂e와 문제의 규모, 손에 잡히게 풀어 보기',
+          desc: 'CO₂e와 문제의 규모, 눈에 보이지 않는 것을 이해하기',
+          slug: '2026-09-05-carbon-basics-what-is-carbon',
         },
         {
           num: '2',
@@ -267,7 +269,7 @@ export const climateCopy: Record<'en' | 'ko', ClimateStrings> = {
     },
     cta: {
       label: '이직 준비 중',
-      heading: '시니어 / 스태프 엔지니어 포지션이라면 국내외 어디든 열려 있습니다.',
+      heading: '국내외 어디든 시니어 / 스태프 엔지니어 포지션에 열려 있습니다.',
     },
   },
 }

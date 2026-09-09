@@ -161,6 +161,14 @@
       "slugs": [
         "2026-06-05-markdown-source-of-truth"
       ]
+    },
+    {
+      "id": "climate",
+      "label": "Climate",
+      "count": 1,
+      "slugs": [
+        "2026-09-05-carbon-basics-what-is-carbon"
+      ]
     }
   ],
   "backlinks": {
@@ -1227,6 +1235,7 @@
       "2026-05-13-agentmemory-architecture",
       "2026-07-06-firecrawl-architecture"
     ],
+    "2026-09-05-carbon-basics-what-is-carbon": [],
     "2026-09-05-deepseek-harness-architecture": [
       "2026-06-29-opencode-architecture",
       "2026-06-30-cline-architecture",
@@ -2791,6 +2800,21 @@
       "summary": "bitchat is a P2P messenger with no accounts and no servers. Nearby devices form a BLE mesh; distant peers are reached over Nostr. The center of this piece is the four-layer store-and-forward stack that answers \"the recipient is not here right now\" — a sealed outbox, courier envelopes addressed by nothing but an HMAC tag plus spray-and-wait, GCS-filter public history sync, and Nostr mailboxes — traced through the code."
     },
     {
+      "slug": "2026-09-05-carbon-basics-what-is-carbon",
+      "title": "Carbon Basics 1: What carbon is, and why it matters",
+      "shortTitle": "Carbon Basics 1",
+      "date": "2026-09-05T09:00:00.000Z",
+      "tags": [
+        "climate",
+        "carbon",
+        "co2e",
+        "carbon-basics"
+      ],
+      "topic": "climate",
+      "stage": "budding",
+      "summary": "What CO₂e means, how much CO₂ has built up in the air, how much of the 1.5 °C budget is left, and how big a tonne really is, shown in four 3D visuals instead of paragraphs."
+    },
+    {
       "slug": "2026-09-05-deepseek-harness-architecture",
       "title": "Analyzing DeepSeek Harness: How Do You Build an Agent Harness Where \"Everything Is a Plugin\"?",
       "shortTitle": "Analyzing DeepSeek Harness",
@@ -3894,5 +3918,5 @@
       }
     ]
   },
-  "generatedAt": "2026-09-07T07:19:02.284Z"
+  "generatedAt": "2026-09-09T09:01:26.555Z"
 }

@@ -181,6 +181,7 @@ const TOPIC_LABELS = {
   'dev-life': 'Dev Life',
   algorithms: 'Algorithms',
   'software-engineering': 'Software Engineering',
+  climate: 'Climate',
   uncategorized: 'Uncategorized',
 }
 
