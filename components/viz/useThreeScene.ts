@@ -55,6 +55,8 @@ export function useThreeScene(
       if (!w || !h) return
       renderer.setSize(w, h, false)
       handle.resize(w, h)
+      // reduced-motion에서는 RAF가 돌지 않으므로 setSize로 비워진 캔버스를 한 프레임 다시 그린다
+      if (reduce) handle.render(0, 0)
     }
     const frame = (ts: number) => {
       raf = 0
