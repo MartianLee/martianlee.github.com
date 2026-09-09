@@ -1,7 +1,7 @@
 // components/viz/CarbonDay.tsx
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   dayItems,
   dayTotalKg,
@@ -12,12 +12,25 @@ import {
 } from '@/data/charts/carbon-basics-2'
 import { useThreeScene, type SceneBuilder } from './useThreeScene'
 import VizFrame from './VizFrame'
+import VizScrubber from './VizScrubber'
 
 const STEP_MS = 1400
 const RISE_MS = 900
 const PAUSE_MS = 2000
 const labelRefs: (HTMLDivElement | null)[] = []
 let totalNumEl: HTMLSpanElement | null = null
+
+/**
+ * 렌더 루프와 React가 공유하는 상태(리렌더 없이 매 프레임 읽는다).
+ * p는 한 사이클 안에서의 진행도(0에서 1). 모듈 싱글턴이라 마운트마다 초기화한다.
+ */
+interface Shared {
+  p: number
+  playing: boolean
+  t0: number
+  onP?: (p: number) => void
+}
+const shared: Shared = { p: 0, playing: true, t0: 0 }
 
 interface Placed {
   id: string
@@ -107,10 +120,9 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     anchors.push({ obj: group, y: p.size + 0.8 })
   }
 
-  let settled = false
+  let lastQ = -1
 
   const progressFor = (i: number, cycleTs: number): number => {
-    if (settled) return 1
     const t0 = i * STEP_MS
     if (cycleTs < t0) return 0
     const p = Math.min((cycleTs - t0) / RISE_MS, 1)
@@ -135,7 +147,17 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
 
   return {
     render(ts) {
-      const cycleTs = settled ? 0 : ts % CYCLE_MS
+      if (shared.playing) {
+        if (!shared.t0) shared.t0 = ts - shared.p * CYCLE_MS
+        shared.p = ((ts - shared.t0) % CYCLE_MS) / CYCLE_MS
+        // 슬라이더는 100단계로만 알린다. 매 프레임 setState하면 초당 60번 리렌더된다.
+        const q = Math.round(shared.p * 100)
+        if (q !== lastQ) {
+          lastQ = q
+          shared.onP?.(shared.p)
+        }
+      }
+      const cycleTs = shared.p * CYCLE_MS
       const progresses: number[] = []
       for (let i = 0; i < placed.length; i++) progresses.push(progressFor(i, cycleTs))
 
@@ -156,7 +178,7 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
 
       // 카메라는 하루 전체를 한 프레임에 담은 채 고정한다. 항목을 따라다니면 점심 큐브가
       // 화면 밖으로 밀려나 "점심이 압도적으로 크다"는 이 장면의 요지가 보이지 않는다.
-      const sway = settled ? 0 : Math.sin(ts * 0.00004) * 0.9
+      const sway = shared.playing ? Math.sin(ts * 0.00004) * 0.9 : 0
       camera.position.set(trackCenterX + 5.5 + sway, 5.2, 15)
       camera.lookAt(trackCenterX, 1.5, 0)
 
@@ -175,8 +197,10 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
       camera.aspect = w / h
       camera.updateProjectionMatrix()
     },
+    // reduced-motion: 다섯 큐브가 모두 올라온 마지막 상태로 고정한다
     settle() {
-      settled = true
+      shared.playing = false
+      shared.p = 1
     },
     dispose() {
       disposables.forEach((d) => d.dispose())
@@ -188,8 +212,33 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
 
 export default function CarbonDay({ lang }: { lang: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  // 아래 라벨 map이 인자 이름으로 p를 쓰므로 상태는 progress로 둔다
+  const [progress, setProgress] = useState(0)
+  const [playing, setPlaying] = useState(true)
+  useEffect(() => {
+    shared.p = 0
+    shared.playing = true
+    shared.t0 = 0
+    shared.onP = setProgress
+    return () => {
+      shared.onP = undefined
+    }
+  }, [])
   const status = useThreeScene(canvasRef, build)
   const L = t[lang]
+
+  const scrub = (v: number) => {
+    shared.playing = false
+    shared.p = v
+    setPlaying(false)
+    setProgress(v)
+  }
+  const toggle = () => {
+    const next = !playing
+    shared.playing = next
+    if (next) shared.t0 = 0
+    setPlaying(next)
+  }
 
   return (
     <VizFrame
@@ -239,6 +288,15 @@ export default function CarbonDay({ lang }: { lang: Lang }) {
               {L.dayCompare} {KOREA_PER_CAPITA_DAILY_KG} {L.kg}
             </div>
           </div>
+          <VizScrubber
+            playing={playing}
+            onToggle={toggle}
+            value={progress}
+            onScrub={scrub}
+            playLabel={L.play}
+            pauseLabel={L.pause}
+            ariaLabel={L.progress}
+          />
         </>
       }
       fallback={{

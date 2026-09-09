@@ -1,14 +1,28 @@
 // components/viz/FoodMasses.tsx
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CO2_M3_PER_KG, foods, t, type Lang } from '@/data/charts/carbon-basics-2'
 import { useThreeScene, type SceneBuilder } from './useThreeScene'
 import VizFrame from './VizFrame'
+import VizScrubber from './VizScrubber'
 
 const GAP = 0.8
 const REVEAL_MS = 16000
 const HOLD_MS = 4000
+const CYCLE_MS = REVEAL_MS + HOLD_MS
+
+/**
+ * 렌더 루프와 React가 공유하는 상태(리렌더 없이 매 프레임 읽는다).
+ * p는 한 사이클 안에서의 진행도(0에서 1). 모듈 싱글턴이라 마운트마다 초기화한다.
+ */
+interface Shared {
+  p: number
+  playing: boolean
+  t0: number
+  onP?: (p: number) => void
+}
+const shared: Shared = { p: 0, playing: true, t0: 0 }
 const labelRefs: (HTMLDivElement | null)[] = []
 
 interface Placed {
@@ -100,19 +114,29 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     })
   }
 
-  // settle()이 켜면 render는 ts와 무관하게 왕복의 끝(p = 1, 소고기 큐브가 보이는 프레임)에 멈춘다
-  let settled = false
+  let lastQ = -1
 
   return {
+    // reduced-motion: 아홉 개가 다 보이는 마지막 프레임으로 고정한다
     settle() {
-      settled = true
+      shared.playing = false
+      shared.p = 1
     },
     render(ts) {
       // 채소 큐브를 가까이 잡은 채로 시작해 천천히 뒤로 빠지면서 아홉 개를 한 프레임에
       // 담는다. 스케일이 무너지는 순간은 "옆으로 훑을 때"가 아니라 "전체가 한 화면에
       // 들어올 때" 보인다. 끝까지 빠지면 잠시 멈췄다가 처음부터 반복한다.
-      const cycle = REVEAL_MS + HOLD_MS
-      const raw = settled ? 1 : Math.min((ts % cycle) / REVEAL_MS, 1)
+      if (shared.playing) {
+        if (!shared.t0) shared.t0 = ts - shared.p * CYCLE_MS
+        shared.p = ((ts - shared.t0) % CYCLE_MS) / CYCLE_MS
+        // 슬라이더는 100단계로만 알린다. 매 프레임 setState하면 초당 60번 리렌더된다.
+        const q = Math.round(shared.p * 100)
+        if (q !== lastQ) {
+          lastQ = q
+          shared.onP?.(shared.p)
+        }
+      }
+      const raw = Math.min((shared.p * CYCLE_MS) / REVEAL_MS, 1)
       const p = raw < 0.5 ? 4 * raw * raw * raw : 1 - Math.pow(-2 * raw + 2, 3) / 2
       const cx = 2 + p * (totalWidth / 2 - 2)
       const dist = 9 + p * 19
@@ -135,8 +159,34 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
 
 export default function FoodMasses({ lang }: { lang: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  // 아래 라벨 map이 인자 이름으로 p를 쓰므로 상태는 progress로 둔다
+  const [progress, setProgress] = useState(0)
+  const [playing, setPlaying] = useState(true)
+  useEffect(() => {
+    shared.p = 0
+    shared.playing = true
+    shared.t0 = 0
+    shared.onP = setProgress
+    return () => {
+      shared.onP = undefined
+    }
+  }, [])
   const status = useThreeScene(canvasRef, build)
   const L = t[lang]
+
+  const scrub = (v: number) => {
+    shared.playing = false
+    shared.p = v
+    setPlaying(false)
+    setProgress(v)
+  }
+  const toggle = () => {
+    const next = !playing
+    shared.playing = next
+    if (next) shared.t0 = 0
+    setPlaying(next)
+  }
+
   return (
     <VizFrame
       title={L.foodTitle}
@@ -162,6 +212,15 @@ export default function FoodMasses({ lang }: { lang: Lang }) {
               <div className="tabular-nums opacity-80">{`${p.kgPerKg} ${L.kg}`}</div>
             </div>
           ))}
+          <VizScrubber
+            playing={playing}
+            onToggle={toggle}
+            value={progress}
+            onScrub={scrub}
+            playLabel={L.play}
+            pauseLabel={L.pause}
+            ariaLabel={L.progress}
+          />
         </>
       }
       fallback={{

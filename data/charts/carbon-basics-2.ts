@@ -328,6 +328,10 @@ export interface Labels {
   gridCaption: string
   gridCountry: Record<GridItem['id'], string>
   gridUsage: string
+
+  play: string
+  pause: string
+  progress: string
 }
 
 export const t: Record<Lang, Labels> = {
@@ -402,6 +406,10 @@ export const t: Record<Lang, Labels> = {
       france: 'France',
     },
     gridUsage: '3,600 kWh per year',
+
+    play: 'Play',
+    pause: 'Pause',
+    progress: 'Progress',
   },
   ko: {
     source: '출처',
@@ -468,5 +476,9 @@ export const t: Record<Lang, Labels> = {
       '연 3,600kWh를 쓰는 가구를 그대로 두고 나라만 바꿨습니다. 네 나라 모두 같은 출처, 같은 연도의 계수입니다.',
     gridCountry: { korea: '한국', usa: '미국', uk: '영국', france: '프랑스' },
     gridUsage: '연 3,600kWh',
+
+    play: '재생',
+    pause: '정지',
+    progress: '진행',
   },
 }
