@@ -149,6 +149,7 @@ export const climateCopy: Record<'en' | 'ko', ClimateStrings> = {
           num: '2',
           title: 'Where carbon hides in daily life',
           desc: 'Food, travel, energy, goods: emissions where you live',
+          slug: '2026-09-12-carbon-basics-daily-life',
         },
         {
           num: '3',
@@ -259,6 +260,7 @@ export const climateCopy: Record<'en' | 'ko', ClimateStrings> = {
           num: '2',
           title: '일상 속 탄소는 어디에 숨어 있나',
           desc: '음식, 이동, 에너지, 물건 등 생활 영역별 배출',
+          slug: '2026-09-12-carbon-basics-daily-life',
         },
         {
           num: '3',
