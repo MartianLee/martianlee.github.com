@@ -44,7 +44,11 @@ export interface UIStrings {
     workflow: string
     builtWithAI: string
   }
-  about: { experience: string; occupation: string }
+  about: {
+    experience: string
+    occupation: string
+    climate: { eyebrow: string; body: string; link: string }
+  }
 }
 
 export const ui: Record<Lang, UIStrings> = {
@@ -91,7 +95,15 @@ export const ui: Record<Lang, UIStrings> = {
       workflow: 'Workflow',
       builtWithAI: 'Built with AI',
     },
-    about: { experience: 'Experience', occupation: 'Software Engineer' },
+    about: {
+      experience: 'Experience',
+      occupation: 'Software Engineer',
+      climate: {
+        eyebrow: 'Earth Driven Developer',
+        body: 'The carbon measurement and offset products I built at a climate-tech startup, plus a series that explains carbon from first principles.',
+        link: 'Climate →',
+      },
+    },
   },
   ko: {
     nav: { projects: '프로젝트', writing: '글', notes: '노트', about: '소개' },
@@ -136,6 +148,14 @@ export const ui: Record<Lang, UIStrings> = {
       workflow: '워크플로우',
       builtWithAI: 'AI와 함께 제작',
     },
-    about: { experience: '경력', occupation: '소프트웨어 엔지니어' },
+    about: {
+      experience: '경력',
+      occupation: '소프트웨어 엔지니어',
+      climate: {
+        eyebrow: 'Earth Driven Developer',
+        body: '기후테크 스타트업에서 만든 탄소 측정·상쇄 제품과, 탄소를 기본 원리부터 풀어 쓰는 시리즈를 모아 두었습니다.',
+        link: 'Climate 페이지 →',
+      },
+    },
   },
 }
