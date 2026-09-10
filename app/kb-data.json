@@ -136,6 +136,17 @@
       ]
     },
     {
+      "id": "backend-architecture",
+      "label": "Backend Architecture",
+      "count": 4,
+      "slugs": [
+        "2026-04-18-bloom-filter-membership-check-at-scale",
+        "2026-04-18-redisbloom-signup-architecture",
+        "2026-07-25-bitchat-architecture",
+        "2026-09-01-framework-magic-tax"
+      ]
+    },
+    {
       "id": "devops-cloud",
       "label": "DevOps & Cloud",
       "count": 3,
@@ -143,16 +154,6 @@
         "2019-03-12-ssh-github",
         "2023-01-30-aws-imweb-domain",
         "2023-02-25-github-author-problem"
-      ]
-    },
-    {
-      "id": "backend-architecture",
-      "label": "Backend Architecture",
-      "count": 3,
-      "slugs": [
-        "2026-04-18-bloom-filter-membership-check-at-scale",
-        "2026-04-18-redisbloom-signup-architecture",
-        "2026-07-25-bitchat-architecture"
       ]
     },
     {
@@ -1254,6 +1255,7 @@
       "2026-05-13-agentmemory-architecture",
       "2026-07-06-firecrawl-architecture"
     ],
+    "2026-09-01-framework-magic-tax": [],
     "2026-09-05-carbon-basics-what-is-carbon": [],
     "2026-09-05-deepseek-harness-architecture": [
       "2026-06-29-opencode-architecture",
@@ -2825,6 +2827,28 @@
       "summary": "bitchat is a P2P messenger with no accounts and no servers. Nearby devices form a BLE mesh; distant peers are reached over Nostr. The center of this piece is the four-layer store-and-forward stack that answers \"the recipient is not here right now\" — a sealed outbox, courier envelopes addressed by nothing but an HMAC tag plus spray-and-wait, GCS-filter public history sync, and Nostr mailboxes — traced through the code."
     },
     {
+      "slug": "2026-09-01-framework-magic-tax",
+      "title": "Is Rails Slow? I Built the Same Blog API Eight Times to Price the Framework",
+      "shortTitle": "Is Rails Slow?",
+      "date": "2026-09-01T09:00:00.000Z",
+      "tags": [
+        "ruby",
+        "rails",
+        "activerecord",
+        "orm",
+        "benchmark",
+        "performance",
+        "django",
+        "sequelize",
+        "gorm",
+        "mysql",
+        "docker"
+      ],
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "summary": "\"Rails is slow\" is an unanswerable question, because a Rails app and a Go app are never doing the same work. So I narrowed it: inside one runtime, what do the framework and the ORM cost? Four runtimes, each built twice, all returning identical JSON from the identical four SQL statements, measured three times on Docker Linux with MySQL. The magic tax in CPU per request came out at ×7.67 for Ruby, ×6.14 for Python, ×2.62 for Node and ×2.51 for Go — and I counted, object by object, exactly what Active Record builds on every request."
+    },
+    {
       "slug": "2026-09-05-carbon-basics-what-is-carbon",
       "title": "Carbon Basics 1: What carbon is, and why it matters",
       "shortTitle": "Carbon Basics 1",
@@ -3042,6 +3066,11 @@
         "count": 3
       },
       {
+        "id": "tag:rails",
+        "label": "rails",
+        "count": 3
+      },
+      {
         "id": "tag:react-native",
         "label": "react-native",
         "count": 3
@@ -3072,6 +3101,10 @@
       {
         "source": "2019-04-17-renwal-sccc-page",
         "target": "tag:jekyll"
+      },
+      {
+        "source": "2019-06-25-rails-remote",
+        "target": "tag:rails"
       },
       {
         "source": "2020-04-06-react-native-kakao-login-ios",
@@ -3176,6 +3209,10 @@
       {
         "source": "2024-02-21-leetcode-201",
         "target": "tag:javascript"
+      },
+      {
+        "source": "2024-09-16-til-ruby-rails",
+        "target": "tag:rails"
       },
       {
         "source": "2026-03-11-openclaw-architecture",
@@ -3926,6 +3963,10 @@
         "target": "tag:architecture"
       },
       {
+        "source": "2026-09-01-framework-magic-tax",
+        "target": "tag:rails"
+      },
+      {
         "source": "2026-09-05-deepseek-harness-architecture",
         "target": "tag:coding-agent"
       },
@@ -3971,5 +4012,5 @@
       }
     ]
   },
-  "generatedAt": "2026-09-09T16:33:05.363Z"
+  "generatedAt": "2026-09-10T14:41:33.546Z"
 }
