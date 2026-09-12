@@ -3,7 +3,7 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 34,
+      "count": 35,
       "slugs": [
         "2020-06-28-manjum-result",
         "2026-03-11-openclaw-architecture",
@@ -38,7 +38,8 @@
         "2026-07-24-hallmark-architecture",
         "2026-09-05-deepseek-harness-architecture",
         "2026-09-05-webmcp-explained",
-        "2026-09-09-deepseek-harness-hands-on"
+        "2026-09-09-deepseek-harness-hands-on",
+        "2026-09-12-archify-architecture"
       ]
     },
     {
@@ -302,6 +303,10 @@
       {
         "slug": "2026-09-05-deepseek-harness-architecture",
         "title": "Analyzing DeepSeek Harness: How Do You Build an Agent Harness Where \"Everything Is a Plugin\"?"
+      },
+      {
+        "slug": "2026-09-12-archify-architecture",
+        "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
       }
     ],
     "2026-04-18-llm-basics-rnn-sequential-processing": [
@@ -966,6 +971,28 @@
       {
         "slug": "2026-09-09-deepseek-harness-hands-on",
         "title": "DeepSeek Harness Hands-On: Dumping the Boot Tree and Swapping Rows With Patches"
+      },
+      {
+        "slug": "2026-09-12-archify-architecture",
+        "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
+      }
+    ],
+    "2026-04-13-adding-mermaid-to-nextjs-blog": [
+      {
+        "slug": "2026-09-12-archify-architecture",
+        "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
+      }
+    ],
+    "2026-09-09-deepseek-harness-hands-on": [
+      {
+        "slug": "2026-09-12-archify-architecture",
+        "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
+      }
+    ],
+    "2026-09-05-webmcp-explained": [
+      {
+        "slug": "2026-09-12-archify-architecture",
+        "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
       }
     ]
   },
@@ -1279,6 +1306,13 @@
       "2026-06-29-opencode-architecture",
       "2026-06-30-cline-architecture",
       "2026-03-11-openclaw-architecture"
+    ],
+    "2026-09-12-archify-architecture": [
+      "2026-04-13-adding-mermaid-to-nextjs-blog",
+      "2026-09-05-deepseek-harness-architecture",
+      "2026-09-09-deepseek-harness-hands-on",
+      "2026-04-18-superpowers-architecture",
+      "2026-09-05-webmcp-explained"
     ]
   },
   "postIndex": [
@@ -2921,6 +2955,24 @@
       "topic": "ai-infrastructure",
       "stage": "budding",
       "summary": "I booted DeepSeek Harness with a single npx command and no API key, dumped its 145-row boot tree with --dump-config, and edited the patch layer by hand. The web profile ships with every model-facing tool switched off, and the reason turns out to be interesting. I also walked straight into the trap where patching a row config silently kills a CLI flag."
+    },
+    {
+      "slug": "2026-09-12-archify-architecture",
+      "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?",
+      "shortTitle": "Archify dissected",
+      "date": "2026-09-12T12:00:00.000Z",
+      "tags": [
+        "archify",
+        "diagram",
+        "agent-skills",
+        "mermaid",
+        "architecture",
+        "open-source",
+        "ai-agent"
+      ],
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "summary": "Archify has the agent write a typed JSON IR and lets a deterministic compiler turn it into a self-contained HTML artifact. I read the repository end to end and built four diagrams with it, watching what the validator refuses, why deliver, visual-check, and human review are kept apart, and what changes when this blog’s own mermaid is ported over."
     }
   ],
   "graph": {
@@ -2928,7 +2980,7 @@
       {
         "id": "tag:architecture",
         "label": "architecture",
-        "count": 32
+        "count": 33
       },
       {
         "id": "tag:llm",
@@ -2938,7 +2990,7 @@
       {
         "id": "tag:ai-agent",
         "label": "ai-agent",
-        "count": 23
+        "count": 24
       },
       {
         "id": "tag:paper-reading",
@@ -2996,6 +3048,11 @@
         "count": 5
       },
       {
+        "id": "tag:open-source",
+        "label": "open-source",
+        "count": 5
+      },
+      {
         "id": "tag:typescript",
         "label": "typescript",
         "count": 5
@@ -3003,11 +3060,6 @@
       {
         "id": "tag:agent",
         "label": "agent",
-        "count": 4
-      },
-      {
-        "id": "tag:open-source",
-        "label": "open-source",
         "count": 4
       },
       {
@@ -4009,8 +4061,20 @@
       {
         "source": "2026-09-09-deepseek-harness-hands-on",
         "target": "tag:ai-agent"
+      },
+      {
+        "source": "2026-09-12-archify-architecture",
+        "target": "tag:architecture"
+      },
+      {
+        "source": "2026-09-12-archify-architecture",
+        "target": "tag:open-source"
+      },
+      {
+        "source": "2026-09-12-archify-architecture",
+        "target": "tag:ai-agent"
       }
     ]
   },
-  "generatedAt": "2026-09-10T14:41:33.546Z"
+  "generatedAt": "2026-09-12T16:01:14.457Z"
 }

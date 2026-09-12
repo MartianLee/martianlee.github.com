@@ -1,0 +1,186 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Archify authoring loop",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "lanes": [
+    {
+      "id": "author",
+      "label": "Agent authoring"
+    },
+    {
+      "id": "gate",
+      "label": "Deterministic gate"
+    },
+    {
+      "id": "evidence",
+      "label": "Evidence and acceptance"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p_author",
+      "label": "Author",
+      "fromCol": 0,
+      "toCol": 0
+    },
+    {
+      "id": "p_gate",
+      "label": "Machine decides here",
+      "fromCol": 1,
+      "toCol": 3,
+      "variant": "security"
+    },
+    {
+      "id": "p_accept",
+      "label": "Accept",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": ["draft", "validate", "deliver", "vcheck", "human"],
+  "nodes": [
+    {
+      "id": "draft",
+      "lane": "author",
+      "col": 0,
+      "type": "frontend",
+      "label": "Write IR candidate",
+      "sublabel": "artifact before internals",
+      "width": 150
+    },
+    {
+      "id": "validate",
+      "lane": "gate",
+      "col": 1,
+      "type": "security",
+      "label": "validate",
+      "sublabel": "9 showcase checks",
+      "width": 150
+    },
+    {
+      "id": "fix",
+      "lane": "author",
+      "col": 2,
+      "type": "backend",
+      "label": "Fix one diagnostic",
+      "sublabel": "from supportedFixes",
+      "width": 150
+    },
+    {
+      "id": "halt",
+      "lane": "author",
+      "col": 3,
+      "type": "external",
+      "label": "Stop and report",
+      "sublabel": "two rounds, no gain",
+      "width": 150
+    },
+    {
+      "id": "deliver",
+      "lane": "gate",
+      "col": 3,
+      "type": "backend",
+      "label": "deliver",
+      "sublabel": "freeze spec bytes",
+      "width": 150
+    },
+    {
+      "id": "vcheck",
+      "lane": "evidence",
+      "col": 4,
+      "type": "security",
+      "label": "visual-check",
+      "sublabel": "measured in real Chrome",
+      "width": 152
+    },
+    {
+      "id": "human",
+      "lane": "evidence",
+      "col": 5,
+      "type": "external",
+      "label": "Human perceptual review",
+      "sublabel": "no tool substitutes",
+      "width": 190
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "draft",
+      "to": "validate",
+      "label": "submit candidate",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e2",
+      "from": "validate",
+      "to": "fix",
+      "label": "diagnostic + evidence",
+      "role": "error"
+    },
+    {
+      "id": "e3",
+      "from": "fix",
+      "to": "validate",
+      "label": "revalidate",
+      "role": "return"
+    },
+    {
+      "id": "e4",
+      "from": "validate",
+      "to": "deliver",
+      "label": "0 errors 0 warnings",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e5",
+      "from": "fix",
+      "to": "halt",
+      "label": "best count stalls",
+      "role": "branch"
+    },
+    {
+      "id": "e6",
+      "from": "deliver",
+      "to": "vcheck",
+      "label": "frozen HTML",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e7",
+      "from": "vcheck",
+      "to": "human",
+      "label": "measurement is not approval",
+      "variant": "emphasis",
+      "role": "main"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": ["draft"],
+    "allowedTerminals": ["human", "halt"],
+    "requiredEdges": [
+      {
+        "from": "validate",
+        "to": "fix"
+      },
+      {
+        "from": "fix",
+        "to": "validate"
+      }
+    ],
+    "requiredPaths": [
+      {
+        "from": "draft",
+        "to": "human"
+      }
+    ]
+  }
+}

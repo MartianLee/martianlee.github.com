@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "dsh 플러그인이 싣는 Archify 스킬 2.14.0",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "skill",
+      "type": "frontend",
+      "label": "SKILL.md",
+      "sublabel": "저작 규약",
+      "pos": [60, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "cli",
+      "type": "backend",
+      "label": "CLI",
+      "sublabel": "validate · deliver",
+      "pos": [340, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "schemas",
+      "type": "security",
+      "label": "스키마 5종",
+      "sublabel": "workflow v1",
+      "pos": [340, 120],
+      "size": [180, 64]
+    },
+    {
+      "id": "renderers",
+      "type": "backend",
+      "label": "렌더러 5종",
+      "sublabel": "결정론적 SVG",
+      "pos": [620, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "viewer",
+      "type": "frontend",
+      "label": "뷰어 런타임",
+      "sublabel": "고정 영어 UI",
+      "pos": [900, 290],
+      "size": [180, 64]
+    }
+  ],
+  "connections": [
+    {
+      "from": "skill",
+      "to": "cli",
+      "label": "명령 호출",
+      "variant": "emphasis",
+      "id": "skill_cli"
+    },
+    {
+      "from": "cli",
+      "to": "schemas",
+      "label": "검증",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "id": "cli_schemas"
+    },
+    {
+      "from": "cli",
+      "to": "renderers",
+      "label": "렌더",
+      "variant": "emphasis",
+      "id": "cli_renderers"
+    },
+    {
+      "from": "renderers",
+      "to": "viewer",
+      "label": "임베드",
+      "variant": "emphasis",
+      "id": "renderers_viewer"
+    }
+  ]
+}
