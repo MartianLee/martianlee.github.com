@@ -84,7 +84,7 @@ That one is answerable, because you can put **two servers that return the same r
 
 Each pair shares the runtime, the HTTP server, the driver, the MySQL wire protocol, the CPU limit and the machine. **The only difference is the framework and the ORM.** Because the subtraction happens inside one runtime, the result is not contaminated by the fact that Go is faster than Ruby.
 
-I will call that difference the **magic tax**.
+I will call that difference the **magic tax**. In everyday terms it is a premium. Rails hands you migrations, callbacks and `post.user` in a single line, and the Rails premium is what that convenience costs.
 
 ```mermaid
 flowchart LR
@@ -160,6 +160,8 @@ Normalised to one core, one process, one thread.
 | python-bare | WSGI + raw SQL          | 1,911 |        0.234 ms |  27.7 MB |
 | go          | Gin + GORM              | 3,420 |        0.277 ms |  25.4 MB |
 | go-bare     | net/http + database/sql | 7,986 |        0.110 ms |  15.4 MB |
+
+<MagicTaxStack lang="en" />
 
 Divided inside each pair, that is the magic tax:
 
