@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "dsh-shell service, providers and consumers",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "p1",
+      "type": "backend",
+      "label": "Provider: dsh-bash-local",
+      "sublabel": "spawns via ctx.subprocess",
+      "pos": [60, 120],
+      "size": [240, 64]
+    },
+    {
+      "id": "p2",
+      "type": "backend",
+      "label": "Provider: dsh-bash-sandbox",
+      "sublabel": "ctx.sandbox wraps argv",
+      "pos": [60, 290],
+      "size": [240, 64]
+    },
+    {
+      "id": "p3",
+      "type": "backend",
+      "label": "Provider: dsh-pwsh-local",
+      "sublabel": "Windows path",
+      "pos": [60, 460],
+      "size": [240, 64]
+    },
+    {
+      "id": "def",
+      "type": "messagebus",
+      "label": "Definition: dsh-shell",
+      "sublabel": "abstract ShellExecutor",
+      "pos": [460, 290],
+      "size": [230, 64]
+    },
+    {
+      "id": "c1",
+      "type": "backend",
+      "label": "Consumer: dsh-tool-bash",
+      "sublabel": "inject: tools, shell",
+      "pos": [850, 190],
+      "size": [230, 64]
+    },
+    {
+      "id": "c2",
+      "type": "external",
+      "label": "Consumer: hook bridges",
+      "sublabel": "Claude Code · Codex",
+      "pos": [850, 390],
+      "size": [230, 64]
+    }
+  ],
+  "connections": [
+    {
+      "from": "p1",
+      "to": "def",
+      "variant": "emphasis"
+    },
+    {
+      "from": "p2",
+      "to": "def",
+      "variant": "emphasis"
+    },
+    {
+      "from": "p3",
+      "to": "def",
+      "variant": "emphasis"
+    },
+    {
+      "from": "def",
+      "to": "c1",
+      "label": "injected",
+      "variant": "emphasis"
+    },
+    {
+      "from": "def",
+      "to": "c2",
+      "label": "injected",
+      "variant": "emphasis"
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Archify pipeline",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tt-a1i/archify",
+      "revision": "6db72a9aea3d0f67a6a034e41f8a5491476a11c1"
+    },
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "skill",
+      "type": "frontend",
+      "label": "SKILL.md",
+      "sublabel": "authoring contract",
+      "tag": "prompt dialect",
+      "pos": [60, 120],
+      "size": [160, 64],
+      "sources": [
+        {
+          "path": "archify/SKILL.md",
+          "line": 1,
+          "end_line": 137,
+          "label": "authoring path"
+        }
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "external",
+      "label": "Agent host",
+      "sublabel": "Claude Code · Codex",
+      "pos": [60, 290],
+      "size": [160, 64]
+    },
+    {
+      "id": "ir",
+      "type": "messagebus",
+      "label": "JSON IR",
+      "sublabel": "typed spec",
+      "pos": [340, 290],
+      "size": [160, 64]
+    },
+    {
+      "id": "schemas",
+      "type": "security",
+      "label": "5 schemas",
+      "sublabel": "generated validators",
+      "tag": "fail-closed",
+      "pos": [490, 120],
+      "size": [150, 64],
+      "sources": [
+        {
+          "path": "archify/schemas/architecture.schema.json",
+          "line": 1,
+          "end_line": 178,
+          "label": "architecture"
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "database",
+      "label": "--repo-root",
+      "sublabel": "path + revision check",
+      "pos": [660, 120],
+      "size": [150, 64]
+    },
+    {
+      "id": "validate",
+      "type": "security",
+      "label": "validate",
+      "sublabel": "9 showcase checks",
+      "pos": [620, 290],
+      "size": [160, 64],
+      "sources": [
+        {
+          "path": "archify/bin/archify.mjs",
+          "line": 1,
+          "end_line": 2091,
+          "label": "CLI entry"
+        }
+      ]
+    },
+    {
+      "id": "renderers",
+      "type": "backend",
+      "label": "5 renderers",
+      "sublabel": "deterministic SVG",
+      "tag": "no auto-layout",
+      "pos": [900, 290],
+      "size": [160, 64],
+      "sources": [
+        {
+          "path": "archify/renderers/architecture/render-architecture.mjs",
+          "label": "architecture"
+        }
+      ]
+    },
+    {
+      "id": "deliver",
+      "type": "backend",
+      "label": "deliver",
+      "sublabel": "snapshot · SHA-256",
+      "pos": [900, 460],
+      "size": [160, 64]
+    },
+    {
+      "id": "html",
+      "type": "cloud",
+      "label": "Single HTML",
+      "sublabel": "inline SVG + viewer",
+      "pos": [620, 460],
+      "size": [160, 64]
+    },
+    {
+      "id": "visual",
+      "type": "security",
+      "label": "visual-check",
+      "sublabel": "real browser probe",
+      "pos": [340, 460],
+      "size": [160, 64],
+      "sources": [
+        {
+          "path": "archify/bin/visual-check.mjs",
+          "line": 1,
+          "end_line": 829,
+          "label": "browser evidence"
+        }
+      ]
+    },
+    {
+      "id": "compare",
+      "type": "backend",
+      "label": "compare",
+      "sublabel": "Before · Delta · After",
+      "pos": [60, 460],
+      "size": [160, 64],
+      "sources": [
+        {
+          "path": "archify/delta/architecture-delta.mjs",
+          "line": 1,
+          "end_line": 1221,
+          "label": "delta engine"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "skill",
+      "to": "agent",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "agent",
+      "to": "ir",
+      "label": "write IR",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ir",
+      "to": "validate",
+      "variant": "emphasis"
+    },
+    {
+      "from": "schemas",
+      "to": "validate",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "repo",
+      "to": "validate",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "validate",
+      "to": "renderers",
+      "label": "freeze on pass",
+      "variant": "emphasis"
+    },
+    {
+      "from": "renderers",
+      "to": "deliver",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "deliver",
+      "to": "html",
+      "label": "atomic commit",
+      "variant": "emphasis"
+    },
+    {
+      "from": "html",
+      "to": "visual",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ir",
+      "to": "compare",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ]
+}

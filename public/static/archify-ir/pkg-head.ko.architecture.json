@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "dsh 플러그인이 싣는 Archify 스킬 2.17.0-dev.1",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "skill",
+      "type": "frontend",
+      "label": "SKILL.md",
+      "sublabel": "저작 규약",
+      "pos": [60, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "cli",
+      "type": "backend",
+      "label": "CLI",
+      "sublabel": "validate · deliver",
+      "pos": [340, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "schemas",
+      "type": "security",
+      "label": "스키마 5종",
+      "sublabel": "workflow v2",
+      "pos": [340, 120],
+      "size": [180, 64]
+    },
+    {
+      "id": "renderers",
+      "type": "backend",
+      "label": "렌더러 5종",
+      "sublabel": "결정론적 SVG",
+      "pos": [620, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "viewer",
+      "type": "frontend",
+      "label": "뷰어 런타임",
+      "sublabel": "en · zh-CN 로컬라이제이션",
+      "pos": [900, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "brands",
+      "type": "cloud",
+      "label": "브랜드 마크",
+      "sublabel": "digest 고정",
+      "pos": [620, 120],
+      "size": [180, 64]
+    },
+    {
+      "id": "upd",
+      "type": "external",
+      "label": "업데이트 알림",
+      "sublabel": "알림만, 설치 안 함",
+      "pos": [340, 460],
+      "size": [180, 64]
+    }
+  ],
+  "connections": [
+    {
+      "from": "skill",
+      "to": "cli",
+      "label": "명령 호출",
+      "variant": "emphasis",
+      "id": "skill_cli"
+    },
+    {
+      "from": "cli",
+      "to": "schemas",
+      "label": "검증",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "id": "cli_schemas"
+    },
+    {
+      "from": "cli",
+      "to": "renderers",
+      "label": "렌더",
+      "variant": "emphasis",
+      "id": "cli_renderers"
+    },
+    {
+      "from": "renderers",
+      "to": "viewer",
+      "label": "임베드",
+      "variant": "emphasis",
+      "id": "renderers_viewer"
+    },
+    {
+      "from": "renderers",
+      "to": "brands",
+      "label": "선택 삽입",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "id": "renderers_brands"
+    },
+    {
+      "from": "cli",
+      "to": "upd",
+      "label": "버전 확인",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 40,
+      "id": "cli_upd"
+    }
+  ]
+}

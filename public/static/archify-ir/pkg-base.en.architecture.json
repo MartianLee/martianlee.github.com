@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Archify Skill 2.14.0 as bundled by the dsh plugin",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "skill",
+      "type": "frontend",
+      "label": "SKILL.md",
+      "sublabel": "authoring contract",
+      "pos": [60, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "cli",
+      "type": "backend",
+      "label": "CLI",
+      "sublabel": "validate · deliver",
+      "pos": [340, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "schemas",
+      "type": "security",
+      "label": "5 schemas",
+      "sublabel": "workflow v1",
+      "pos": [340, 120],
+      "size": [180, 64]
+    },
+    {
+      "id": "renderers",
+      "type": "backend",
+      "label": "5 renderers",
+      "sublabel": "deterministic SVG",
+      "pos": [620, 290],
+      "size": [180, 64]
+    },
+    {
+      "id": "viewer",
+      "type": "frontend",
+      "label": "Viewer runtime",
+      "sublabel": "fixed English UI",
+      "pos": [900, 290],
+      "size": [180, 64]
+    }
+  ],
+  "connections": [
+    {
+      "from": "skill",
+      "to": "cli",
+      "label": "invokes",
+      "variant": "emphasis",
+      "id": "skill_cli"
+    },
+    {
+      "from": "cli",
+      "to": "schemas",
+      "label": "validates",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "id": "cli_schemas"
+    },
+    {
+      "from": "cli",
+      "to": "renderers",
+      "label": "renders",
+      "variant": "emphasis",
+      "id": "cli_renderers"
+    },
+    {
+      "from": "renderers",
+      "to": "viewer",
+      "label": "embeds",
+      "variant": "emphasis",
+      "id": "renderers_viewer"
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Archify 저작 루프",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "author",
+      "label": "에이전트 저작"
+    },
+    {
+      "id": "gate",
+      "label": "결정론적 게이트"
+    },
+    {
+      "id": "evidence",
+      "label": "증거와 수용"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p_author",
+      "label": "저작",
+      "fromCol": 0,
+      "toCol": 0
+    },
+    {
+      "id": "p_gate",
+      "label": "기계가 판정하는 구간",
+      "fromCol": 1,
+      "toCol": 3,
+      "variant": "security"
+    },
+    {
+      "id": "p_accept",
+      "label": "수용",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": ["draft", "validate", "deliver", "vcheck", "human"],
+  "nodes": [
+    {
+      "id": "draft",
+      "lane": "author",
+      "col": 0,
+      "type": "frontend",
+      "label": "IR 후보 작성",
+      "sublabel": "코드보다 파일이 먼저",
+      "width": 150
+    },
+    {
+      "id": "validate",
+      "lane": "gate",
+      "col": 1,
+      "type": "security",
+      "label": "validate",
+      "sublabel": "showcase 9개 검사",
+      "width": 150
+    },
+    {
+      "id": "fix",
+      "lane": "author",
+      "col": 2,
+      "type": "backend",
+      "label": "진단 1건만 수정",
+      "sublabel": "supportedFixes 중에서",
+      "width": 158
+    },
+    {
+      "id": "halt",
+      "lane": "author",
+      "col": 3,
+      "type": "external",
+      "label": "중단하고 보고",
+      "sublabel": "두 라운드 개선 없음",
+      "width": 150
+    },
+    {
+      "id": "deliver",
+      "lane": "gate",
+      "col": 3,
+      "type": "backend",
+      "label": "deliver",
+      "sublabel": "명세 바이트 동결",
+      "width": 150
+    },
+    {
+      "id": "vcheck",
+      "lane": "evidence",
+      "col": 4,
+      "type": "security",
+      "label": "visual-check",
+      "sublabel": "실제 Chrome 측정",
+      "width": 152
+    },
+    {
+      "id": "human",
+      "lane": "evidence",
+      "col": 5,
+      "type": "external",
+      "label": "사람의 지각 검토",
+      "sublabel": "도구가 대신 못 함",
+      "width": 158
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "draft",
+      "to": "validate",
+      "label": "후보 제출",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e2",
+      "from": "validate",
+      "to": "fix",
+      "label": "진단 + 증거",
+      "role": "error"
+    },
+    {
+      "id": "e3",
+      "from": "fix",
+      "to": "validate",
+      "label": "재검증",
+      "role": "return"
+    },
+    {
+      "id": "e4",
+      "from": "validate",
+      "to": "deliver",
+      "label": "0 오류 0 경고",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e5",
+      "from": "fix",
+      "to": "halt",
+      "label": "최소치 정체",
+      "role": "branch"
+    },
+    {
+      "id": "e6",
+      "from": "deliver",
+      "to": "vcheck",
+      "label": "동결된 HTML",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e7",
+      "from": "vcheck",
+      "to": "human",
+      "label": "측정은 승인이 아님",
+      "variant": "emphasis",
+      "role": "main"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": ["draft"],
+    "allowedTerminals": ["human", "halt"],
+    "requiredEdges": [
+      {
+        "from": "validate",
+        "to": "fix"
+      },
+      {
+        "from": "fix",
+        "to": "validate"
+      }
+    ],
+    "requiredPaths": [
+      {
+        "from": "draft",
+        "to": "human"
+      }
+    ]
+  }
+}

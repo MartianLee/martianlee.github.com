@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "dsh-shell 서비스 정의와 제공자·소비자",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "p1",
+      "type": "backend",
+      "label": "제공자: dsh-bash-local",
+      "sublabel": "ctx.subprocess로 spawn",
+      "pos": [60, 120],
+      "size": [240, 64]
+    },
+    {
+      "id": "p2",
+      "type": "backend",
+      "label": "제공자: dsh-bash-sandbox",
+      "sublabel": "ctx.sandbox로 argv 래핑",
+      "pos": [60, 290],
+      "size": [240, 64]
+    },
+    {
+      "id": "p3",
+      "type": "backend",
+      "label": "제공자: dsh-pwsh-local",
+      "sublabel": "Windows 경로",
+      "pos": [60, 460],
+      "size": [240, 64]
+    },
+    {
+      "id": "def",
+      "type": "messagebus",
+      "label": "서비스 정의: dsh-shell",
+      "sublabel": "abstract ShellExecutor",
+      "pos": [460, 290],
+      "size": [230, 64]
+    },
+    {
+      "id": "c1",
+      "type": "backend",
+      "label": "소비자: dsh-tool-bash",
+      "sublabel": "inject: tools, shell",
+      "pos": [850, 190],
+      "size": [230, 64]
+    },
+    {
+      "id": "c2",
+      "type": "external",
+      "label": "소비자: 훅 브리지",
+      "sublabel": "Claude Code · Codex",
+      "pos": [850, 390],
+      "size": [230, 64]
+    }
+  ],
+  "connections": [
+    {
+      "from": "p1",
+      "to": "def",
+      "variant": "emphasis"
+    },
+    {
+      "from": "p2",
+      "to": "def",
+      "variant": "emphasis"
+    },
+    {
+      "from": "p3",
+      "to": "def",
+      "variant": "emphasis"
+    },
+    {
+      "from": "def",
+      "to": "c1",
+      "label": "inject 주입",
+      "variant": "emphasis"
+    },
+    {
+      "from": "def",
+      "to": "c2",
+      "label": "inject 주입",
+      "variant": "emphasis"
+    }
+  ]
+}
