@@ -1,5 +1,5 @@
 // data/charts/framework-magic-tax.ts
-// 본문 5장 「마법세 — 결과」 표와 같은 값만 담는다. 여기서 새로 계산하는 수치는 없다.
+// 본문 5장 「추상화 비용 — 결과」 표와 같은 값만 담는다. 여기서 새로 계산하는 수치는 없다.
 //
 // 출처: https://github.com/MartianLee/study-rails-compare
 // 측정 조건: Docker Linux 컨테이너 + MySQL 8.4, 3회 독립 측정의 중앙값,
@@ -25,7 +25,7 @@ export interface Pair {
   cpuRatio: number
 }
 
-/** 마법세가 큰 순서. 본문 표의 행 순서(rails, node, python, go)와는 다르다. */
+/** 추상화 비용이 큰 순서. 본문 표의 행 순서(rails, node, python, go)와는 다르다. */
 export const pairs: Pair[] = [
   { id: 'ruby', runtime: 'Ruby', fullCpu: 1.113, bareCpu: 0.145, cpuRatio: 7.67 },
   { id: 'python', runtime: 'Python', fullCpu: 1.439, bareCpu: 0.234, cpuRatio: 6.14 },
@@ -72,16 +72,16 @@ export const t: Record<Lang, Labels> = {
       node: 'node:http + raw SQL',
       go: 'net/http + database/sql',
     },
-    tableCols: ['Runtime', 'Raw SQL (ms)', 'Full stack (ms)', 'Magic tax'],
+    tableCols: ['Runtime', 'Raw SQL (ms)', 'Full stack (ms)', 'Abstraction cost'],
   },
   ko: {
-    title: '요청당 CPU를 본체와 마법세로 가른 것.',
+    title: '요청당 CPU를 본체와 추상화 비용으로 가른 것.',
     caption:
       '어두운 칸은 같은 서버를 직접 SQL로 돌렸을 때의 값이고, 주황 칸은 프레임워크와 ORM이 그 위에 더 쓴 몫입니다. 코어 1개 · 프로세스 1개 · 스레드 1개로 정규화한 값입니다.',
     source: '측정',
     sourceName: 'study-rails-compare, 3회 중앙값',
     legendBase: '본체 · 같은 서버 + 직접 SQL',
-    legendTax: '마법세 · 프레임워크 + ORM이 더 쓴 몫',
+    legendTax: '추상화 비용 · 프레임워크 + ORM이 더 쓴 몫',
     unit: 'ms',
     full: {
       ruby: 'Rails 8 + Active Record',
@@ -95,6 +95,6 @@ export const t: Record<Lang, Labels> = {
       node: 'node:http + 직접 SQL',
       go: 'net/http + database/sql',
     },
-    tableCols: ['런타임', '본체 (ms)', '전체 (ms)', '마법세'],
+    tableCols: ['런타임', '본체 (ms)', '전체 (ms)', '추상화 비용'],
   },
 }

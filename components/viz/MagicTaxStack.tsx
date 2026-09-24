@@ -1,7 +1,7 @@
 import { AXIS_MAX, AXIS_TICKS, pairs, t, type Lang } from '@/data/charts/framework-magic-tax'
 
 /**
- * 요청당 CPU를 막대 하나로 그리고, 그 안에서 본체와 마법세를 가른다.
+ * 요청당 CPU를 막대 하나로 그리고, 그 안에서 본체와 추상화 비용을 가른다.
  *
  * 상호작용이 없으므로 클라이언트 컴포넌트가 아니다 — JS를 한 바이트도 보내지 않는다.
  * 3D viz들과 달리 캔버스가 없어 VizFrame을 쓰지 않지만, figure + figcaption + 출처 +
