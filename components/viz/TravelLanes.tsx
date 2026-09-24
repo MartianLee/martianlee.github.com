@@ -1,11 +1,12 @@
 // components/viz/TravelLanes.tsx
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { travel, t, type Lang } from '@/data/charts/carbon-basics-2'
 import { useThreeScene, type SceneBuilder } from './useThreeScene'
 import { discSprite, makePoints, disposePoints } from './three-utils'
 import VizFrame from './VizFrame'
+import VizScrubber from './VizScrubber'
 
 const LANE_GAP = 3.4
 // 이동 폭을 좁게 잡아야 가장 긴 꼬리(항공 22m)까지 화면 안에 다 들어온다. 꼬리가 잘리면
@@ -20,6 +21,24 @@ const TAIL_REF_G_PER_PKM = 246
 const TAIL_REF_LEN = 22
 const TAIL_Y_MAX = 0.8
 const TAIL_Z_JITTER = 0.4
+// 꼬리 끝 입자일수록(reach가 클수록) 전체 길이까지 자라는 데 진행도가 더 필요하다.
+// 0.4로 두면 한 바퀴의 앞 40%에서 꼬리가 펼쳐지고 나머지 60%는 다 자란 채로 유지된다.
+const TAIL_LAG_SPAN = 0.4
+// 꼬리 끝은 이 비율까지만 어두워진다(0이면 완전히 사라져 버려서 바닥을 둔다)
+const TAIL_FADE_FLOOR = 0.35
+const SETTLED_P = (SETTLED_X - MOVER_MIN_X) / MOVER_RANGE
+
+/**
+ * 렌더 루프와 React가 공유하는 상태(리렌더 없이 매 프레임 읽는다).
+ * p는 한 바퀴 안에서의 진행도(0에서 1). 모듈 싱글턴이라 마운트마다 초기화한다.
+ */
+interface Shared {
+  p: number
+  playing: boolean
+  t0: number
+  onP?: (p: number) => void
+}
+const shared: Shared = { p: 0, playing: true, t0: 0 }
 
 /** 레인 i의 z좌표. 수단이 7개이므로 가운데 레인이 z=0에 오도록 대칭 배치한다. */
 function laneZ(i: number): number {
@@ -55,9 +74,14 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     mover: InstanceType<typeof THREE.Mesh>
     points: ReturnType<typeof makePoints>
     attr: InstanceType<typeof THREE.BufferAttribute>
-    dx: Float32Array
-    dy: Float32Array
+    // reach: 이동체에서 얼마나 뒤쪽인지(0=이동체 바로 뒤, 1=꼬리 끝). 길이·자라는 속도·
+    // 위로 뜨는 정도·색 바램이 모두 이 하나의 값에서 파생된다.
+    reach: Float32Array
+    // 이 진행도(threshold)에 도달해야 해당 입자가 완전히 펼쳐진다(threshold = reach * LAG_SPAN)
+    threshold: Float32Array
+    yMax: Float32Array
     dz: Float32Array
+    tailLen: number
     z: number
   }[] = []
 
@@ -78,20 +102,30 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     // 꼬리 길이만이 배출량 차이를 나타낸다(이 장면의 핵심).
     const count = Math.round(item.gPerPkm / 2)
     const tailLen = (item.gPerPkm / TAIL_REF_G_PER_PKM) * TAIL_REF_LEN
-    const dx = new Float32Array(count)
-    const dy = new Float32Array(count)
+    const reach = new Float32Array(count)
+    const threshold = new Float32Array(count)
+    const yMax = new Float32Array(count)
     const dz = new Float32Array(count)
     const positions = new Float32Array(count * 3)
+    const colors = new Float32Array(count * 3)
     for (let j = 0; j < count; j++) {
-      // 이동체 뒤쪽(x가 작은 쪽)으로만 흩뿌린다
-      dx[j] = -Math.random() * tailLen
-      dy[j] = Math.random() * TAIL_Y_MAX
+      reach[j] = Math.random()
+      threshold[j] = reach[j] * TAIL_LAG_SPAN
+      // 뒤로 갈수록 더 뜬다. 무작위 계수를 곱해 줄 세운 듯 나란하지 않게 흩뜬다.
+      yMax[j] = reach[j] * TAIL_Y_MAX * (0.4 + Math.random() * 0.6)
       dz[j] = (Math.random() * 2 - 1) * TAIL_Z_JITTER
+      // 꼬리 끝일수록 어둡게(추가 블렌딩이라 어두워질수록 옅어져 보인다)
+      const fade = 1 - reach[j] * (1 - TAIL_FADE_FLOOR)
+      colors[j * 3] = fade
+      colors[j * 3 + 1] = fade
+      colors[j * 3 + 2] = fade
     }
+    // 항공만 살짝 더 밝은 재질을 따로 둔다. 가장 긴 꼬리가 이 장면의 요지라서다.
     const points = makePoints(THREE, positions, {
-      size: 1.1,
-      color: '#e6a760',
-      opacity: 0.8,
+      size: item.id === 'flight' ? 1.3 : 1.1,
+      color: item.id === 'flight' ? '#ffd9a3' : '#e6a760',
+      vertexColors: colors,
+      opacity: item.id === 'flight' ? 0.95 : 0.8,
       sprite,
       additive: true,
     })
@@ -99,23 +133,31 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     const attr = points.geometry.getAttribute('position') as InstanceType<
       typeof THREE.BufferAttribute
     >
-    lanes.push({ mover, points, attr, dx, dy, dz, z })
+    lanes.push({ mover, points, attr, reach, threshold, yMax, dz, tailLen, z })
   })
 
-  // 이동체를 x에 두고 모든 레인의 이동체·꼬리 입자를 그 x 기준으로 다시 계산한다
-  function place(x: number) {
+  // p(0~1)는 이동체가 레인을 한 번 지나가는 진행도. 입자마다 threshold가 달라 뒤쪽
+  // 입자일수록 늦게 완전히 펼쳐지므로(느리게 따라붙으므로) 꼬리가 덩어리째 끌려가는
+  // 대신 서서히 풀려나가는 것처럼 보인다. 다 펼쳐진 뒤의 최대 길이는 growth가 1로
+  // 수렴하는 reach * tailLen이라 기존과 같은 배출량 순서를 그대로 지킨다.
+  function place(p: number) {
+    const moverX = MOVER_MIN_X + p * MOVER_RANGE
     for (const lane of lanes) {
-      lane.mover.position.x = x
+      lane.mover.position.x = moverX
       const arr = lane.attr.array as Float32Array
-      for (let j = 0; j < lane.dx.length; j++) {
-        arr[j * 3] = x + lane.dx[j]
-        arr[j * 3 + 1] = lane.dy[j]
+      for (let j = 0; j < lane.reach.length; j++) {
+        const th = lane.threshold[j]
+        const raw = th <= 1e-6 ? 1 : Math.min(p / th, 1)
+        const growth = raw * raw * (3 - 2 * raw) // smoothstep
+        const back = lane.reach[j] * lane.tailLen * growth
+        arr[j * 3] = moverX - back
+        arr[j * 3 + 1] = lane.yMax[j] * growth
         arr[j * 3 + 2] = lane.z + lane.dz[j]
       }
       lane.attr.needsUpdate = true
     }
   }
-  place(MOVER_MIN_X)
+  place(0)
 
   // 카메라가 고정이라 레인 라벨 위치는 리사이즈 때만 다시 계산하면 된다
   const v = new THREE.Vector3()
@@ -134,20 +176,26 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     })
   }
 
-  // null이 아니면 reduced-motion으로 고정된 상태이므로 render()가 더 이상 x를 계산하지 않는다
-  let frozenX: number | null = null
+  // 슬라이더는 100단계로만 알린다. 매 프레임 setState하면 초당 60번 리렌더된다.
+  let lastQ = -1
 
   return {
-    // reduced-motion: 이동체를 중간 지점에 두고 꼬리를 한 번만 계산한 상태로 고정한다
+    // reduced-motion: 이동체를 중간 지점에 두고 꼬리가 다 자란 상태로 고정한다
     settle() {
-      frozenX = SETTLED_X
-      place(SETTLED_X)
+      shared.playing = false
+      shared.p = SETTLED_P
     },
     render(ts) {
-      if (frozenX === null) {
-        const p = (ts % PERIOD_MS) / PERIOD_MS
-        place(MOVER_MIN_X + p * MOVER_RANGE)
+      if (shared.playing) {
+        if (!shared.t0) shared.t0 = ts - shared.p * PERIOD_MS
+        shared.p = ((ts - shared.t0) % PERIOD_MS) / PERIOD_MS
+        const q = Math.round(shared.p * 100)
+        if (q !== lastQ) {
+          lastQ = q
+          shared.onP?.(shared.p)
+        }
       }
+      place(shared.p)
       renderer.render(scene, camera)
       projectLabels()
     },
@@ -170,8 +218,33 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
 
 export default function TravelLanes({ lang }: { lang: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [progress, setProgress] = useState(0)
+  const [playing, setPlaying] = useState(true)
+  useEffect(() => {
+    shared.p = 0
+    shared.playing = true
+    shared.t0 = 0
+    shared.onP = setProgress
+    return () => {
+      shared.onP = undefined
+    }
+  }, [])
   const status = useThreeScene(canvasRef, build)
   const L = t[lang]
+
+  const scrub = (v: number) => {
+    shared.playing = false
+    shared.p = v
+    setPlaying(false)
+    setProgress(v)
+  }
+  const toggle = () => {
+    const next = !playing
+    shared.playing = next
+    if (next) shared.t0 = 0
+    setPlaying(next)
+  }
+
   return (
     <VizFrame
       title={L.travelTitle}
@@ -197,6 +270,15 @@ export default function TravelLanes({ lang }: { lang: Lang }) {
               <div className="tabular-nums opacity-80">{item.gPerPkm} g</div>
             </div>
           ))}
+          <VizScrubber
+            playing={playing}
+            onToggle={toggle}
+            value={progress}
+            onScrub={scrub}
+            playLabel={L.play}
+            pauseLabel={L.pause}
+            ariaLabel={L.progress}
+          />
         </>
       }
       fallback={{

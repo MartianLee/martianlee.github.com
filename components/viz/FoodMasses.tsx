@@ -136,12 +136,19 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
           shared.onP?.(shared.p)
         }
       }
-      const raw = Math.min((shared.p * CYCLE_MS) / REVEAL_MS, 1)
-      const p = raw < 0.5 ? 4 * raw * raw * raw : 1 - Math.pow(-2 * raw + 2, 3) / 2
+      const elapsed = shared.p * CYCLE_MS
+      const raw = Math.min(elapsed / REVEAL_MS, 1)
+      // ease-out quint: 초반은 활기차게 움직이다 끝에서는 브레이크 없이 아주 천천히 멈춰 선다
+      const p = 1 - Math.pow(1 - raw, 5)
       const cx = 2 + p * (totalWidth / 2 - 2)
       const dist = 9 + p * 19
       camera.position.set(cx + dist * 0.26, 2 + p * 5.4, dist)
       camera.lookAt(cx, 0.8 + p * 1.5, 0)
+      // hold 구간에서만 소고기 테두리가 3초 주기로 천천히 숨쉰다. shared.p에서 그대로 값을
+      // 끌어오므로 일시정지·스크럽 상태에서는 shared.p가 멈춰 있어 화면도 같이 멈춘다.
+      const holdElapsed = elapsed - REVEAL_MS
+      beefEdgeMat.opacity =
+        holdElapsed >= 0 ? 0.875 + 0.125 * Math.sin((holdElapsed / 3000) * Math.PI * 2) : 0.9
       renderer.render(scene, camera)
       project()
     },

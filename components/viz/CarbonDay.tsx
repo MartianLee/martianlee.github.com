@@ -17,6 +17,9 @@ import VizScrubber from './VizScrubber'
 const STEP_MS = 1400
 const RISE_MS = 900
 const PAUSE_MS = 2000
+// 가장 큰 항목(점심)이 다 올라온 뒤 테두리 강조가 지속되는 시간과 라벨이 뜨는 높이
+const HILITE_MS = 1200
+const HILITE_LIFT_PX = 6
 const labelRefs: (HTMLDivElement | null)[] = []
 let totalNumEl: HTMLSpanElement | null = null
 
@@ -58,6 +61,8 @@ const placed = place()
 const trackWidth = placed[placed.length - 1].x + placed[placed.length - 1].size / 2
 const trackCenterX = trackWidth / 2
 const CYCLE_MS = (placed.length - 1) * STEP_MS + RISE_MS + PAUSE_MS
+// 하이라이트 대상은 데이터에서 가장 큰 kg 항목을 찾아 정한다(인덱스를 하드코딩하지 않는다)
+const hiliteIndex = placed.reduce((maxI, p, i) => (p.kg > placed[maxI].kg ? i : maxI), 0)
 
 const build: SceneBuilder = (THREE, canvas, renderer) => {
   const scene = new THREE.Scene()
@@ -91,7 +96,22 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     transparent: true,
     opacity: 0,
   })
-  const disposables: { dispose: () => void }[] = [cubeMat, edgeMat, cubeMatFade, edgeMatFade]
+  // 가장 큰 항목(점심)이 다 올라온 순간에만 잠깐 빌려 쓰는 테두리 강조 재질.
+  // 강조 대상이 한 큐브뿐이라 cubeMatFade/edgeMatFade와 같은 이유로 큐브마다 만들지 않는다.
+  const edgeMatHilite = new THREE.LineBasicMaterial({
+    color: '#cf7a3d',
+    transparent: true,
+    opacity: 0.55,
+  })
+  const hiliteRust = new THREE.Color('#cf7a3d')
+  const hiliteWhite = new THREE.Color('#f4efe4')
+  const disposables: { dispose: () => void }[] = [
+    cubeMat,
+    edgeMat,
+    cubeMatFade,
+    edgeMatFade,
+    edgeMatHilite,
+  ]
 
   const cubes: {
     group: InstanceType<typeof THREE.Group>
@@ -122,15 +142,32 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
 
   let lastQ = -1
 
-  const progressFor = (i: number, cycleTs: number): number => {
+  // 상승 구간 안에서의 선형 진행도(0에서 1). progressFor(재질 페이드용)와
+  // scaleFor(큐브 높이용)가 이 값을 각자 다르게 이징한다.
+  const localP = (i: number, cycleTs: number): number => {
     const t0 = i * STEP_MS
     if (cycleTs < t0) return 0
-    const p = Math.min((cycleTs - t0) / RISE_MS, 1)
+    return Math.min((cycleTs - t0) / RISE_MS, 1)
+  }
+  const progressFor = (i: number, cycleTs: number): number => {
+    const p = localP(i, cycleTs)
     return 1 - Math.pow(1 - p, 3)
+  }
+  // 큐브 높이(group.scale.y)에는 살짝 튕기는 오버슈트를 얹는다: 1.0을 넘어 ~1.03까지
+  // 갔다가 제자리로 돌아와 끝에서 뚝 멈추지 않고 자리를 잡는다. p=0/1에서는 정확히
+  // 0/1로 돌아오므로 reduced-motion의 settle()이나 스크러버로 멈춰도 튀는 프레임에 걸리지 않는다.
+  const scaleFor = (i: number, cycleTs: number): number => {
+    const p = localP(i, cycleTs)
+    const c1 = 0.9
+    const c3 = c1 + 1
+    const u = p - 1
+    return 1 + c3 * u * u * u + c1 * u * u
   }
 
   const v = new THREE.Vector3()
-  const project = (progresses: number[]) => {
+  // hiliteLiftPx: 강조 중인 라벨만 위로 들어 올리는 오프셋(px). 두 번째 transform을 얹는
+  // 대신 같은 translate() 문자열 안에 접어 넣는다.
+  const project = (progresses: number[], hiliteLiftPx: number) => {
     const w = canvas.clientWidth
     const h = canvas.clientHeight
     anchors.forEach((a, i) => {
@@ -138,7 +175,8 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
       if (!el) return
       v.set(a.obj.position.x, a.obj.position.y + a.y, a.obj.position.z).project(camera)
       const sx = (v.x * 0.5 + 0.5) * w
-      const sy = (-v.y * 0.5 + 0.5) * h
+      const lift = i === hiliteIndex ? hiliteLiftPx : 0
+      const sy = (-v.y * 0.5 + 0.5) * h - lift
       const onScreen = v.z < 1 && sx > -80 && sx < w + 80
       el.style.transform = `translate(-50%, -100%) translate(${sx}px, ${sy}px)`
       el.style.opacity = onScreen ? String(progresses[i]) : '0'
@@ -164,7 +202,7 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
       cubes.forEach((c, i) => {
         const prog = progresses[i]
         c.group.visible = prog > 0
-        c.group.scale.y = prog
+        c.group.scale.y = scaleFor(i, cycleTs)
         if (prog >= 1) {
           c.mesh.material = cubeMat
           c.edges.material = edgeMat
@@ -176,6 +214,20 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
         }
       })
 
+      // 가장 큰 항목이 다 올라온 순간부터 HILITE_MS 동안 테두리를 러스트에서 흰색으로
+      // 되돌린다. cycleTs는 매 프레임 progress(shared.p)로 다시 계산되므로 경과 시간을
+      // 따로 적산하지 않는다. 스크러버로 앞뒤로 움직여도 그 시점의 진행도만으로 항상
+      // 같은 결과가 나온다.
+      const hiliteElapsed = cycleTs - (hiliteIndex * STEP_MS + RISE_MS)
+      let hiliteK = -1
+      if (hiliteElapsed >= 0 && hiliteElapsed < HILITE_MS) {
+        hiliteK = hiliteElapsed / HILITE_MS
+        edgeMatHilite.color.copy(hiliteRust).lerp(hiliteWhite, hiliteK)
+        cubes[hiliteIndex].edges.material = edgeMatHilite
+      }
+      // 라벨도 같은 진행도로 살짝 들렸다가 되돌아온다(강조 구간의 중간에서 최대)
+      const hiliteLiftPx = hiliteK >= 0 ? HILITE_LIFT_PX * Math.sin(hiliteK * Math.PI) : 0
+
       // 카메라는 하루 전체를 한 프레임에 담은 채 고정한다. 항목을 따라다니면 점심 큐브가
       // 화면 밖으로 밀려나 "점심이 압도적으로 크다"는 이 장면의 요지가 보이지 않는다.
       const sway = shared.playing ? Math.sin(ts * 0.00004) * 0.9 : 0
@@ -183,7 +235,7 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
       camera.lookAt(trackCenterX, 1.5, 0)
 
       renderer.render(scene, camera)
-      project(progresses)
+      project(progresses, hiliteLiftPx)
 
       if (totalNumEl) {
         const allDone = progresses.every((p) => p >= 1)
