@@ -2,7 +2,7 @@
 slug: '2026-09-01-framework-magic-tax'
 title: 'Is Rails Slow? I Built the Same Blog API Eight Times to Price the Framework'
 crawlertitle: 'Is Rails Slow? I Built the Same Blog API Eight Times to Price the Framework'
-summary: '"Rails is slow" is an unanswerable question, because a Rails app and a Go app are never doing the same work. So I narrowed it: inside one runtime, what do the framework and the ORM cost? Four runtimes, each built twice, all returning identical JSON from the identical four SQL statements, measured three times on Docker Linux with MySQL. The magic tax in CPU per request came out at ×7.67 for Ruby, ×6.14 for Python, ×2.62 for Node and ×2.51 for Go — and I counted, object by object, exactly what Active Record builds on every request.'
+summary: '"Rails is slow" is an unanswerable question, because a Rails app and a Go app are never doing the same work. So I narrowed it: inside one runtime, what do the framework and the ORM cost? Four runtimes, each built twice, all returning identical JSON from the identical four SQL statements, measured three times on Docker Linux with MySQL. The abstraction cost in CPU per request came out at ×7.67 for Ruby, ×6.14 for Python, ×2.62 for Node and ×2.51 for Go — and I counted, object by object, exactly what Active Record builds on every request.'
 date: 2026-09-01 18:00:00 +0900
 categories: posts
 tags:
@@ -38,7 +38,7 @@ _This article is mostly written by Claude Code_
 2. [Rewriting it into a question that has an answer](#2-rewriting-it-into-a-question-that-has-an-answer)
 3. [Hello-world measures a router](#3-hello-world-measures-a-router)
 4. [What makes a benchmark believable is the gate, not the numbers](#4-what-makes-a-benchmark-believable-is-the-gate-not-the-numbers)
-5. [The magic tax](#5-the-magic-tax)
+5. [The abstraction cost](#5-the-abstraction-cost)
 6. [What is Active Record actually spending?](#6-what-is-active-record-actually-spending)
 7. [Why god models cost — measuring column count](#7-why-god-models-cost--measuring-column-count)
 8. [Slicing one Rails request into layers](#8-slicing-one-rails-request-into-layers)
@@ -84,7 +84,7 @@ That one is answerable, because you can put **two servers that return the same r
 
 Each pair shares the runtime, the HTTP server, the driver, the MySQL wire protocol, the CPU limit and the machine. **The only difference is the framework and the ORM.** Because the subtraction happens inside one runtime, the result is not contaminated by the fact that Go is faster than Ruby.
 
-I will call that difference the **magic tax**.
+I will call that difference the **abstraction cost**, the far end from a zero-cost abstraction. Rails hands you migrations, callbacks and `post.user` in a single line, and this is what that convenience spends on every request.
 
 ```mermaid
 flowchart LR
@@ -96,7 +96,7 @@ flowchart LR
     GATE["fairness gate<br/>· JSON equal value-for-value<br/>· identical statement set in MySQL's general_log"]
     F --> GATE
     B --> GATE
-    GATE --> T["the difference = magic tax<br/>CPU per request · throughput · memory"]
+    GATE --> T["the difference = abstraction cost<br/>CPU per request · throughput · memory"]
 ```
 
 ## 3. Hello-world measures a router
@@ -146,7 +146,7 @@ There are a few more concessions like it, all written down in [`SPEC.md`](https:
 
 Putting the load generator inside the network is not a preference. Measuring from the macOS host would send every packet through Docker's port forwarder and put that latency in every sample. Host ports are used only for readiness and correctness checks. The load generator itself is in the repo too ([`loadgen/main.go`](https://github.com/MartianLee/study-rails-compare/blob/main/loadgen/main.go), 190 lines of dependency-free Go) — **a benchmark whose measuring instrument is a third-party image nobody can pin is not evidence.**
 
-## 5. The magic tax
+## 5. The abstraction cost
 
 Normalised to one core, one process, one thread.
 
@@ -161,7 +161,9 @@ Normalised to one core, one process, one thread.
 | go          | Gin + GORM              | 3,420 |        0.277 ms |  25.4 MB |
 | go-bare     | net/http + database/sql | 7,986 |        0.110 ms |  15.4 MB |
 
-Divided inside each pair, that is the magic tax:
+<MagicTaxStack lang="en" />
+
+Divided inside each pair, that is the abstraction cost:
 
 | runtime | CPU per request | throughput | memory |
 | ------- | --------------: | ---------: | -----: |
@@ -176,7 +178,7 @@ Three things read out of this.
 
 **② But the same table contains a number pointing the other way.** Ruby with the magic removed — Rack plus raw SQL — costs 0.145 ms per request, which is **3.9× cheaper than Express+Sequelize (0.567 ms) and the same order of magnitude as Gin+GORM (0.277 ms)**. Same language, same web server, same driver; remove Active Record and you get 7.67×. The accurate sentence is not "Ruby is slow" but **"Active Record is expensive."**
 
-**③ And it isn't a Ruby problem.** Django's ORM costs ×6.14. **The amount of magic is the price**, and the two frameworks that do the most of it cost the most. Go's tax is small not because Go is fast but because GORM has no callbacks, no dirty tracking, and no generated association methods.
+**③ And it isn't a Ruby problem.** Django's ORM costs ×6.14. **The amount of magic is the price**, and the two frameworks that do the most of it cost the most. Go's cost is small not because Go is fast but because GORM has no callbacks, no dirty tracking, and no generated association methods.
 
 On memory the folk wisdom inverts. **Express+Sequelize uses 183.7 MB — 1.7× Rails' 107.1 MB.** "Ruby is a memory hog" does not survive an equal-functionality comparison. The impression that Rails eats memory comes not from a heavy runtime but from **having to run several workers**, which is what sections 9 and 10 are about.
 
@@ -347,7 +349,7 @@ Out of all that came the most transferable result in this post.
 
 The reason is structural: a bare stack does so little per request that its throughput is set by **database round-trip latency**. Therefore —
 
-**The magic tax measured as a throughput ratio depends on how fast your database is.** It is at its maximum against a local unloaded MySQL; against a managed database across a network the framework's share shrinks and the ratio falls. **The CPU ratio does not move, because it is a property of the code rather than of the wire.**
+**The abstraction cost measured as a throughput ratio depends on how fast your database is.** It is at its maximum against a local unloaded MySQL; against a managed database across a network the framework's share shrinks and the ratio falls. **The CPU ratio does not move, because it is a property of the code rather than of the wire.**
 
 Quote CPU per request when you quote a multiple; state the database conditions when you quote throughput.
 
@@ -355,7 +357,7 @@ Quote CPU per request when you quote a multiple; state the database conditions w
 
 In a benchmark, the lies live in the silences. So, explicitly:
 
-**Nothing about developer productivity.** The entire reason frameworks exist is missing from every number here. A magic tax of ×7.67 is not an argument against magic; it is **the price tag on it**. Buying with the tag visible differs from buying blind, and that difference is all this post is trying to make.
+**Nothing about developer productivity.** The entire reason frameworks exist is missing from every number here. An abstraction cost of ×7.67 is not an argument against magic; it is **the price tag on it**. Buying with the tag visible differs from buying blind, and that difference is all this post is trying to make.
 
 **Memory is "container working set under load"** (cgroup `memory.current` minus page cache) — the basis on which you are billed and scheduled, not the size of your live data. I did not measure how much a forced GC reclaims; neither V8 nor Ruby promptly returns freed pages to the OS, so the effect runs the same direction for both runtimes.
 

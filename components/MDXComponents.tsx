@@ -9,6 +9,7 @@ import GasMixCloud from './viz/GasMixCloud'
 import AtmosphereTimeline from './viz/AtmosphereTimeline'
 import BudgetTank from './viz/BudgetTank'
 import TonneCubes from './viz/TonneCubes'
+import MagicTaxStack from './viz/MagicTaxStack'
 
 export const components: MDXComponents = {
   Image,
@@ -21,4 +22,5 @@ export const components: MDXComponents = {
   AtmosphereTimeline,
   BudgetTank,
   TonneCubes,
+  MagicTaxStack,
 }
