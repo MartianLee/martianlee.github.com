@@ -25,7 +25,7 @@
     "esbuild": "^0.25.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
-    "image-size": "1.2.1",
+    "image-size": "2.0.3",
     "next": "latest",
     "next-contentlayer2": "latest",
     "next-themes": "^0.4.4",
