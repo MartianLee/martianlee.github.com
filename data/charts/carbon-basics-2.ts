@@ -176,10 +176,9 @@ export const travel: { items: TravelItem[]; source: Source } = {
  * 물건 1개의 생애 배출(kg CO2e)과 단계 비중.
  * makePct = 제조 + 수송, usePct = 사용(충전, 세탁). 폐기는 어느 출처에서도 1% 미만이라
  * 막대에 넣지 않는다.
- * 경계를 맞추기 위해 모두 생애(cradle-to-grave) 기준으로 골랐다. 티셔츠는 같은 Cotton
- * Incorporated 표에서 제조까지 3.4kg, 미국 소비자 세탁 56회까지 더한 8.4kg이 나오므로
- * 8.4를 쓰고 3.4는 본문에서 경계 이야기를 할 때 인용한다.
+ * 경계를 맞추기 위해 모두 생애(cradle-to-grave) 기준으로 골랐다.
  * 운동화는 쓰는 동안 에너지가 들지 않는 제품이라 usePct가 0이다.
+ * 티셔츠만 폐기가 8.6%로 커서 makePct + usePct가 100이 안 된다. 다른 항목은 폐기가 1% 미만이다.
  */
 export interface GoodsItem {
   id: 'laptop' | 'phone' | 'jeans' | 'shoes' | 'tshirt'
@@ -240,23 +239,30 @@ export const goods: GoodsItem[] = [
     },
   },
   {
-    // 면 티셔츠: 제조까지 3.4kg, 미국 소비자 세탁 56회 포함 8.4kg(같은 표에서 계산).
+    // 225g 니트 티셔츠, cradle-to-grave 18,885 kg CO2e per 1,000kg(=4,444벌) -> 4.25kg/벌.
+    // 사용 1.52(36%), 폐기 0.37(8.6%), 나머지 제조+수송 2.36(56%).
+    // 2012년 판(3.4 / 8.4)을 쓰지 않는 이유: 그 연구가 모델링한 것은 티셔츠가 아니라
+    // 니트 골프셔츠(305g)였고, 두 값 모두 표에서 우리가 환산한 것이었다. 2017년 개정판은
+    // 실제 티셔츠를 모델링하고 총합을 인쇄해 두었다.
     id: 'tshirt',
-    totalKg: 8.4,
-    makePct: 40,
-    usePct: 60,
+    totalKg: 4.25,
+    makePct: 56,
+    usePct: 36,
     source: {
-      name: 'Cotton Incorporated, LCA of Cotton Fiber & Fabric',
-      url: 'https://cottontoday.cottoninc.com/wp-content/uploads/2016/08/LCA_Executive_Summary_split-1.pdf',
-      year: 2012,
+      name: 'Cotton Incorporated / thinkstep, LCA Update of Cotton Fiber and Fabric (T-shirt)',
+      url: 'https://cottontoday.cottoninc.com/wp-content/uploads/2019/11/2016-LCA-Full-Report-Update.pdf',
+      year: 2017,
     },
   },
 ]
 
-/** 본문에서 경계 이야기를 할 때 쓰는 티셔츠 3종 값. */
+/**
+ * 본문에서 "같은 티셔츠, 다른 답" 이야기를 할 때 쓰는 두 값.
+ * 차이의 원인은 세탁 가정이다. 앞은 생애 세탁 18.2회에 자연건조 74.7%,
+ * 뒤는 50회 착용에 매회 온수 세탁을 가정한다.
+ */
 export const tshirtBoundary = {
-  gateKg: 3.4,
-  graveKg: 8.4,
+  graveKg: 4.25,
   hotWashKg: 15,
   hotWashSource: {
     name: 'Carbon Trust, International Carbon Flows: Clothing',
