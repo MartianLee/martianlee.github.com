@@ -10,6 +10,7 @@ import AtmosphereTimeline from './viz/AtmosphereTimeline'
 import BudgetTank from './viz/BudgetTank'
 import TonneCubes from './viz/TonneCubes'
 import MagicTaxStack from './viz/MagicTaxStack'
+import StackedBars from './viz/StackedBars'
 
 export const components: MDXComponents = {
   Image,
@@ -23,4 +24,5 @@ export const components: MDXComponents = {
   BudgetTank,
   TonneCubes,
   MagicTaxStack,
+  StackedBars,
 }

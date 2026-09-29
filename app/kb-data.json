@@ -126,6 +126,18 @@
       ]
     },
     {
+      "id": "backend-architecture",
+      "label": "Backend Architecture",
+      "count": 5,
+      "slugs": [
+        "2026-04-18-bloom-filter-membership-check-at-scale",
+        "2026-04-18-redisbloom-signup-architecture",
+        "2026-07-25-bitchat-architecture",
+        "2026-09-01-framework-magic-tax",
+        "2026-09-28-request-layers"
+      ]
+    },
+    {
       "id": "algorithms",
       "label": "Algorithms",
       "count": 4,
@@ -134,17 +146,6 @@
         "2024-01-24-leetcode-1239",
         "2024-01-31-js-small-tricks-for-ps-1",
         "2024-02-21-leetcode-201"
-      ]
-    },
-    {
-      "id": "backend-architecture",
-      "label": "Backend Architecture",
-      "count": 4,
-      "slugs": [
-        "2026-04-18-bloom-filter-membership-check-at-scale",
-        "2026-04-18-redisbloom-signup-architecture",
-        "2026-07-25-bitchat-architecture",
-        "2026-09-01-framework-magic-tax"
       ]
     },
     {
@@ -1313,7 +1314,8 @@
       "2026-09-09-deepseek-harness-hands-on",
       "2026-04-18-superpowers-architecture",
       "2026-09-05-webmcp-explained"
-    ]
+    ],
+    "2026-09-28-request-layers": []
   },
   "postIndex": [
     {
@@ -2973,6 +2975,25 @@
       "topic": "ai-infrastructure",
       "stage": "budding",
       "summary": "Archify has the agent write a typed JSON IR and lets a deterministic compiler turn it into a self-contained HTML artifact. I read the repository end to end and built four diagrams with it, watching what the validator refuses, why deliver, visual-check, and human review are kept apart, and what changes when this blog’s own mermaid is ported over."
+    },
+    {
+      "slug": "2026-09-28-request-layers",
+      "title": "Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart",
+      "shortTitle": "Where Does One Rails Request…",
+      "date": "2026-09-28T09:00:00.000Z",
+      "tags": [
+        "ruby",
+        "rails",
+        "activerecord",
+        "express",
+        "gin",
+        "orm",
+        "benchmark",
+        "performance"
+      ],
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "summary": "One list request, split into four layers (HTTP server, routing and middleware, database queries, ORM) and measured in Rails, Express and Gin. 70% of a Rails request's CPU is Active Record; routing and middleware take 7%."
     }
   ],
   "graph": {
@@ -3073,6 +3094,11 @@
         "count": 4
       },
       {
+        "id": "tag:rails",
+        "label": "rails",
+        "count": 4
+      },
+      {
         "id": "tag:agent-browser",
         "label": "agent-browser",
         "count": 3
@@ -3113,18 +3139,23 @@
         "count": 3
       },
       {
+        "id": "tag:orm",
+        "label": "orm",
+        "count": 3
+      },
+      {
         "id": "tag:playwright",
         "label": "playwright",
         "count": 3
       },
       {
-        "id": "tag:rails",
-        "label": "rails",
+        "id": "tag:react-native",
+        "label": "react-native",
         "count": 3
       },
       {
-        "id": "tag:react-native",
-        "label": "react-native",
+        "id": "tag:ruby",
+        "label": "ruby",
         "count": 3
       },
       {
@@ -3244,6 +3275,10 @@
       },
       {
         "source": "2023-06-01-pg-duplicate-key-voilates",
+        "target": "tag:orm"
+      },
+      {
+        "source": "2023-06-01-pg-duplicate-key-voilates",
         "target": "tag:react-native"
       },
       {
@@ -3261,6 +3296,10 @@
       {
         "source": "2024-02-21-leetcode-201",
         "target": "tag:javascript"
+      },
+      {
+        "source": "2024-09-16-til-ruby-rails",
+        "target": "tag:ruby"
       },
       {
         "source": "2024-09-16-til-ruby-rails",
@@ -4016,7 +4055,15 @@
       },
       {
         "source": "2026-09-01-framework-magic-tax",
+        "target": "tag:ruby"
+      },
+      {
+        "source": "2026-09-01-framework-magic-tax",
         "target": "tag:rails"
+      },
+      {
+        "source": "2026-09-01-framework-magic-tax",
+        "target": "tag:orm"
       },
       {
         "source": "2026-09-05-deepseek-harness-architecture",
@@ -4073,8 +4120,20 @@
       {
         "source": "2026-09-12-archify-architecture",
         "target": "tag:ai-agent"
+      },
+      {
+        "source": "2026-09-28-request-layers",
+        "target": "tag:ruby"
+      },
+      {
+        "source": "2026-09-28-request-layers",
+        "target": "tag:rails"
+      },
+      {
+        "source": "2026-09-28-request-layers",
+        "target": "tag:orm"
       }
     ]
   },
-  "generatedAt": "2026-09-24T16:27:47.168Z"
+  "generatedAt": "2026-09-29T02:36:55.825Z"
 }

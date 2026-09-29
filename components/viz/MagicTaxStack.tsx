@@ -58,7 +58,7 @@ export default function MagicTaxStack({ lang = 'ko' }: { lang?: Lang }) {
               return (
                 <span
                   key={tick}
-                  className={`text-muted absolute top-0 font-mono text-[11px] tabular-nums ${
+                  className={`text-muted absolute top-0 font-mono text-[11px] whitespace-nowrap tabular-nums ${
                     last ? '-translate-x-full' : '-translate-x-1/2'
                   }`}
                   style={{ left: pct(tick) }}
