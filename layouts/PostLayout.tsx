@@ -70,6 +70,12 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
             <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
             <span>·</span>
             <span>{readingTime.text}</span>
+            {content.kind === 'note' && (
+              <>
+                <span>·</span>
+                <span className="text-accent">{t.studyNote}</span>
+              </>
+            )}
           </div>
         </header>
 

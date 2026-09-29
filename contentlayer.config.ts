@@ -116,6 +116,9 @@ export const Blog = defineDocumentType(() => ({
     shortTitle: { type: 'string' },
     topic: { type: 'string' },
     stage: { type: 'enum', options: ['seedling', 'budding', 'evergreen'], default: 'budding' },
+    // 'note' = study note (e.g. AI-assisted repo/paper analysis): kept at its URL and in the KB,
+    // but left out of the /posts list, home and RSS.
+    kind: { type: 'enum', options: ['post', 'note'], default: 'post' },
   },
   computedFields: {
     ...computedFields,

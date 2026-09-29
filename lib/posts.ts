@@ -27,6 +27,11 @@ export function canonicalBlogs(): Blog[] {
   return sortPosts([...bySlug.values()]) as Blog[]
 }
 
+/** Canonical docs shown in listings (home, /posts, RSS): study notes are excluded. */
+export function listedBlogs(): Blog[] {
+  return canonicalBlogs().filter((p) => p.kind !== 'note')
+}
+
 /** A specific language version, or the canonical (English-preferred) when language omitted. */
 export function postBySlug(slug: string, language?: 'en' | 'ko'): Blog | undefined {
   if (language) return allBlogs.find((p) => p.slug === slug && p.language === language)

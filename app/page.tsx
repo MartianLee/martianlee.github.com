@@ -1,4 +1,4 @@
-import { canonicalBlogs, localizedList } from '@/lib/posts'
+import { listedBlogs, localizedList } from '@/lib/posts'
 import Masthead from '@/components/home/Masthead'
 import ProjectsSection from '@/components/home/ProjectsSection'
 import WritingSection from '@/components/home/WritingSection'
@@ -6,7 +6,7 @@ import ExperienceSection from '@/components/home/ExperienceSection'
 import ContactSection from '@/components/home/ContactSection'
 
 export default async function Page() {
-  const posts = localizedList(canonicalBlogs())
+  const posts = localizedList(listedBlogs())
   return (
     <>
       <Masthead />

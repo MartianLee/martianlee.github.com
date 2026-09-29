@@ -1,5 +1,5 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { canonicalBlogs, localizedList } from '@/lib/posts'
+import { listedBlogs, localizedList } from '@/lib/posts'
 import { genPageMetadata } from 'app/seo'
 
 const POSTS_PER_PAGE = 5
@@ -7,7 +7,7 @@ const POSTS_PER_PAGE = 5
 export const metadata = genPageMetadata({ title: 'Posts' })
 
 export default function BlogPage() {
-  const posts = localizedList(canonicalBlogs())
+  const posts = localizedList(listedBlogs())
   const pageNumber = 1
   const initialDisplayPosts = posts.slice(
     POSTS_PER_PAGE * (pageNumber - 1),

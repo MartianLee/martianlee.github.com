@@ -25,6 +25,7 @@ MartianLee's personal blog / digital garden. Next.js App Router + Contentlayer2 
   ---
   ```
 - Optional fields: `draft: true` (unpublished), `lastmod`, `stage` (seedling | budding | evergreen — digital-garden maturity, default budding), `topic`, `canonicalUrl`, `bibliography`, `shortTitle` (≤ 32 chars, label shown on the /kb/graph node; write it in the English file — the KB derives one from the title when absent).
+- `kind: note` marks a study note (e.g. a repo or paper analysis mostly done by AI for personal learning). It keeps its `/posts/<slug>` URL, sitemap entry, tag pages and KB, but is left out of the home page, the `/posts` list and RSS. Put it in **both** the `.mdx` and `.en.mdx` files (listings use the English file). Default is `post`.
 
 ## Writing tone (hard rule)
 
