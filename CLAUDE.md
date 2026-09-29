@@ -30,6 +30,7 @@ MartianLee's personal blog / digital garden. Next.js App Router + Contentlayer2 
 
 - Korean body text uses **formal speech** (경어체: ~입니다 / ~합니다). Never use plain form (~이다 / ~한다).
 - The English version is a natural translation of the same content — no literal/machine-translation style.
+- Post titles (`title`, `crawlertitle`) and section headings (`##`, `###`), KO and EN, never contain an em dash (`—`). Split with `?` or `:`, or rephrase into one sentence.
 
 ## Don't
 

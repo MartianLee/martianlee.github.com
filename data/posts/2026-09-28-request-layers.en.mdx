@@ -1,0 +1,98 @@
+---
+slug: '2026-09-28-request-layers'
+title: 'Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart'
+crawlertitle: 'Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart'
+summary: "One list request, split into four layers (HTTP server, routing and middleware, database queries, ORM) and measured in Rails, Express and Gin. 70% of a Rails request's CPU is Active Record; routing and middleware take 7%."
+date: 2026-09-28 18:00:00 +0900
+categories: posts
+tags: ['ruby', 'rails', 'activerecord', 'express', 'gin', 'orm', 'benchmark', 'performance']
+topic: backend-architecture
+stage: budding
+author: MartianLee
+---
+
+## 1. Splitting one request into layers
+
+[The first post](/posts/2026-09-01-framework-magic-tax) built the same blog API twice in each language and measured how much more the framework-and-ORM version costs than the raw-SQL one. For Rails, CPU per request was 7.67 times higher.
+
+That ratio says nothing about where inside the request the cost goes. Receiving the HTTP request, routing it, passing through middleware, querying the database, turning rows into models, writing JSON: which of these is slow? So this time I split one request into layers and measured it the same way in Rails, Express (Node) and Gin (Go).
+
+## 2. Four endpoints, each adding one thing
+
+Each runtime got four endpoints. Each one adds **exactly one thing** to the one before it.
+
+| endpoint                     | what it does                                                      | what it adds           |
+| ---------------------------- | ----------------------------------------------------------------- | ---------------------- |
+| A. bare server + static JSON | receives HTTP without a framework, returns fixed JSON             | HTTP server and JSON   |
+| B. framework + static JSON   | returns the same JSON through the framework's router and renderer | routing and middleware |
+| C. framework + raw SQL       | fetches the post list with four hand-written statements           | database queries       |
+| D. framework + ORM           | fetches the same list through the ORM (the real list API)         | the ORM                |
+
+So the difference between steps is the cost of that layer: B minus A is routing and middleware, C minus B is the database queries, D minus C is the ORM.
+
+Two things keep it fair. The static JSON is the same 20 posts in all six apps, serialised fresh on every request. C is the bare app's list code moved into the framework unchanged, and it returns JSON byte-identical to D.
+
+The conditions match the first post: one CPU, one process and one thread per app, eight concurrent requests for 10 seconds. CPU time is read from the container's cgroup and divided by the number of requests; the tables show the median of three runs.
+
+## 3. Results
+
+| CPU per request | HTTP server and JSON (A) | routing and middleware (B−A) | database (C−B) | ORM (D−C) | total (D) |
+| --------------- | -----------------------: | ---------------------------: | -------------: | --------: | --------: |
+| Rails           |                 0.056 ms |                     0.086 ms |       0.210 ms |  0.804 ms |  1.155 ms |
+| Express         |                 0.019 ms |                     0.011 ms |       0.215 ms |  0.227 ms |  0.472 ms |
+| Gin             |                 0.017 ms |                     0.002 ms |       0.133 ms |  0.130 ms |  0.283 ms |
+
+<StackedBars chart="request-layers" lang="en" />
+
+The same results as shares:
+
+| share of request CPU | HTTP server and JSON | routing and middleware | database | ORM |
+| -------------------- | -------------------: | ---------------------: | -------: | --: |
+| Rails                |                   5% |                     7% |      18% | 70% |
+| Express              |                   4% |                     2% |      46% | 48% |
+| Gin                  |                   6% |                     1% |      47% | 46% |
+
+**70% of a Rails request's CPU is Active Record.** In Express and Gin the ORM is about as large as the database work; in Rails it is nearly four times the database work.
+
+## 4. Layer by layer
+
+**The HTTP server and JSON output are small everywhere.** Rails (Puma and Rack) spends 0.056 ms, three times Node and Go, but that is 5% of the request.
+
+**Routing and middleware are not large either.** Rails spends 0.086 ms, far more than Express (0.011 ms) or Gin (0.002 ms), yet it is 7% of the request. A Rails API app runs 13 middlewares by default and goes through the router, the controller and the renderer, and all of that comes to 7%. The first post said "Rails the framework takes 11.4%"; that figure included the HTTP server. This time the two are separated.
+
+**Database work costs about the same in all three.** Sending the same four statements and shaping the results into JSON takes 0.13 to 0.21 ms.
+
+One difference in Rails was not explained, though. The same SQL code costs 0.112 ms in the bare app and 0.210 ms inside Rails. The difference in JSON encoding is 0.003 ms, so that is not it, and running the same code alone inside the Rails process costs 0.116 ms, the same as the bare app. What adds 0.1 ms only inside a Rails request was not isolated here, so that 0.1 ms sits inside the Rails database layer in the table.
+
+**Only in Rails does the ORM dominate.** Active Record costs 0.804 ms per request: 3.5 times Sequelize (0.227 ms) and 6.2 times GORM (0.130 ms). Within one request, Active Record alone is more than twice the HTTP server, routing, middleware and database work put together (0.352 ms).
+
+## 5. What is slow inside Active Record?
+
+Looking one level down into the ORM layer, the slowest step in Active Record is **building models**. The query layer, which builds the SQL and receives the result, costs about what Sequelize's does; the cost grows sharply at the step that turns result rows into Active Record records.
+
+And that cost does not come from one record being heavy. This list API turns even the rows of the join table linking posts to tags into records, building 137 records to show 20 posts. The next post compares that step by step with Sequelize and GORM.
+
+## 6. Takeaways
+
+- **A Rails request is slow mostly because of Active Record**: 70% of its CPU.
+- **Routing and middleware are smaller than people think.** Trimming middleware or tuning routing works on less than 7% of the request.
+- **Database work costs about the same regardless of language**: around 0.1 to 0.2 ms in all three.
+
+## 7. Limits of this measurement
+
+**One endpoint was measured**: the post list API. Other shapes of request can split differently.
+
+**One CPU, eight concurrent requests.** More workers or threads change the absolute numbers; this measures the ratios between layers.
+
+**The database is on the same machine.** A database across a network raises response time, but this measures the app's CPU time, which does not include that wait.
+
+**Layers are split by subtraction**, which assumes each layer's cost is independent. As with the Rails database layer in section 4, cost that appears only when layers are combined can land inside one of them.
+
+---
+
+> Measured: 2026-09-29
+> Code and raw results: https://github.com/MartianLee/study-rails-compare (`harness/layers.py`, `docs/layers.md`)
+> Versions: Rails 8.1.3.1 (Ruby 3.4.10 + YJIT, Puma 6.6.1), Express 4.21.2 + Sequelize 6.37.5 (Node 24.20.0), Gin 1.10.1 + GORM 1.25.12 (Go 1.25.14)
+> Environment: Docker Linux containers + MySQL 8.4 · 1 CPU, 1 process, 1 thread, 8 concurrent requests · median of three runs
+
+_Written with Claude Code_
