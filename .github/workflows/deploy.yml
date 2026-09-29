@@ -140,6 +140,12 @@ jobs:
         run: npx contentlayer2 build
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build --turbopack
+      # `yarn build` runs this as postbuild, but this job calls `next build` directly,
+      # so without this step feed.xml and the tag feeds never reach ./out.
+      - name: Generate RSS feeds
+        run: node ./scripts/postbuild.mjs
+        env:
+          NODE_OPTIONS: --experimental-strip-types --experimental-json-modules
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
