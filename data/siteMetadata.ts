@@ -8,7 +8,7 @@ const siteMetadata: PlinyConfig = {
     "MartianLee's tech blog exploring web development, software architecture, and AI/LLM technologies.",
   language: 'ko-KR',
   theme: 'system', // system, dark or light
-  siteUrl: 'https://martianlee.github.io/',
+  siteUrl: 'https://martianlee.github.io',
   siteRepo: 'https://github.com/MartianLee/martianlee.github.com',
   siteLogo: '/static/favicons/favicon.png',
   image: '/static/images/avatar.png',
