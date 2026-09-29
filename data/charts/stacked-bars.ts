@@ -12,6 +12,10 @@ export interface Segment {
 
 export interface Bar {
   name: string
+  /** 언어별 이름. 없으면 name을 쓴다. */
+  label?: Record<Lang, string>
+  /** 이름 아래 작게 적는 보조 값 (예: 요청당 CPU). */
+  note?: string
   values: Record<string, number>
   /** 본문 표의 합계. 층 합과 반올림 차이가 날 수 있어 표의 값을 그대로 둔다. */
   total: number
@@ -26,6 +30,10 @@ export interface Chart {
   caption: Record<Lang, string>
   sourceUrl: string
   firstCol: Record<Lang, string>
+  /** 축 단위. 기본 ms */
+  unit?: Record<Lang, string>
+  /** 합계 소수 자리. 기본 3 */
+  digits?: number
 }
 
 const SOURCE = {
@@ -35,6 +43,63 @@ const SOURCE = {
 export const sourceName = SOURCE
 
 export const charts: Record<string, Chart> = {
+  // 「Active Record는 요청마다 무엇을 만드는가?」 5장 (docs/orm-anatomy.md, preload 변형)
+  'preload-records': {
+    segments: [
+      { key: 'posts', fill: 'bg-ink/55', label: { ko: '게시글', en: 'Posts' } },
+      { key: 'users', fill: 'bg-ink/25', label: { ko: '작성자', en: 'Authors' } },
+      {
+        key: 'joins',
+        fill: 'bg-accent',
+        label: { ko: '조인 행 (post_tags)', en: 'Join rows (post_tags)' },
+      },
+      { key: 'tags', fill: 'bg-accent/35', label: { ko: '태그', en: 'Tags' } },
+    ],
+    bars: [
+      {
+        name: 'posts',
+        label: { ko: '게시글만', en: 'Posts only' },
+        note: '0.065 ms',
+        values: { posts: 20, users: 0, joins: 0, tags: 0 },
+        total: 20,
+      },
+      {
+        name: 'user',
+        label: { ko: '+ user', en: '+ user' },
+        note: '0.189 ms',
+        values: { posts: 20, users: 20, joins: 0, tags: 0 },
+        total: 40,
+      },
+      {
+        name: 'tags',
+        label: { ko: '+ tags', en: '+ tags' },
+        note: '0.492 ms',
+        values: { posts: 20, users: 0, joins: 66, tags: 31 },
+        total: 117,
+      },
+      {
+        name: 'user-tags',
+        label: { ko: '+ user, tags', en: '+ user, tags' },
+        note: '0.608 ms',
+        values: { posts: 20, users: 20, joins: 66, tags: 31 },
+        total: 137,
+      },
+    ],
+    axisMax: 140,
+    ticks: [0, 35, 70, 105, 140],
+    unit: { ko: '개', en: '' },
+    digits: 0,
+    title: {
+      ko: '게시글 20개를 보여 주려고 만든 레코드 수.',
+      en: 'Records built to show 20 posts.',
+    },
+    caption: {
+      ko: '막대 길이는 레코드 수, 이름 아래 값은 요청당 CPU입니다. 태그를 불러오면 조인 행 66개가 모두 레코드가 되고, CPU도 레코드 수를 따라 늘어납니다.',
+      en: 'Bar length is the number of records; the value under each name is CPU per request. Loading tags turns all 66 join rows into records, and CPU rises with the record count.',
+    },
+    sourceUrl: 'https://github.com/MartianLee/study-rails-compare/blob/main/docs/orm-anatomy.md',
+    firstCol: { ko: '불러온 대상', en: 'Preloaded' },
+  },
   // 「Active Record는 요청마다 무엇을 만드는가?」 3장 (docs/orm-anatomy.md)
   'orm-layers': {
     segments: [

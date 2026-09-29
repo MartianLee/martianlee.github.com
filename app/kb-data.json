@@ -128,13 +128,14 @@
     {
       "id": "backend-architecture",
       "label": "Backend Architecture",
-      "count": 5,
+      "count": 6,
       "slugs": [
         "2026-04-18-bloom-filter-membership-check-at-scale",
         "2026-04-18-redisbloom-signup-architecture",
         "2026-07-25-bitchat-architecture",
         "2026-09-01-framework-magic-tax",
-        "2026-09-28-request-layers"
+        "2026-09-28-request-layers",
+        "2026-09-29-activerecord-anatomy"
       ]
     },
     {
@@ -1315,7 +1316,8 @@
       "2026-04-18-superpowers-architecture",
       "2026-09-05-webmcp-explained"
     ],
-    "2026-09-28-request-layers": []
+    "2026-09-28-request-layers": [],
+    "2026-09-29-activerecord-anatomy": []
   },
   "postIndex": [
     {
@@ -2994,6 +2996,26 @@
       "topic": "backend-architecture",
       "stage": "budding",
       "summary": "One list request, split into four layers (HTTP server, routing and middleware, database queries, ORM) and measured in Rails, Express and Gin. 70% of a Rails request's CPU is Active Record; routing and middleware take 7%."
+    },
+    {
+      "slug": "2026-09-29-activerecord-anatomy",
+      "title": "What Does Active Record Build on Every Request? Measured the Same Way as Sequelize and GORM",
+      "shortTitle": "What Does Active Record Build…",
+      "date": "2026-09-29T09:00:00.000Z",
+      "tags": [
+        "ruby",
+        "rails",
+        "activerecord",
+        "orm",
+        "sequelize",
+        "gorm",
+        "benchmark",
+        "performance",
+        "mysql"
+      ],
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "summary": "The last post concluded that Ruby is not slow and that most of a Rails request is Active Record. This one compares what Active Record does per request with Sequelize and GORM, by reading the source and measuring. Most of the cost comes from a has_and_belongs_to_many preload that turns every join row into a full record, and there is a way to cut it sharply while keeping the same SQL."
     }
   ],
   "graph": {
@@ -3074,6 +3096,11 @@
         "count": 5
       },
       {
+        "id": "tag:rails",
+        "label": "rails",
+        "count": 5
+      },
+      {
         "id": "tag:typescript",
         "label": "typescript",
         "count": 5
@@ -3081,6 +3108,11 @@
       {
         "id": "tag:agent",
         "label": "agent",
+        "count": 4
+      },
+      {
+        "id": "tag:orm",
+        "label": "orm",
         "count": 4
       },
       {
@@ -3094,9 +3126,14 @@
         "count": 4
       },
       {
-        "id": "tag:rails",
-        "label": "rails",
+        "id": "tag:ruby",
+        "label": "ruby",
         "count": 4
+      },
+      {
+        "id": "tag:activerecord",
+        "label": "activerecord",
+        "count": 3
       },
       {
         "id": "tag:agent-browser",
@@ -3111,6 +3148,11 @@
       {
         "id": "tag:backend",
         "label": "backend",
+        "count": 3
+      },
+      {
+        "id": "tag:benchmark",
+        "label": "benchmark",
         "count": 3
       },
       {
@@ -3139,8 +3181,8 @@
         "count": 3
       },
       {
-        "id": "tag:orm",
-        "label": "orm",
+        "id": "tag:performance",
+        "label": "performance",
         "count": 3
       },
       {
@@ -3151,11 +3193,6 @@
       {
         "id": "tag:react-native",
         "label": "react-native",
-        "count": 3
-      },
-      {
-        "id": "tag:ruby",
-        "label": "ruby",
         "count": 3
       },
       {
@@ -4063,7 +4100,19 @@
       },
       {
         "source": "2026-09-01-framework-magic-tax",
+        "target": "tag:activerecord"
+      },
+      {
+        "source": "2026-09-01-framework-magic-tax",
         "target": "tag:orm"
+      },
+      {
+        "source": "2026-09-01-framework-magic-tax",
+        "target": "tag:benchmark"
+      },
+      {
+        "source": "2026-09-01-framework-magic-tax",
+        "target": "tag:performance"
       },
       {
         "source": "2026-09-05-deepseek-harness-architecture",
@@ -4131,9 +4180,45 @@
       },
       {
         "source": "2026-09-28-request-layers",
+        "target": "tag:activerecord"
+      },
+      {
+        "source": "2026-09-28-request-layers",
         "target": "tag:orm"
+      },
+      {
+        "source": "2026-09-28-request-layers",
+        "target": "tag:benchmark"
+      },
+      {
+        "source": "2026-09-28-request-layers",
+        "target": "tag:performance"
+      },
+      {
+        "source": "2026-09-29-activerecord-anatomy",
+        "target": "tag:ruby"
+      },
+      {
+        "source": "2026-09-29-activerecord-anatomy",
+        "target": "tag:rails"
+      },
+      {
+        "source": "2026-09-29-activerecord-anatomy",
+        "target": "tag:activerecord"
+      },
+      {
+        "source": "2026-09-29-activerecord-anatomy",
+        "target": "tag:orm"
+      },
+      {
+        "source": "2026-09-29-activerecord-anatomy",
+        "target": "tag:benchmark"
+      },
+      {
+        "source": "2026-09-29-activerecord-anatomy",
+        "target": "tag:performance"
       }
     ]
   },
-  "generatedAt": "2026-09-29T02:47:01.132Z"
+  "generatedAt": "2026-09-29T02:53:48.788Z"
 }

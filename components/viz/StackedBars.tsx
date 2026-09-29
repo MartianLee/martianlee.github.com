@@ -8,6 +8,10 @@ import { charts, sourceName, type Lang } from '@/data/charts/stacked-bars'
 export default function StackedBars({ chart, lang = 'ko' }: { chart: string; lang?: Lang }) {
   const c = charts[chart]
   const pct = (v: number) => `${(v / c.axisMax) * 100}%`
+  const digits = c.digits ?? 3
+  const unit = c.unit ? c.unit[lang] : 'ms'
+  const tickDigits = Number.isInteger(c.ticks[1]) ? 0 : 1
+  const nameOf = (b: (typeof c.bars)[number]) => b.label?.[lang] ?? b.name
 
   return (
     <figure className="my-8">
@@ -29,7 +33,14 @@ export default function StackedBars({ chart, lang = 'ko' }: { chart: string; lan
                 key={b.name}
                 className="grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-3 sm:grid-cols-[7rem_1fr_4rem]"
               >
-                <span className="text-sm font-bold">{b.name}</span>
+                <span className="flex flex-col text-sm leading-tight font-bold">
+                  {nameOf(b)}
+                  {b.note && (
+                    <span className="text-muted font-mono text-[11px] font-normal tabular-nums">
+                      {b.note}
+                    </span>
+                  )}
+                </span>
                 <div className="bg-line relative h-7 overflow-hidden rounded">
                   {c.segments.map((s) => {
                     const seg = (
@@ -44,7 +55,7 @@ export default function StackedBars({ chart, lang = 'ko' }: { chart: string; lan
                   })}
                 </div>
                 <span className="text-right text-sm font-bold tabular-nums">
-                  {b.total.toFixed(3)}
+                  {b.total.toFixed(digits)}
                 </span>
               </div>
             )
@@ -65,8 +76,8 @@ export default function StackedBars({ chart, lang = 'ko' }: { chart: string; lan
                   }`}
                   style={{ left: pct(tick) }}
                 >
-                  {tick.toFixed(1)}
-                  {last ? ' ms' : ''}
+                  {tick.toFixed(tickDigits)}
+                  {last && unit ? ` ${unit}` : ''}
                 </span>
               )
             })}
@@ -99,11 +110,14 @@ export default function StackedBars({ chart, lang = 'ko' }: { chart: string; lan
           <tbody>
             {c.bars.map((b) => (
               <tr key={b.name}>
-                <td>{b.name}</td>
+                <td>
+                  {nameOf(b)}
+                  {b.note ? ` (${b.note})` : ''}
+                </td>
                 {c.segments.map((s) => (
-                  <td key={s.key}>{b.values[s.key].toFixed(3)}</td>
+                  <td key={s.key}>{b.values[s.key].toFixed(digits)}</td>
                 ))}
-                <td>{b.total.toFixed(3)}</td>
+                <td>{b.total.toFixed(digits)}</td>
               </tr>
             ))}
           </tbody>
