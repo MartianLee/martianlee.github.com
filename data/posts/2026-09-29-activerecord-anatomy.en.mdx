@@ -1,0 +1,191 @@
+---
+slug: '2026-09-29-activerecord-anatomy'
+title: 'What Does Active Record Build on Every Request? Measured the Same Way as Sequelize and GORM'
+crawlertitle: 'What Does Active Record Build on Every Request? Measured the Same Way as Sequelize and GORM'
+summary: 'The last post concluded that Ruby is not slow and that most of a Rails request is Active Record. This one compares what Active Record does per request with Sequelize and GORM, by reading the source and measuring. Most of the cost comes from a has_and_belongs_to_many preload that turns every join row into a full record, and there is a way to cut it sharply while keeping the same SQL.'
+date: 2026-09-29 18:00:00 +0900
+categories: posts
+tags:
+  ['ruby', 'rails', 'activerecord', 'orm', 'sequelize', 'gorm', 'benchmark', 'performance', 'mysql']
+topic: backend-architecture
+stage: budding
+author: MartianLee
+---
+
+## 1. The question the last post left open
+
+[The last post](/posts/2026-09-01-framework-magic-tax) built the same blog API twice in each of four languages. Its conclusion, in one line: **Ruby itself is not slow, and most of a Rails request is Active Record.** Ruby without the magic (Rack + raw SQL) cost 0.145 ms of CPU per request, cheaper than Express + Sequelize at 0.567 ms, and when a Rails request was sliced into layers, the framework took 11.4% and the ORM the other 88.6%.
+
+That leaves the obvious next question. What is Active Record actually doing on every request to spend that much? And what are the mainstream ORMs in Node and Go doing in the same place that costs them less?
+
+"ORMs are just slow" does not answer it. All three are ORMs, and all three send the same SQL. This post splits the difference two ways: by measuring each layer under identical conditions, and by reading the installed source of all three libraries.
+
+## 2. Three ORMs, measured the same way
+
+The last post measured Active Record in four steps. This one measures Sequelize and GORM the same way. The work per request is the list endpoint, unchanged: **four SQL statements** reading 20 posts, their authors, the tag join rows and the tags.
+
+| step                   | what it does                                                                                                                                                         |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ① raw driver           | the same approach as the bare app: SQL written by hand, run as a prepared statement, output assembled by hand (Node, like its bare app, without prepared statements) |
+| ② ORM query, no models | the same four statements built and run by the ORM's query builder; no model objects                                                                                  |
+| ③ models               | model objects built by the ORM (a preload in Active Record and GORM; four per-model `findAll` calls in Sequelize, as in the app); no attribute read                  |
+| ④ + serialisation      | every attribute read, the same JSON built                                                                                                                            |
+
+Step ② is `pluck` in Active Record, `raw: true` in Sequelize, and in GORM the builder API followed by `Rows()` and a hand-written `Scan`. In each case the ORM builds and runs the SQL but does not turn the result into models.
+
+Four rules kept it fair.
+
+- **Every step sends the same four statements.** Before timing, the JSON from ② and ④ was checked **byte-for-byte against ①**, and it matched in all three runs.
+- Each runtime ran **inside its own app's Docker image**, so driver and ORM versions, and settings like GORM's `PrepareStmt: true`, match the real app.
+- Time is **process CPU per request**. The last post compared CPU per request, and part of Go's and Node's GC runs on other threads, where wall-clock time would miss it. Each run takes the minimum of six batches of 40 after 20 warm-ups; the table shows the median of three runs.
+- Allocation is in a different unit per runtime: objects in Ruby, mallocs in Go, heap bytes in Node. **These are not comparable across runtimes**, so only the growth between steps within one runtime is read.
+
+## 3. Results: where the cost lands
+
+| CPU per request (median of 3) | Active Record | Sequelize |  GORM |
+| ----------------------------- | ------------: | --------: | ----: |
+| ① raw driver                  |         0.106 |     0.235 | 0.116 |
+| ② ORM query, no models        |         0.290 |     0.407 | 0.128 |
+| ③ models                      |         0.601 |     0.429 | 0.186 |
+| ④ + serialisation             |         0.725 |     0.528 | 0.227 |
+
+All values in ms. Read the differences between steps as the cost of each layer:
+
+| layer                           | Active Record | Sequelize |      GORM |
+| ------------------------------- | ------------: | --------: | --------: |
+| query layer (①→②)               |     +0.183 ms | +0.172 ms | +0.012 ms |
+| building models (②→③)           |     +0.311 ms | +0.022 ms | +0.058 ms |
+| reading attributes (③→④)        |     +0.124 ms | +0.098 ms | +0.041 ms |
+| model layer, per row (②→④ ÷ 20) |       21.8 µs |    6.0 µs |    5.0 µs |
+
+<StackedBars chart="orm-layers" lang="en" />
+
+Three things stand out.
+
+First, **the query layer costs Active Record and Sequelize about the same**: roughly 45 µs per SQL statement. GORM spends 3 µs. This layer covers building the SQL and also receiving the result and turning it into values.
+
+Second, **only Active Record's cost grows sharply at the model step.** Sequelize adds 0.022 ms when it builds models; Active Record adds 0.311 ms. Most of this post is about that one row.
+
+Third, **the floors differ.** At step ①, with nothing but the driver, Node costs more than twice what Ruby and Go do. Ruby's mysql2 parses results in a C extension and Go's driver in compiled Go, while Node's mysql2 parses them in JavaScript. It is part of why Ruby without the magic beat Node in the last post.
+
+## 4. The cost of building a query
+
+At step ② all three ORMs build the SQL from scratch on every request. The cost still differs by more than ten times, because of how they build the SQL and how they receive the result.
+
+**Active Record clones a Relation for every method in the chain.** Each call in `Post.published.order(...).limit(20).offset(40).includes(...)` creates a new Relation through `spawn` (`relation/spawn_methods.rb:9-11`), six for this one chain. It is what keeps Relations immutable. Then it builds an Arel syntax tree and a visitor turns it into a SQL string, and that result is not cached: the `StatementCache` that reuses compiled SQL is only used by `find` and `find_by` (`core.rb:404-444`). Bind values become objects too. Every id inside an `IN (...)` turns into an `ActiveModel::Attribute` at the moment the SQL is compiled (`arel/nodes/homogeneous_in.rb:50-52`). Counting the `status`, LIMIT and OFFSET values as well, this request creates 74 bind-value objects.
+
+**Sequelize deep-copies its options and awaits hooks that are not there.** One `findAll` makes three or four deep clones across the options, the default scope and the `where` (`model.js:1102`, `model.js:2052`, `utils.js:158`). With no hooks registered at all, it still awaits four model hooks and four instance hooks in turn, eight Promises per query (`hooks.js:67-98`). Every query creates a `uuid()` (`abstract/query.js:27`) and a `new Error()` that captures a stack trace (`mysql/query.js:52`). On the way back, Sequelize's `typeCast` callback runs for every cell (`mysql/connection-manager.js:54`), and DATETIME values arrive as strings and are parsed again with `new Date()` (`mysql/data-types.js:54-65`).
+
+**GORM also rebuilds the SQL every time, but out of lighter parts.** A chain creates one `DB` and one `Statement` when it starts and reuses them for every later call (`gorm.go:405-432`). The SQL goes straight into a `strings.Builder` (`statement.go:469-486`). A struct's schema is parsed once per type and kept in a `sync.Map` (`schema/schema.go:150-163`). Whether a model has hooks like `AfterFind` is also checked once, at schema parse time, and stored as a bool, so the per-query cost is one bool check (`schema/schema.go:306-322`).
+
+So Active Record and Sequelize are the ones that **create dozens of objects, sometimes over a hundred, to build a single statement**, and GORM is the one that **cut that work down with reuse and static types**. In a dynamic language with a garbage collector, dozens of objects per statement per request is not a small cost.
+
+## 5. The cost of building models: it was the join rows
+
+To see why Active Record's model step grows so much, I changed what gets loaded along with the posts (the preload), one association at a time. This covers everything from running the SQL to having the models.
+
+| on the same posts query    | CPU per request | records built |
+| -------------------------- | --------------: | ------------: |
+| posts only                 |        0.065 ms |            20 |
+| + `includes(:user)`        |        0.189 ms |            40 |
+| + `includes(:tags)` only   |        0.492 ms |           117 |
+| + `includes(:user, :tags)` |        0.608 ms |           137 |
+
+Twenty posts on their own cost 0.065 ms, query included. The cost grows sharply once the tags are loaded too, and the reason is that the number of records goes from 20 to 137.
+
+**Between posts and tags sits a join row.** A post has several tags and a tag belongs to several posts, so the `post_tags` table holds one row per pair: "post N has tag M". This request touches 66 of those join rows.
+
+When that relation is declared in Rails as `has_and_belongs_to_many`, Active Record **turns each of those 66 join rows into a full record** when it loads the tags. A row holding three numbers (`id`, `post_id`, `tag_id`) becomes an object as heavy as a post. On top of that, every post and every join row gets its own object to hold its associations. That is why showing 20 posts builds 137 records.
+
+<StackedBars chart="preload-records" lang="en" />
+
+The flip side is that **building one record is itself cheap.** Loading the posts alone built 20 of them in 0.065 ms, query included. What drove the cost up is not how heavy a record is but how many of them there are.
+
+That is also how to reread the "121 objects per row" from the last post. A post row is not heavy; showing one post row drags join records and association objects along with it.
+
+Sequelize and GORM read the join rows too. But Sequelize hangs no association object on its join-row instances, and GORM uses the join rows only to pair things up before putting the tags straight into structs. Of the three, only Active Record gives every join row its own association object.
+
+## 6. The cost of reading attributes: three designs
+
+Step ③→④, reading attributes, is where the three ORMs' designs split most clearly.
+
+**Active Record converts lazily, and only once.** When it builds a record it keeps the values the driver returned, converts an attribute the first time it is read, and stores the result in `@casted_values` (`activemodel/attribute_set/builder.rb:41-58`). A second read allocates nothing. The first read costs different amounts by type:
+
+| type     | on first read   | why                                                                                                                          |
+| -------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| integer  | no objects      | returns the Integer the driver already produced                                                                              |
+| string   | a string copy   | copied with `String.new(value)` so in-place edits can be detected (`activemodel/type/string.rb:37-39`)                       |
+| datetime | about 8 objects | wraps the UTC `Time` the driver already produced in a `TimeWithZone` (`activesupport/core_ext/date_and_time/zones.rb:20-38`) |
+
+This app turns on prepared statements, so mysql2 uses the binary protocol, so the driver has already turned integers and timestamps into Ruby objects. On top of that, Active Record **copies strings and wraps timestamps in a time zone object once more.** Serialisation reads three string attributes (`title`, `slug`, `body`) and one timestamp (`published_at`) per post, so that cost lands on every row.
+
+**Sequelize does nothing at read time.** Conversion already happened cell by cell when the result arrived (the `typeCast` in section 4), and `post.title` is a getter defined once on the prototype that returns `dataValues.title` (`model.js:2160-2179`). It pays for conversion up front instead, when the result arrives, and when it builds a record it copies all the values once more; more on that copy in the next section.
+
+**GORM has no read at all.** `p.Title` is a struct field load, a single machine instruction; the value went into the field at `Scan` time. GORM's cost is in that `Scan`. It heap-allocates each row's struct with `reflect.New` (`scan.go:319`) and receives each column through a double-pointer holder from a `sync.Pool`, a path where database/sql allocates a fresh value for every non-NULL cell (`database/sql/convert.go:436`).
+
+Widening the query makes this concrete. Same 20 rows; only the number of selected columns goes from 2 to 11.
+
+| one more column, per row | Active Record | Sequelize |    GORM |
+| ------------------------ | ------------: | --------: | ------: |
+| extra CPU                |       0.43 µs |   0.41 µs | 0.13 µs |
+
+**Per column, Active Record and Sequelize cost about the same.** Bringing one value into a dynamic language costs roughly the same in both runtimes. So the reason Active Record's model layer is 3.6 times Sequelize's is not a cost that grows with columns; it is **a fixed cost per record and per association**. Section 5 was that fixed cost.
+
+## 7. A few things people say that turn out not to be true
+
+Reading the code showed that some common explanations do not hold for these versions.
+
+**"Active Record is slow because of dirty tracking."** Not on the read path. Loading a record does not copy the original values anywhere. They stay in the row the driver returned, and the change tracker is created only the first time something like `changed?` is called (`activemodel/dirty.rb:382-388`). A request that only serialises never pays for it. It is **Sequelize that copies every row's values the moment it loads them** (`_previousDataValues = {...dataValues}`, `model.js:2245`), including records that will never be modified.
+
+**"`pluck` is fast because it skips type casting."** It does not skip it. `pluck` casts every selected cell eagerly; for the posts query alone it allocated more objects than `to_a` did (484 against 427). What `pluck` really skips is the record shells and the whole preload and association machinery, and that is most of the gap between steps ② and ③.
+
+**"Sequelize's `raw: true` is much faster because it skips models."** Here it made almost no difference (0.407 ms at ② against 0.429 ms at ③). `raw: true` only skips the instances. The option clones, the eight empty hooks and the per-cell `typeCast` all remain, and each row is still copied once (`abstract/query.js:197-209`). Most of what Sequelize spends is in front of the models, not in them.
+
+**"ORMs cache the SQL, so query building is negligible."** All three rebuild the SQL for chained queries like this list query on every call. What GORM and Active Record cache is the prepared statement, which saves the database server its preparation work but not the cost of building the SQL string. Sequelize does not use prepared statements at all; it escapes values straight into the SQL string (`mysql/query.js:59-61`).
+
+## 8. Same SQL, same JSON, 41% less CPU
+
+If section 5 is right, the fix is simple: **do not turn the join rows into records.** The four statements and the JSON stay the same; only the tags change:
+
+```ruby
+posts = scope.includes(:user).to_a
+links = PostTag.where(post_id: posts.map(&:id)).pluck(:post_id, :tag_id)
+tags  = Tag.where(id: links.map(&:last).uniq).index_by(&:id)
+```
+
+Posts, authors and tags are still Active Record models. Only the join rows come back as `[post_id, tag_id]` pairs of numbers. Counting the SQL sent, both versions issue four statements, and the JSON they produce is byte-for-byte identical.
+
+| one list request, from SQL to serialised JSON | CPU per request | objects allocated |
+| --------------------------------------------- | --------------: | ----------------: |
+| `includes(:user, :tags)`                      |        0.747 ms |             3,896 |
+| join rows via `pluck`                         |        0.442 ms |             2,219 |
+
+**CPU per request drops by 41%.** That is below Sequelize's step ④ (0.528 ms) doing the same work. It took a few more lines, and no models were given up.
+
+Generalised: when Active Record code is slow, the first thing to count is not rows but **records built**. Subscribe to the `instantiation.active_record` event and you get the number of records each query builds. If showing 20 posts builds 137 records, the difference is usually join rows and intermediate models dragged in by a preload, with `has_and_belongs_to_many` and `has_many :through` as the usual suspects.
+
+## 9. What this measurement does not say
+
+**It is an in-process microbenchmark.** HTTP, routing and middleware are left out, which is why the absolute numbers differ from the last post's endpoint measurements (Rails 1.113 ms, Express + Sequelize 0.567 ms, Gin + GORM 0.277 ms). It measures the ratios and directions between layers.
+
+**Active Record's query cache was off.** The harness ran outside Rails' executor. A real request runs inside it with the query cache on, which copies each statement's result once more (`abstract/query_cache.rb:263-325`). In a real request Active Record spends a little more than this table shows.
+
+**Step ③ reads more columns than step ②.** Active Record and GORM build models with `SELECT *` by default, reading 11 post columns, 6 author columns and 3 join-row columns, while step ② reads only the 8, 2 and 2 it needs; Sequelize reads authors' `id` and `name` only. The extra cells are 60 for posts, 80 for authors and 66 for join rows. Using section 6's per-column cost (which includes reading the attribute), at most 0.09 ms of Active Record's 0.311 ms increase at ②→③ comes from this; since step ③ reads no attributes the real share is smaller, and taking it out does not change the explanation in section 5.
+
+**Allocation cannot be compared across runtimes.** One Ruby object, one Go malloc and one byte of V8 heap are not the same unit, so the tables only put time side by side.
+
+**The results are pinned to versions.** The code read and every line number cited are from the installed Active Record 8.1.3.1, Sequelize 6.37.5 and GORM 1.25.12; other versions may be implemented differently.
+
+---
+
+So the reason Active Record is expensive is **the model-building step**. Against Sequelize, the query layer and attribute reads cost about the same, and the gap at the model step (0.289 ms) is larger than the whole per-request gap (0.197 ms). Against GORM, half the gap is this step. And that cost is not because one record is heavy: the preload turns even the join rows into full records and gives every post and every join row its own association object. The first move to make Active Record cheaper is not to abandon the ORM; it is to count the records being built.
+
+---
+
+> Measured: 2026-09-29
+> Code and raw results: https://github.com/MartianLee/study-rails-compare (`harness/orm_anatomy.py`, `docs/orm-anatomy.md`)
+> Versions: Active Record 8.1.3.1 (Ruby 3.4.10 + YJIT), Sequelize 6.37.5 (Node 24.20.0), GORM 1.25.12 (Go 1.25.14)
+> Environment: Docker Linux containers + MySQL 8.4 · median of three runs
+> Code citations: paths and line numbers under each library's `lib/`. Unprefixed Rails paths are relative to `activerecord/lib/active_record/`; Active Model and Active Support paths carry `activemodel/` and `activesupport/`.
+
+_Written with Claude Code_
