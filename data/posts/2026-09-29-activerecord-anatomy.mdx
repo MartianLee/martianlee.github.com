@@ -189,3 +189,15 @@ tags  = Tag.where(id: links.map(&:last).uniq).index_by(&:id)
 > 코드 인용: 각 라이브러리의 `lib/` 아래 경로와 행 번호입니다. 접두어가 없는 Rails 경로는 `activerecord/lib/active_record/` 기준이고, Active Model과 Active Support는 `activemodel/`, `activesupport/`를 붙였습니다.
 
 _Claude Code와 함께 작성됨_
+
+---
+
+{/* series:rails-perf */}
+
+**Rails 성능 시리즈**
+
+1. [Rails는 느린가요? 같은 블로그 API를 8번 만들어 추상화 비용을 측정해 보았습니다](/ko/posts/2026-09-01-framework-magic-tax)
+2. [Rails 요청 하나의 CPU는 어디에 쓰일까요? HTTP, 라우팅, DB, ORM으로 나눠 측정해 보았습니다](/ko/posts/2026-09-28-request-layers)
+3. **Active Record는 요청마다 무엇을 만드는가? Sequelize, GORM과 같은 방법으로 측정해 보았습니다** (지금 읽는 글)
+
+{/* /series */}
