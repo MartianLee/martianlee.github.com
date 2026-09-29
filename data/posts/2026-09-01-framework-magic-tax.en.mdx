@@ -24,32 +24,6 @@ stage: budding
 author: MartianLee
 ---
 
-> Measured: 2026-08-31
-> Code and raw results: https://github.com/MartianLee/study-rails-compare
-> Environment: Docker Linux containers + MySQL 8.4 · median of three independent runs
-
----
-
-_This article is mostly written by Claude Code_
-
-## Contents
-
-1. [Why this argument never resolves](#1-why-this-argument-never-resolves)
-2. [Rewriting it into a question that has an answer](#2-rewriting-it-into-a-question-that-has-an-answer)
-3. [Hello-world measures a router](#3-hello-world-measures-a-router)
-4. [What makes a benchmark believable is the gate, not the numbers](#4-what-makes-a-benchmark-believable-is-the-gate-not-the-numbers)
-5. [The abstraction cost](#5-the-abstraction-cost)
-6. [What is Active Record actually spending?](#6-what-is-active-record-actually-spending)
-7. [Why god models cost — measuring column count](#7-why-god-models-cost--measuring-column-count)
-8. [Slicing one Rails request into layers](#8-slicing-one-rails-request-into-layers)
-9. [Give it four cores and one process still cannot pass one](#9-give-it-four-cores-and-one-process-still-cannot-pass-one)
-10. [Eight workers is not eight times the memory](#10-eight-workers-is-not-eight-times-the-memory)
-11. [YJIT depends enormously on the workload](#11-yjit-depends-enormously-on-the-workload)
-12. [Latency is a completely different story](#12-latency-is-a-completely-different-story)
-13. [I threw away two campaigns — and that was the most useful result](#13-i-threw-away-two-campaigns--and-that-was-the-most-useful-result)
-14. [What this does not measure](#14-what-this-does-not-measure)
-15. [Running it yourself](#15-running-it-yourself)
-
 ## 1. Why this argument never resolves
 
 "Is Rails slow?"
@@ -210,7 +184,7 @@ Counting the objects one request actually creates, by class, shows why:
 
 That is the mechanical identity of "Active Record is slow." There is no slow algorithm anywhere; it is that **every time a row becomes an object, the machinery for everything that object might later do gets built alongside it.** Dirty tracking, deferred type casting, `post.user` — all of them are what that machinery buys. The magic isn't free; it's **prepaid**.
 
-## 7. Why god models cost — measuring column count
+## 7. Why do god models cost more? Measuring column count
 
 Real-world Rails leans hard on god models. The intuition that "a bigger model is slower" is right, but what it costs depends entirely on **which thing gets bigger**. Same 20 rows, same table, same index; only the number of columns that become attributes changes:
 
@@ -333,7 +307,7 @@ Measure the same endpoint at concurrency 50 and Rails' p99 jumps to **552 ms**. 
 
 **Always state the concurrency when you quote a latency.** 3.06 ms and 552 ms are the same code on the same endpoint.
 
-## 13. I threw away two campaigns — and that was the most useful result
+## 13. The most useful result came from two campaigns I threw away
 
 Getting to the final numbers meant discarding two complete campaigns. The reasons are useful to other people, so here they are.
 
@@ -395,3 +369,11 @@ Full code, raw per-run results, and the SQL MySQL actually received:
 So, the answer to the original question. **On latency, no** — 3.06 ms, 1–2% of a real request. **On server count, yes** — one fifth of Gin+GORM. **And the source of that gap is not Ruby, it is Active Record**: same language, same Puma, same driver, and CPU per request drops by 7.67×.
 
 Which makes the real question not "is Rails slow" but **"what are we paying for this magic, and do we know the price when we pay it?"**
+
+---
+
+> Measured: 2026-08-31
+> Code and raw results: https://github.com/MartianLee/study-rails-compare
+> Environment: Docker Linux containers + MySQL 8.4 · median of three independent runs
+
+_Written with Claude Code_
