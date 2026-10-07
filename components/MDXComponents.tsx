@@ -11,6 +11,9 @@ import BudgetTank from './viz/BudgetTank'
 import TonneCubes from './viz/TonneCubes'
 import MagicTaxStack from './viz/MagicTaxStack'
 import StackedBars from './viz/StackedBars'
+import PassthroughCompositor from './viz/PassthroughCompositor'
+import PassthroughLayers from './viz/PassthroughLayers'
+import YouTube from './YouTube'
 
 export const components: MDXComponents = {
   Image,
@@ -25,4 +28,7 @@ export const components: MDXComponents = {
   TonneCubes,
   MagicTaxStack,
   StackedBars,
+  PassthroughCompositor,
+  PassthroughLayers,
+  YouTube,
 }
