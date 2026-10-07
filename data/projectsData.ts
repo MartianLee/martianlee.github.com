@@ -97,7 +97,6 @@ const projectsData: Project[] = [
     aiTools: ['GPT (Prompt Copy-Paste Start, ~2023)', 'Augment Code (Minor Support, mid-2025)'],
     demo: 'https://phaser3-rollup-typescript-vercel.vercel.app/',
     imgSrc: '/static/projects/earth-invaders.png',
-    featured: true,
   },
   {
     title: 'Fish Tank Simulator',
