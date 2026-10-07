@@ -25,7 +25,7 @@ const projectsData: Project[] = [
     description:
       'A native macOS markdown editor for plain-file vaults, built on SwiftUI and TextKit 2 with a Swift extension SDK. Incremental Live Preview keeps a keystroke in a 4,000-line note at about 15 ms, with performance budgets checked in CI. Local-first, MIT licensed.',
     descriptionKo:
-      '마크다운 파일 폴더(vault)를 여는 네이티브 macOS 에디터입니다. SwiftUI와 TextKit 2로 만들었고 Swift 확장 SDK를 제공합니다. 증분 Live Preview 덕분에 4,000줄 문서에서도 키 입력이 약 15ms에 반영되며, 성능 예산은 CI에서 검사합니다. 로컬 우선, MIT 라이선스입니다.',
+      '마크다운 파일 폴더(vault)를 여는 네이티브 macOS 에디터입니다. SwiftUI와 TextKit 2로 만들었고 Swift 확장 SDK를 제공합니다. 증분 Live Preview 덕분에 4,000줄 문서에서도 키 입력이 약 15ms에 반영됩니다. 이 지연 시간은 CI에서 매번 테스트합니다. 로컬 우선, MIT 라이선스입니다.',
     category: 'non-game',
     techStack: [
       'Swift',
