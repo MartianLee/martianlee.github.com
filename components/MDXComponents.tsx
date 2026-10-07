@@ -10,6 +10,7 @@ import AtmosphereTimeline from './viz/AtmosphereTimeline'
 import BudgetTank from './viz/BudgetTank'
 import TonneCubes from './viz/TonneCubes'
 import CarbonDay from './viz/CarbonDay'
+import DayRoutine from './viz/DayRoutine'
 import FoodMasses from './viz/FoodMasses'
 import TravelLanes from './viz/TravelLanes'
 import EmbodiedGoods from './viz/EmbodiedGoods'
@@ -27,6 +28,7 @@ export const components: MDXComponents = {
   BudgetTank,
   TonneCubes,
   CarbonDay,
+  DayRoutine,
   FoodMasses,
   TravelLanes,
   EmbodiedGoods,

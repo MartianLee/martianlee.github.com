@@ -48,7 +48,7 @@ export const CITY_GAS_G_PER_MJ = 55.865
  * 모두 공개한다. 순서는 하루의 시간 순.
  */
 export interface DayItem {
-  id: 'shower' | 'commute' | 'lunch' | 'office' | 'streaming'
+  id: 'shower' | 'breakfast' | 'commute' | 'lunch' | 'office' | 'dinner' | 'streaming'
   /** 24시 기준 발생 시각(장면의 트랙 위치) */
   hour: number
   kg: number
@@ -81,10 +81,18 @@ export const dayItems: DayItem[] = [
     source: koreaGridSource,
   },
   {
-    // 휘발유 승용차 1인 탑승 170.48 g/pkm x 20km.
-    id: 'commute',
+    // 계란 2개(100g) x 4.67 kg/kg.
+    id: 'breakfast',
     hour: 8,
-    kg: 3.41,
+    kg: 0.47,
+    source: owidFood,
+  },
+  {
+    // 휘발유 승용차 1인 탑승 170.48 g/pkm x 40km(왕복). 출근만 세면 하루의 절반을
+    // 빼먹는 셈이라 퇴근까지 넣는다.
+    id: 'commute',
+    hour: 9,
+    kg: 6.82,
     source: owidTravel,
   },
   {
@@ -102,6 +110,13 @@ export const dayItems: DayItem[] = [
     source: koreaGridSource,
   },
   {
+    // 쌀 90g x 4.45 + 돼지고기 100g x 12.31 + 채소 200g x 0.53 = 0.40 + 1.23 + 0.11.
+    id: 'dinner',
+    hour: 19,
+    kg: 1.74,
+    source: owidFood,
+  },
+  {
     // 영상 스트리밍 36 g/시간 x 2시간. 대부분은 데이터센터가 아니라 보는 화면에서 나온다.
     id: 'streaming',
     hour: 22,
@@ -110,7 +125,7 @@ export const dayItems: DayItem[] = [
   },
 ]
 
-export const dayTotalKg = 20.13
+export const dayTotalKg = 25.75
 
 /* ─────────────────────────── V2: FoodMasses ─────────────────────────── */
 
@@ -315,6 +330,9 @@ export interface Labels {
   day: Record<DayItem['id'], string>
   dayTotal: string
   dayCompare: string
+  routineTitle: string
+  routineNote: string
+  routine: Record<DayItem['id'], string>
 
   foodTitle: string
   foodCaption: string
@@ -353,13 +371,27 @@ export const t: Record<Lang, Labels> = {
       'A modelled day for an office worker in Seoul, not a measurement. Every formula is listed at the end of the post.',
     day: {
       shower: 'Morning shower',
-      commute: 'Commute, 20 km by car',
+      breakfast: 'Breakfast, two eggs',
+      commute: 'Commute, 40 km round trip',
       lunch: 'Lunch, 150 g of beef',
       office: 'Office electricity, 2.5 kWh',
+      dinner: 'Dinner, rice and pork',
       streaming: 'Streaming, 2 hours',
     },
     dayTotal: 'Day total',
     dayCompare: "Korea's per-capita average, per day",
+    routineTitle: 'The day in question',
+    routineNote:
+      'A modelled day for an office worker in Seoul. The times mark when each emission happens, and the dots are sized by how much.',
+    routine: {
+      shower: 'Wake up, ten-minute shower',
+      breakfast: 'Breakfast, two eggs',
+      commute: 'Drive to work and back, 40 km',
+      lunch: 'Lunch, 150 g of beef',
+      office: 'A share of the office electricity',
+      dinner: 'Dinner at home, rice and pork',
+      streaming: 'Two hours of streaming before bed',
+    },
 
     foodTitle: 'What a kilogram of food costs',
     foodCaption:
@@ -429,13 +461,27 @@ export const t: Record<Lang, Labels> = {
       '서울 직장인의 하루를 가정한 모델 계산이며 측정값이 아닙니다. 계산식은 글 끝에 모두 적었습니다.',
     day: {
       shower: '아침 온수 샤워',
-      commute: '출근, 자가용 20km',
+      breakfast: '아침, 계란 2개',
+      commute: '출퇴근, 자가용 왕복 40km',
       lunch: '점심, 소고기 150g',
       office: '사무실 전기 2.5kWh',
+      dinner: '저녁, 밥과 돼지고기',
       streaming: '스트리밍 2시간',
     },
     dayTotal: '하루 합계',
     dayCompare: '한국 1인당 하루 평균',
+    routineTitle: '어떤 하루인가',
+    routineNote:
+      '서울에 사는 직장인의 하루를 가정했습니다. 시각은 배출이 생긴 시점이고, 점의 크기가 그 양입니다.',
+    routine: {
+      shower: '일어나서 10분 샤워',
+      breakfast: '아침, 계란 2개',
+      commute: '자가용으로 왕복 40km 출퇴근',
+      lunch: '점심, 소고기 150g',
+      office: '사무실 전기 중 내 몫',
+      dinner: '집에서 저녁, 밥과 돼지고기',
+      streaming: '자기 전 스트리밍 2시간',
+    },
 
     foodTitle: '식품 1kg의 값',
     foodCaption: '생산에서 소매까지의 배출입니다. 조리와 가정 폐기는 빠져 있습니다.',

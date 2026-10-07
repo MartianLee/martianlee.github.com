@@ -137,7 +137,8 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
     group.add(mesh, edges)
     root.add(group)
     cubes.push({ group, mesh, edges, kg: p.kg })
-    anchors.push({ obj: group, y: p.size + 0.8 })
+    // 항목이 일곱 개라 이웃 라벨이 가로로 겹친다. 한 칸씩 번갈아 올려 푼다.
+    anchors.push({ obj: group, y: p.size + 0.8 + (anchors.length % 2) * 1.8 })
   }
 
   let lastQ = -1
@@ -231,7 +232,7 @@ const build: SceneBuilder = (THREE, canvas, renderer) => {
       // 카메라는 하루 전체를 한 프레임에 담은 채 고정한다. 항목을 따라다니면 점심 큐브가
       // 화면 밖으로 밀려나 "점심이 압도적으로 크다"는 이 장면의 요지가 보이지 않는다.
       const sway = shared.playing ? Math.sin(ts * 0.00004) * 0.9 : 0
-      camera.position.set(trackCenterX + 5.5 + sway, 5.2, 15)
+      camera.position.set(trackCenterX + 6.2 + sway, 5.6, 18)
       camera.lookAt(trackCenterX, 1.5, 0)
 
       renderer.render(scene, camera)
