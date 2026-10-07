@@ -1,0 +1,94 @@
+---
+slug: '2026-09-12-carbon-basics-daily-life'
+title: 'Carbon Basics 2: Where carbon hides in daily life'
+crawlertitle: 'Carbon Basics 2: Where carbon hides in daily life'
+summary: 'Following one ordinary day to pull the hidden emissions out of food, travel, goods and electricity, in five 3D visuals. Of the 26 kg in that day, 58% came from a single lunch.'
+date: 2026-09-12 18:00:00 +0900
+categories: posts
+tags: ['climate', 'carbon', 'carbon-basics', 'daily-life']
+topic: climate
+stage: budding
+author: MartianLee
+---
+
+> Part 2 of "Carbon, from scratch". Part 1 calibrated the units for reading carbon; this one reads a day with them. The series explains, from first principles, the work introduced on the [Climate page](/climate).
+
+The fuel we burn ourselves is a smaller share than you would guess. Most of the emissions are already inside the things we buy. It is the difference between the handful of dependencies you wrote into package.json and the hundreds you find when you open node_modules. This part opens those transitive dependencies one at a time.
+
+## Following a day
+
+Take an ordinary day for an office worker in Seoul and stack up the emissions like a backpack, from the moment they wake to the moment they sleep. Every figure below is derived, and the formulas are at the end of the post.
+
+<DayRoutine lang="en" />
+
+<CarbonDay lang="en" />
+
+The surprise is the ordering. Of the day's 25.75 kg, 58% came from a single lunch. The 40 km round-trip commute is 6.82 kg, and lunch is more than twice that. Streaming, the item people feel guiltiest about, came to 72 g for two hours. That is roughly 300 metres in a car, and most of it comes not from a data centre but from the screen you are watching.
+
+One caution. Do not put this total next to Korea's per-capita figure (11.3 tonnes a year, about 31 kg a day). That average also carries industrial and public emissions I never touched, divided by the population. Different boundaries give different numbers, and the rules for drawing those boundaries are what part 3 is about.
+
+## Food
+
+Food is where the per-kilogram spread is most extreme. A kilogram of beef and a kilogram of tofu are both protein, and their emissions differ by a factor of thirty.
+
+<FoodMasses lang="en" />
+
+What creates the gap is not packaging or shipping. It is mostly methane, from feed and from the digestion of cattle. That is the same gas part 1 converted into CO₂e. Transport's share of food emissions is startlingly small: what you eat matters far more than how far it travelled.
+
+## Travel
+
+Travel is where units trip people up. You have to divide by passenger-kilometre, not compare totals. The same car emits four times as much per person when you drive alone as when four of you share it.
+
+<TravelLanes lang="en" />
+
+The electric car is the interesting one. Nothing comes out of the tailpipe, but the emissions have not disappeared. They moved to the power plant. So an EV's footprint is set by the grid, not by the car. The number above assumes the UK grid; on Korea's coal-heavier grid it is larger. We will work out that factor shortly.
+
+## Things
+
+Food and travel are flows that repeat every day. Things are different: a large share of their emissions was already finished before I bought them.
+
+The phone is the extreme case. An iPhone 17 accounts for 55 kg over its life, and 77% of that comes from making it. All the electricity from charging it every day for years is only 18%. Keeping it one more year beats dimming the screen by a wide margin.
+
+<EmbodiedGoods lang="en" />
+
+Clothes sit differently. Of a pair of jeans at 33.4 kg, 37% comes from the owner washing and drying them, and for a cotton T-shirt at 4.25 kg it is 36%. Electronics run between 18% and 27%. Electronics load their emissions before the purchase; clothes keep loading them after.
+
+The T-shirt's numbers are interesting in themselves. One study puts the same cotton T-shirt at 4.25 kg, another at 15 kg. That is more than a threefold spread, and the shirt is not what differs. The first assumes 18 washes over the garment's life, mostly line-dried; the second assumes fifty wears with a hot wash each time. The rules that fix those assumptions are the subject of the next part.
+
+So things give an individual two levers. For electronics, keep them longer. For clothes, wash less and wash cold. Use a phone for four years instead of two and its annual share halves.
+
+## The other side of a kilowatt-hour
+
+The electricity at home shows up on the meter in kWh. A kWh is a unit of energy, not of emissions. To convert it you multiply by an emission factor, and that factor is decided by how the country makes its electricity.
+
+<GridTiles lang="en" />
+
+Live the same life on a different grid and the emissions change. Cutting your electricity by 20% in Korea achieves less than the grid becoming as clean as the UK's. That is not an argument against saving electricity. It is an argument about the length of the lever.
+
+## So where should the effort go
+
+Size alone is the wrong question. Emissions accumulate as unit cost times frequency. A T-shirt is 4.25 kg, and you buy a few a year. A lunch is 14.9 kg, and it comes back tomorrow. A phone is 55 kg once, which over four years is 14 kg a year. Whenever you ask what is big, ask how often alongside it.
+
+The point of this post is not to hand out guilt but to separate what an individual controls from what they do not. Diet, mode of travel, and how long you keep things are largely personal choices. Grid factors and supply chains are not. Both matter, but the numbers tell you which lever is longer.
+
+And every one of these numbers is something a person decided the boundaries for and then calculated. How values like beef at 99.5 kg, or the same T-shirt at 4.25 kg and 15 kg, get made in the first place is life-cycle assessment and emission factors, and that is the next part.
+
+## Sources and verification
+
+- Food, per kg: Poore & Nemecek (2018), Our World in Data. The boundary runs from production to retail; cooking and household waste are excluded. Beef at 99.48 is the beef-herd figure. The weighted average including dairy co-products is about 60, a different number.
+- Travel, per passenger-km: UK DESNZ 2022 factors, Our World in Data. The domestic flight figure of 245.9 g includes the non-CO₂ warming effects of flying at altitude, and the EV figure of 47.1 g assumes the UK grid. Petrol car with four sharing, 42.6 g, is not a published value but 170.5 divided by four.
+- Things: Apple Product Environmental Reports (iPhone 17 256GB, MacBook Air 15-inch M5 512GB), Levi Strauss LCA (2015, washing and drying included), MIT/ASICS footwear LCA (2013), Cotton Incorporated / thinkstep LCA Update (2017, 225 g T-shirt). All five are cradle-to-grave, so the boundaries match. The study that puts the T-shirt at 15 kg is Carbon Trust, International Carbon Flows: Clothing (2011), which assumes fifty wears with a hot wash each time.
+- Electricity: the country comparison uses Ember's 2024 values (via Our World in Data) for all four countries, same year and same source. The office electricity in the day scenario uses Korea's national emission factor at the consumption stage, 0.4173 kg/kWh (2023). The two differ because their accounting boundaries and base years differ.
+- Streaming: 36 g per hour, the IEA's December 2020 revision of its 2019 estimate.
+
+The day is a modelled scenario, not a measurement. The formulas:
+
+- Morning shower, 0.69 kg: heating 100 L from 15 °C to 40 °C takes 10.45 MJ, which at 85% boiler efficiency is 12.3 MJ of city gas. City gas combustion is 15.236 t C/TJ, or 55.865 g CO₂/MJ after multiplying by 44/12.
+- Commute, 6.82 kg: petrol car with one occupant, 170.48 g/pkm × 40 km. Counting only the morning leg would drop half the day, so the trip home is in.
+- Breakfast, 0.47 kg: 100 g of eggs × 4.67 kg/kg.
+- Lunch, 14.92 kg: beef (beef herd) at 99.48 kg/kg × 0.15 kg. The weighted average of 60, which includes dairy co-products, would give 9.00 kg and drop lunch's share to 45%.
+- Dinner, 1.74 kg: 90 g rice × 4.45 + 100 g pork × 12.31 + 200 g vegetables × 0.53.
+- Office electricity, 1.04 kg: 2.5 kWh × 0.4173 kg/kWh.
+- Streaming, 0.07 kg: 36 g/hour × 2 hours.
+
+Items whose sources disagree were left out. Last-mile parcel delivery ranges from 0.1 kg to 1.1 kg across studies, a tenfold spread, so it is not here. Cycling and walking emit nothing from a tailpipe, but Our World in Data separately puts cycling at 16 to 50 g/km on a dietary basis, so it is not in the chart either.

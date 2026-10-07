@@ -14,6 +14,12 @@ import StackedBars from './viz/StackedBars'
 import PassthroughCompositor from './viz/PassthroughCompositor'
 import PassthroughLayers from './viz/PassthroughLayers'
 import YouTube from './YouTube'
+import CarbonDay from './viz/CarbonDay'
+import DayRoutine from './viz/DayRoutine'
+import FoodMasses from './viz/FoodMasses'
+import TravelLanes from './viz/TravelLanes'
+import EmbodiedGoods from './viz/EmbodiedGoods'
+import GridTiles from './viz/GridTiles'
 
 export const components: MDXComponents = {
   Image,
@@ -31,4 +37,10 @@ export const components: MDXComponents = {
   PassthroughCompositor,
   PassthroughLayers,
   YouTube,
+  CarbonDay,
+  DayRoutine,
+  FoodMasses,
+  TravelLanes,
+  EmbodiedGoods,
+  GridTiles,
 }

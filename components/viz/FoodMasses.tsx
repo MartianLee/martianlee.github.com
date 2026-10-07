@@ -1,0 +1,243 @@
+// components/viz/FoodMasses.tsx
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { CO2_M3_PER_KG, foods, t, type Lang } from '@/data/charts/carbon-basics-2'
+import { useThreeScene, type SceneBuilder } from './useThreeScene'
+import VizFrame from './VizFrame'
+import VizScrubber from './VizScrubber'
+
+const GAP = 0.8
+const REVEAL_MS = 16000
+const HOLD_MS = 4000
+const CYCLE_MS = REVEAL_MS + HOLD_MS
+
+/**
+ * 렌더 루프와 React가 공유하는 상태(리렌더 없이 매 프레임 읽는다).
+ * p는 한 사이클 안에서의 진행도(0에서 1). 모듈 싱글턴이라 마운트마다 초기화한다.
+ */
+interface Shared {
+  p: number
+  playing: boolean
+  t0: number
+  onP?: (p: number) => void
+}
+const shared: Shared = { p: 0, playing: true, t0: 0 }
+const labelRefs: (HTMLDivElement | null)[] = []
+
+interface Placed {
+  id: (typeof foods.items)[number]['id']
+  size: number
+  x: number
+  kgPerKg: number
+}
+
+function place(): Placed[] {
+  const out: Placed[] = []
+  let x = 0
+  // foods.items는 소고기(가장 크다) -> 채소(가장 작다) 순이라, 뒤집어야 작은 것부터
+  // 배치된다. 카메라가 작은 큐브에서 소고기 큐브로 패닝하며 스케일이 무너지는 순간을
+  // 보여 주는 것이 이 장면의 요지다.
+  const reversed = [...foods.items].reverse()
+  for (const item of reversed) {
+    const size = Math.cbrt(item.kgPerKg * CO2_M3_PER_KG)
+    x += size / 2
+    out.push({ id: item.id, size, x, kgPerKg: item.kgPerKg })
+    x += size / 2 + GAP
+  }
+  return out
+}
+const placed = place()
+const totalWidth = placed[placed.length - 1].x + placed[placed.length - 1].size / 2
+const biggest = placed[placed.length - 1].size
+
+const build: SceneBuilder = (THREE, canvas, renderer) => {
+  const scene = new THREE.Scene()
+  const camera = new THREE.PerspectiveCamera(35, 1.6, 0.1, 400)
+  const root = new THREE.Group()
+  scene.add(root)
+
+  const grid = new THREE.GridHelper(80, 40, '#5b3a1c', '#3a2413')
+  grid.position.set(totalWidth / 2, 0, 0)
+  root.add(grid)
+
+  const cubeMat = new THREE.MeshBasicMaterial({
+    color: '#e6a760',
+    transparent: true,
+    opacity: 0.22,
+  })
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: '#f4efe4',
+    transparent: true,
+    opacity: 0.55,
+  })
+  // 소고기 큐브만 rust 모서리로 강조한다
+  const beefEdgeMat = new THREE.LineBasicMaterial({
+    color: '#cf7a3d',
+    transparent: true,
+    opacity: 0.9,
+  })
+  const disposables: { dispose: () => void }[] = [cubeMat, edgeMat, beefEdgeMat]
+  const anchors: { obj: InstanceType<typeof THREE.Object3D>; y: number }[] = []
+
+  for (const p of placed) {
+    const geo = new THREE.BoxGeometry(p.size, p.size, p.size)
+    disposables.push(geo)
+    const edges = new THREE.EdgesGeometry(geo)
+    disposables.push(edges)
+    const group = new THREE.Group()
+    group.position.set(p.x, p.size / 2, 0)
+    group.add(new THREE.Mesh(geo, cubeMat))
+    group.add(new THREE.LineSegments(edges, p.id === 'beef' ? beefEdgeMat : edgeMat))
+    root.add(group)
+    // 작은 큐브 여섯 개는 화면상 60px 남짓 간격이라 라벨이 가로로 겹친다. 계단식으로 쌓으면
+    // 맨 앞 라벨이 화면 위로 잘리므로 한 칸씩 번갈아 올리는 지그재그로 푼다.
+    anchors.push({
+      obj: group,
+      y: p.size / 2 + 0.6 + (anchors.length < 6 ? (anchors.length % 2) * 2.6 : 0),
+    })
+  }
+
+  const v = new THREE.Vector3()
+  const project = () => {
+    const w = canvas.clientWidth
+    const h = canvas.clientHeight
+    anchors.forEach((a, i) => {
+      const el = labelRefs[i]
+      if (!el) return
+      v.set(a.obj.position.x, a.obj.position.y + a.y, a.obj.position.z).project(camera)
+      const sx = (v.x * 0.5 + 0.5) * w
+      const sy = (-v.y * 0.5 + 0.5) * h
+      const visible = v.z < 1 && sx > -80 && sx < w + 80
+      el.style.transform = `translate(-50%, -100%) translate(${sx}px, ${sy}px)`
+      el.style.opacity = visible ? '1' : '0'
+    })
+  }
+
+  let lastQ = -1
+
+  return {
+    // reduced-motion: 아홉 개가 다 보이는 마지막 프레임으로 고정한다
+    settle() {
+      shared.playing = false
+      shared.p = 1
+    },
+    render(ts) {
+      // 채소 큐브를 가까이 잡은 채로 시작해 천천히 뒤로 빠지면서 아홉 개를 한 프레임에
+      // 담는다. 스케일이 무너지는 순간은 "옆으로 훑을 때"가 아니라 "전체가 한 화면에
+      // 들어올 때" 보인다. 끝까지 빠지면 잠시 멈췄다가 처음부터 반복한다.
+      if (shared.playing) {
+        if (!shared.t0) shared.t0 = ts - shared.p * CYCLE_MS
+        shared.p = ((ts - shared.t0) % CYCLE_MS) / CYCLE_MS
+        // 슬라이더는 100단계로만 알린다. 매 프레임 setState하면 초당 60번 리렌더된다.
+        const q = Math.round(shared.p * 100)
+        if (q !== lastQ) {
+          lastQ = q
+          shared.onP?.(shared.p)
+        }
+      }
+      const elapsed = shared.p * CYCLE_MS
+      const raw = Math.min(elapsed / REVEAL_MS, 1)
+      // ease-out quint: 초반은 활기차게 움직이다 끝에서는 브레이크 없이 아주 천천히 멈춰 선다
+      const p = 1 - Math.pow(1 - raw, 5)
+      const cx = 2 + p * (totalWidth / 2 - 2)
+      const dist = 9 + p * 19
+      camera.position.set(cx + dist * 0.26, 2 + p * 5.4, dist)
+      camera.lookAt(cx, 0.8 + p * 1.5, 0)
+      // hold 구간에서만 소고기 테두리가 3초 주기로 천천히 숨쉰다. shared.p에서 그대로 값을
+      // 끌어오므로 일시정지·스크럽 상태에서는 shared.p가 멈춰 있어 화면도 같이 멈춘다.
+      const holdElapsed = elapsed - REVEAL_MS
+      beefEdgeMat.opacity =
+        holdElapsed >= 0 ? 0.875 + 0.125 * Math.sin((holdElapsed / 3000) * Math.PI * 2) : 0.9
+      renderer.render(scene, camera)
+      project()
+    },
+    resize(w, h) {
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+    },
+    dispose() {
+      disposables.forEach((d) => d.dispose())
+      grid.geometry.dispose()
+      ;(grid.material as InstanceType<typeof THREE.Material>).dispose()
+    },
+  }
+}
+
+export default function FoodMasses({ lang }: { lang: Lang }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  // 아래 라벨 map이 인자 이름으로 p를 쓰므로 상태는 progress로 둔다
+  const [progress, setProgress] = useState(0)
+  const [playing, setPlaying] = useState(true)
+  useEffect(() => {
+    shared.p = 0
+    shared.playing = true
+    shared.t0 = 0
+    shared.onP = setProgress
+    return () => {
+      shared.onP = undefined
+    }
+  }, [])
+  const status = useThreeScene(canvasRef, build)
+  const L = t[lang]
+
+  const scrub = (v: number) => {
+    shared.playing = false
+    shared.p = v
+    setPlaying(false)
+    setProgress(v)
+  }
+  const toggle = () => {
+    const next = !playing
+    shared.playing = next
+    if (next) shared.t0 = 0
+    setPlaying(next)
+  }
+
+  return (
+    <VizFrame
+      title={L.foodTitle}
+      caption={L.foodCaption}
+      sourceLabel={L.source}
+      sourceName={foods.source.name}
+      sourceUrl={foods.source.url}
+      status={status}
+      canvasRef={canvasRef}
+      aspect="16 / 9"
+      overlay={
+        <>
+          {placed.map((p, i) => (
+            <div
+              key={p.id}
+              ref={(el) => {
+                labelRefs[i] = el
+              }}
+              className="absolute top-0 left-0 text-center font-mono text-[11px] leading-tight whitespace-nowrap text-[#f4efe4] opacity-0 transition-opacity"
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,.6)' }}
+            >
+              <div>{L.food[p.id]}</div>
+              <div className="tabular-nums opacity-80">{`${p.kgPerKg} ${L.kg}`}</div>
+            </div>
+          ))}
+          <VizScrubber
+            playing={playing}
+            onToggle={toggle}
+            value={progress}
+            onScrub={scrub}
+            playLabel={L.play}
+            pauseLabel={L.pause}
+            ariaLabel={L.progress}
+          />
+        </>
+      }
+      fallback={{
+        columns: [lang === 'ko' ? '식품' : 'Food', L.kg],
+        rows: foods.items.map((item) => ({
+          label: L.food[item.id],
+          value: `${item.kgPerKg} ${L.kg}`,
+        })),
+        note: L.fallbackNote,
+      }}
+    />
+  )
+}
