@@ -90,9 +90,13 @@ export default function StackedBars({ chart, lang = 'ko' }: { chart: string; lan
         <span className="text-ink font-semibold">{c.title[lang]}</span> {c.caption[lang]}{' '}
         <span className="text-muted">
           {lang === 'ko' ? '측정' : 'Measurement'}:{' '}
-          <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
-            {sourceName[lang]}
-          </a>
+          {c.sourceUrl ? (
+            <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
+              {(c.source ?? sourceName)[lang]}
+            </a>
+          ) : (
+            (c.source ?? sourceName)[lang]
+          )}
         </span>
       </figcaption>
 
