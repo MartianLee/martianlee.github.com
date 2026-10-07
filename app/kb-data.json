@@ -128,14 +128,15 @@
     {
       "id": "backend-architecture",
       "label": "Backend Architecture",
-      "count": 6,
+      "count": 7,
       "slugs": [
         "2026-04-18-bloom-filter-membership-check-at-scale",
         "2026-04-18-redisbloom-signup-architecture",
         "2026-07-25-bitchat-architecture",
         "2026-09-01-framework-magic-tax",
         "2026-09-28-request-layers",
-        "2026-09-29-activerecord-anatomy"
+        "2026-09-29-activerecord-anatomy",
+        "2026-10-07-hyperframes-architecture"
       ]
     },
     {
@@ -231,6 +232,10 @@
       {
         "slug": "2026-09-05-webmcp-explained",
         "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
+      },
+      {
+        "slug": "2026-10-07-hyperframes-architecture",
+        "title": "HyperFrames Architecture: How Do You Capture a Live Web Page One Exact Frame at a Time?"
       }
     ],
     "2026-04-09-agent-browser-architecture": [
@@ -255,6 +260,10 @@
       {
         "slug": "2026-09-05-webmcp-explained",
         "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
+      },
+      {
+        "slug": "2026-10-07-hyperframes-architecture",
+        "title": "HyperFrames Architecture: How Do You Capture a Live Web Page One Exact Frame at a Time?"
       }
     ],
     "2026-04-18-superpowers-architecture": [
@@ -939,6 +948,10 @@
       {
         "slug": "2026-09-05-webmcp-explained",
         "title": "WebMCP Explained: What Changes in Browser Automation When a Web Page Hands Tools Directly to an AI Agent?"
+      },
+      {
+        "slug": "2026-10-07-hyperframes-architecture",
+        "title": "HyperFrames Architecture: How Do You Capture a Live Web Page One Exact Frame at a Time?"
       }
     ],
     "2026-04-18-redisbloom-signup-architecture": [
@@ -1317,7 +1330,12 @@
       "2026-09-05-webmcp-explained"
     ],
     "2026-09-28-request-layers": [],
-    "2026-09-29-activerecord-anatomy": []
+    "2026-09-29-activerecord-anatomy": [],
+    "2026-10-07-hyperframes-architecture": [
+      "2026-04-17-playwright-architecture",
+      "2026-03-13-lightpanda-architecture",
+      "2026-06-30-browser-use-architecture"
+    ]
   },
   "postIndex": [
     {
@@ -3016,6 +3034,26 @@
       "topic": "backend-architecture",
       "stage": "budding",
       "summary": "The last post concluded that Ruby is not slow and that most of a Rails request is Active Record. This one compares what Active Record does per request with Sequelize and GORM, by reading the source and measuring. Most of the cost comes from a has_and_belongs_to_many preload that turns every join row into a full record, and there is a way to cut it sharply while keeping the same SQL."
+    },
+    {
+      "slug": "2026-10-07-hyperframes-architecture",
+      "title": "HyperFrames Architecture: How Do You Capture a Live Web Page One Exact Frame at a Time?",
+      "shortTitle": "HyperFrames Architecture",
+      "date": "2026-10-07T09:00:00.000Z",
+      "tags": [
+        "hyperframes",
+        "video-rendering",
+        "headless-chrome",
+        "puppeteer",
+        "ffmpeg",
+        "gsap",
+        "deterministic-rendering",
+        "ai-agent",
+        "architecture"
+      ],
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "summary": "HyperFrames is HeyGen’s open-source framework for rendering HTML pages to MP4. It never plays the page. For every frame, it moves the page’s clock and every animation to that instant, then captures. I followed the code, rendered videos myself, and measured how speed scales with workers and whether the output is really identical."
     }
   ],
   "graph": {
@@ -3023,17 +3061,17 @@
       {
         "id": "tag:architecture",
         "label": "architecture",
-        "count": 33
+        "count": 34
+      },
+      {
+        "id": "tag:ai-agent",
+        "label": "ai-agent",
+        "count": 25
       },
       {
         "id": "tag:llm",
         "label": "llm",
         "count": 25
-      },
-      {
-        "id": "tag:ai-agent",
-        "label": "ai-agent",
-        "count": 24
       },
       {
         "id": "tag:paper-reading",
@@ -4217,8 +4255,16 @@
       {
         "source": "2026-09-29-activerecord-anatomy",
         "target": "tag:performance"
+      },
+      {
+        "source": "2026-10-07-hyperframes-architecture",
+        "target": "tag:ai-agent"
+      },
+      {
+        "source": "2026-10-07-hyperframes-architecture",
+        "target": "tag:architecture"
       }
     ]
   },
-  "generatedAt": "2026-09-29T03:27:44.753Z"
+  "generatedAt": "2026-10-07T14:48:26.057Z"
 }

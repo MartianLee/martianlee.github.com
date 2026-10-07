@@ -1,0 +1,473 @@
+---
+slug: '2026-10-07-hyperframes-architecture'
+title: 'HyperFrames Architecture: How Do You Capture a Live Web Page One Exact Frame at a Time?'
+crawlertitle: 'HyperFrames Architecture: How Do You Capture a Live Web Page One Exact Frame at a Time?'
+summary: 'HyperFrames is HeyGen’s open-source framework for rendering HTML pages to MP4. It never plays the page. For every frame, it moves the page’s clock and every animation to that instant, then captures. I followed the code, rendered videos myself, and measured how speed scales with workers and whether the output is really identical.'
+date: 2026-10-07 18:00:00 +0900
+categories: posts
+tags:
+  [
+    'hyperframes',
+    'video-rendering',
+    'headless-chrome',
+    'puppeteer',
+    'ffmpeg',
+    'gsap',
+    'deterministic-rendering',
+    'ai-agent',
+    'architecture',
+  ]
+topic: backend-architecture
+stage: budding
+author: MartianLee
+kind: note
+---
+
+## 1. Why HyperFrames?
+
+It showed up on GitHub Trending this week. The first commit landed on March 10, 2026, and seven months later the repository has 58,000 stars. It has 5,336 commits, about 25 a day. The release out today (October 7) is v0.8.140.
+
+The README opens with one line.
+
+> Write HTML. Render video. Built for agents.
+
+You build a page with HTML, CSS and animation, and it turns that page into an MP4. That raises a question. A web page runs in real time. `requestAnimationFrame` fires at the display's refresh rate, CSS animations advance with wall-clock time, and `Date.now()` returns the current time. If you screen-record a page to make a video, heavy scenes drop frames, and every recording comes out slightly different.
+
+Video can't be made that way. A 6-second video at 30 fps needs exactly 180 frames spaced 1/30 of a second apart, with none dropped or shifted. How do you get one exact frame at a time out of a page that runs in real time?
+
+HyperFrames' answer is **don't play the page**. For each frame, it decides the time, moves the page's clock and every animation to that time, and then captures.
+
+## 2. In one sentence
+
+**HyperFrames** is an **HTML-to-video renderer**: it loads an HTML page whose timing lives in `data-*` attributes into headless Chrome, seeks the whole page to each frame's time, captures the pixels and pipes them to FFmpeg.
+
+| Question                           | HyperFrames' answer                                                                                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What do you write videos in?       | HTML, CSS and JS. No React, no build step.                                                                                                                 |
+| How is animation timed?            | You register a paused GSAP timeline on `window.__timelines`. The renderer seeks it every frame.                                                            |
+| Anything besides GSAP?             | CSS animations, WAAPI, Anime.js, Lottie, Three.js and TypeGPU, through adapters.                                                                           |
+| What if I call `Date.now()`?       | During a render, the page's `Date.now()` and `performance.now()` return virtual time. Lint still rejects it as an error.                                   |
+| And `<video>`?                     | It is never played. FFmpeg extracts its frames ahead of time, and each frame the matching image is swapped in as an `<img>`.                               |
+| How fast is it?                    | It launches several Chrome processes and splits the frame range between them. In the cloud, AWS Lambda or Cloud Run render 240-frame chunks.               |
+| What does "Built for agents" mean? | It ships 21 skills and a CLI that prints JSON results (`lint`, `check`, `keyframes`, `doctor`). Coding agents writing videos is the main way it gets used. |
+| License?                           | Apache 2.0.                                                                                                                                                |
+
+## 3. How does it relate to earlier posts?
+
+Most posts on this blog about headless browsers asked "how do you drive a browser?" HyperFrames uses the browser as a **camera**.
+
+| Project                                                | How it uses the browser                    | Relation to HyperFrames                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| [Playwright](/kb/2026-04-17-playwright-architecture)   | Drives and inspects pages for tests        | Both run on CDP. Playwright waits until the page is "ready"; HyperFrames decides what time it is on the page.               |
+| [Lightpanda](/kb/2026-03-13-lightpanda-architecture)   | A browser made light by dropping rendering | The opposite. Pixels are HyperFrames' output, so it needs Chrome's full rendering pipeline.                                 |
+| [browser-use](/kb/2026-06-30-browser-use-architecture) | An LLM agent uses the browser              | HyperFrames is also for agents, but the direction is reversed. The agent **writes** the page, and the renderer captures it. |
+
+## 4. Stack and size
+
+It is a Bun workspace monorepo with 14 packages. Lines of TypeScript and JavaScript, excluding tests:
+
+| Package                       | Lines of code | Test files | Role                                                                     |
+| ----------------------------- | ------------: | ---------: | ------------------------------------------------------------------------ |
+| `packages/studio`             |       172,923 |        680 | Browser-based editor UI                                                  |
+| `packages/cli`                |        87,059 |        303 | The `hyperframes` CLI (`init`, `lint`, `check`, `render`, `snapshot`…)   |
+| `packages/core`               |        52,450 |        192 | The in-page runtime, animation adapters, types                           |
+| `packages/producer`           |        40,114 |        120 | The full render pipeline (compile → capture → encode → audio → assemble) |
+| `packages/engine`             |        30,341 |         89 | Captures frames with Puppeteer and encodes them with FFmpeg              |
+| `packages/parsers`            |        16,482 |         43 | Composition HTML parser                                                  |
+| `packages/studio-server`      |        16,247 |         68 | Studio backend                                                           |
+| `packages/lint`               |        10,013 |         20 | 97 composition lint rules                                                |
+| `packages/player`             |         9,265 |         15 | Embeddable `<hyperframes-player>`                                        |
+| `packages/sdk`                |         7,911 |         22 | SDK for calling renders from code                                        |
+| `packages/aws-lambda`         |         4,469 |         13 | Distributed rendering on Lambda                                          |
+| `packages/shader-transitions` |         3,678 |          6 | WebGL shader transitions                                                 |
+| `packages/gcp-cloud-run`      |         3,049 |         11 | Distributed rendering on Cloud Run                                       |
+| `packages/sdk-playground`     |         1,617 |          3 | SDK examples                                                             |
+
+That is about 456,000 lines in total, 38% of it Studio. The rendering core lives in `engine`, `producer` and `core`, which together pass 120,000 lines. Three files exceed 5,000 lines: `renderOrchestrator.ts` (5,414), which coordinates the render stages; the page runtime's `init.ts` (5,170); and `frameCapture.ts` (5,031), which captures frames.
+
+External dependencies are few. The engine uses only `puppeteer`, `hono` (a local file server) and `linkedom` (server-side DOM parsing). FFmpeg and Chrome are located on the system.
+
+## 5. Rendering one myself
+
+Before reading the structure, I made a video. It is a 6-second composition with a title, a subtitle, a progress bar, a square spinning by CSS animation, and a number counting from 0 to 1000.
+
+```html
+<div
+  id="root"
+  data-composition-id="main"
+  data-width="1920"
+  data-height="1080"
+  data-start="0"
+  data-duration="6"
+>
+  <h1 class="title clip" id="t" data-start="0" data-duration="6" data-track-index="1">
+    HTML로 만든 영상
+  </h1>
+  <p class="sub clip" id="s" data-start="1" data-duration="5" data-track-index="2">
+    frame-by-frame, deterministic
+  </p>
+  <div class="bar clip" id="b" data-start="0" data-duration="6" data-track-index="3"></div>
+  <div class="spin clip" id="sp" data-start="0" data-duration="6" data-track-index="4"></div>
+  <div class="counter clip" id="c" data-start="0" data-duration="6" data-track-index="5">0</div>
+  <script>
+    const tl = gsap.timeline({ paused: true })
+    tl.from('#t', { x: -200, opacity: 0, duration: 1, ease: 'power3.out' }, 0)
+    tl.from('#s', { y: 40, opacity: 0, duration: 0.8 }, 1)
+    tl.fromTo('#b', { scaleX: 0 }, { scaleX: 1, duration: 6, ease: 'none' }, 0)
+    const n = { v: 0 }
+    tl.to(
+      n,
+      {
+        v: 1000,
+        duration: 5,
+        ease: 'none',
+        onUpdate: () => {
+          document.getElementById('c').textContent = Math.round(n.v)
+        },
+      },
+      0
+    )
+    window.__timelines = window.__timelines || {}
+    window.__timelines['main'] = tl
+  </script>
+</div>
+```
+
+There are only three rules. Give each element `data-start` and `data-duration`, create the GSAP timeline with `{ paused: true }`, and register it on `window.__timelines["main"]`. You never call `play()`. The renderer moves the timeline.
+
+`hyperframes check` inspects the composition in headless Chrome.
+
+```text
+Lint      ◇ 0 errors, 0 warnings
+Runtime   ◇ 0 errors, 0 warnings
+Layout    ◇ 0 issues across 9 sample(s)
+Motion    ◇ 0 errors, 0 warnings
+Contrast  ◇ 14/14 text checks pass WCAG AA
+◇  Check passed
+```
+
+`hyperframes render -w 1` reports:
+
+```text
+634.2 KB · 6.0s video · rendered in 8.8s
+screenshot capture · hardware gpu · compile 0.3s · extract 0.0s · audio 0.0s ·
+probe 0.0s · setup 0.2s · capture 8.2s · encode (during capture) 8.2s · assemble 0.0s
+```
+
+![Frame 90 of the rendered video](/static/post-images/2026-10-07-hyperframes-architecture/frame-090.png)
+
+This is frame 90. Its time is 89/30 = 2.967 s, and the number is 1000 × 2.967 / 5 = 593. Nearly all the time went to `capture`: 180 frames in 8.2 s, about 22 frames per second. The log also had this line.
+
+```text
+[engine] fast capture: falling back to screenshot capture — css-animation detected
+(drawElementImage cannot reproduce it; see fast-capture-limitations.md)
+```
+
+The CSS animation on the spinning square kept it from using the fast capture method (see 7.6).
+
+## 6. What stages does a render go through?
+
+`hyperframes render` runs lint first (`cli/src/commands/render/execute.ts:96`). If lint passes, it calls the producer's `executeRenderJob` (`producer/src/services/renderOrchestrator.ts:2863`). The header comment of that file lists the stages itself.
+
+| Stage | Name           | What it does                                                                                                |
+| ----- | -------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1     | compile        | Inlines sub-compositions (`data-composition-src`) and derives `data-end` from `data-start + data-duration`. |
+| 1b    | probe          | Opens a browser to confirm the real duration, and reconciles media durations with ffprobe.                  |
+| 2     | extract videos | Uses FFmpeg to extract every `<video>`'s frames as images.                                                  |
+| 3     | audio          | Mixes the sound of every `<audio>` and `<video>` into one `audio.m4a`.                                      |
+| 4     | capture        | Captures frames one at a time in headless Chrome.                                                           |
+| 5     | encode         | Encodes the frames to H.264. Skipped if encoding already ran during capture.                                |
+| 6     | assemble       | Muxes video and audio and applies `faststart`.                                                              |
+
+Audio is handled entirely apart from video. Each track goes through FFmpeg filters (`atrim`, `volume`, `adelay`), and one `amix` combines them (`engine/src/services/audioMixer.ts`). Effects such as EQ, compression and reverb run not in FFmpeg but in **an `OfflineAudioContext` inside the same headless Chrome**. Studio's preview plays effects through Web Audio, so the render has to use the same graph code for the sound to match. A comment in `audioFxRender.ts` notes that four of them, including the compressor and the modulated delays, have no FFmpeg filter that behaves the same way.
+
+## 7. How is frame N captured?
+
+The core is stage 4, capture. Following one frame from start to finish:
+
+1. Compute the time: `t = N × fps.den / fps.num`, rounded to the frame grid.
+2. Call `window.__hf.seek(t)` in the page.
+3. The page runtime seeks every animation adapter to `t` and shows or hides each clip.
+4. Move the virtual clock to `t` and run the queued `requestAnimationFrame` callbacks.
+5. Put the frame image for that time in place of each `<video>`.
+6. Read the pixels.
+7. Write the pixels to FFmpeg's stdin.
+
+### 7.1 Time is computed with integer math
+
+```ts
+export function quantizeSeekTime(
+  timeSeconds: number,
+  fps: number,
+  subFrameDivisions?: number
+): number {
+  const divisions = Number.isInteger(subFrameDivisions) ? (subFrameDivisions as number) : 1
+  if (divisions <= 1) return quantizeTimeToFrame(timeSeconds, fps)
+  const grid = safeFps(fps) * divisions
+  return Math.round(safeTime(timeSeconds) * grid) / grid
+}
+```
+
+This is `core/src/inline-scripts/parityContract.ts:63`. The renderer, Studio's preview and `check` all snap time with this function. NTSC rates like 29.97 fps are taken as the fraction `30000/1001`, so floating-point error can't accumulate and shift a frame.
+
+### 7.2 The page's clock is swapped out
+
+When rendering, the producer serves the composition from a local file server and inserts a script at the very top of `<head>`, so it runs before any author script (`producer/src/services/fileServer.ts:219`). That script replaces the page's clock with a virtual one. Abridged:
+
+```js
+var virtualNowMs = 0
+// Date.now() and performance.now() return virtualNowMs
+window.requestAnimationFrame = function (callback) {
+  var entry = { id: rafId++, callback: callback, cancelled: false }
+  rafQueue.push(entry) // queued, not run
+  return entry.id
+}
+window.__HF_VIRTUAL_TIME__ = {
+  seekToTime: function (nextTimeMs) {
+    virtualNowMs = Math.max(0, Number(nextTimeMs) || 0)
+    flushAnimationFrame() // rAF callbacks run only on seek
+    return virtualNowMs
+  },
+}
+```
+
+On a page with this shim, time does not pass on its own. The clock moves only when the renderer calls `seekToTime`, and only then do `requestAnimationFrame` callbacks run, once. Whether capturing the 3-second mark takes 1 second or 10, the page believes it is 3 seconds in.
+
+There are things the shim does not replace, though. Its doc comment says it freezes "the rAF/setTimeout pipeline", but the code only saves the originals of `setTimeout` and `setInterval` and never overrides them. `Math.random` is also left alone by default (`seedRandomFromFrame: false`). Only the distributed chunk worker seeds it (`distributed/renderChunk.ts:711`). Lint covers the rest.
+
+### 7.3 One seek fans out to 13 adapters
+
+`__hf.seek` is also in a bridge script the producer injects (`fileServer.ts:658`, abridged).
+
+```js
+hf.seek = function (t, options) {
+  p.renderSeek(t, options) // page runtime
+  var nextTimeMs = Math.max(0, Number(t) || 0) * 1000
+  window.__HF_VIRTUAL_TIME__.seekToTime(nextTimeMs) // virtual clock
+  seekSameOriginChildFrames(window, nextTimeMs) // iframes too
+}
+```
+
+`renderSeek` (`core/src/runtime/init.ts:3921`) stops the clock, seeks every registered adapter to `t`, then pauses them again. There is one adapter per animation library.
+
+| Adapter                                    | How it seeks                                                         |
+| ------------------------------------------ | -------------------------------------------------------------------- |
+| gsap                                       | `timeline.totalTime(t)`, then one more re-render (explained below)   |
+| css                                        | `currentTime = t; pause()` on each of `element.getAnimations()`      |
+| waapi                                      | `animation.currentTime = t; animation.pause()`                       |
+| animejs                                    | `instance.seek(t)`                                                   |
+| lottie                                     | `goToAndStop(frame, true)`                                           |
+| three                                      | Writes the time to `window.__hfThreeTime` and dispatches `hf-seek`   |
+| typegpu                                    | Writes the time to `window.__hfTypegpuTime` and dispatches `hf-seek` |
+| frame-source                               | Seeks registered frame sources only while their clip is visible      |
+| mapbox, maplibre, leaflet, google-maps, d3 | No seek. They only wait until tiles and data have loaded             |
+
+Three.js and TypeGPU's own clocks are not replaced. The author has to read `__hfThreeTime` or listen for `hf-seek` and redraw the scene.
+
+The GSAP adapter does not stop at a single `totalTime(t)`. `rerenderGsapTimelineAt` (`core/src/runtime/adapters/gsap.ts:11`) moves to `t - 0.001` first, primes tweens that start exactly at `t`, and then moves to `t`. This makes a `set` and a `from` at the same instant apply in the order they were written. Every frame of a video is a still image, so boundary cases that go unnoticed during real-time playback show up as they are.
+
+### 7.4 Clips are shown over half-open intervals
+
+An element with `data-start` and `data-duration` is shown or hidden at time `t` by this rule (`core/src/runtime/clipWindow.ts:6`).
+
+```ts
+/** Half-open: two back-to-back clips never both hold the shared boundary instant */
+export const isInClipWindow = (time, start, end) =>
+  hasClipStarted(time, start) && time < end && !sameInstant(time, end)
+
+export const isClipVisibleAt = (time, start, end, compositionDuration) =>
+  isInClipWindow(time, start, end) ||
+  (hasClipStarted(time, start) &&
+    compositionDuration > 0 &&
+    end >= compositionDuration - TERMINAL_EPSILON_SECONDS)
+```
+
+Because the window is `[start, end)`, a 0–3 s clip and a 3–6 s clip are never both visible at exactly 3 s. There is one exception: a clip that runs to the end of the video stays visible through the last instant. Without it, the final frame would be blank.
+
+### 7.5 `<video>` is never played
+
+Seeking an in-page `<video>` and waiting for `seeked` is slow, and depending on the decoder it may not land on the exact frame. HyperFrames doesn't play it at all.
+
+In stage 2 (extract videos), FFmpeg extracts each video's frames to image files (`engine/src/services/videoFrameExtractor.ts`). Variable-frame-rate sources are converted to a constant rate with the `fps=F:start_time=0:round=up` filter. At capture time, the frame for that instant goes into a hidden `<img>` next to the `<video>` as a data URI; the video's size, position and styles are copied onto the `<img>`, and the `<video>` is hidden (`screenshotService.ts:641`). What you see on screen is not a video but an image that changes every frame.
+
+### 7.6 Three ways to read the pixels
+
+| Mode          | When                                                          | How                                                                                                                              |
+| ------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `beginframe`  | Linux + `chrome-headless-shell`                               | `HeadlessExperimental.beginFrame` advances Chrome's compositor one frame at a time, and the same call returns the screenshot     |
+| `drawelement` | Default, when there are no CSS animations, blurs, blends etc. | Wraps the page in `<canvas layoutsubtree>` and draws DOM paint records straight into the canvas with `canvas.drawElementImage()` |
+| `screenshot`  | When neither of the above can be used                         | `Page.captureScreenshot`                                                                                                         |
+
+The docs say it "seeks frame by frame with `beginFrame`", but that mode is Linux-only. On macOS and Windows there is no `beginFrame`; what sets the time is the virtual clock from 7.2 and the seek from 7.3. What `beginFrame` adds is bringing Chrome's compositor to the same instant.
+
+`drawElement` is an experimental Chrome feature (`--enable-features=CanvasDrawElement`). Skipping the compositor makes it fast, but it can't reproduce effects the compositor handles (CSS animations, `backdrop-filter`, `blur`, `mix-blend-mode`). So before rendering, the engine scans computed styles and stylesheets, and if it finds such effects it switches to screenshot (`engine/src/services/threeDProjection.ts:957`). That is what happened in the section 5 log.
+
+I measured how much faster it is. Replacing the spinning square's CSS animation with a GSAP rotation allows `drawElement`. I rendered the same composition three times with each method.
+
+<StackedBars chart="hyperframes-capture-mode" lang="en" />
+
+| Capture method | Render time | Capture time |
+| -------------- | ----------: | -----------: |
+| drawElement    |       4.7 s |        4.2 s |
+| screenshot     |       8.9 s |        8.3 s |
+
+Capture time dropped by 49%, close to the "~46% faster than Page.captureScreenshot on local GPU" claimed in a comment in `drawElementService.ts`.
+
+### 7.7 Frames are piped to FFmpeg
+
+By default, captured frames are not saved to disk but streamed to FFmpeg's stdin (`streamingEncoder.ts:264`). FFmpeg reads JPEGs (quality 80) through `-f image2pipe -vcodec mjpeg -i -` and encodes them with `libx264`. The quality presets are draft (ultrafast, CRF 28), standard (medium, CRF 18) and high (slow, CRF 15). Since every frame comes from a still image, B-frames are off (`-bf 0`) and the color space is pinned to BT.709.
+
+## 8. How much faster do more workers make it?
+
+One worker is one Chrome process (the `--workers` help text puts it at about 256 MB each). Frames are split into contiguous ranges. Split four ways, 180 frames become 0–44, 45–89, 90–134 and 135–179 (`parallelCoordinator.ts:422`). A `FrameReorderBuffer` puts the frames each worker captures back in order and feeds them to a single FFmpeg.
+
+I rendered the same composition three times at each worker count, on an Apple M5 Pro (15 cores) with hardware GPU.
+
+<StackedBars chart="hyperframes-workers" lang="en" />
+
+| Workers  | Render time | Capture time | vs. 1 worker |
+| -------- | ----------: | -----------: | -----------: |
+| 1        |       8.7 s |        8.1 s |         1.0× |
+| 2        |       5.2 s |        4.3 s |         1.7× |
+| 4        |       3.6 s |        2.7 s |         2.4× |
+| auto (5) |       4.0 s |        2.3 s |         2.2× |
+| 8        |       3.3 s |        2.3 s |         2.6× |
+
+Up to two workers, time nearly halves; past four, capture time barely drops. The video is only 6 seconds long, so with eight workers each one handles just 23 frames. The fixed time each worker spends opening the page and waiting for it to be ready likely becomes relatively large (I did not time the steps inside the capture stage separately). `auto` picked five workers, but browser setup (`setup`) grew to 0.9 s, so it was slower than four. There is one more difference between one worker and several. Only with one worker does encoding run during capture (`encode (during capture)`); with several, 0.4 s of encoding follows capture.
+
+In the cloud, the same approach splits the frame range across many machines. `producer/src/distributed.ts` exposes three pure functions.
+
+```ts
+const planResult = await planV2(projectDir, config, planV2Dir) // controller
+const chunk = await renderChunkV2(planV2Dir, chunkIndex, outputChunkPath) // worker
+await assembleV2(planV2Dir, chunkPaths, outputPath) // controller
+```
+
+- `plan` runs compile, video frame extraction and the audio mix, and freezes the result into one directory. Audio is mixed only once, here.
+- The frame range is split into 240-frame chunks (8 seconds at 30 fps). The comment says the size "fits Lambda's 15-min cap" (`distributed/plan.ts:361`).
+- Chunk workers force the software renderer (SwiftShader) instead of a GPU and seed `Math.random` per frame. The GOP size equals the chunk length, so every chunk starts on a keyframe.
+- `assemble` joins the chunks with `ffmpeg -f concat -c copy`, without re-encoding.
+
+On AWS, a Step Functions `Map` launches a worker per chunk; on GCP, Cloud Workflows does (capped at 20 concurrent). Both adapters are thin wrappers where one function plays all three roles: `plan`, `renderChunk` and `assemble`.
+
+## 9. Does the same input really give the same video?
+
+The docs (`docs/concepts/determinism.mdx`) describe deterministic rendering like this.
+
+> Rendering never plays your video. It asks for one frame at a time, and the answer to "what does frame 90 look like?" depends on exactly one thing that changes: the number 90.
+
+The frame adapter contract also requires that "seeks work in any order". I checked. I decoded the 21 MP4s from section 8 with `ffmpeg -f framemd5` and hashed every frame.
+
+| Comparison                      | Result                                              |
+| ------------------------------- | --------------------------------------------------- |
+| Same settings, rendered 3 times | Bit-identical across all 3 runs, for all 7 settings |
+| 1 worker vs. 4 workers          | Different                                           |
+| 5 workers (auto) vs. 8 workers  | Different                                           |
+
+The same settings gave exactly the same result. Different worker counts did not. To rule out the encoder, I rendered PNG sequences (`--format png-sequence`) and compared pixels directly. Between one and four workers, **135 of the 180 frames, from frame 46 to 180,** differed. The first 45 frames are the range the first worker captures in the four-worker render. Every frame captured from the second worker onward was different.
+
+Here is where they differ. In frame 90, 143 pixels differed, all inside one glyph of the title, '로'.
+
+![The glyph '로' captured with one worker (left) and four (middle); differing pixels on the right](/static/post-images/2026-10-07-hyperframes-architecture/worker-diff.png)
+
+The stroke edges are shifted sideways by one pixel. To narrow down the cause, I changed two things.
+
+| Experiment                                        | Difference between 1 and 4 workers |
+| ------------------------------------------------- | ---------------------------------- |
+| GPU off, software rendering (`--no-browser-gpu`)  | 135 frames differ                  |
+| Only the title's `x: -200` slide-in tween removed | **0 frames differ**                |
+
+It had nothing to do with the GPU. Removing the one-second tween that slides the title in from the left made the two outputs identical. After one second, the title's `x` is 0 in every worker. What differs is how it got there. The first worker stepped through the slide-in frame by frame from 0 s; the second seeked straight to 1.5 s. Even with the same DOM values, where Chrome rasterizes the glyph appears to be affected by the frames before it (I did not trace this inside Chrome, so this is an inference).
+
+So HyperFrames' determinism holds for **the same input, the same worker split and the same machine**. A frame's pixels are not set by the frame number alone; they also depend on which frames that Chrome process went through before. The difference is invisible to the eye, but it matters for regression tests that compare render hashes, or for retries that re-render a chunk. The repository is aware of this. The lint hint against `gsap.utils.random()` explains that "each render worker initializes independently, so random values diverge across chunks", and the docs recommend `--docker` renders, which pin Chromium, fonts and FFmpeg, to remove machine-to-machine differences.
+
+## 10. What does "Built for agents" mean?
+
+Apart from the code, documentation for agents makes up a large part of the repository. `skills/` holds 21 skills; the Markdown alone is 330 files and 42,392 lines. The 21 `SKILL.md` entry files come to 5,349 lines.
+
+The `/hyperframes` skill is the router. When a "make me a video" request arrives, it first looks at project state (is this a Remotion port, an existing edit, is there a `BRIEF.md`), then follows a priority table to one of 10 workflow types (`/product-launch-video`, `/pr-to-video`, `/music-to-video`, `/slideshow`, and so on). Workflow skills are not installed up front; once the router picks one, it installs it with `npx hyperframes skills update <workflow>`.
+
+The CLI is built so an agent can read its results.
+
+| Command            | What the agent gets                                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lint --json`      | A list of findings shaped as `{code, severity, message, file, line, column, selector, elementId, fixHint, snippet}`                                       |
+| `check --json`     | Lint, runtime errors, layout (text overflow and overlap), motion assertions, WCAG contrast. Each finding carries `selector`, `bbox`, `time` and `fixHint` |
+| `snapshot`         | PNGs at chosen times and a `contact-sheet.jpg` (many frames in one image). A code comment calls it a "grid view for AI review"                            |
+| `keyframes --json` | JSON of GSAP tweens, CSS `@keyframes` and Anime.js keyframes laid out in absolute time. `--shot` draws an onion-skin PNG of the motion path               |
+| `doctor --json`    | Environment checks: Node, FFmpeg, Chrome, memory, `/dev/shm` and more. It always exits 0, so the skill says to gate on `jq -e '.ok'`                      |
+
+`check` is like the renderer in that it seeks instead of playing (the comment at `checkBrowser.ts:278` reads "`check` seeks, it never plays"). It seeks to 9 times to audit layout, and at up to 5 times it takes one screenshot with the text hidden, reads the real background color, and computes contrast. The "14/14 text checks pass WCAG AA" in section 5 is the result of this check.
+
+There are 97 lint rules, and their hints give the reason so an agent can fix the problem. For `Date.now()` the hint says to use the GSAP timeline position instead of wall-clock time; for `crypto.getRandomValues()`, to use a seeded PRNG such as mulberry32. The skills also carry working rules such as "never render merely because checks pass; pause at the final preview".
+
+## 11. How is it different from Remotion?
+
+The obvious comparison is [Remotion](https://www.remotion.dev/), which makes videos with React. The repository has a comparison doc (`docs/guides/hyperframes-vs-remotion.mdx`) and a `/remotion-to-hyperframes` skill that ports Remotion projects.
+
+|                        | HyperFrames                                          | Remotion                                                                     |
+| ---------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Written in             | HTML, CSS, JS                                        | React, TypeScript                                                            |
+| How time is handled    | The renderer pauses animations and seeks every frame | Components read the frame number with `useCurrentFrame()` and compute values |
+| Existing web animation | GSAP, Lottie and CSS work nearly as-is               | Rewritten as React components                                                |
+| License                | Apache 2.0                                           | Free for companies of up to three people, paid above that                    |
+
+The difference comes down to "who decides the time?" In Remotion a component is a pure function of the frame number, so the author computes every time-dependent value. In HyperFrames the author writes ordinary web animation, and the renderer decides that animation's time on its behalf. The virtual clock, the 13 adapters and the `<video>` swap from section 7 all exist because of this choice.
+
+The comparison doc is plain about where Remotion is better: it is older, its Lambda rendering is more mature, and this.
+
+> HyperFrames asks you to follow rules — paused timeline, no wall clocks, no unseeded randomness — and breaks quietly if you don't.
+
+## 12. Suggested reading order
+
+1. **`docs/concepts/determinism.mdx`, `docs/guides/hyperframes-vs-remotion.mdx`**: the shortest statement of the design intent.
+2. **`packages/cli/src/templates/blank/index.html`**: the smallest composition.
+3. **`buildVirtualTimeShim` and `bridge` in `packages/producer/src/services/fileServer.ts`**: where the clock is swapped and `__hf.seek` lives. If you read only one file in this repository, make it this one.
+4. **`packages/core/src/runtime/clipWindow.ts`**: the 25-line clip visibility rule.
+5. **`packages/core/src/runtime/adapters/`**: read `waapi.ts`, `css.ts`, then `gsap.ts` to see how seeking differs per library.
+6. **The header comment of `packages/producer/src/services/renderOrchestrator.ts`**: the six-stage list. Leave the 5,414-line body for later.
+7. **`captureFrameCore` in `packages/engine/src/services/frameCapture.ts`**: the function that captures one frame.
+8. **`packages/producer/src/services/distributed/plan.ts`**: how chunks are split, with the reasons in comments.
+9. **`skills/hyperframes/SKILL.md`**: the 154-line router.
+
+## 13. Design points worth noting
+
+**1. Time is set from outside.** The renderer takes over `Date.now()`, `requestAnimationFrame` and the time of 13 kinds of animation library. That is why existing GSAP or Lottie web animation can become video nearly unchanged.
+
+**2. Preview, checks and render share one seek function.** Studio's preview, `check`, `snapshot` and the renderer all go through the same runtime and the same `quantizeSeekTime`. That is why the frame you see in preview matches the rendered one.
+
+**3. When the fast path fails, it falls back to the safe one.** `drawElement` capture detects unsupported CSS effects before rendering, switches to screenshot, and logs why. `beginFrame` is also probed at launch, and if it fails, Chrome is relaunched with ordinary flags.
+
+**4. Distributed rendering is three pure functions.** `plan`, `renderChunk` and `assemble` know nothing about the network. The Lambda and Cloud Run adapters are thin wrappers around them, which makes moving to another cloud easy.
+
+**5. Output is designed for agents to read.** `lint`, `check`, `keyframes` and `doctor` support `--json`, and every finding carries a CSS selector, a time and a fix hint. An agent can tell what went wrong without watching the video like a person would.
+
+## 14. Things to watch out for
+
+**1. Determinism is narrower than the docs say.** As measured in section 9, pixels can change when the worker count changes. If you re-render a video and compare hashes, pin the worker count too.
+
+**2. The virtual clock has gaps.** `setTimeout` and `setInterval` are not virtualized, `Math.random` is unseeded in local renders, and network requests during a render are not blocked. Lint is what stops these. It checks the scripts written in the composition with regular expressions, so `Math.random` calls inside an externally loaded library are outside its scope.
+
+**3. Breaking the rules fails quietly.** A timeline created without `paused: true` or an infinitely repeating animation yields a strange video with no error. The comparison doc admits this. `check` catches much of it, but in the end the author (usually an agent) has to follow the contract.
+
+**4. The capture path differs by platform.** `beginFrame` is used only on Linux, and `drawElement` only under certain conditions. The same composition is captured through different paths on a macOS laptop and a Linux server. The official way to remove that difference is a Docker render.
+
+**5. The code changes very fast.** Seven months produced 5,336 commits and 518 release tags. Branches driven by telemetry analysis (for example, code that categorizes why drawElement was not used) appear throughout. The top committer accounts for 2,339 commits, 44% of the total.
+
+**6. Telemetry is on by default.** Every render sends anonymous telemetry, and the `--skill` option records which skill started the render. You can turn it off with `hyperframes telemetry disable` or the `HYPERFRAMES_NO_TELEMETRY` or `DO_NOT_TRACK` environment variables.
+
+## 15. Conclusion
+
+HyperFrames gets exact frames out of a web page that runs in real time by **not playing the page, and instead moving the page's clock and every animation to each frame's time before capturing it**. The virtual clock shim, the 13 animation adapters, the pre-extracted video frames and the half-open clip windows all serve to let the renderer, not the page, decide what time it is.
+
+My measurements matched this design. Renders with the same settings were bit-identical every time, and splitting the frame range across several Chrome processes made a 6-second video up to 2.6× faster. The measurements also showed the limit. Even for the same frame, glyph rasterization can depend on which frames were captured before it, so changing the worker count produces pixel differences invisible to the eye.
+
+---
+
+> Analysis date: 2026-10-07
+> Version: `hyperframes` v0.8.140 (Apache 2.0)
+> Commit: `5c7f6316d` (`main`, 2026-10-07)
+> Repository: https://github.com/heygen-com/hyperframes
+> Measurement setup: Apple M5 Pro (15 cores), macOS, Node 24.15, FFmpeg 8.1, `hyperframes@0.8.140` CLI, 1920×1080 at 30 fps for 6 s (180 frames), each setting rendered 3 times, median reported
+
+_Written with Claude Code_

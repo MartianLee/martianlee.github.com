@@ -28,7 +28,10 @@ export interface Chart {
   ticks: number[]
   title: Record<Lang, string>
   caption: Record<Lang, string>
-  sourceUrl: string
+  /** 측정 출처 링크. 없으면 출처 이름만 적는다. */
+  sourceUrl?: string
+  /** 측정 출처 이름. 없으면 sourceName(study-rails-compare)을 쓴다. */
+  source?: Record<Lang, string>
   firstCol: Record<Lang, string>
   /** 축 단위. 기본 ms */
   unit?: Record<Lang, string>
@@ -194,4 +197,106 @@ export const charts: Record<string, Chart> = {
     sourceUrl: 'https://github.com/MartianLee/study-rails-compare/blob/main/docs/layers.md',
     firstCol: { ko: '프레임워크', en: 'Framework' },
   },
+}
+
+// 「HyperFrames 아키텍처 분석」 8장. 6초 1080p 30fps(180프레임) 컴포지션, Apple M5 Pro, 3회 중앙값.
+// 칸은 CLI가 출력한 단계별 시간이고, 합계는 CLI의 "rendered in" 값이다(반올림 때문에 칸 합과 0.1초 어긋날 수 있다).
+const HF_SOURCE = {
+  ko: '직접 측정, Apple M5 Pro, 3회 중앙값',
+  en: 'own measurement, Apple M5 Pro, median of 3 runs',
+}
+const HF_SEGMENTS = [
+  {
+    key: 'prep',
+    fill: 'bg-ink/30',
+    label: { ko: '컴파일·브라우저 준비', en: 'Compile and browser setup' },
+  },
+  {
+    key: 'capture',
+    fill: 'bg-accent',
+    label: { ko: '프레임 캡처', en: 'Frame capture' },
+  },
+  { key: 'encode', fill: 'bg-ink/60', label: { ko: '인코딩', en: 'Encoding' } },
+]
+
+charts['hyperframes-workers'] = {
+  segments: HF_SEGMENTS,
+  bars: [
+    {
+      name: '1',
+      label: { ko: 'worker 1개', en: '1 worker' },
+      values: { prep: 0.5, capture: 8.1, encode: 0 },
+      total: 8.7,
+    },
+    {
+      name: '2',
+      label: { ko: 'worker 2개', en: '2 workers' },
+      values: { prep: 0.5, capture: 4.3, encode: 0.4 },
+      total: 5.2,
+    },
+    {
+      name: '4',
+      label: { ko: 'worker 4개', en: '4 workers' },
+      values: { prep: 0.5, capture: 2.7, encode: 0.4 },
+      total: 3.6,
+    },
+    {
+      name: 'auto',
+      label: { ko: 'auto (5개)', en: 'auto (5)' },
+      values: { prep: 1.2, capture: 2.3, encode: 0.4 },
+      total: 4.0,
+    },
+    {
+      name: '8',
+      label: { ko: 'worker 8개', en: '8 workers' },
+      values: { prep: 0.5, capture: 2.3, encode: 0.4 },
+      total: 3.3,
+    },
+  ],
+  axisMax: 10,
+  ticks: [0, 2.5, 5, 7.5, 10],
+  unit: { ko: '초', en: 's' },
+  digits: 1,
+  title: {
+    ko: '6초 영상 하나를 렌더링하는 데 걸린 시간.',
+    en: 'Time to render one 6-second video.',
+  },
+  caption: {
+    ko: 'worker 1개일 때는 캡처와 동시에 인코딩하므로 인코딩 칸이 따로 없습니다. 4개를 넘기면 캡처 시간이 거의 줄지 않습니다.',
+    en: 'With one worker, encoding runs during capture, so it has no separate segment. Past four workers, capture time barely drops.',
+  },
+  source: HF_SOURCE,
+  firstCol: { ko: 'worker 수', en: 'Workers' },
+}
+
+charts['hyperframes-capture-mode'] = {
+  segments: HF_SEGMENTS,
+  bars: [
+    {
+      name: 'drawelement',
+      label: { ko: 'drawElement', en: 'drawElement' },
+      values: { prep: 0.5, capture: 4.2, encode: 0 },
+      total: 4.7,
+    },
+    {
+      name: 'screenshot',
+      label: { ko: 'screenshot', en: 'screenshot' },
+      values: { prep: 0.5, capture: 8.3, encode: 0 },
+      total: 8.9,
+    },
+  ],
+  axisMax: 10,
+  ticks: [0, 2.5, 5, 7.5, 10],
+  unit: { ko: '초', en: 's' },
+  digits: 1,
+  title: {
+    ko: '캡처 방식만 바꿨을 때의 렌더링 시간 (worker 1개).',
+    en: 'Render time with only the capture method changed (one worker).',
+  },
+  caption: {
+    ko: 'CSS 애니메이션을 GSAP 회전으로 바꾼 같은 컴포지션입니다. drawElement는 캡처 시간이 screenshot의 절반 정도입니다.',
+    en: 'The same composition with the CSS animation replaced by a GSAP rotation. drawElement capture takes about half the time of screenshot.',
+  },
+  source: HF_SOURCE,
+  firstCol: { ko: '캡처 방식', en: 'Capture method' },
 }
