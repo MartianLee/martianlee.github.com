@@ -2,8 +2,9 @@
 slug: '2026-10-07-minecraft-elden-ring-bridge'
 title: 'Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?'
 crawlertitle: 'Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?'
-summary: 'Since late September, "passthrough modding", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, the one implementation with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed.'
+summary: 'Since late September, "passthrough modding", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, one of the implementations with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed.'
 date: 2026-10-07 21:00:00 +0900
+lastmod: 2026-10-08 21:00:00 +0900
 categories: posts
 tags:
   [
@@ -65,10 +66,10 @@ This is the two-minute video the original creator posted.
 
 Over the following week, similar clips kept coming: Minecraft in GTA V, Escape from Tarkov mechanics in Skyrim, Call of Duty Zombies mixed with Mario Kart. People started calling it "passthrough modding": run both games at the same time, put a mod on each side, and have them exchange collision and pixels.
 
-The day after the clip spread, September 30, two repositories went public.
+Right after the clip spread, two repositories went public on September 30 and October 1 (UTC).
 
 - **`justbustin/minecraft-crossover-bridge`**: the README opens with "og idea from @tobynjacobs. implementation vibecoded on my own." It's a separate implementation built with an agent after seeing the original clip, and it supports two games, Monster Hunter: World and Elden Ring. This is the repository this post analyzes.
-- **`rehan-remade/universal-modder`**: a Claude Code plugin released by Rehan Sheikh, an engineer at fal. It's a bundle of skills for "modding almost any PC game you own," and its `mashup-mods` skill sorts this whole trend into four patterns. It picked up 4,942 stars and 452 forks in a week (GitHub API, 2026-10-07).
+- **`rehan-remade/universal-modder`**: a Claude Code plugin released by Rehan Sheikh, an engineer at fal. It's a bundle of skills for "modding almost any PC game you own," and its `mashup-mods` skill sorts this whole trend into four patterns (a fifth was added on October 7). It picked up 4,942 stars and 452 forks in a week (GitHub API, 2026-10-07).
 
 The justbustin repository this post reads had only 22 stars as of the same day. Even so, a Windows port called `Minecraft-Ring` appeared on October 2, and both universal-modder and crossover-modder link to it as the example of passthrough. In practice, it has become the reference implementation for the trend.
 
@@ -341,14 +342,15 @@ That critique lines up exactly with how minecraft-crossover-bridge is built. Eld
 
 ### universal-modder: a map of the trend
 
-The `mashup-mods` skill mentioned earlier lists its four patterns from lightest to heaviest.
+The `mashup-mods` skill mentioned earlier lists its patterns from lightest to heaviest. There were four when this post was written; an October 7 commit added a fifth.
 
-| Pattern                   | Approach                                                        | Example                              |
-| ------------------------- | --------------------------------------------------------------- | ------------------------------------ |
-| 1. Port the content       | Reimplement the guest's enemy or weapon with the host's mod API | Creepers added to Dark Souls         |
-| 2. Passthrough            | Run both games, exchange state, pixels and collision            | This bridge, Minecraft in GTA V      |
-| 3. Decomp as a library    | Wrap a decompiled game as a library and embed it in the host    | libsm64 + Garry's Mod                |
-| 4. Reimplement, then fuse | Rewrite both runtimes with an LLM and merge them in one process | MW2 + Skate 3 Rust reimplementations |
+| Pattern                   | Approach                                                          | Example                              |
+| ------------------------- | ----------------------------------------------------------------- | ------------------------------------ |
+| 1. Port the content       | Reimplement the guest's enemy or weapon with the host's mod API   | Creepers added to Dark Souls         |
+| 2. Passthrough            | Run both games, exchange state, pixels and collision              | This bridge, Minecraft in GTA V      |
+| 3. Decomp as a library    | Wrap a decompiled game as a library and embed it in the host      | libsm64 + Garry's Mod                |
+| 4. Reimplement, then fuse | Rewrite both runtimes with an LLM and merge them in one process   | MW2 + Skate 3 Rust reimplementations |
+| 5. Rules only             | Reimplement the guest's rules headless, keep the host as the view | (added 2026-10-07)                   |
 
 The skill advises picking the lightest pattern that delivers the idea. Passthrough is the second lightest. It uses the original games as they are, so there's no reimplementation cost, and in exchange you pay to keep two processes in sync. The seqlocks, the pose ordering, the stand-in character and the shared-life counters in this post are all that sync cost.
 
@@ -466,6 +468,7 @@ The Windows version uses F5 to cycle first- and third-person views and treats F6
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | [Claude Code Game Studios](/kb/2026-04-18-claude-code-game-studios-architecture) | That one used agents to _build_ games; this one uses agents to _take apart_ existing games |
 | [SkillSpector](/kb/2026-07-03-skillspector-architecture)                         | Both universal-modder and crossover-modder ship as skill repositories                      |
+| [Twelve passthrough mods compared](/kb/2026-10-08-passthrough-bridge-spectrum)   | The follow-up. Compares the mesh, logic and no-bridge approaches with the pixel one here   |
 
 ## References
 
