@@ -1,0 +1,255 @@
+---
+slug: '2026-10-08-passthrough-bridge-spectrum'
+title: '두 게임 사이의 브릿지는 무엇을 넘기나요? 패스스루 모딩 저장소 12개 비교'
+crawlertitle: '두 게임 사이의 브릿지는 무엇을 넘기나요? 패스스루 모딩 저장소 12개 비교'
+summary: '9월 말부터 두 게임을 동시에 실행해 하나로 합치는 패스스루 모드가 수십 개 공개됐습니다. 그중 12개의 코드를 열어 브릿지로 무엇을 넘기는지(픽셀, 메시, 로직, 브릿지 없음)에 따라 나누고 가장 많이 인용된 원형 SkyCraft가 픽셀 설계에서 메시로 방향을 바꾼 흔적과 Minecraft가 유독 guest로 많이 쓰이는 이유를 정리했습니다.'
+date: 2026-10-08 21:00:00 +0900
+categories: posts
+tags:
+  ['game-modding', 'minecraft', 'reverse-engineering', 'architecture', 'open-source', 'ai-agent']
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+**지금 GitHub에서는 두 게임을 동시에 실행해 한 게임 세계 안에서 다른 게임을 플레이하게 만드는 "패스스루 모드"가 9월 말부터 열흘 남짓 사이에 수십 개 쏟아지고 있습니다.**
+
+> 작성 일자: 2026-10-08
+> 코드를 읽은 저장소: `chasmlol/SkyCraft`(`bfcaf17`), `justbustin/minecraft-crossover-bridge`(`d172387`), `Xu060113/SekiroCraft-Passthrough`(`784d993`), `VortexisTV/wither-storm-gta5-passthrough`(`24e54b6`), `hattozo/gtr`(`bcc7a0d`), `GooseMcGee/DyingLight-GMod`(`e53209d`), `madgamer98/CU-Hornet`(`17598d6`), `Yaekai/OWCraft`(`cd5f061`), `yumekiru/callofwarcraft`(`c2a3996`), `BennettCode/Skyring`(`519649f`), `dr4lera/CyberpunkStreetChem`(`791e706`), `Ezmanw/universal-doomer`(`c271a16`)
+> 분석 범위: 코드 정적 분석. 게임을 실제로 띄워서 돌려 보지는 않았습니다. 저장소 생성일은 GitHub 기준(UTC), 스타 수는 2026-10-08 조회 값입니다.
+
+---
+
+_This article is mostly written by Claude Code_
+
+## 목차
+
+1. [전편 이후 무엇이 달라졌나요?](#1-전편-이후-무엇이-달라졌나요)
+2. [한 문장으로 이해하기](#2-한-문장으로-이해하기)
+3. [모든 패스스루 모드의 공통 뼈대](#3-모든-패스스루-모드의-공통-뼈대)
+4. [픽셀 브릿지: 그림을 통째로 넘깁니다](#4-픽셀-브릿지-그림을-통째로-넘깁니다)
+5. [메시 브릿지: 원형은 픽셀을 버렸습니다](#5-메시-브릿지-원형은-픽셀을-버렸습니다)
+6. [로직 브릿지: 그림 없이 숫자만 넘깁니다](#6-로직-브릿지-그림-없이-숫자만-넘깁니다)
+7. [브릿지 없음: 게임을 라이브러리로 만듭니다](#7-브릿지-없음-게임을-라이브러리로-만듭니다)
+8. [열하루 동안의 계보](#8-열하루-동안의-계보)
+9. [왜 다들 Minecraft를 guest로 쓰나요?](#9-왜-다들-minecraft를-guest로-쓰나요)
+10. [주의해서 볼 지점](#10-주의해서-볼-지점)
+11. [결론](#11-결론)
+12. [기존 글과의 관계](#12-기존-글과의-관계)
+
+---
+
+## 1. 전편 이후 무엇이 달라졌나요?
+
+[전편](/kb/2026-10-07-minecraft-elden-ring-bridge)에서는 Minecraft를 Elden Ring 안에서 돌리는 `justbustin/minecraft-crossover-bridge`를 읽었습니다. Minecraft가 그린 픽셀과 깊이를 공유 메모리로 넘기고 Elden Ring이 깊이를 비교해 자기 화면에 끼워 넣는 구조였습니다.
+
+그 뒤로 비슷한 저장소가 계속 올라왔습니다. 2026-10-08에 GitHub에서 "passthrough", "mashup mod", "crossover mod"로 검색하면 9월 20일 이후 생성된 게임 크로스오버 저장소만 27개가 나옵니다. 설명에 이 단어를 쓰지 않은 저장소까지 합치면 더 많습니다. Skyrim, GTA V, Sekiro, Outer Wilds, Dying Light, Cyberpunk 2077, Fallout: New Vegas, Valheim까지 화면에 보이는 쪽 게임도 다양합니다.
+
+코드를 읽어 보면 전편에서 본 방식이 유일한 답은 아닙니다. 두 게임을 동시에 실행한다는 점은 같지만 두 게임 사이의 브릿지로 **무엇을 넘기느냐**가 저장소마다 다릅니다. 이 유행에서 가장 많이 인용되는 원형인 `chasmlol/SkyCraft`는 처음에 전편과 같은 픽셀 방식으로 설계했다가, 실제로는 다른 방식으로 구현했습니다.
+
+이 글은 저장소 12개의 코드를 열어 그 차이를 정리합니다.
+
+## 2. 한 문장으로 이해하기
+
+**패스스루 모드는 모두 두 게임을 동시에 실행하지만 브릿지로 그림(픽셀)을 넘기는지, 모양(메시)을 넘기는지, 숫자(로직)만 넘기는지에 따라 세 갈래로 나뉘고 브릿지를 아예 없애는 네 번째 길이 있습니다.**
+
+용어를 먼저 정리합니다. 화면에 보이는 게임을 **host**, 뒤에서 함께 도는 게임을 **guest**라고 부릅니다. 둘을 잇는 공유 메모리나 소켓이 **브릿지**입니다. 아래 버튼으로 네 가지를 바꿔 보세요.
+
+<BridgeSpectrum lang="ko" />
+
+| 브릿지가 넘기는 것   | 프레임당 크기 | 그림은 누가 그리나 | 대표 저장소                                          |
+| -------------------- | ------------- | ------------------ | ---------------------------------------------------- |
+| 픽셀 (색 + 깊이)     | 약 37MB       | guest              | justbustin, SekiroCraft, gtr, DyingLight-GMod        |
+| 메시 (모양 + 텍스처) | 바뀔 때만     | host               | SkyCraft, OWCraft, callofwarcraft                    |
+| 로직 (수치·규칙)     | 약 0.6KB      | host               | Skyring, CyberpunkStreetChem                         |
+| 없음                 | 0             | host               | universal-doomer, er-mario, 2010-rust-rewrite-mashup |
+
+37MB는 전편에서 계산한 justbustin의 프레임 슬롯 하나(1920×1200, 픽셀당 16바이트)입니다. 0.6KB는 Skyring이 숨긴 Elden Ring에서 매 프레임 받아 오는 상태값의 합입니다. 두 숫자는 약 6만 배 차이가 납니다.
+
+이 분류 축이 새로운 것은 아닙니다. 커뮤니티 가이드 저장소 `trevaintdead/ai-game-modding-guides`(266★)의 14번 가이드는 이번 유행의 접근법을 7개 경로로 나누고 각 경로에 "무엇이 둘 사이를 건너는가(What crosses between them)" 열을 붙여 두었습니다(`guides/14-choosing-a-route.md:9-19`). 이 글의 네 분류는 그 표의 경로 2(프레임 합성), 3(네이티브 지오메트리 전송), 1(상태 교환), 5(엔진 재구현)에 대응합니다. 이 글은 그 지도를 들고 실제 저장소 코드가 정말 그렇게 생겼는지 확인합니다.
+
+## 3. 모든 패스스루 모드의 공통 뼈대
+
+어느 갈래든 뼈대는 같습니다.
+
+- **두 프로세스**: host와 guest를 동시에 실행합니다. guest 창은 보통 숨깁니다.
+- **공유 메모리**: 두 프로세스가 같은 메모리 영역을 매핑해 매 프레임 상태를 주고받습니다. 쓰는 중인 값을 읽지 않도록 대부분 seqlock(쓰기 전후로 번호를 올려 읽는 쪽이 확인하는 방식)이나 슬롯 여러 개를 돌려 쓰는 링 버퍼를 씁니다.
+- **대역(proxy)**: 상대 게임의 캐릭터나 지형은 내 게임 안에 보이지 않는 상자로 만듭니다. 칼이 그 상자에 맞으면 브릿지를 건너 진짜 대상에게 데미지가 전달됩니다.
+
+다른 점은 화면에 무엇이 어떻게 나타나느냐입니다. 다음 절부터 네 갈래를 차례로 봅니다.
+
+## 4. 픽셀 브릿지: 그림을 통째로 넘깁니다
+
+guest가 host 카메라 위치에서 자기 장면을 그린 뒤 그 그림을 넘기고 host가 깊이를 비교해 자기 화면에 끼워 넣습니다. 전편의 justbustin이 이 방식입니다. 코드를 읽은 저장소 중 절반이 여기에 속합니다.
+
+### 같은 기법을 다른 게임에 옮긴 경우
+
+- **SekiroCraft**(Sekiro + Minecraft): 뼈대는 justbustin과 같습니다. 동기화를 seqlock 대신 대기 시간 0인 뮤텍스 시도(try-lock)로 하고 Sekiro의 D3D11 Present를 직접 후킹합니다. host 조명을 다시 입히는 단계는 없습니다. README는 SkyCraft와 universal-modder 예제를 "아키텍처 참고만" 했다고 밝힙니다. universal-modder는 Claude Code가 아무 PC 게임이나 모드를 만들게 하는 스킬 모음 저장소이고 패스스루 예제 코드도 함께 들어 있습니다.
+- **wither-storm-gta5-passthrough**(GTA V + Minecraft Wither Storm 모드): universal-modder 저장소에 들어 있는 GTA V 예제(`examples/minecraft-gta5-passthrough`)의 포크입니다. Minecraft 쪽 Fabric 소스는 원본과 한 줄도 다르지 않고 합성기 차이는 약 11줄입니다. 새로 더한 것은 Forge 1.20.1 이식과 폭풍이 GTA 행인과 차를 빨아들이는 이벤트입니다.
+
+### 같은 뼈대에 새 아이디어를 얹은 경우
+
+- **gtr**(GTA V + Roblox 호환 엔진 Vanadium): guest가 색과 깊이에 더해 **태양 방향에서 본 그림자 깊이 맵(512×512)**을 따로 넘깁니다. host 셰이더가 이 맵으로 guest 캐릭터의 그림자를 GTA 땅에 드리웁니다. GTA가 화면 왼쪽 위 8×8 픽셀 두 칸에 프레임 번호를 그려 두면, 합성 단계에서 그 표시를 다시 읽어 어느 guest 프레임을 붙일지 정하는 방법도 씁니다(`shared/gtr_frame.h:92-`).
+- **DyingLight-GMod**(Dying Light + Garry's Mod): 숨겨 둔 Garry's Mod가 물리건과 무기, 스폰 메뉴를 맡습니다. GMod는 배경을 마젠타로 칠해 넘기고 host 셰이더가 마젠타를 투명으로 되돌립니다. 투명도를 담는 알파 채널 8비트에는 거리값을 넣습니다. 이 값은 물체끼리 가리는 판정에 쓰지 않고 **한 박자 늦게 도착한 그림을 현재 카메라 위치에 맞게 옮겨 붙이는 재투영**에 씁니다. host의 깊이 테스트는 꺼져 있습니다.
+- **CU-Hornet**(Casualties Unknown + Silksong): 둘 다 2D 게임이라 깊이가 필요 없습니다. Silksong이 투명 배경으로 그린 호넷을 넘기면 host가 스프라이트 하나로 붙입니다. 작성자도 `MODLOG.md:157`에서 깊이가 없다고 적었습니다.
+
+### 픽셀 브릿지가 못 하는 것
+
+픽셀 브릿지는 데모를 빨리 띄우기 좋습니다. guest 게임의 렌더러를 그대로 쓰니 블록, 손, 인벤토리 화면이 원본과 똑같이 보입니다. 다만 그림에는 guest가 칠한 빛이 이미 들어 있습니다. justbustin은 host 화면의 밝기에 맞춰 guest 그림의 밝기를 보정하지만 guest 물체가 host 땅에 그림자를 드리우게 할 방법은 없습니다. gtr이 그림자 맵을 따로 넘기는 이유가 여기에 있습니다. 그리고 매 프레임 37MB를 GPU에서 CPU로 읽었다가 다시 GPU로 올려야 합니다.
+
+## 5. 메시 브릿지: 원형은 픽셀을 버렸습니다
+
+`chasmlol/SkyCraft`(1,039★)는 Skyrim 안에서 Minecraft를 플레이하게 만드는 모드입니다. 2026-09-30 16:40(UTC)에 공개되어 justbustin보다 약 9시간 먼저 나왔고 이 글에서 다룬 저장소 중 가장 많은 저장소가 출처로 밝힌 원형입니다.
+
+SkyCraft의 설계 문서 9절은 렌더링을 이렇게 계획했습니다. "Minecraft는 자기 것만 Skyrim 해상도로 화면 밖에 그리고, 색과 깊이 텍스처를 GPU로 공유해 Skyrim 깊이 버퍼와 비교해 합성한다"(`docs/DESIGN.md:160-171`). 전편의 justbustin과 같은 픽셀 브릿지입니다.
+
+그런데 실제 코드에서 블록은 다른 길로 갑니다. 프로토콜 헤더의 render ring 주석은 이렇습니다.
+
+> Minecraft ships its own block meshes (built by Minecraft's block renderer: models, tint, AO, lighting) and its block atlas; Skyrim draws them in its own frame so blocks stay locked to the world and are occluded by Skyrim geometry.
+>
+> `protocol/skycraft_protocol.h:321-324`
+
+Minecraft는 블록의 **모양(메시)과 텍스처 아틀라스**만 64MB 링 버퍼로 넘기고 그림은 Skyrim이 자기 프레임 안에서 직접 그립니다. 정점 하나는 32바이트(위치, UV, 색, 블록광과 하늘광)입니다. 픽셀로 넘기는 것은 손, HUD, 인벤토리 화면뿐입니다.
+
+설계를 바꾼 이유를 직접 적은 문장은 저장소에 없습니다. 다만 README가 얻은 결과를 보여 줍니다. 블록은 "Skyrim의 프레임 안에서 Skyrim의 태양, 그림자, 안개, 날씨와 함께 그려지고", Minecraft의 횃불과 용암이 Skyrim을 밝힙니다(`README.md:21-24`). 픽셀 브릿지로는 만들기 어려운 결과입니다. 같은 블록을 세 방식으로 받아 비교해 보세요.
+
+<PixelVsMesh lang="ko" />
+
+메시 브릿지는 픽셀 브릿지보다 넘기는 양이 적습니다. 블록이 바뀐 구역(16×16×16 섹션)만 다시 보내면 되기 때문입니다. 그 대가로 host에 메시를 그리는 코드를 새로 짜야 합니다. SkyCraft는 Skyrim의 `Main::RenderWorld` 뒤에 훅을 걸어 Skyrim 깊이 버퍼에 맞춰 블록을 그리고 그림자도 주고받습니다(`skse/src/WorldRender.cpp:339-342`).
+
+### OWCraft: 같은 메시를 Unity에 맡깁니다
+
+`Yaekai/OWCraft`(Outer Wilds + Minecraft)는 SkyCraft의 프로토콜 v11과 Minecraft 쪽 Fabric 모드를 그대로 가져다 씁니다. host만 Skyrim에서 Outer Wilds로 바뀌었습니다. Outer Wilds는 Unity 게임이라 받은 메시를 Unity의 `MeshRenderer`로 만들기만 하면 엔진의 조명과 그림자가 자동으로 붙습니다(`host/World/BlockRenderer.cs:12-15`).
+
+새로 푼 문제는 둥근 행성입니다. Minecraft 세계는 평평하고 아래 방향이 고정돼 있지만 Outer Wilds의 행성은 공 모양입니다. OWCraft는 행성 표면을 약 40m 크기의 타일로 나누고 타일마다 Minecraft 세계의 512×512 블록 구역을 하나씩 고정으로 대응시킵니다(`host/World/AnchorGrid.cs:232-233`). 플레이어가 타일 중심에서 0.6타일 넘게 벗어나면 Minecraft 쪽 플레이어를 새 구역으로 순간 이동시킵니다. 같은 타일은 늘 같은 블록 구역에 대응하므로, Outer Wilds의 세계가 22분마다 처음으로 되돌아가도 지은 집은 그 자리에 남습니다.
+
+### callofwarcraft: 공유 메모리 대신 파일로 넘깁니다
+
+`yumekiru/callofwarcraft`는 World of Warcraft 1.12.1 안에서 Call of Duty: Modern Warfare 2(2009)의 총을 쏘게 만듭니다. 원본 게임 바이너리를 후킹하지 않고 **오픈소스 재구현 클라이언트**(WoW는 Rust로 만든 Benilla, MW2는 IW4L)를 소스 패치합니다.
+
+MW2의 총과 팔은 메시로 넘기는데, 뼈대를 넘기지 않고 **뼈 움직임이 이미 반영된 최종 정점 좌표**를 매 프레임 보냅니다. 변하지 않는 UV와 인덱스는 내용이 바뀔 때만 보냅니다(`codcraft_frame.rs:418-551`). 전송은 공유 메모리가 아니라 디스크의 파일입니다. 헤더를 먼저 0으로 지우고 길이를 마지막에 써서 반쯤 쓴 파일을 읽지 않게 막습니다. WoW 서버(vMaNGOS)에도 총알 판정용 명령 코드(opcode)를 추가했기 때문에, 이 모드는 guest, host, 서버의 세 노드로 움직입니다.
+
+## 6. 로직 브릿지: 그림 없이 숫자만 넘깁니다
+
+guest 화면을 아무도 보지 않는 방식입니다. host가 모든 것을 그리고 guest는 숨은 채 계산만 합니다.
+
+### Skyring: Elden Ring을 전투 엔진으로 씁니다
+
+`BennettCode/Skyring`은 Skyrim을 Elden Ring의 전투 규칙으로 플레이하게 만듭니다. Elden Ring은 창을 숨긴 채 뒤에서 돌고 Skyrim에서 회피 키를 누르면 숨은 Elden Ring 캐릭터가 구릅니다. 그 결과가 숫자로 돌아옵니다.
+
+| 방향                | 넘기는 것                                              | 크기 |
+| ------------------- | ------------------------------------------------------ | ---- |
+| Skyrim → Elden Ring | 입력(이동, 버튼), 카메라 방향, 들고 있는 무기          | 72B  |
+| Elden Ring → Skyrim | HP, 스태미나, 무적 프레임과 공격 판정 플래그 등 상태값 | 128B |
+| Elden Ring → Skyrim | 뼈 24개의 회전(쿼터니언)                               | 464B |
+
+출처는 `protocol/schema/messages.toml:212-284`입니다. 픽셀, 깊이, 메시는 하나도 오가지 않습니다.
+
+뼈 회전을 넘기게 된 과정이 저장소에 남아 있습니다. 처음에는 Skyrim의 기본 구르기 동작으로 맞추려고 세 번 시도했지만 "앞으로만 구르고 카메라가 몸을 다시 정렬"해서 실패했습니다. 그 뒤 Skate 3를 GTA San Andreas에 합친 GTA San AnSkateas처럼 숨은 엔진의 포즈를 host 캐릭터에 매 프레임 흘려보내는 쪽으로 바꿨습니다(`STATUS.md:59-69`, `MODLOG.md:346-356`). 그래서 Skyrim 캐릭터가 Elden Ring의 구르기 애니메이션으로 구릅니다.
+
+무적 프레임은 Skyrim 쪽 근접 피격 처리를 후킹해 연결합니다. 숨은 Elden Ring 캐릭터의 무적 플래그가 켜져 있으면 Skyrim의 피해 적용 함수를 아예 호출하지 않아 공격이 빗나갑니다(`skse/src/hooks/PlayerHit.cpp`).
+
+이 저장소는 Claude Code로 만들었다고 밝히고 에이전트용 작업 규칙(`docs/ai/CLAUDE.md`)까지 공개해 두었습니다. "두 번 실패하면 멈추고 인계 메모를 쓴 뒤 새 대화를 요청한다"는 규칙이 있습니다. 위의 구르기 시도는 세 번째 시도 뒤에 이 규칙을 적용해 멈추고 대안 세 가지를 남긴 것으로 기록돼 있습니다.
+
+### 읽어 올 수 있는 값은 읽고, 없는 계산만 다시 만듭니다
+
+로직 브릿지를 보면 "guest의 계산 결과를 그대로 가져오는가, 아니면 guest의 공식을 host에 다시 구현하는가"라는 질문이 생깁니다. Skyring의 답은 둘 다입니다.
+
+- **읽어 오는 것**: HP, 스태미나, 무적 프레임, 공격이 실제로 닿는 구간, 뼈 포즈. 숨은 Elden Ring이 실제로 계산한 값을 메모리에서 읽습니다.
+- **다시 만드는 것**: 데미지. 숨은 Elden Ring 안에는 Skyrim의 적이 존재하지 않아서 Elden Ring이 그 적에게 줄 데미지를 계산할 수 없습니다. 그래서 Skyrim 쪽 `CombatMath.h`가 Elden Ring의 공격력과 방어 곡선을 근사식으로 다시 계산합니다.
+
+README는 "Elden Ring이 데미지 공식을 맡는다"고 쓰지만 코드를 보면 데미지 계산의 일부는 Skyrim 쪽 근사식입니다.
+
+### CyberpunkStreetChem: 경제는 숫자로, 장비는 그림 한 겹으로
+
+`dr4lera/CyberpunkStreetChem`은 Cyberpunk 2077의 나이트 시티에서 Schedule I의 재배와 판매 경제를 돌립니다. 식물 성장, 재고 가격은 Schedule I가 계산하고 Cyberpunk는 1초마다 수량을 맞추는 미러 역할을 합니다. 명령은 네임드 파이프로 줄 단위 JSON을 주고받습니다(`guest/GuestBridge.cs:63-97`).
+
+재배 텐트 같은 장비만 Schedule I가 그린 그림(1280×720 RGBA)을 ReShade로 덧씌웁니다. 깊이가 없어서 나이트 시티의 벽이 장비를 가리지 못한다고 README가 직접 밝힙니다. 로직 브릿지에 픽셀이 한 겹 섞인 혼합형입니다.
+
+## 7. 브릿지 없음: 게임을 라이브러리로 만듭니다
+
+마지막 갈래는 guest를 별도 프로세스로 띄우지 않습니다.
+
+`Ezmanw/universal-doomer`는 Doom을 의존성 없는 C 라이브러리(`libportadoom.a`)로 만듭니다. 운영체제 기능을 하나도 부르지 않도록 표준 C 라이브러리를 직접 구현했고 파일은 메모리 위의 가상 파일 시스템으로, 시간은 `pd_tick()`을 부를 때만 흐르는 가상 시계로 바꿨습니다. 컴파일된 파일을 모두 합쳐 봐도 운영체제나 외부 라이브러리에서 가져와야 하는 함수가 하나도 없습니다.
+
+host 엔진은 이 라이브러리를 링크하고 함수를 불러 벽, 바닥, 몬스터 목록 같은 **월드 상태**를 받습니다(`include/portadoom.h`). Doom의 픽셀 화면도 옵션으로 받을 수 있지만 기본 사용법은 월드 상태를 받아 host가 자기 방식으로 그리는 것입니다. 함께 들어 있는 `doomify` 스킬은 에이전트에게 "Doom이 결정하고 host는 그리기만 한다, 게임플레이를 재구현하지 마라"고 지시합니다(`skills/doomify/SKILL.md:36-37`). 다만 2026-10-08 기준으로 실제 게임 엔진에 붙인 예제는 아직 없고 headless 테스트 호스트만 있습니다.
+
+같은 Doom을 다른 방식으로 붙인 저장소도 있습니다. 10월 7일에 공개된 `Caffs/SkyDoom`은 Doom을 별도로 돌리고 무기, 체력, 탄약 같은 이벤트만 공유 메모리로 Skyrim에 넘깁니다(README 기준). 같은 guest라도 브릿지를 어떻게 설계하느냐에 따라 로직 브릿지가 되기도 하고 브릿지 없음이 되기도 합니다.
+
+이 갈래에는 더 큰 저장소도 있습니다. `deltarooo/er-mario`(156★)는 Super Mario 64 디컴파일을 라이브러리로 만든 libsm64를 Elden Ring 안에 넣어 마리오로 플레이하게 합니다. `chasmlol/2010-rust-rewrite-mashup`(793★)은 MW2, Skate 3, Minecraft를 Rust로 재구현해 게임 하나로 합쳤습니다. 이 저장소는 SkyCraft와 같은 사람이 만들었습니다. 같은 작성자가 메시 브릿지와 브릿지 없음 방식을 모두 만들었습니다.
+
+universal-modder의 `mashup-mods` 스킬도 같은 그림을 그립니다. 10월 7일 커밋에서 다섯 번째 패턴 "guest의 규칙을 화면 없이 다시 구현하고 host는 화면으로만 쓴다"가 추가되었습니다(`skills/mashup-mods/SKILL.md:93`). 이 글의 분류로는 로직 브릿지에 해당합니다.
+
+## 8. 열하루 동안의 계보
+
+9월 27일부터 10월 7일까지 공개된 저장소를 생성일과 브릿지 유형으로 놓으면 이렇게 됩니다.
+
+<BridgeLineage lang="ko" />
+
+눈에 띄는 점은 세 가지입니다.
+
+- **계보가 두 갈래입니다.** 픽셀 쪽 justbustin과 메시 쪽 SkyCraft는 서로를 언급하지 않습니다. justbustin은 영상을 올린 Tobyn Jacobs를 아이디어 출처로 밝히고 SkyCraft는 출처를 밝히지 않습니다. Tobyn Jacobs의 코드는 2026-10-08까지 공개되지 않았습니다.
+- **가장 많이 가져다 쓰인 원형은 SkyCraft입니다.** OWCraft와 Skyring은 SkyCraft 코드를 MIT 라이선스로 가져다 쓰고 출처를 남겼습니다. SekiroCraft와 CU-Hornet은 SkyCraft를 참고했다고 밝힙니다. CU-Hornet이 쓰는 프로토콜도 이름은 "v11"이지만 OWCraft가 가져다 쓴 SkyCraft v11과는 별개의 형식입니다.
+- **universal-modder 예제도 원형 역할을 합니다.** wither-storm이 그 GTA V 예제를 포크했고 SekiroCraft도 참고 대상으로 이 예제를 듭니다.
+
+## 9. 왜 다들 Minecraft를 guest로 쓰나요?
+
+앞에서 검색한 게임 크로스오버 저장소 27개 중 14개에 Minecraft가 들어 있습니다. 대부분 "X 안의 Minecraft" 형태입니다. Skyrim, GTA V, Sekiro, Outer Wilds, Valheim, Fallout: New Vegas, Saints Row, Subnautica까지 host는 매번 바뀌는데 guest는 Minecraft로 고정되는 경우가 많습니다.
+
+가이드와 문서가 직접 밝힌 이유가 세 가지이고 코드에서 읽히는 이유가 두 가지 더 있습니다.
+
+1. **guest 안에 모드를 넣을 수 있습니다.** 패스스루 모드는 guest 게임 안에서도 코드를 돌려야 합니다. Minecraft Java Edition은 Fabric 같은 모드 로더가 있어서 게임 안에 코드를 넣기 쉽습니다.
+2. **소스를 읽을 수 있습니다.** Mojang은 난독화를 풀 수 있는 공식 매핑을 공개합니다. Fabric 빌드 도구로 읽을 수 있는 소스를 바로 만들 수 있습니다(universal-modder `references/engines/minecraft.md:14`). 코드를 읽고 고치는 일을 에이전트에게 맡기는 이번 유행에서 특히 큰 장점입니다.
+3. **guest의 물리를 host 지형 위에서 돌릴 수 있습니다.** 가이드는 guest 게임의 조건으로 "자기 물리를 바꾸지 않고 상대 게임의 지형에 대고 돌릴 수 있는가"를 꼽고 Minecraft는 모드 로더와 통합 서버가 있어서 이 조건을 통과한다고 씁니다(ai-game-modding-guides `guides/02-passthrough-mods.md:139-143`).
+4. **세계가 블록이라 지형을 옮기기 쉽습니다.** host의 땅과 벽을 Minecraft에 알려 주려면 블록으로 바꾸면 됩니다. SkyCraft는 Skyrim의 충돌 정보를 삼각형과 8×8×8 점유 마스크로 Minecraft에 넘기고 OWCraft는 행성 표면을 같은 형식으로 넘깁니다.
+5. **블록 렌더러가 메시를 바로 내줍니다.** SkyCraft의 render ring은 Minecraft 자신의 블록 렌더러가 만든 메시를 그대로 보냅니다. 메시 브릿지가 Minecraft를 guest로 쓴 SkyCraft에서 먼저 나온 것도 이와 맞닿아 있습니다.
+
+Minecraft가 아닌 guest를 봐도 같은 규칙이 보입니다. Garry's Mod는 Lua와 바이너리 모듈을 열어 둔 게임이고 Silksong과 Schedule I는 Unity 게임이라 BepInEx나 MelonLoader로 안을 고칠 수 있습니다. Doom과 Super Mario 64는 소스나 디컴파일이 공개돼 있고 MW2는 오픈소스 재구현(IW4L)을 씁니다. 반대로 host 자리에는 Skyrim(SKSE), GTA V(ScriptHookV), Elden Ring(me3), Cyberpunk 2077(RED4ext)처럼 스크립트 확장 도구가 오래 쌓인 게임이 옵니다. 가이드도 자기가 참고 사례로 든 프로젝트에 대해 "모두 네이티브 host 하나와 Java나 .NET으로 된 게임 하나를 짝짓는다"고 정리합니다(`guides/02-passthrough-mods.md`의 "Ideas that don't work" 표).
+
+정리하면 **guest는 속을 열어 볼 수 있는 게임이고 host는 화면이 좋고 확장 도구가 갖춰진 게임**입니다. Minecraft는 이 guest 조건을 두루 갖춘 게임입니다.
+
+## 10. 주의해서 볼 지점
+
+- **대부분 공개된 지 1주일이 안 됐습니다.** 스타는 SkyCraft와 2010-rust-rewrite-mashup, er-mario를 빼면 0~22개이고 커밋 이력도 짧습니다. "작동한다"는 README의 설명일 뿐이고 이 글도 게임을 실행해 확인하지 않았습니다.
+- **README와 코드가 다른 경우가 있습니다.** Skyring의 데미지 공식은 README 설명과 달리 절반이 재구현입니다. OWCraft의 설계 문서는 엔티티와 3인칭이 없다고 쓰지만 변경 기록은 둘 다 추가했다고 적습니다. 설명보다 코드를 기준으로 보는 편이 안전합니다.
+- **검색 표본에는 한계가 있습니다.** 9절의 "27개 중 14개"는 세 가지 검색어로 찾은 저장소만 센 것입니다. 이 단어를 쓰지 않은 저장소는 빠졌습니다.
+- **오프라인 전용이고 게임 파일은 직접 준비해야 합니다.** 어느 저장소도 게임 파일을 포함하지 않고 사용자가 가진 설치본에 붙는 방식입니다. 온라인 게임에 쓰면 안 된다는 경고도 공통입니다. 일부 저장소는 설치 프로그램을 따로 배포하는데, DLL 주입을 하는 프로그램이니 실행 전에 코드를 확인하는 편이 좋습니다.
+
+## 11. 결론
+
+전편의 결론은 "화면에서는 한 세계처럼 보여도 두 게임은 서로를 투명한 상자와 픽셀로만 안다"였습니다. 저장소 12개의 코드를 비교하면 그 픽셀은 여러 선택지 중 하나입니다.
+
+- 픽셀 브릿지는 guest 화면을 그대로 가져오므로 빨리 만들 수 있지만 host의 빛과 그림자 바깥에 머뭅니다.
+- 메시 브릿지는 guest의 모양만 받아 host가 다시 그리므로 host 세계에 녹아듭니다. 이 유행의 원형인 SkyCraft가 설계 단계의 픽셀 방식을 버리고 이쪽을 택했습니다.
+- 로직 브릿지는 그림을 아예 넘기지 않고 guest를 계산기로만 씁니다. 다만 guest 안에 없는 대상에 대한 계산은 host에서 다시 만들어야 합니다.
+- 브릿지 없음은 guest를 라이브러리로 만들어 동기화 문제를 없앱니다. 대신 guest를 그만큼 뜯어고칠 수 있어야 합니다.
+
+픽셀에서 브릿지 없음 쪽으로 갈수록 브릿지로 넘기는 양은 줄고 host가 직접 하는 일은 늘어납니다. 어느 방식을 고를 수 있는지는 guest 게임을 얼마나 열어 볼 수 있느냐에 달려 있습니다. 모드 로더와 공식 매핑, 블록 세계를 모두 갖춘 Minecraft가 guest로 많이 쓰이는 이유도 여기에 있습니다.
+
+## 12. 기존 글과의 관계
+
+| 글                                                                                             | 이번 글과 겹치는 지점                                                                |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [Minecraft를 Elden Ring 안에서 돌리는 브릿지 분석](/kb/2026-10-07-minecraft-elden-ring-bridge) | 전편입니다. 이 글의 픽셀 브릿지 기준선인 justbustin을 자세히 읽었습니다              |
+| [Claude Code Game Studios 분석](/kb/2026-04-18-claude-code-game-studios-architecture)          | 에이전트로 게임을 만드는 쪽이고, 이번 글은 에이전트로 이미 있는 게임을 뜯는 쪽입니다 |
+| [SkillSpector 분석](/kb/2026-07-03-skillspector-architecture)                                  | universal-modder와 universal-doomer 모두 에이전트 스킬로 배포됩니다                  |
+
+## 참고
+
+- [chasmlol/SkyCraft](https://github.com/chasmlol/SkyCraft)
+- [justbustin/minecraft-crossover-bridge](https://github.com/justbustin/minecraft-crossover-bridge)
+- [Xu060113/SekiroCraft-Passthrough](https://github.com/Xu060113/SekiroCraft-Passthrough)
+- [VortexisTV/wither-storm-gta5-passthrough](https://github.com/VortexisTV/wither-storm-gta5-passthrough)
+- [hattozo/gtr](https://github.com/hattozo/gtr)
+- [GooseMcGee/DyingLight-GMod](https://github.com/GooseMcGee/DyingLight-GMod)
+- [madgamer98/CU-Hornet](https://github.com/madgamer98/CU-Hornet)
+- [Yaekai/OWCraft](https://github.com/Yaekai/OWCraft)
+- [yumekiru/callofwarcraft](https://github.com/yumekiru/callofwarcraft)
+- [BennettCode/Skyring](https://github.com/BennettCode/Skyring)
+- [dr4lera/CyberpunkStreetChem](https://github.com/dr4lera/CyberpunkStreetChem)
+- [Ezmanw/universal-doomer](https://github.com/Ezmanw/universal-doomer)
+- [Caffs/SkyDoom](https://github.com/Caffs/SkyDoom)
+- [deltarooo/er-mario](https://github.com/deltarooo/er-mario)
+- [chasmlol/2010-rust-rewrite-mashup](https://github.com/chasmlol/2010-rust-rewrite-mashup)
+- [rehan-remade/universal-modder](https://github.com/rehan-remade/universal-modder)
+- [trevaintdead/ai-game-modding-guides](https://github.com/trevaintdead/ai-game-modding-guides)

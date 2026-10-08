@@ -3,7 +3,7 @@
     {
       "id": "ai-infrastructure",
       "label": "AI Infrastructure",
-      "count": 36,
+      "count": 37,
       "slugs": [
         "2020-06-28-manjum-result",
         "2026-03-11-openclaw-architecture",
@@ -40,7 +40,8 @@
         "2026-09-05-webmcp-explained",
         "2026-09-09-deepseek-harness-hands-on",
         "2026-09-12-archify-architecture",
-        "2026-10-07-minecraft-elden-ring-bridge"
+        "2026-10-07-minecraft-elden-ring-bridge",
+        "2026-10-08-passthrough-bridge-spectrum"
       ]
     },
     {
@@ -867,6 +868,10 @@
       {
         "slug": "2026-10-07-minecraft-elden-ring-bridge",
         "title": "Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?"
+      },
+      {
+        "slug": "2026-10-08-passthrough-bridge-spectrum",
+        "title": "What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared"
       }
     ],
     "2026-05-30-weknora-architecture": [
@@ -973,6 +978,10 @@
       {
         "slug": "2026-10-07-minecraft-elden-ring-bridge",
         "title": "Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?"
+      },
+      {
+        "slug": "2026-10-08-passthrough-bridge-spectrum",
+        "title": "What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared"
       }
     ],
     "2026-04-18-bloom-filter-membership-check-at-scale": [
@@ -1017,6 +1026,18 @@
       {
         "slug": "2026-09-12-archify-architecture",
         "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
+      }
+    ],
+    "2026-10-08-passthrough-bridge-spectrum": [
+      {
+        "slug": "2026-10-07-minecraft-elden-ring-bridge",
+        "title": "Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?"
+      }
+    ],
+    "2026-10-07-minecraft-elden-ring-bridge": [
+      {
+        "slug": "2026-10-08-passthrough-bridge-spectrum",
+        "title": "What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared"
       }
     ]
   },
@@ -1346,6 +1367,12 @@
       "2026-06-30-browser-use-architecture"
     ],
     "2026-10-07-minecraft-elden-ring-bridge": [
+      "2026-04-18-claude-code-game-studios-architecture",
+      "2026-07-03-skillspector-architecture",
+      "2026-10-08-passthrough-bridge-spectrum"
+    ],
+    "2026-10-08-passthrough-bridge-spectrum": [
+      "2026-10-07-minecraft-elden-ring-bridge",
       "2026-04-18-claude-code-game-studios-architecture",
       "2026-07-03-skillspector-architecture"
     ]
@@ -3084,7 +3111,24 @@
       ],
       "topic": "ai-infrastructure",
       "stage": "budding",
-      "summary": "Since late September, \"passthrough modding\", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, the one implementation with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed."
+      "summary": "Since late September, \"passthrough modding\", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, one of the implementations with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed."
+    },
+    {
+      "slug": "2026-10-08-passthrough-bridge-spectrum",
+      "title": "What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared",
+      "shortTitle": "Passthrough bridge spectrum",
+      "date": "2026-10-08T12:00:00.000Z",
+      "tags": [
+        "game-modding",
+        "minecraft",
+        "reverse-engineering",
+        "architecture",
+        "open-source",
+        "ai-agent"
+      ],
+      "topic": "ai-infrastructure",
+      "stage": "budding",
+      "summary": "Since late September, dozens of passthrough mods that run two games at once and merge them into one have gone public. This post opens the code of twelve of them, sorts them by what crosses the bridge (pixels, meshes, logic, or nothing at all), and looks at the traces of the most-cited original, SkyCraft, moving from a pixel design to meshes, and at why Minecraft is so often the guest."
     }
   ],
   "graph": {
@@ -3092,12 +3136,12 @@
       {
         "id": "tag:architecture",
         "label": "architecture",
-        "count": 35
+        "count": 36
       },
       {
         "id": "tag:ai-agent",
         "label": "ai-agent",
-        "count": 26
+        "count": 27
       },
       {
         "id": "tag:llm",
@@ -3130,6 +3174,11 @@
         "count": 7
       },
       {
+        "id": "tag:open-source",
+        "label": "open-source",
+        "count": 7
+      },
+      {
         "id": "tag:react",
         "label": "react",
         "count": 7
@@ -3137,11 +3186,6 @@
       {
         "id": "tag:claude-code",
         "label": "claude-code",
-        "count": 6
-      },
-      {
-        "id": "tag:open-source",
-        "label": "open-source",
         "count": 6
       },
       {
@@ -4306,8 +4350,20 @@
       {
         "source": "2026-10-07-minecraft-elden-ring-bridge",
         "target": "tag:ai-agent"
+      },
+      {
+        "source": "2026-10-08-passthrough-bridge-spectrum",
+        "target": "tag:architecture"
+      },
+      {
+        "source": "2026-10-08-passthrough-bridge-spectrum",
+        "target": "tag:open-source"
+      },
+      {
+        "source": "2026-10-08-passthrough-bridge-spectrum",
+        "target": "tag:ai-agent"
       }
     ]
   },
-  "generatedAt": "2026-10-07T14:50:53.325Z"
+  "generatedAt": "2026-10-08T00:56:01.621Z"
 }

@@ -1,0 +1,256 @@
+---
+slug: '2026-10-08-passthrough-bridge-spectrum'
+title: 'What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared'
+crawlertitle: 'What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared'
+shortTitle: 'Passthrough bridge spectrum'
+summary: 'Since late September, dozens of passthrough mods that run two games at once and merge them into one have gone public. This post opens the code of twelve of them, sorts them by what crosses the bridge (pixels, meshes, logic, or nothing at all), and looks at the traces of the most-cited original, SkyCraft, moving from a pixel design to meshes, and at why Minecraft is so often the guest.'
+date: 2026-10-08 21:00:00 +0900
+categories: posts
+tags:
+  ['game-modding', 'minecraft', 'reverse-engineering', 'architecture', 'open-source', 'ai-agent']
+topic: ai-infrastructure
+stage: budding
+author: MartianLee
+---
+
+**Right now, GitHub is filling up with "passthrough mods" that run two games at once so you can play one game inside the other's world: dozens of them in the eleven days since late September.**
+
+> Written: 2026-10-08
+> Repositories read: `chasmlol/SkyCraft` (`bfcaf17`), `justbustin/minecraft-crossover-bridge` (`d172387`), `Xu060113/SekiroCraft-Passthrough` (`784d993`), `VortexisTV/wither-storm-gta5-passthrough` (`24e54b6`), `hattozo/gtr` (`bcc7a0d`), `GooseMcGee/DyingLight-GMod` (`e53209d`), `madgamer98/CU-Hornet` (`17598d6`), `Yaekai/OWCraft` (`cd5f061`), `yumekiru/callofwarcraft` (`c2a3996`), `BennettCode/Skyring` (`519649f`), `dr4lera/CyberpunkStreetChem` (`791e706`), `Ezmanw/universal-doomer` (`c271a16`)
+> Scope: static code reading. None of the games were actually launched. Repository creation dates are GitHub's (UTC); star counts were fetched on 2026-10-08.
+
+---
+
+_This article is mostly written by Claude Code_
+
+## Contents
+
+1. [What changed since the last post?](#1-what-changed-since-the-last-post)
+2. [The one-sentence version](#2-the-one-sentence-version)
+3. [The skeleton every passthrough mod shares](#3-the-skeleton-every-passthrough-mod-shares)
+4. [Pixel bridges: send the whole picture](#4-pixel-bridges-send-the-whole-picture)
+5. [Mesh bridges: the original gave up on pixels](#5-mesh-bridges-the-original-gave-up-on-pixels)
+6. [Logic bridges: numbers only, no picture](#6-logic-bridges-numbers-only-no-picture)
+7. [No bridge: turn the game into a library](#7-no-bridge-turn-the-game-into-a-library)
+8. [Eleven days of lineage](#8-eleven-days-of-lineage)
+9. [Why is Minecraft almost always the guest?](#9-why-is-minecraft-almost-always-the-guest)
+10. [Things to watch for](#10-things-to-watch-for)
+11. [Conclusion](#11-conclusion)
+12. [Related posts](#12-related-posts)
+
+---
+
+## 1. What changed since the last post?
+
+The [previous post](/kb/2026-10-07-minecraft-elden-ring-bridge) read `justbustin/minecraft-crossover-bridge`, which runs Minecraft inside Elden Ring. Minecraft sends its pixels and depth through shared memory, and Elden Ring compares depths and slots them into its own frame.
+
+Similar repositories have kept coming since. Searching GitHub on 2026-10-08 for "passthrough", "mashup mod" and "crossover mod" turns up 27 game-crossover repositories created after September 20 alone, and more exist that never use those words. The games on screen range across Skyrim, GTA V, Sekiro, Outer Wilds, Dying Light, Cyberpunk 2077, Fallout: New Vegas and Valheim.
+
+Reading the code shows that the approach from the last post isn't the only answer. They all run two games at once, but **what crosses the bridge** between them differs from repository to repository. `chasmlol/SkyCraft`, the original this trend cites most, was designed with the same pixel approach as the last post and then built a different way.
+
+This post opens twelve repositories and lays out those differences.
+
+## 2. The one-sentence version
+
+**Every passthrough mod runs two games at once, but they split three ways by whether the bridge carries a picture (pixels), shapes (meshes) or just numbers (logic), and a fourth path removes the bridge entirely.**
+
+A few terms first. The game you see on screen is the **host**. The game running alongside it in the background is the **guest**. The shared memory or socket that connects them is the **bridge**. Use the buttons below to switch between the four.
+
+<BridgeSpectrum lang="en" />
+
+| What crosses the bridge  | Size per frame  | Who draws | Examples                                             |
+| ------------------------ | --------------- | --------- | ---------------------------------------------------- |
+| Pixels (color + depth)   | ~37MB           | Guest     | justbustin, SekiroCraft, gtr, DyingLight-GMod        |
+| Meshes (shape + texture) | Only on changes | Host      | SkyCraft, OWCraft, callofwarcraft                    |
+| Logic (values and rules) | ~0.6KB          | Host      | Skyring, CyberpunkStreetChem                         |
+| Nothing                  | 0               | Host      | universal-doomer, er-mario, 2010-rust-rewrite-mashup |
+
+The 37MB is one frame slot in justbustin (1920×1200 at 16 bytes per pixel), worked out in the last post. The 0.6KB is the sum of the state Skyring reads back from a hidden Elden Ring every frame. The two differ by a factor of about 60,000.
+
+This axis isn't new. Guide 14 in the community repository `trevaintdead/ai-game-modding-guides` (266★) splits the trend's approaches into seven routes and gives each a "What crosses between them" column (`guides/14-choosing-a-route.md:9-19`). The four groups here map to its routes 2 (frame compositing), 3 (native geometry transfer), 1 (state exchange) and 5 (engine recreation). This post takes that map and checks whether the actual code looks the way it says.
+
+## 3. The skeleton every passthrough mod shares
+
+Whichever group a mod falls into, the skeleton is the same.
+
+- **Two processes**: host and guest run at the same time. The guest window is usually hidden.
+- **Shared memory**: both processes map the same memory region and exchange state every frame. To avoid reading a value mid-write, most use a seqlock (the writer bumps a counter before and after, and the reader checks it) or a ring of several slots.
+- **Stand-ins (proxies)**: the other game's characters and terrain exist in your game as invisible boxes. When a sword hits one, the hit crosses the bridge and lands on the real target.
+
+What differs is what shows up on screen and how. The next sections go through the four groups in turn.
+
+## 4. Pixel bridges: send the whole picture
+
+The guest draws its scene from the host's camera, sends the picture over, and the host compares depths to slot it into its own frame. That's justbustin from the last post. Half of the repositories read here fall into this group.
+
+### Same technique, different games
+
+- **SekiroCraft** (Sekiro + Minecraft): the skeleton matches justbustin. It syncs with a zero-timeout mutex try-lock instead of a seqlock and hooks Sekiro's D3D11 Present directly. There's no step that relights the guest picture with host lighting. The README says it used SkyCraft and the universal-modder example "for architecture reference only." universal-modder is a repository of skills that let Claude Code mod almost any PC game, and it ships passthrough example code too.
+- **wither-storm-gta5-passthrough** (GTA V + the Minecraft Wither Storm mod): a fork of the GTA V example that ships inside the universal-modder repository (`examples/minecraft-gta5-passthrough`). Its Minecraft-side Fabric source is identical to the original, and the compositor differs by about 11 lines. What's new is a Forge 1.20.1 port and events that let the storm pull in GTA pedestrians and cars.
+
+### Same skeleton, new ideas on top
+
+- **gtr** (GTA V + Vanadium, a Roblox-compatible engine): besides color and depth, the guest sends a **shadow depth map seen from the sun's direction (512×512)**. The host shader uses it to cast the guest character's shadow onto GTA's ground. GTA also draws a frame number into two 8×8-pixel cells in the top-left corner of the screen, and the compositing step reads that mark back to decide which guest frame to attach (`shared/gtr_frame.h:92-`).
+- **DyingLight-GMod** (Dying Light + Garry's Mod): a hidden Garry's Mod handles the physgun, weapons and spawn menu. GMod paints its background magenta, and the host shader turns the magenta back into transparency. The 8-bit alpha channel, normally used for transparency, carries a distance. It isn't used to decide what hides what. It drives **reprojection, shifting a frame that arrived a beat late to match the current camera position**. The host's depth test is off.
+- **CU-Hornet** (Casualties Unknown + Silksong): both are 2D games, so depth isn't needed. Silksong draws Hornet on a transparent background and the host attaches it as a single sprite. The author notes the lack of depth in `MODLOG.md:157`.
+
+### What pixel bridges can't do
+
+A pixel bridge gets a demo on screen fast. It uses the guest's own renderer, so blocks, the hand and the inventory screen look exactly like the original. The catch is that the picture already has the guest's lighting baked in. justbustin adjusts the guest picture's brightness to match the host frame, but there's no way for a guest object to cast a shadow on the host's ground. That's why gtr sends a separate shadow map. And every frame, 37MB has to be read from the GPU to the CPU and uploaded back to the GPU.
+
+## 5. Mesh bridges: the original gave up on pixels
+
+`chasmlol/SkyCraft` (1,039★) lets you play Minecraft inside Skyrim. It went public at 16:40 UTC on 2026-09-30, about nine hours before justbustin, and among the repositories here it's the original the most repositories credit.
+
+Section 9 of SkyCraft's design doc planned the rendering like this: Minecraft renders only its own things offscreen at Skyrim's resolution, shares the color and depth textures on the GPU, and composites them depth-tested against Skyrim's depth buffer (`docs/DESIGN.md:160-171`). That's the same pixel bridge as justbustin.
+
+In the actual code, blocks take another path. The render ring comment in the protocol header reads:
+
+> Minecraft ships its own block meshes (built by Minecraft's block renderer: models, tint, AO, lighting) and its block atlas; Skyrim draws them in its own frame so blocks stay locked to the world and are occluded by Skyrim geometry.
+>
+> `protocol/skycraft_protocol.h:321-324`
+
+Minecraft sends only the blocks' **shapes (meshes) and texture atlas** through a 64MB ring buffer, and Skyrim draws them itself inside its own frame. One vertex is 32 bytes (position, UV, color, block light and sky light). Only the hand, HUD and inventory screens go over as pixels.
+
+Nothing in the repository says why the design changed. The README does show what it bought: blocks are "drawn inside Skyrim's frame with its sun, shadows, fog and weather," and Minecraft's torches and lava light up Skyrim (`README.md:21-24`). That's hard to get from a pixel bridge. Compare the same block received three ways.
+
+<PixelVsMesh lang="en" />
+
+A mesh bridge also moves less data than a pixel bridge, because only the regions where blocks changed (16×16×16 sections) need to be resent. The cost is that the host needs new code to draw meshes. SkyCraft hooks in after Skyrim's `Main::RenderWorld`, draws the blocks against Skyrim's depth buffer, and exchanges shadows too (`skse/src/WorldRender.cpp:339-342`).
+
+### OWCraft: hand the same meshes to Unity
+
+`Yaekai/OWCraft` (Outer Wilds + Minecraft) reuses SkyCraft's protocol v11 and its Minecraft-side Fabric mod as they are. Only the host changed, from Skyrim to Outer Wilds. Outer Wilds is a Unity game, so turning the received meshes into Unity `MeshRenderer`s is enough to pick up the engine's lighting and shadows automatically (`host/World/BlockRenderer.cs:12-15`).
+
+The new problem it solves is round planets. Minecraft's world is flat with a fixed "down," while Outer Wilds' planets are spheres. OWCraft tiles each planet surface into tiles of about 40m and pins each tile to its own fixed 512×512-block region of the Minecraft world (`host/World/AnchorGrid.cs:232-233`). When the player wanders more than 0.6 of a tile from the tile center, the Minecraft-side player is teleported into the new region. Since a given tile always maps to the same blocks, a house you build stays put even when Outer Wilds' world resets every 22 minutes.
+
+### callofwarcraft: files instead of shared memory
+
+`yumekiru/callofwarcraft` lets you fire Call of Duty: Modern Warfare 2 (2009) guns inside World of Warcraft 1.12.1. Instead of hooking the retail binaries, it patches the source of **open-source reimplementation clients**: Benilla (a Rust WoW client) and IW4L (for MW2).
+
+The MW2 gun and arms cross as meshes, but instead of a skeleton it sends **final vertex positions with the bone motion already applied** every frame. UVs and indices, which don't change, are sent only when their contents change (`codcraft_frame.rs:418-551`). The transport isn't shared memory but files on disk. The header is zeroed first and the length written last, so a half-written file is never read. It also adds a bullet-hit command code (opcode) to the WoW server (vMaNGOS), so this mod runs on three nodes: guest, host and server.
+
+## 6. Logic bridges: numbers only, no picture
+
+In this group nobody ever sees the guest's screen. The host draws everything, and the guest stays hidden doing calculations.
+
+### Skyring: Elden Ring as a combat engine
+
+`BennettCode/Skyring` lets you play Skyrim with Elden Ring's combat rules. Elden Ring runs in the background with its window hidden. Press dodge in Skyrim and the hidden Elden Ring character rolls, and the result comes back as numbers.
+
+| Direction           | What crosses                                                 | Size |
+| ------------------- | ------------------------------------------------------------ | ---- |
+| Skyrim → Elden Ring | Input (movement, buttons), camera direction, equipped weapon | 72B  |
+| Elden Ring → Skyrim | HP, stamina, i-frame and hit-window flags, and other state   | 128B |
+| Elden Ring → Skyrim | Rotations of 24 bones (quaternions)                          | 464B |
+
+The source is `protocol/schema/messages.toml:212-284`. No pixels, depth or meshes cross at all.
+
+The repository records how it ended up sending bone rotations. It first tried three times to match Skyrim's own roll animation, and each time the character "only rolled forward and the camera realigned the body." It then switched to what GTA San AnSkateas (Skate 3 merged into GTA San Andreas) does, streaming the hidden engine's pose onto the host character every frame (`STATUS.md:59-69`, `MODLOG.md:346-356`). That's how the Skyrim character rolls with Elden Ring's roll animation.
+
+I-frames are wired in by hooking Skyrim's melee hit handling. If the hidden Elden Ring character's invulnerability flag is on, Skyrim's damage function is never called and the attack misses (`skse/src/hooks/PlayerHit.cpp`).
+
+The project says it was built with Claude Code and publishes its agent working rules (`docs/ai/CLAUDE.md`). One rule says "after two failures, stop, write a handoff and ask for a new chat." The roll attempts above are logged as stopping after the third try under that rule, with three alternatives left behind.
+
+### Read what you can, rebuild only what's missing
+
+A logic bridge raises a question: does the host take the guest's computed results as they are, or reimplement the guest's formulas? Skyring's answer is both.
+
+- **Read**: HP, stamina, i-frames, the window when an attack actually connects, and bone poses. These are values the hidden Elden Ring really computed, read from its memory.
+- **Rebuilt**: damage. Skyrim's enemies don't exist inside the hidden Elden Ring, so Elden Ring can't compute the damage it would do to them. Skyrim's `CombatMath.h` recomputes Elden Ring's attack rating and defense curve with approximations.
+
+The README says "Elden Ring owns the damage formulas," but in the code part of the damage math is a Skyrim-side approximation.
+
+### CyberpunkStreetChem: the economy as numbers, gear as one picture layer
+
+`dr4lera/CyberpunkStreetChem` runs Schedule I's growing and dealing economy in Cyberpunk 2077's Night City. Schedule I computes plant growth, stock and prices, and Cyberpunk acts as a mirror that syncs quantities once a second. Commands go back and forth as line-delimited JSON over a named pipe (`guest/GuestBridge.cs:63-97`).
+
+Only equipment such as the grow tent arrives as a picture Schedule I drew (1280×720 RGBA), overlaid with ReShade. There's no depth, so the README itself says Night City's walls don't hide the equipment yet. It's a logic bridge with one layer of pixels mixed in.
+
+## 7. No bridge: turn the game into a library
+
+The last group doesn't run the guest as a separate process at all.
+
+`Ezmanw/universal-doomer` turns Doom into a dependency-free C library (`libportadoom.a`). To avoid calling any operating-system functions, it implements its own C standard library, replaces files with an in-memory virtual file system, and replaces time with a virtual clock that only advances when `pd_tick()` is called. Even with all the compiled files combined, there isn't a single function it needs from the operating system or an outside library.
+
+The host engine links the library and calls functions to get **world state**: walls, floors, the monster list and so on (`include/portadoom.h`). Doom's pixel screen is available as an option, but the intended use is to take the world state and draw it the host's own way. The bundled `doomify` skill tells the agent "Doom decides, the host only draws; don't reimplement gameplay" (`skills/doomify/SKILL.md:36-37`). As of 2026-10-08, though, there's no example attached to a real game engine yet, only a headless test host.
+
+Another repository wires up the same Doom a different way. `Caffs/SkyDoom`, published on October 7, runs Doom separately and sends only events like weapons, health and ammo to Skyrim through shared memory (per its README). The same guest can end up as a logic bridge or as no bridge, depending on how the bridge is designed.
+
+This group also has bigger repositories. `deltarooo/er-mario` (156★) embeds libsm64, a library built from the Super Mario 64 decompilation, inside Elden Ring so you can play as Mario. `chasmlol/2010-rust-rewrite-mashup` (793★) reimplements MW2, Skate 3 and Minecraft in Rust and merges them into one game. It's by the same author as SkyCraft, who has now built both a mesh bridge and a no-bridge project.
+
+universal-modder's `mashup-mods` skill draws the same picture. An October 7 commit added a fifth pattern, "reimplement the guest's rules headless, keep the host as the view" (`skills/mashup-mods/SKILL.md:93`). In this post's terms, that's a logic bridge.
+
+## 8. Eleven days of lineage
+
+Placing the repositories published from September 27 to October 7 by creation date and bridge type gives this:
+
+<BridgeLineage lang="en" />
+
+Three things stand out.
+
+- **There are two lineages.** justbustin on the pixel side and SkyCraft on the mesh side never mention each other. justbustin credits Tobyn Jacobs, who posted the original clip, as the source of the idea; SkyCraft credits no source. Tobyn Jacobs' code had not been published as of 2026-10-08.
+- **SkyCraft is the most reused original.** OWCraft and Skyring take SkyCraft code under its MIT license and credit it. SekiroCraft and CU-Hornet say they referred to SkyCraft. CU-Hornet's protocol is also called "v11," but it's a separate format from the SkyCraft v11 that OWCraft reuses.
+- **The universal-modder example acts as an original too.** wither-storm forked its GTA V example, and SekiroCraft lists it as a reference.
+
+## 9. Why is Minecraft almost always the guest?
+
+Of the 27 game-crossover repositories from the search above, 14 involve Minecraft, mostly in the form "Minecraft inside X." The host changes every time (Skyrim, GTA V, Sekiro, Outer Wilds, Valheim, Fallout: New Vegas, Saints Row, Subnautica), while the guest is very often Minecraft.
+
+The guides and docs state three reasons outright, and the code suggests two more.
+
+1. **You can put a mod inside the guest.** A passthrough mod has to run code inside the guest game as well. Minecraft Java Edition has mod loaders such as Fabric, which make that easy.
+2. **You can read the source.** Mojang publishes official mappings that undo the obfuscation, and Fabric's build tooling turns them into readable source right away (universal-modder `references/engines/minecraft.md:14`). In a trend where agents do the reading and editing, that's a big advantage.
+3. **The guest's physics can run on the host's terrain.** The guide asks of a guest game whether it can run its own physics, unchanged, against the other game's geometry, and says Minecraft passes because it has a mod loader and an integrated server (ai-game-modding-guides `guides/02-passthrough-mods.md:139-143`).
+4. **The world is made of blocks, so terrain translates easily.** To tell Minecraft about the host's ground and walls, you turn them into blocks. SkyCraft sends Skyrim's collision to Minecraft as triangles and 8×8×8 occupancy masks, and OWCraft sends planet surfaces in the same format.
+5. **The block renderer hands you meshes.** SkyCraft's render ring sends meshes built by Minecraft's own block renderer. That fits with mesh bridges showing up first in SkyCraft, which uses Minecraft as its guest.
+
+The guests that aren't Minecraft follow the same rule. Garry's Mod exposes Lua and binary modules. Silksong and Schedule I are Unity games you can open up with BepInEx or MelonLoader. Doom and Super Mario 64 have public source or decompilations, and MW2 is used through an open-source reimplementation (IW4L). On the host side, by contrast, sit games with long-established script extenders: Skyrim (SKSE), GTA V (ScriptHookV), Elden Ring (me3), Cyberpunk 2077 (RED4ext). The guide sums it up too, for the projects it cites as references: every one pairs a native host with one Java or .NET gameplay game (the "Ideas that don't work" table in `guides/02-passthrough-mods.md`).
+
+Put simply, **the guest is a game you can open up, and the host is a good-looking game with mature extension tools**. Minecraft meets those guest conditions across the board.
+
+## 10. Things to watch for
+
+- **Most are less than a week old.** Apart from SkyCraft, 2010-rust-rewrite-mashup and er-mario, they have 0 to 22 stars and short commit histories. "It works" is what the README says, and this post didn't run the games either.
+- **READMEs and code sometimes disagree.** Skyring's damage formulas are half reimplemented, unlike the README's description. OWCraft's design doc says entities and third person aren't there yet, while its changelog says both were added. Trust the code over the description.
+- **The search sample has limits.** "14 of 27" in section 9 counts only the repositories three search terms found. Repositories that don't use those words are missing.
+- **Offline only, and you bring your own game files.** None of the repositories include game files; they attach to installs you own. All of them warn against using them in online games. Some distribute separate installers, and since those inject DLLs, it's worth reading the code before running one.
+
+## 11. Conclusion
+
+The last post concluded that "on screen it looks like one world, but the two games know each other only as invisible boxes and pixels." Comparing the code of twelve repositories shows that pixels are one option among several.
+
+- A pixel bridge brings over the guest's screen as is, so it's quick to build, but it stays outside the host's light and shadows.
+- A mesh bridge takes only the guest's shapes and lets the host redraw them, so they blend into the host world. SkyCraft, the original of this trend, dropped the pixel approach from its design for this one.
+- A logic bridge sends no picture at all and uses the guest only as a calculator. Anything the guest doesn't have inside it, though, has to be recomputed on the host.
+- No bridge turns the guest into a library and removes the sync problem. In exchange, you have to be able to take the guest apart that far.
+
+Moving from pixels toward no bridge, less crosses the bridge and the host does more of the work itself. Which approach you can choose depends on how far you can open up the guest game. That's also why Minecraft, with a mod loader, official mappings and a world made of blocks, is so often the guest.
+
+## 12. Related posts
+
+| Post                                                                                              | Where it overlaps                                                                      |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [Inside the bridge that runs Minecraft in Elden Ring](/kb/2026-10-07-minecraft-elden-ring-bridge) | The previous post. It reads justbustin, this post's pixel-bridge baseline, in detail   |
+| [Claude Code Game Studios](/kb/2026-04-18-claude-code-game-studios-architecture)                  | That one uses agents to build games; this one uses agents to take apart existing games |
+| [SkillSpector](/kb/2026-07-03-skillspector-architecture)                                          | Both universal-modder and universal-doomer ship as agent skills                        |
+
+## References
+
+- [chasmlol/SkyCraft](https://github.com/chasmlol/SkyCraft)
+- [justbustin/minecraft-crossover-bridge](https://github.com/justbustin/minecraft-crossover-bridge)
+- [Xu060113/SekiroCraft-Passthrough](https://github.com/Xu060113/SekiroCraft-Passthrough)
+- [VortexisTV/wither-storm-gta5-passthrough](https://github.com/VortexisTV/wither-storm-gta5-passthrough)
+- [hattozo/gtr](https://github.com/hattozo/gtr)
+- [GooseMcGee/DyingLight-GMod](https://github.com/GooseMcGee/DyingLight-GMod)
+- [madgamer98/CU-Hornet](https://github.com/madgamer98/CU-Hornet)
+- [Yaekai/OWCraft](https://github.com/Yaekai/OWCraft)
+- [yumekiru/callofwarcraft](https://github.com/yumekiru/callofwarcraft)
+- [BennettCode/Skyring](https://github.com/BennettCode/Skyring)
+- [dr4lera/CyberpunkStreetChem](https://github.com/dr4lera/CyberpunkStreetChem)
+- [Ezmanw/universal-doomer](https://github.com/Ezmanw/universal-doomer)
+- [Caffs/SkyDoom](https://github.com/Caffs/SkyDoom)
+- [deltarooo/er-mario](https://github.com/deltarooo/er-mario)
+- [chasmlol/2010-rust-rewrite-mashup](https://github.com/chasmlol/2010-rust-rewrite-mashup)
+- [rehan-remade/universal-modder](https://github.com/rehan-remade/universal-modder)
+- [trevaintdead/ai-game-modding-guides](https://github.com/trevaintdead/ai-game-modding-guides)
