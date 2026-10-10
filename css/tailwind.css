@@ -8,6 +8,7 @@
 @source '../node_modules/pliny';
 
 @theme {
+  --font-family-sans: var(--font-space-grotesk), '42dot Sans', ui-sans-serif, system-ui, sans-serif;
   --font-family-mono: var(--font-jetbrains), '42dot Sans', ui-monospace, monospace;
   --font-family-serif: var(--font-newsreader), '42dot Sans', Georgia, serif;
 

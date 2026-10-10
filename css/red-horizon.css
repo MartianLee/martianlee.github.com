@@ -26,6 +26,8 @@
   --rh-mono:
     var(--font-jetbrains), '42dot Sans', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --rh-accent-text: #9a3412;
+  /* accent for header text that sits on the sky zenith (--rh-sky-z) */
+  --rh-head-accent: #5c1d07;
   /* horizon band */
   --rh-sun-x: 82%;
   --rh-sun-y: 50%;
@@ -59,6 +61,7 @@ html.dark {
   --rh-sand-d: #1c1412;
   --rh-monument: #ede3cf;
   --rh-accent-text: #f6ab83;
+  --rh-head-accent: #ea580c;
   --rh-sun-x: 84%;
   --rh-sun-y: 100%;
   --rh-sun-core: rgba(232, 242, 255, 0.98);
@@ -116,10 +119,13 @@ html.dark {
 }
 .rh-nav a:hover,
 .rh-nav a[aria-current='page'] {
-  color: var(--rh-accent);
+  color: var(--rh-head-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
 }
 .rh-nav .rh-cv {
-  color: var(--rh-accent);
+  color: var(--rh-head-accent);
 }
 .rh-tools {
   display: flex;
@@ -817,7 +823,7 @@ a.rh-tagchip:hover {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 26px 0 calc(112px + env(safe-area-inset-bottom, 0px));
+  padding: 26px 0 calc(40px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--rh-line);
   font: 500 12px/1.4 var(--rh-mono);
   color: var(--rh-muted);
