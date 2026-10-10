@@ -4,6 +4,7 @@ import WhatIBuilt from '@/components/climate/WhatIBuilt'
 import HowItWorked from '@/components/climate/HowItWorked'
 import LearningSeries from '@/components/climate/LearningSeries'
 import ClimateCTA from '@/components/climate/ClimateCTA'
+import HorizonBand from '@/components/HorizonBand'
 import SectionContainer from '@/components/SectionContainer'
 
 export const metadata = genPageMetadata({
@@ -14,12 +15,15 @@ export const metadata = genPageMetadata({
 
 export default function ClimatePage() {
   return (
-    <SectionContainer>
-      <ClimateHero />
-      <WhatIBuilt />
-      <HowItWorked />
-      <LearningSeries />
-      <ClimateCTA />
-    </SectionContainer>
+    <>
+      <HorizonBand variant="slim" />
+      <SectionContainer>
+        <ClimateHero />
+        <WhatIBuilt />
+        <HowItWorked />
+        <LearningSeries />
+        <ClimateCTA />
+      </SectionContainer>
+    </>
   )
 }
