@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import siteMetadata from '@/data/siteMetadata'
 import headerNavLinks from '@/data/headerNavLinks'
 import Link from './Link'
@@ -18,29 +19,31 @@ const navLabel = (ui: UIStrings, href: string, fallback: string): string => {
   return fallback
 }
 
+const isCurrent = (pathname: string, href: string): boolean => {
+  if (href === '/posts') return /^\/(posts|tags|ko\/posts)(\/|$)/.test(pathname)
+  return pathname === href || pathname.startsWith(href + '/')
+}
+
 const Header = () => {
   const ui = useUI()
+  const pathname = usePathname() ?? '/'
   return (
-    <header className="site-chrome-header flex items-center justify-between py-7">
-      <Link
-        href="/"
-        aria-label={siteMetadata.headerTitle}
-        className="text-xl font-bold tracking-tight"
-      >
-        ML<span className="text-accent">.</span>
+    <header className="rh-head site-chrome-header">
+      <Link href="/" aria-label={siteMetadata.headerTitle} className="rh-wordmark">
+        ML<span>.</span>
       </Link>
-      <div className="flex items-center gap-4 font-mono text-xs sm:gap-5">
-        <nav className="hidden items-center gap-5 sm:flex">
+      <div className="rh-tools">
+        <nav className="rh-nav" aria-label="Site">
           {headerNavLinks.map((link) => (
             <Link
               key={link.title}
               href={link.href}
-              className="text-ink hover:text-accent transition-colors"
+              aria-current={isCurrent(pathname, link.href) ? 'page' : undefined}
             >
               {navLabel(ui, link.href, link.title)}
             </Link>
           ))}
-          <a href={siteMetadata.linkedin} className="text-accent">
+          <a className="rh-cv" href={siteMetadata.linkedin}>
             {ui.cv}
           </a>
         </nav>

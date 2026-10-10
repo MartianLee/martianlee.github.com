@@ -5,6 +5,7 @@ import { coreContent } from 'pliny/utils/contentlayer'
 import { genPageMetadata } from 'app/seo'
 import React from 'react'
 import Link from '@/components/Link'
+import SectionContainer from '@/components/SectionContainer'
 
 export const metadata = genPageMetadata({ title: 'About' })
 
@@ -13,7 +14,7 @@ export default function Page() {
   const mainContent = coreContent(author)
 
   return (
-    <>
+    <SectionContainer>
       <AuthorLayout content={mainContent}>
         <h1>칭찬할고양 개발자 페이지</h1>
         <h2>개발자명</h2>
@@ -33,6 +34,6 @@ export default function Page() {
           </Link>
         </p>
       </AuthorLayout>
-    </>
+    </SectionContainer>
   )
 }

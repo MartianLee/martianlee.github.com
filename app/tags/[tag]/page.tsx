@@ -5,6 +5,7 @@ import { canonicalBlogs, localizedList } from '@/lib/posts'
 import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
+import SectionContainer from '@/components/SectionContainer'
 
 export async function generateMetadata(props: {
   params: Promise<{ tag: string }>
@@ -40,5 +41,9 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
   const filteredPosts = localizedList(
     canonicalBlogs().filter((post) => post.tags && post.tags.map((t) => slug(t)).includes(tag))
   )
-  return <ListLayout posts={filteredPosts} title={title} />
+  return (
+    <SectionContainer>
+      <ListLayout posts={filteredPosts} title={title} />
+    </SectionContainer>
+  )
 }

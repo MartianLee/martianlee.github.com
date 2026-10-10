@@ -3,6 +3,7 @@ import { Metadata } from 'next'
 import projectsData from '@/data/projectsData'
 import ProjectDetail from '@/components/projects/ProjectDetail'
 import { genPageMetadata } from 'app/seo'
+import SectionContainer from '@/components/SectionContainer'
 
 export const generateStaticParams = async () => projectsData.map((p) => ({ slug: p.slug }))
 
@@ -20,5 +21,9 @@ export default async function ProjectPage(props: { params: Promise<{ slug: strin
   const project = projectsData.find((p) => p.slug === slug)
   if (!project) return notFound()
 
-  return <ProjectDetail project={project} />
+  return (
+    <SectionContainer>
+      <ProjectDetail project={project} />
+    </SectionContainer>
+  )
 }

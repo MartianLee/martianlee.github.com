@@ -1,0 +1,932 @@
+/* Red Horizon: the shared design system for the Martian-horizon pages.
+   Every class is rh- prefixed and every custom property is --rh- prefixed, so nothing here can touch the
+   existing Tailwind tokens, .prose rules or the Knowledge Base. Light values live on :root and dark values
+   only under html.dark (next-themes toggles that class). */
+
+/* ---------- tokens ---------- */
+:root {
+  --rh-paper: #f4efe4;
+  --rh-surface: #fbf8f1;
+  --rh-ink: #1a1712;
+  --rh-muted: #6b6356;
+  --rh-line: #dcd4c4;
+  --rh-accent: #c2410c;
+  --rh-ok: #2f7d46;
+  --rh-space: #211c16;
+  --rh-sky-z: #c19870;
+  --rh-sky-m: #dab894;
+  --rh-sky-h: #ecd7b9;
+  --rh-far: #c79c79;
+  --rh-sand-d: #7d4a2d;
+  --rh-monument: #1c1712;
+  --rh-gutter: clamp(16px, 4vw, 48px);
+  --rh-col: 1100px;
+  --rh-display: var(--font-archivo), 'Archivo', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --rh-serif: var(--font-newsreader), '42dot Sans', Georgia, 'Times New Roman', serif;
+  --rh-mono:
+    var(--font-jetbrains), '42dot Sans', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --rh-accent-text: #9a3412;
+  /* horizon band */
+  --rh-sun-x: 82%;
+  --rh-sun-y: 50%;
+  --rh-sun-core: rgba(255, 249, 236, 0.96);
+  --rh-sun-glow: rgba(255, 238, 208, 0.55);
+  --rh-sun-size: 15px;
+  --rh-sun-reach: 110px;
+  --rh-ground-top: #ad6a42;
+  --rh-ground-mid: #c99a76;
+  --rh-far-2: #d4ad8b;
+  --rh-dust: rgba(255, 246, 230, 0.7);
+  --rh-shade: rgba(26, 23, 18, 0.05);
+  --rh-code-bg: #16130d;
+  --rh-code-fg: #e9e3d5;
+  --rh-orb-lx: 62%;
+  --rh-orb-ly: 30%;
+}
+html.dark {
+  --rh-paper: #14110b;
+  --rh-surface: #1c1812;
+  --rh-ink: #ebe4d6;
+  --rh-muted: #a59c8b;
+  --rh-line: #2c271f;
+  --rh-accent: #ea580c;
+  --rh-ok: #4fb36d;
+  --rh-space: #0b0907;
+  --rh-sky-z: #0e131e;
+  --rh-sky-m: #202838;
+  --rh-sky-h: #4a4352;
+  --rh-far: #332a31;
+  --rh-sand-d: #1c1412;
+  --rh-monument: #ede3cf;
+  --rh-accent-text: #f6ab83;
+  --rh-sun-x: 84%;
+  --rh-sun-y: 100%;
+  --rh-sun-core: rgba(232, 242, 255, 0.98);
+  --rh-sun-glow: rgba(118, 162, 232, 0.5);
+  --rh-sun-size: 11px;
+  --rh-sun-reach: 190px;
+  --rh-ground-top: #24191a;
+  --rh-ground-mid: #1a1411;
+  --rh-far-2: #3c3036;
+  --rh-dust: rgba(255, 214, 180, 0.32);
+  --rh-shade: rgba(255, 246, 230, 0.045);
+  --rh-code-bg: #0e0c08;
+  --rh-code-fg: #e9e3d5;
+  --rh-orb-lx: 78%;
+  --rh-orb-ly: 54%;
+}
+
+/* ---------- page wrapper: the body type of a Red Horizon page (scoped, so the KB and climate keep their fonts) ---------- */
+.rh-page {
+  font: 400 17px/1.55 var(--rh-serif);
+  color: var(--rh-ink);
+}
+
+/* ---------- header (absolute over the sky band on every page) ---------- */
+.rh-head {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) var(--rh-gutter) 0;
+  font: 500 12px/1 var(--rh-mono);
+  letter-spacing: 0.02em;
+}
+.rh-wordmark {
+  font: 800 23px/1 var(--rh-display);
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  padding: 8px 0;
+}
+.rh-wordmark span {
+  color: var(--rh-accent);
+}
+.rh-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.rh-nav a {
+  padding: 8px 0;
+}
+.rh-nav a:hover,
+.rh-nav a[aria-current='page'] {
+  color: var(--rh-accent);
+}
+.rh-nav .rh-cv {
+  color: var(--rh-accent);
+}
+.rh-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rh-lang {
+  padding: 8px 6px;
+}
+.rh-lang span {
+  opacity: 0.55;
+}
+.rh-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.rh-icon-btn:hover {
+  background: color-mix(in srgb, var(--rh-ink) 12%, transparent);
+}
+/* The existing ThemeSwitch / SearchButton / MobileNav buttons keep their markup. Size their icons here and give them
+   the 36px round hit area of the reference icon button (padding, so utilities such as sm:hidden still decide display).
+   Direct children only: the full-screen menu keeps the size of its own close button. */
+.rh-tools > button {
+  padding: 9px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.rh-tools > button:hover {
+  background: color-mix(in srgb, var(--rh-ink) 12%, transparent);
+}
+.rh-tools > button svg {
+  width: 18px;
+  height: 18px;
+}
+/* below 640px the MobileNav button (sm:hidden) takes over, so the nav hides at the same width */
+@media (max-width: 639px) {
+  .rh-nav {
+    display: none;
+  }
+}
+
+/* ---------- editorial column + section system ---------- */
+.rh-wrap {
+  max-width: calc(var(--rh-col) + 2 * var(--rh-gutter));
+  margin: 0 auto;
+  padding-inline: var(--rh-gutter);
+}
+.rh-sec {
+  padding-top: clamp(52px, 7vw, 96px);
+}
+.rh-sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rh-ink);
+  margin-bottom: clamp(20px, 3vw, 36px);
+}
+.rh-sec-no {
+  font: 500 12px/1 var(--rh-mono);
+  color: var(--rh-accent);
+  letter-spacing: 0.08em;
+}
+.rh-sec-head h2 {
+  margin: 0;
+  font: 800 clamp(28px, 3.8vw, 46px) / 1 var(--rh-display);
+  font-stretch: 125%;
+  letter-spacing: -0.025em;
+}
+.rh-sec-link {
+  margin-left: auto;
+  padding: 6px 0;
+  font: 500 12px/1 var(--rh-mono);
+  color: var(--rh-muted);
+  white-space: nowrap;
+}
+.rh-sec-link:hover {
+  color: var(--rh-accent);
+}
+.rh-chip {
+  font: 500 10.5px/1 var(--rh-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+  border: 1px solid var(--rh-line);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+.rh-meta {
+  margin: 0;
+  font: 500 11.5px/1.5 var(--rh-mono);
+  letter-spacing: 0.04em;
+  color: var(--rh-muted);
+}
+
+/* ---------- procedural project bodies (planets replace screenshots in lists) ---------- */
+.rh-tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 76px;
+  border-radius: 6px;
+  background: var(--rh-space);
+  overflow: hidden;
+}
+.rh-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 22%, rgba(255, 255, 255, 0.7) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 80% 16%, rgba(255, 255, 255, 0.55) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 66% 84%, rgba(255, 255, 255, 0.5) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 28% 74%, rgba(255, 255, 255, 0.45) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 92% 58%, rgba(255, 255, 255, 0.6) 0 0.6px, transparent 1.2px);
+}
+.rh-orb {
+  --rh-a: #eee;
+  --rh-b: #888;
+  --rh-tex: none;
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 36% 32%, var(--rh-a), var(--rh-b) 78%);
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-orb i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  background: var(--rh-tex);
+  background-size: 50% 100%;
+  transition: transform 2.6s cubic-bezier(0.25, 0.6, 0.2, 1);
+}
+.rh-orb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 28%,
+    transparent 32%,
+    rgba(8, 5, 3, 0.42) 60%,
+    rgba(8, 5, 3, 0.9) 92%
+  );
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.35);
+}
+.rh-orb-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 86px;
+  height: 86px;
+  margin: -43px 0 0 -43px;
+  border-radius: 50%;
+  border: 2px solid rgba(246, 214, 196, 0.75);
+  transform: rotate(-20deg) scaleY(0.27);
+  pointer-events: none;
+}
+.rh-orb-ring.rh-front {
+  clip-path: inset(50% 0 0 0);
+  z-index: 1;
+}
+.rh-o-hanji {
+  --rh-a: #f7f0e2;
+  --rh-b: #b8a585;
+  --rh-tex:
+    repeating-linear-gradient(112deg, rgba(70, 52, 32, 0.18) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(24deg, rgba(70, 52, 32, 0.1) 0 1px, transparent 1px 9px);
+}
+.rh-o-munch {
+  --rh-a: #f4c983;
+  --rh-b: #b4562b;
+  --rh-tex:
+    radial-gradient(ellipse 16% 10% at 30% 63%, rgba(150, 36, 18, 0.85), transparent 70%),
+    linear-gradient(
+      180deg,
+      transparent 0 14%,
+      rgba(196, 74, 34, 0.5) 14% 23%,
+      transparent 23% 37%,
+      rgba(160, 52, 25, 0.5) 37% 45%,
+      transparent 45% 58%,
+      rgba(214, 120, 52, 0.45) 58% 70%,
+      transparent 70% 82%,
+      rgba(170, 60, 30, 0.45) 82% 90%,
+      transparent 90%
+    );
+}
+.rh-o-cheer {
+  --rh-a: #f4c0a9;
+  --rh-b: #a4584a;
+  --rh-tex:
+    radial-gradient(ellipse 24% 12% at 26% 40%, rgba(255, 236, 226, 0.4), transparent 70%),
+    radial-gradient(ellipse 20% 10% at 70% 68%, rgba(120, 50, 40, 0.35), transparent 70%);
+}
+.rh-o-fish {
+  --rh-a: #7fb9b0;
+  --rh-b: #1d4a52;
+  --rh-tex:
+    radial-gradient(circle at 18% 40%, #93b672 0 7%, transparent 8%),
+    radial-gradient(circle at 27% 50%, #86ab68 0 5%, transparent 6%),
+    radial-gradient(ellipse 12% 7% at 68% 64%, #9cbf78 0 60%, transparent 70%),
+    radial-gradient(ellipse 26% 5% at 44% 24%, rgba(255, 255, 255, 0.6), transparent 75%),
+    radial-gradient(ellipse 20% 4% at 82% 80%, rgba(255, 255, 255, 0.5), transparent 75%);
+}
+/* pointer is the Sun: orbs take their light from the cursor (JS sets --rh-lx/--rh-ly; the defaults come from the theme tokens) */
+.rh-orb {
+  --rh-lx: var(--rh-orb-lx);
+  --rh-ly: var(--rh-orb-ly);
+  background: radial-gradient(circle at var(--rh-lx) var(--rh-ly), var(--rh-a), var(--rh-b) 78%);
+}
+.rh-orb::after {
+  background: radial-gradient(
+    circle at calc(var(--rh-lx) - 6%) calc(var(--rh-ly) - 4%),
+    transparent 32%,
+    rgba(8, 5, 3, 0.42) 60%,
+    rgba(8, 5, 3, 0.9) 92%
+  );
+}
+.rh-o-invaders {
+  --rh-a: #a9d3ef;
+  --rh-b: #1c3c6c;
+  --rh-tex:
+    radial-gradient(ellipse 18% 13% at 24% 42%, #6f9b58 0 60%, transparent 72%),
+    radial-gradient(ellipse 12% 16% at 62% 60%, #7aa462 0 55%, transparent 70%),
+    radial-gradient(
+      circle at 76% 30%,
+      #ff5a3c 0 4%,
+      rgba(255, 90, 60, 0.35) 5% 9%,
+      transparent 10%
+    ),
+    radial-gradient(ellipse 30% 5% at 40% 20%, rgba(255, 255, 255, 0.55), transparent 75%);
+}
+.rh-o-shoulder {
+  --rh-a: #ece4ee;
+  --rh-b: #6f6680;
+  --rh-tex:
+    radial-gradient(circle at 22% 36%, rgba(60, 50, 74, 0.35) 0 6%, transparent 7%),
+    radial-gradient(circle at 58% 64%, rgba(60, 50, 74, 0.3) 0 9%, transparent 10%),
+    radial-gradient(circle at 74% 28%, rgba(60, 50, 74, 0.28) 0 4%, transparent 5%),
+    radial-gradient(circle at 36% 80%, rgba(60, 50, 74, 0.25) 0 5%, transparent 6%);
+}
+.rh-o-defense {
+  --rh-a: #7a5442;
+  --rh-b: #170f0b;
+  --rh-tex:
+    repeating-linear-gradient(
+      62deg,
+      transparent 0 9px,
+      rgba(255, 112, 48, 0.75) 9px 10px,
+      transparent 10px 23px
+    ),
+    repeating-linear-gradient(
+      -28deg,
+      transparent 0 13px,
+      rgba(255, 150, 70, 0.5) 13px 14px,
+      transparent 14px 31px
+    );
+}
+.rh-o-gukbap {
+  --rh-a: #f6e5c2;
+  --rh-b: #9a6639;
+  --rh-tex:
+    radial-gradient(ellipse 30% 9% at 34% 36%, rgba(120, 70, 30, 0.35), transparent 72%),
+    radial-gradient(ellipse 26% 8% at 66% 66%, rgba(120, 70, 30, 0.3), transparent 72%),
+    radial-gradient(circle at 28% 62%, rgba(255, 255, 255, 0.75) 0 2.5%, transparent 3.5%),
+    radial-gradient(circle at 54% 30%, rgba(255, 255, 255, 0.7) 0 2%, transparent 3%),
+    radial-gradient(circle at 74% 48%, rgba(255, 255, 255, 0.7) 0 2.5%, transparent 3.5%);
+}
+.rh-o-tracker {
+  --rh-a: #e2dcae;
+  --rh-b: #5d5a2c;
+  --rh-tex: linear-gradient(
+    180deg,
+    transparent 0 12%,
+    rgba(120, 110, 40, 0.45) 12% 17%,
+    transparent 17% 30%,
+    rgba(170, 96, 40, 0.45) 30% 34%,
+    transparent 34% 47%,
+    rgba(90, 110, 60, 0.5) 47% 55%,
+    transparent 55% 66%,
+    rgba(140, 120, 50, 0.4) 66% 70%,
+    transparent 70% 82%,
+    rgba(100, 80, 40, 0.4) 82% 87%,
+    transparent 87%
+  );
+}
+.rh-o-sontab {
+  --rh-a: #e3f6f3;
+  --rh-b: #2f747c;
+  --rh-tex:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 7px,
+      rgba(255, 255, 255, 0.42) 7px 9px,
+      transparent 9px 16px
+    ),
+    radial-gradient(ellipse 22% 6% at 30% 30%, rgba(255, 255, 255, 0.6), transparent 70%);
+}
+/* one element: the second, smaller moonlet is its box-shadow */
+.rh-moonlet {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f1ead8, #8d846b 80%);
+  top: 13px;
+  right: 19px;
+  box-shadow: -12px 34px 0 -2px #b9ae8e;
+}
+
+/* ---------- project rows (home and /projects) ---------- */
+.rh-proj {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rh-proj li {
+  overflow: hidden;
+}
+.rh-proj-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(16px, 2.4vw, 32px);
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rh-line);
+}
+.rh-proj-row:focus-visible {
+  outline-offset: -2px;
+}
+.rh-proj-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--rh-accent) 10%, transparent) 60%,
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.rh-proj-row:hover::before,
+.rh-proj-row:focus-visible::before {
+  transform: translateX(100%);
+}
+.rh-proj-row:hover .rh-orb i,
+.rh-proj-row:focus-visible .rh-orb i {
+  transform: translateX(-50%);
+}
+.rh-proj-row:hover .rh-orb,
+.rh-proj-row:focus-visible .rh-orb {
+  transform: scale(1.07);
+}
+.rh-proj-main {
+  min-width: 0;
+}
+.rh-proj-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  font: 700 21px/1.15 var(--rh-display);
+  letter-spacing: -0.01em;
+  transition: color 0.3s;
+}
+.rh-proj-row:hover .rh-proj-title,
+.rh-proj-row:focus-visible .rh-proj-title {
+  color: var(--rh-accent);
+}
+.rh-proj-desc {
+  display: block;
+  margin-top: 6px;
+  color: var(--rh-muted);
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+.rh-proj-stack {
+  font: 500 12px/1.4 var(--rh-mono);
+  color: var(--rh-muted);
+  white-space: nowrap;
+  padding-right: 8px;
+}
+@media (max-width: 860px) {
+  .rh-proj-stack {
+    display: none;
+  }
+  .rh-proj-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .rh-proj-row {
+    align-items: start;
+  }
+  .rh-tile {
+    width: 72px;
+    height: 60px;
+  }
+  .rh-orb {
+    width: 38px;
+    height: 38px;
+  }
+  .rh-orb-ring {
+    width: 64px;
+    height: 64px;
+    margin: -32px 0 0 -32px;
+  }
+}
+
+/* ---------- horizon band: one per page (sky, far mesas behind a monument title, ground below the baseline) ---------- */
+.rh-band {
+  --rh-ground-h: clamp(46px, 6vw, 72px);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: clamp(250px, 36vh, 340px);
+  padding-top: calc(76px + env(safe-area-inset-top, 0px));
+}
+.rh-band-sky {
+  position: absolute;
+  inset: 0 0 var(--rh-ground-h) 0;
+  z-index: -4;
+  background:
+    radial-gradient(
+      circle at var(--rh-sun-x) var(--rh-sun-y),
+      var(--rh-sun-core) 0 var(--rh-sun-size),
+      var(--rh-sun-glow) calc(var(--rh-sun-size) + 1px),
+      transparent var(--rh-sun-reach)
+    ),
+    linear-gradient(180deg, var(--rh-sky-z) 0%, var(--rh-sky-m) 52%, var(--rh-sky-h) 100%);
+}
+.rh-band::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: var(--rh-ground-h);
+  left: 0;
+  width: calc(100% + 260px);
+  z-index: -3;
+  pointer-events: none;
+  opacity: 0.85;
+  background-image:
+    radial-gradient(circle at 20px 30px, var(--rh-dust) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 150px 80px, var(--rh-dust) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 90px 12px, var(--rh-dust) 0 0.5px, transparent 1.1px),
+    radial-gradient(circle at 210px 104px, var(--rh-dust) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 64px 96px, var(--rh-dust) 0 0.5px, transparent 1px);
+  background-size: 260px 124px;
+  animation: rh-dust 70s linear infinite;
+}
+@keyframes rh-dust {
+  to {
+    transform: translateX(-260px);
+  }
+}
+.rh-band-far {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--rh-ground-h) - 1px);
+  z-index: -2;
+  width: 100%;
+  height: clamp(44px, 7vw, 92px);
+  display: block;
+}
+.rh-band-far .rh-f1 {
+  fill: var(--rh-far-2);
+}
+.rh-band-far .rh-f2 {
+  fill: var(--rh-far);
+}
+.rh-band-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--rh-ground-h);
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    var(--rh-ground-top) 0%,
+    var(--rh-ground-mid) 34%,
+    var(--rh-paper) 100%
+  );
+}
+.rh-band-ground svg {
+  position: absolute;
+  left: 0;
+  top: -9px;
+  width: 100%;
+  height: 12px;
+  display: block;
+}
+.rh-band-ground path {
+  fill: var(--rh-ground-top);
+}
+.rh-band-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: calc(var(--rh-col) + 2 * var(--rh-gutter));
+  margin: 0 auto;
+  padding: 0 var(--rh-gutter) var(--rh-ground-h);
+}
+.rh-band-tele {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0 0 clamp(12px, 2vw, 20px);
+  font: 500 11.5px/1.5 var(--rh-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rh-ink);
+}
+.rh-band-tele .rh-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.rh-band-tele .rh-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rh-accent);
+  flex: none;
+  animation: rh-ping 2.4s ease-out infinite;
+}
+.rh-band-tele .rh-sep {
+  opacity: 0.45;
+}
+.rh-band-tele a:hover {
+  color: var(--rh-accent);
+}
+@keyframes rh-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--rh-accent) 65%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+.rh-monument {
+  margin: 0 0 -0.035em;
+  font: 800 clamp(46px, 11vw, 150px) / 0.8 var(--rh-display);
+  font-stretch: 125%;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--rh-monument);
+  white-space: nowrap;
+  animation: rh-settle 1.6s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+.rh-monument .rh-dot {
+  color: var(--rh-accent);
+}
+@keyframes rh-settle {
+  from {
+    letter-spacing: 0.01em;
+  }
+  to {
+    letter-spacing: -0.035em;
+  }
+}
+@media (max-width: 640px) {
+  .rh-band {
+    min-height: 0;
+    padding-top: calc(70px + env(safe-area-inset-top, 0px));
+  }
+  .rh-band-tele {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+  }
+}
+/* variants (after the media query above so the slim height also holds on phones) */
+.rh-band--headline .rh-monument {
+  font-stretch: 100%;
+  font-weight: 700;
+  font-size: clamp(34px, 5.4vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  white-space: normal;
+  text-wrap: balance;
+  text-transform: none;
+  max-width: 20ch;
+}
+.rh-band--slim {
+  min-height: clamp(150px, 20vh, 190px);
+}
+.rh-band-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px clamp(24px, 4vw, 56px);
+}
+.rh-band-row > :first-child {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .rh-band-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- column helpers ---------- */
+.rh-lede {
+  margin: clamp(22px, 3vw, 34px) 0 0;
+  max-width: 54ch;
+  font: italic 400 clamp(20px, 2vw, 24px) / 1.4 var(--rh-serif);
+  color: var(--rh-muted);
+  text-wrap: pretty;
+}
+.rh-status {
+  margin: 0;
+}
+.rh-tagchip {
+  display: inline-flex;
+  align-items: center;
+  font: 500 10.5px/1 var(--rh-mono);
+  letter-spacing: 0.04em;
+  color: var(--rh-muted);
+  border: 1px solid var(--rh-line);
+  border-radius: 999px;
+  padding: 5px 9px;
+  transition:
+    color 0.25s,
+    border-color 0.25s;
+}
+a.rh-tagchip:hover {
+  color: var(--rh-accent);
+  border-color: var(--rh-accent);
+}
+
+/* ---------- contact strip + foot (global footer) ---------- */
+.rh-contact {
+  margin-top: clamp(52px, 7vw, 88px);
+  padding: 24px 0;
+  border-top: 1px solid var(--rh-ink);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px 24px;
+  font: 500 13px/1.4 var(--rh-mono);
+}
+.rh-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rh-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rh-ok);
+  flex: none;
+}
+.rh-contact nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  color: var(--rh-accent);
+}
+.rh-contact nav a {
+  padding: 6px 0;
+}
+.rh-contact nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.rh-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 26px 0 calc(112px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--rh-line);
+  font: 500 12px/1.4 var(--rh-mono);
+  color: var(--rh-muted);
+}
+/* contact: a relay to the link you reach for */
+.rh-contact {
+  position: relative;
+}
+.rh-contact nav a {
+  display: inline-flex;
+  gap: 5px;
+  background: linear-gradient(currentColor, currentColor) 0 calc(100% - 4px) / 0 1px no-repeat;
+  transition: background-size 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-contact nav a:hover,
+.rh-contact nav a:focus-visible {
+  text-decoration: none;
+  background-size: 100% 1px;
+}
+.rh-status i {
+  position: relative;
+}
+.rh-contact.rh-tx .rh-status i {
+  animation: rh-pingok 1.2s ease-out;
+}
+@keyframes rh-pingok {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--rh-ok) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+.rh-wire {
+  position: absolute;
+  left: var(--rh-x0, 0);
+  top: var(--rh-y0, 0);
+  width: var(--rh-len, 0);
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--rh-accent) 55%, transparent) 0 3px,
+    transparent 3px 8px
+  );
+  opacity: 0;
+  transition: opacity 0.35s;
+  pointer-events: none;
+}
+.rh-wire i {
+  position: absolute;
+  left: 0;
+  top: -3px;
+  width: 28px;
+  height: 7px;
+  margin-left: -28px;
+  border-radius: 4px;
+  background: radial-gradient(closest-side, var(--rh-accent), transparent);
+  opacity: 0;
+}
+.rh-contact.rh-tx .rh-wire {
+  opacity: 1;
+}
+.rh-contact.rh-tx .rh-wire i {
+  animation: rh-relay 0.85s cubic-bezier(0.45, 0.05, 0.25, 1) forwards;
+}
+@keyframes rh-relay {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(var(--rh-len) + 14px));
+    opacity: 0;
+  }
+}
+.rh-footer {
+  font-family: var(--rh-serif);
+}
+.rh-live-line {
+  flex-basis: 100%;
+  margin: 0;
+  font: 500 12px/1.5 var(--rh-mono);
+  color: var(--rh-muted);
+}
+/* MarsLightTime renders this until it mounts, so the line keeps one line of height (no layout shift when the sentence appears).
+   vertical-align: top keeps the empty box from growing the line box below the baseline. */
+.rh-live-placeholder {
+  display: inline-block;
+  height: 1.5em;
+  vertical-align: top;
+}
+
+/* ---------- reduced motion: a still frame, no loops ---------- */
+@media (prefers-reduced-motion: reduce) {
+  [class^='rh-'],
+  [class*=' rh-'],
+  [class^='rh-']::before,
+  [class^='rh-']::after,
+  [class*=' rh-']::before,
+  [class*=' rh-']::after,
+  [class^='rh-'] i,
+  [class*=' rh-'] i {
+    animation: none !important;
+    transition: none !important;
+  }
+}
