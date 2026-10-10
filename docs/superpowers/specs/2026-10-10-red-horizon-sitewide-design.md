@@ -42,35 +42,38 @@
 
 ### 3.1 테마 토큰
 
-사이트 테마는 next-themes가 `<html class="dark">`로 바꿉니다. 프리뷰의 `prefers-color-scheme`/`[data-theme]` 블록은 `:root`(라이트)와 `html.dark`(다크) 두 블록으로 옮깁니다. 기존 토큰 이름(`--paper --surface --ink --muted --line --accent`)은 유지하고 값만 A 기준으로 바꿉니다.
+사이트 테마는 next-themes가 `<html class="dark">`로 바꿉니다. 프리뷰의 `prefers-color-scheme`/`[data-theme]` 블록은 `:root`(라이트)와 `html.dark`(다크) 두 블록으로 옮깁니다.
+
+**A 시스템은 `--rh-` 접두어가 붙은 자기 토큰만 씁니다.** 기존 토큰(`--paper --surface --ink --muted --line --accent`)과 Tailwind 매핑(`text-muted` 등)은 값을 바꾸지 않습니다. KB가 `text-muted`를 50곳에서 쓰고 있어서, 공유 토큰 값을 바꾸면 KB 화면이 달라지기 때문입니다.
 
 | 토큰 | 라이트 | 다크 | 비고 |
 |---|---|---|---|
-| `--paper` | #f4efe4 | #14110b | 유지 |
-| `--surface` | #fbf8f1 | #1c1812 | |
-| `--ink` | #1a1712 | #ebe4d6 | |
-| `--muted` | #6b6356 | #a59c8b | 대비 개선(기존 #8c8475) |
-| `--line` | #dcd4c4 | #2c271f | |
-| `--accent` | #c2410c | #ea580c | 유지 |
-| `--accent-text` | #9a3412 | #f6ab83 | 하늘 위 작은 액센트 글자 대비용 |
-| `--ok` | #2f7d46 | #4fb36d | 상태 점 |
-| `--space` | #211c16 | #0b0907 | 오브 타일 바탕 |
-| `--sky-z --sky-m --sky-h --far --sand-d --monument` | site.css 값 | site.css 값 | 하늘 밴드 |
-| 밴드용(`--sun`, ground, `--far-2`, dust 등) | inner.css 값 | inner.css 값 | 내부 페이지 밴드 |
-
-KB는 자체 `--kb-*` 토큰을 쓰므로 영향이 없어야 합니다(§10 회귀 확인).
+| `--rh-paper` | #f4efe4 | #14110b | 기존 `--paper`와 같은 값 |
+| `--rh-surface` | #fbf8f1 | #1c1812 | |
+| `--rh-ink` | #1a1712 | #ebe4d6 | |
+| `--rh-muted` | #6b6356 | #a59c8b | 기존 #8c8475보다 대비가 높음 |
+| `--rh-line` | #dcd4c4 | #2c271f | |
+| `--rh-accent` | #c2410c | #ea580c | |
+| `--rh-accent-text` | #9a3412 | #f6ab83 | 하늘 위 작은 액센트 글자 대비용 |
+| `--rh-ok` | #2f7d46 | #4fb36d | 상태 점 |
+| `--rh-space` | #211c16 | #0b0907 | 오브 타일 바탕 |
+| `--rh-sky-z --rh-sky-m --rh-sky-h --rh-far --rh-sand-d --rh-monument` | site.css 값 | site.css 값 | 하늘 |
+| 밴드용(`--rh-sun`, ground, `--rh-far-2`, dust 등) | inner.css 값 | inner.css 값 | 내부 페이지 밴드 |
 
 ### 3.2 서체
 
-- Display: **Archivo** (next/font/google, variable, `axes: ['wdth']`, `variable: '--font-archivo'`). 이름·밴드 제목은 `font-stretch: 125%` + 800, 제목류는 100% + 700. Space Grotesk는 제거합니다.
-- Body: Newsreader (유지), Mono: JetBrains Mono (유지), 한국어 폴백: 42dot Sans (유지).
-- Tailwind `--font-family-sans`는 Archivo로 바꿉니다. 빌드 후 Archivo woff2 크기를 재고, 라틴 서브셋이 80 KB를 넘으면 `next/font/local`로 두 정적 인스턴스(wdth 100/700, wdth 125/800)를 셀프 호스팅합니다.
+- 확인된 사실: Tailwind v4는 `@theme`의 `--font-family-sans` 키를 쓰지 않습니다. 빌드된 CSS에서 `.font-sans`는 `var(--font-sans)` = 시스템 UI 서체이고, Space Grotesk는 선언만 되어 있고 어디서도 쓰이지 않습니다(다운로드도 되지 않음).
+- 그래서 전역 `font-sans`는 그대로 두고(KB·climate 영향 없음), Space Grotesk import와 `--font-family-sans` 줄은 삭제합니다.
+- Display: **Archivo** (next/font/google, variable, `axes: ['wdth']`, `variable: '--font-archivo'`). 이름·밴드 제목은 `font-stretch: 125%` + 800, 제목류는 100% + 700.
+- A 컴포넌트는 `--rh-display`(Archivo 스택), `--rh-serif`(Newsreader + 42dot Sans 스택), `--rh-mono`(JetBrains Mono + 42dot Sans 스택)를 명시적으로 씁니다. A 페이지의 최상위 래퍼(`.rh-page`)가 본문 기본 서체를 `--rh-serif`로 정합니다(프리뷰에서 body가 하던 역할).
+- 빌드 후 Archivo woff2 크기를 재고, 라틴 서브셋이 80 KB를 넘으면 `next/font/local`로 두 정적 인스턴스(wdth 100/700, wdth 125/800)를 셀프 호스팅합니다.
 
 ### 3.3 CSS 구성
 
-- `css/red-horizon.css` 하나를 새로 만들어 `css/tailwind.css`에서 `@import` 합니다. site.css와 inner.css의 공통부(섹션 헤드, 칩, 오브, 밴드, 연락 줄, 푸터, 리스트 행, 프로즈 보강)를 여기로 모읍니다.
+- `css/red-horizon.css` 하나를 새로 만들어 `css/tailwind.css`에서 `@import` 합니다. site.css, inner.css, 각 페이지 레퍼런스의 `<style>`을 여기로 옮깁니다.
+- **모든 클래스는 `rh-` 접두어**를 붙입니다(`.proj-row` → `.rh-proj-row`). 예외적인 이름: `.site-head` → `.rh-head`, `.ring` → `.rh-orb-ring`(Tailwind `ring` 유틸리티와 충돌), 글 본문 규칙(`.prose …`)은 `.rh-reading …`으로 범위를 좁힙니다(KB의 `.prose`를 건드리지 않기 위해).
 - 오브 조명은 inner.css 방식(`--lx`/`--ly` CSS 변수)으로 통일합니다. site.css의 고정값(36% 32%)은 기본값으로만 남깁니다.
-- 기존 `.eyebrow .sec-head .sec-num .chip .list-row .ghost-btn` 등 Bold Editorial 유틸리티는 새 페이지들이 더 이상 쓰지 않으면 삭제합니다(KB와 climate가 쓰는지 확인 후).
+- 기존 Bold Editorial 유틸리티(`.eyebrow .sec-head .sec-num .chip .list-row .ghost-btn .reading-measure` 등)는 마지막 태스크에서 사용처를 확인해, 아무도 쓰지 않는 것만 삭제합니다.
 - 모든 애니메이션은 `prefers-reduced-motion: reduce`에서 꺼집니다.
 
 ## 4. 레이아웃 구조
@@ -165,6 +168,8 @@ type HorizonBandProps = {
 밴드: "ERROR 404 · NO SIGNAL AT THIS ADDRESS", 제목 `SIGNAL LOST.`, 지평선의 착륙선 실루엣과 깜빡이는 비컨. 본문: "There is no page at this address. It may have moved, or it was never written." + 실시간 문구 "Even a reply from Mars takes 13 min 17 s right now." + ← Back home / Browse posts.
 
 ### 5.8 climate, praisecat
+
+praisecat은 지금 `AuthorLayout`을 빌려 쓰고 있어서 About 리디자인(지구본)을 그대로 물려받게 됩니다. praisecat은 `AuthorLayout`에서 떼어 slim 밴드 + 단순 본문 칼럼으로 바꿉니다.
 
 내용 디자인은 그대로 두고 `HorizonBand variant="slim"`(제목 없는 짧은 하늘 띠)을 맨 위에 둬서 헤더 아래 바탕을 맞춥니다. 본문은 `SectionContainer`로 감쌉니다. 새 서체·토큰은 전역으로 적용됩니다.
 
