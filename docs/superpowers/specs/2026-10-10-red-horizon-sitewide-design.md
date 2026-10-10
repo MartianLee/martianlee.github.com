@@ -55,6 +55,7 @@
 | `--rh-line` | #dcd4c4 | #2c271f | |
 | `--rh-accent` | #c2410c | #ea580c | |
 | `--rh-accent-text` | #9a3412 | #f6ab83 | 하늘 위 작은 액센트 글자 대비용 |
+| `--rh-head-accent` | #5c1d07 | #ea580c | 헤더 액센트 글자(현재 메뉴·hover·CV). 하늘 꼭대기 `--rh-sky-z` 위 대비 라이트 4.89:1, 다크 5.22:1 (`--rh-accent`는 라이트 1.97:1) |
 | `--rh-ok` | #2f7d46 | #4fb36d | 상태 점 |
 | `--rh-space` | #211c16 | #0b0907 | 오브 타일 바탕 |
 | `--rh-sky-z --rh-sky-m --rh-sky-h --rh-far --rh-sand-d --rh-monument` | site.css 값 | site.css 값 | 하늘 |
@@ -62,9 +63,9 @@
 
 ### 3.2 서체
 
-- 확인된 사실: Tailwind v4는 `@theme`의 `--font-family-sans` 키를 쓰지 않습니다. 빌드된 CSS에서 `.font-sans`는 `var(--font-sans)` = 시스템 UI 서체이고, Space Grotesk는 선언만 되어 있고 어디서도 쓰이지 않습니다(다운로드도 되지 않음).
-- 그래서 전역 `font-sans`는 그대로 두고(KB·climate 영향 없음), Space Grotesk import와 `--font-family-sans` 줄은 삭제합니다.
-- Display: **Archivo** (next/font/google, variable, `axes: ['wdth']`, `variable: '--font-archivo'`). 이름·밴드 제목은 `font-stretch: 125%` + 800, 제목류는 100% + 700.
+- 확인된 사실: Tailwind v4는 `@theme`의 `--font-family-sans` 키를 `.font-sans` 유틸리티에 쓰지 않습니다(`.font-sans` = 시스템 UI 서체). 하지만 변수 자체는 쓰입니다(Task 3에서 정정): `.reading-measure .prose h1–h4`(PostLayout·PostSimple·PostBanner·AuthorLayout)와 viz 컴포넌트 3개(BridgeSpectrum·PixelVsMesh·BridgeLineage, KB 노트 안에서도 렌더)가 `var(--font-family-sans)` = Space Grotesk를 씁니다.
+- 그래서 전역 `font-sans`는 그대로 두고, Space Grotesk와 `--font-family-sans` 줄도 그대로 두되 `preload: false`로 바꿉니다. 쓰는 글자가 있는 페이지에서만 내려받습니다(KB 차트 라벨 유지).
+- Display: **Archivo** 정적 인스턴스 2개(next/font/local, `variable: '--font-archivo'`, 라틴 서브셋 각 약 14.5 KB). 이름·밴드 제목은 `font-stretch: 125%` + 800, 제목류는 100% + 700. 가변 폰트(next/font/google, `axes: ['wdth']`)의 라틴 파일이 88 KB로 측정되어 아래 규칙대로 전환했습니다. 굵기 800 = 확장형(wdth 125) 파일, 700 = 표준 폭(wdth 100) 파일로 1:1 대응하므로, 800 표준 폭이나 700 확장형 조합은 쓰지 않습니다(브라우저는 폭을 합성하지 않음).
 - A 컴포넌트는 `--rh-display`(Archivo 스택), `--rh-serif`(Newsreader + 42dot Sans 스택), `--rh-mono`(JetBrains Mono + 42dot Sans 스택)를 명시적으로 씁니다. A 페이지의 최상위 래퍼(`.rh-page`)가 본문 기본 서체를 `--rh-serif`로 정합니다(프리뷰에서 body가 하던 역할).
 - 빌드 후 Archivo woff2 크기를 재고, 라틴 서브셋이 80 KB를 넘으면 `next/font/local`로 두 정적 인스턴스(wdth 100/700, wdth 125/800)를 셀프 호스팅합니다.
 
@@ -227,13 +228,13 @@ praisecat은 지금 `AuthorLayout`을 빌려 쓰고 있어서 About 리디자인
 
 - 실제 `<a>`/`<button>`, 보이는 `:focus-visible`, 장식 캔버스 `aria-hidden`.
 - 포인터로만 보이는 정보는 다른 곳에도 있습니다(오브 조명은 장식, 경력 막대는 텍스트 기간 병기, 스크러버는 키보드 slider).
-- 본문 대비 4.5:1 이상. 하늘 위 작은 액센트 글자는 `--accent-text`.
+- 본문 대비 4.5:1 이상. 헤더 액센트 글자(현재 메뉴·hover·CV)는 하늘 꼭대기 위에 있으므로 `--rh-head-accent`를 쓰고, 현재 메뉴와 hover는 밑줄로도 표시합니다(색만으로 구분하지 않음). 그 밖의 하늘 위 작은 액센트 글자는 `--rh-accent-text`를 쓰되 실제 배경에서 대비를 잽니다.
 - 390px에서 가로 스크롤 없음, 거터 16px 이상.
 
 ## 9. i18n
 
 - 모든 새 UI 문구는 `lib/ui-strings.ts`에 EN/KO 쌍으로 둡니다: HUD 라벨, 밴드 텔레메트리 라벨, 태그 레일, 게이지 aria, 페이지네이션, 404 문구, About 지구본 캡션·버튼, 경력 스크러버 안내·읽기 문구, 프로젝트 목록 소개와 힌트, 연락 줄 실시간 문구.
-- KO 문구는 경어체입니다. 밴드 제목 KO: 글, 프로젝트, 태그, 이성화, 신호 끊김. 한글은 Archivo에 없어 42dot Sans 굵은 글씨로 폴백되며 이를 허용합니다.
+- KO 문구는 경어체입니다. 밴드 제목 KO: 글, 프로젝트, 태그, 이성화, 신호 끊김. 한글은 Archivo에 없습니다. 42dot Sans는 400 굵기만 로드되므로 디스플레이 스택에 넣지 않고(가짜 굵게 방지), 한글 제목은 플랫폼 기본 한글 산세리프의 실제 굵은 웨이트(macOS는 Apple SD Gothic Neo)로 폴백되며 이를 허용합니다.
 - 프로젝트·경력 한 줄 설명은 `summaryKo`, `descriptionKo`, `roleKo`를 씁니다.
 
 ## 10. 테스트와 검증
@@ -253,7 +254,7 @@ praisecat은 지금 `AuthorLayout`을 빌려 쓰고 있어서 About 리디자인
 | 시계 값 하이드레이션 불일치 | 마운트 후 계산, SSR은 자리표시 |
 | 자동 섹션 번호 중복 | TOC 기반 판별로 기존 번호 글은 끔 |
 | 경력 막대 정밀도 | 연 단위만 표시(월 데이터 없음), 문구도 연도만 |
-| Archivo 가변 폰트 용량 | 측정 후 80 KB 초과 시 정적 인스턴스 셀프 호스팅 |
+| Archivo 가변 폰트 용량 | 88 KB 측정(80 KB 초과) → 정적 인스턴스 2개(각 약 14.5 KB) 셀프 호스팅으로 전환 |
 | mermaid·viz 컴포넌트가 새 프로즈 스타일과 충돌 | 해당 글 스크린샷 확인, 프로즈 규칙은 기존 셀렉터를 보강하는 방식 |
 
 ## 12. 작업 순서
