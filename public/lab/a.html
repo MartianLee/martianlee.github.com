@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Red Horizon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,700;125,800&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Layout: a full-bleed Martian horizon band where the name stands at the horizon, then a 1100px editorial column on paper. */
+:root{
+  --paper:#f4efe4;--surface:#fbf8f1;--ink:#1a1712;--muted:#6b6356;--line:#dcd4c4;--accent:#c2410c;--ok:#2f7d46;--space:#211c16;
+  --sky-z:#c19870;--sky-m:#dab894;--sky-h:#ecd7b9;--far:#c79c79;--sand-d:#7d4a2d;--monument:#1c1712;
+  --display:'Archivo','Arial Black','Helvetica Neue',Arial,sans-serif;
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --gutter:clamp(16px,4vw,48px);--col:1100px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#14110b;--surface:#1c1812;--ink:#ebe4d6;--muted:#a59c8b;--line:#2c271f;--accent:#ea580c;--ok:#4fb36d;--space:#0b0907;
+  --sky-z:#0e131e;--sky-m:#202838;--sky-h:#4a4352;--far:#332a31;--sand-d:#1c1412;--monument:#ede3cf;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#14110b;--surface:#1c1812;--ink:#ebe4d6;--muted:#a59c8b;--line:#2c271f;--accent:#ea580c;--ok:#4fb36d;--space:#0b0907;
+  --sky-z:#0e131e;--sky-m:#202838;--sky-h:#4a4352;--far:#332a31;--sand-d:#1c1412;--monument:#ede3cf;color-scheme:dark}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--serif);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+/* ---------- header ---------- */
+.site-head{position:absolute;z-index:6;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:calc(18px + env(safe-area-inset-top,0px)) var(--gutter) 0;font:500 12px/1 var(--mono);letter-spacing:.02em}
+.wordmark{font:800 23px/1 var(--display);font-stretch:125%;letter-spacing:-.02em;padding:8px 0}
+.wordmark span{color:var(--accent)}
+.nav{display:flex;align-items:center;gap:22px}
+.nav a{padding:8px 0}
+.nav a:hover{color:var(--accent)}
+.nav .cv{color:var(--accent)}
+.tools{display:flex;align-items:center;gap:6px}
+.lang{padding:8px 6px}.lang span{opacity:.55}
+.icon-btn{display:grid;place-items:center;width:36px;height:36px;border:0;padding:0;background:transparent;color:inherit;border-radius:50%;cursor:pointer}
+.icon-btn:hover{background:color-mix(in srgb,var(--ink) 12%,transparent)}
+.menu-btn{display:none}
+@media (max-width:760px){.nav{display:none}.menu-btn{display:grid}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;height:clamp(560px,86svh,900px);overflow:hidden;isolation:isolate}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky-z) 0%,var(--sky-m) 30%,var(--sky-h) var(--hz,55%),var(--far) var(--hz,55%),var(--sand-d) 82%)}
+.title{position:absolute;z-index:1;left:var(--gutter);right:var(--gutter);bottom:calc(45% - .075em);font-size:clamp(52px,10.6vw,172px)}
+.eyebrow{margin:0 0 clamp(14px,2.4vh,26px);font:500 12px/1.5 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.title h1{margin:0;font-family:var(--display);font-weight:800;font-stretch:125%;font-size:1em;line-height:.8;letter-spacing:-.03em;color:var(--monument);white-space:nowrap;animation:settle 1.8s cubic-bezier(.2,.7,.1,1) both}
+.title .dot{color:var(--accent)}
+.nw{white-space:nowrap}
+.bl{display:inline-block;width:0;height:0;vertical-align:baseline}
+.title .br{display:none}
+@keyframes settle{from{letter-spacing:.012em}to{letter-spacing:-.03em}}
+#mars{position:absolute;inset:0;z-index:2;width:100%;height:100%;opacity:0;transition:opacity 1.1s ease;pointer-events:none;image-rendering:auto}
+#mars.on{opacity:1}
+.dunes{position:absolute;z-index:2;left:0;top:calc(55% - 60px);width:100%;height:calc(45% + 60px);pointer-events:none}
+.fade{position:absolute;z-index:3;left:0;right:0;bottom:0;height:27%;pointer-events:none;background:linear-gradient(180deg,transparent 0%,color-mix(in srgb,var(--paper) 62%,transparent) 42%,color-mix(in srgb,var(--paper) 94%,transparent) 72%,var(--paper) 100%)}
+.lead{position:absolute;z-index:4;left:var(--gutter);top:calc(env(safe-area-inset-top,0px) + clamp(88px,13vh,124px));margin:0;max-width:22ch;font:400 clamp(22px,2.15vw,31px)/1.26 var(--serif);text-wrap:balance}
+.hero-foot{position:absolute;z-index:4;left:var(--gutter);right:var(--gutter);bottom:clamp(18px,3.4vh,36px);display:flex;align-items:flex-end;justify-content:space-between;gap:20px 32px}
+.cta{display:flex;flex-wrap:wrap;gap:4px 22px;font:500 13px/1 var(--mono)}
+.cta a{padding:8px 0;color:var(--muted)}
+.cta a:hover{color:var(--accent)}
+.cta .cta-main{color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.hud{font:500 11px/1.65 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
+.hud .live{display:flex;align-items:center;gap:9px;margin:0 0 6px;color:var(--ink)}
+.hud .live i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:ping 2.4s ease-out infinite;flex:none}
+.hud dl{display:grid;grid-template-columns:auto auto;gap:0 22px;margin:0}
+.hud dt{white-space:nowrap}
+.hud dd{margin:0;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;text-transform:none;letter-spacing:.02em}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 65%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+@media (max-width:900px){.hero-foot{flex-direction:column-reverse;align-items:stretch;gap:12px}.hud .opt{display:none}.hud dl{grid-template-columns:auto 1fr}.fade{height:34%}}
+@media (max-width:640px){.title{font-size:clamp(44px,15vw,96px);bottom:calc(45% + .02em)}.title .br{display:inline}.title h1{white-space:normal;line-height:.86}.eyebrow{font-size:11px;letter-spacing:.08em;text-wrap:balance}.hero{height:clamp(620px,92svh,860px)}.lead{max-width:19ch}.hud dl{grid-template-columns:minmax(0,1fr) auto}.hud dt{white-space:normal}}
+@media (min-width:641px) and (max-height:720px){.title{font-size:clamp(52px,8.4vw,150px)}.lead{font-size:22px}}
+
+/* ---------- sections ---------- */
+.wrap{max-width:calc(var(--col) + 2*var(--gutter));margin:0 auto;padding-inline:var(--gutter)}
+.sec{padding-top:clamp(52px,7vw,96px)}
+.sec-head{display:flex;align-items:baseline;gap:14px;padding-top:14px;border-top:1px solid var(--ink);margin-bottom:clamp(20px,3vw,36px)}
+.sec-no{font:500 12px/1 var(--mono);color:var(--accent);letter-spacing:.08em}
+.sec-head h2{margin:0;font:800 clamp(28px,3.8vw,46px)/1 var(--display);font-stretch:125%;letter-spacing:-.025em}
+.sec-link{margin-left:auto;padding:6px 0;font:500 12px/1 var(--mono);color:var(--muted);white-space:nowrap}
+.sec-link:hover{color:var(--accent)}
+
+.proj{list-style:none;margin:0;padding:0}
+.proj li{overflow:hidden}
+.proj-row{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:clamp(16px,2.4vw,32px);align-items:center;padding:20px 0;border-bottom:1px solid var(--line)}
+.proj-row:focus-visible{outline-offset:-2px}
+.proj-row::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 10%,transparent) 60%,transparent);transform:translateX(-100%);transition:transform .9s cubic-bezier(.2,.7,.2,1);pointer-events:none}
+.proj-row:hover::before{transform:translateX(100%)}
+.tile{position:relative;display:grid;place-items:center;width:104px;height:76px;border-radius:6px;background:var(--space);overflow:hidden}
+.tile::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 22%,rgba(255,255,255,.7) 0 .6px,transparent 1.2px),radial-gradient(circle at 80% 16%,rgba(255,255,255,.55) 0 .6px,transparent 1.2px),radial-gradient(circle at 66% 84%,rgba(255,255,255,.5) 0 .6px,transparent 1.2px),radial-gradient(circle at 28% 74%,rgba(255,255,255,.45) 0 .6px,transparent 1.2px),radial-gradient(circle at 92% 58%,rgba(255,255,255,.6) 0 .6px,transparent 1.2px)}
+.orb{--a:#eee;--b:#888;--tex:none;position:relative;width:52px;height:52px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 36% 32%,var(--a),var(--b) 78%);transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.orb i{position:absolute;top:0;bottom:0;left:0;width:200%;background:var(--tex);background-size:50% 100%;transition:transform 2.6s cubic-bezier(.25,.6,.2,1)}
+.orb::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 28%,transparent 32%,rgba(8,5,3,.42) 60%,rgba(8,5,3,.9) 92%);box-shadow:inset 1px 1px 2px rgba(255,255,255,.35)}
+.proj-row:hover .orb i{transform:translateX(-50%)}
+.proj-row:hover .orb{transform:scale(1.07)}
+.o-hanji{--a:#f7f0e2;--b:#b8a585;--tex:repeating-linear-gradient(112deg,rgba(70,52,32,.18) 0 1px,transparent 1px 5px),repeating-linear-gradient(24deg,rgba(70,52,32,.1) 0 1px,transparent 1px 9px)}
+.o-munch{--a:#f4c983;--b:#b4562b;--tex:radial-gradient(ellipse 16% 10% at 30% 63%,rgba(150,36,18,.85),transparent 70%),linear-gradient(180deg,transparent 0 14%,rgba(196,74,34,.5) 14% 23%,transparent 23% 37%,rgba(160,52,25,.5) 37% 45%,transparent 45% 58%,rgba(214,120,52,.45) 58% 70%,transparent 70% 82%,rgba(170,60,30,.45) 82% 90%,transparent 90%)}
+.o-cheer{--a:#f4c0a9;--b:#a4584a;--tex:radial-gradient(ellipse 24% 12% at 26% 40%,rgba(255,236,226,.4),transparent 70%),radial-gradient(ellipse 20% 10% at 70% 68%,rgba(120,50,40,.35),transparent 70%)}
+.o-fish{--a:#7fb9b0;--b:#1d4a52;--tex:radial-gradient(circle at 18% 40%,#93b672 0 7%,transparent 8%),radial-gradient(circle at 27% 50%,#86ab68 0 5%,transparent 6%),radial-gradient(ellipse 12% 7% at 68% 64%,#9cbf78 0 60%,transparent 70%),radial-gradient(ellipse 26% 5% at 44% 24%,rgba(255,255,255,.6),transparent 75%),radial-gradient(ellipse 20% 4% at 82% 80%,rgba(255,255,255,.5),transparent 75%)}
+.ring{position:absolute;left:50%;top:50%;width:86px;height:86px;margin:-43px 0 0 -43px;border-radius:50%;border:2px solid rgba(246,214,196,.75);transform:rotate(-20deg) scaleY(.27);pointer-events:none}
+.ring.front{clip-path:inset(50% 0 0 0);z-index:1}
+.proj-main{min-width:0}
+.proj-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0;font:700 21px/1.15 var(--display);letter-spacing:-.01em;transition:color .3s}
+.proj-row:hover .proj-title{color:var(--accent)}
+.chip{font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 8px}
+.proj-desc{display:block;margin-top:6px;color:var(--muted);font-size:15.5px;line-height:1.5;max-width:62ch}
+.proj-stack{font:500 12px/1.4 var(--mono);color:var(--muted);white-space:nowrap}
+@media (max-width:860px){.proj-stack{display:none}.proj-row{grid-template-columns:auto minmax(0,1fr)}}
+@media (max-width:560px){.proj-row{align-items:start}.tile{width:72px;height:60px}.orb{width:38px;height:38px}.ring{width:64px;height:64px;margin:-32px 0 0 -32px}.proj-desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}}
+
+.lede{margin:0 0 34px;max-width:52ch;font:italic 400 clamp(20px,2vw,24px)/1.4 var(--serif);color:var(--muted)}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,4vw,56px)}
+@media (max-width:820px){.feat{grid-template-columns:minmax(0,1fr)}}
+.meta{margin:0;font:500 11.5px/1.5 var(--mono);letter-spacing:.04em;color:var(--muted)}
+.feat h3{margin:10px 0 0;font:700 clamp(23px,2.3vw,30px)/1.16 var(--display);letter-spacing:-.015em;text-wrap:balance}
+.feat h3 a{background:linear-gradient(var(--accent),var(--accent)) 0 100%/0 2px no-repeat;transition:background-size .6s cubic-bezier(.2,.7,.2,1),color .3s}
+.feat h3 a:hover{background-size:100% 2px;color:var(--accent)}
+.sum{margin:12px 0 0;color:var(--muted);font-size:16.5px;line-height:1.55}
+.rows{list-style:none;margin:44px 0 0;padding:0;border-top:1px solid var(--line)}
+.rows a{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:16px 0;border-bottom:1px solid var(--line);font:700 17.5px/1.3 var(--display);letter-spacing:-.005em;transition:color .25s,padding-left .35s}
+.rows a:hover{color:var(--accent);padding-left:10px}
+.rows time{flex:none;font:500 12px/1 var(--mono);color:var(--muted)}
+@media (max-width:560px){.rows a{flex-direction:column;gap:8px}}
+
+.exp{list-style:none;margin:0;padding:0}
+.exp li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;padding:22px 0;border-bottom:1px solid var(--line)}
+.exp h3{margin:0;font:800 24px/1.15 var(--display);font-stretch:125%;letter-spacing:-.02em}
+.exp h3 a:hover{color:var(--accent)}
+.role{font:italic 400 18px/1.3 var(--serif);color:var(--muted);margin-left:10px;letter-spacing:0}
+.period{font:500 12px/2 var(--mono);color:var(--muted);text-align:right;white-space:nowrap}
+.exp p{grid-column:1/-1;margin:0;color:var(--muted);font-size:16px;max-width:78ch}
+.exp .stack{font:500 12px/1.5 var(--mono);letter-spacing:.02em}
+@media (max-width:560px){.exp li{grid-template-columns:minmax(0,1fr)}.period{text-align:left}.role{display:block;margin:4px 0 0}}
+
+.contact{margin-top:clamp(52px,7vw,88px);padding:24px 0;border-top:1px solid var(--ink);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px 24px;font:500 13px/1.4 var(--mono)}
+.status{display:flex;align-items:center;gap:10px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.contact nav{display:flex;flex-wrap:wrap;gap:6px 20px;color:var(--accent)}
+.contact nav a{padding:6px 0}
+.contact nav a:hover{text-decoration:underline;text-underline-offset:4px}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:26px 0 calc(112px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);font:500 12px/1.4 var(--mono);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<section class="hero" id="hero" aria-label="Introduction">
+  <div class="sky" aria-hidden="true"></div>
+
+  <header class="site-head">
+    <a class="wordmark" href="https://martianlee.github.io/" aria-label="MartianLee home">ML<span>.</span></a>
+    <div class="tools">
+      <nav class="nav" aria-label="Site">
+        <a href="https://martianlee.github.io/projects">Projects</a>
+        <a href="https://martianlee.github.io/posts">Posts</a>
+        <a href="https://martianlee.github.io/kb">Notes</a>
+        <a href="https://martianlee.github.io/about">About</a>
+        <a class="cv" href="https://linkedin.com/in/martianlee/">CV ↗</a>
+      </nav>
+      <span class="lang" aria-label="Language: English">EN <span>/ KO</span></span>
+      <button class="icon-btn" type="button" aria-label="Search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      </button>
+      <button class="icon-btn menu-btn" type="button" aria-label="Open menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <p class="lead">I move fast with AI — and keep the decisions that matter human.</p>
+
+  <div class="title">
+    <p class="eyebrow"><span class="nw">Software Engineer @ UJET</span> · <span class="nw">ex-Founder/CTO</span> · <span class="nw">Seoul, open to global roles</span></p>
+    <h1><span class="w1">MARTIAN</span> <br class="br"><span class="w2">LEE<span class="dot">.</span><i class="bl" aria-hidden="true"></i></span></h1>
+  </div>
+
+  <svg id="dunes-fallback" class="dunes" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true" hidden>
+    <path style="fill:var(--far)" d="M0 72V19h118l16 21 16 4q100-14 180-6l62 8 12-18h96l14 19 46-2q40 2 90 13l2 2h288l15-17q20-10 45-9v51z"/>
+    <path style="fill:var(--sand-d)" d="M0 400V84c80-22 150-24 230-10s150 8 230-14 170-20 250 0 160 22 290 6V400z"/>
+  </svg>
+  <noscript><style>#dunes-fallback[hidden]{display:block!important}</style></noscript>
+
+  <canvas id="mars" aria-hidden="true"></canvas>
+  <div class="fade" aria-hidden="true"></div>
+
+  <div class="hero-foot">
+    <nav class="cta" aria-label="Start here">
+      <a class="cta-main" href="#projects">↓ View projects</a>
+      <a href="https://martianlee.github.io/posts">Posts</a>
+      <a href="https://linkedin.com/in/martianlee/">CV ↗</a>
+      <a href="https://github.com/MartianLee">GitHub ↗</a>
+    </nav>
+    <aside class="hud" aria-label="Live Mars telemetry">
+      <p class="live"><i aria-hidden="true"></i>Live · Jezero Crater 18.44°N 77.45°E</p>
+      <dl>
+        <dt>Local solar time</dt><dd id="h-lmst">23:43:32</dd>
+        <dt class="opt">Coordinated Mars time</dt><dd class="opt" id="h-mtc">18:33:44</dd>
+        <dt class="opt">Mars sol date</dt><dd class="opt" id="h-msd">54,308.77</dd>
+        <dt>Season</dt><dd><span id="h-season">MY 39 · Ls 4.9°</span><span class="opt"> · northern <span id="h-sea">spring</span></span></dd>
+        <dt>Earth → Mars light time</dt><dd id="h-light">13 min 18 s</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<main class="wrap">
+  <section class="sec" id="projects" aria-labelledby="projects-h">
+    <div class="sec-head"><span class="sec-no">01</span><h2 id="projects-h">Projects</h2><a class="sec-link" href="https://martianlee.github.io/projects">All projects →</a></div>
+    <ul class="proj">
+      <li><a class="proj-row" href="https://martianlee.github.io/projects/hanji">
+        <span class="tile" aria-hidden="true"><span class="orb o-hanji"><i></i></span></span>
+        <span class="proj-main"><span class="proj-title">Hanji.md <span class="chip">macOS App</span></span>
+        <span class="proj-desc">A native macOS markdown editor for plain-file vaults, built on SwiftUI and TextKit 2 with a Swift extension SDK. Incremental Live Preview keeps a keystroke in a 4,000-line note at about 15 ms, with performance budgets checked in CI. Local-first, MIT licensed.</span></span>
+        <span class="proj-stack">Swift · SwiftUI · TextKit 2 →</span></a></li>
+      <li><a class="proj-row" href="https://martianlee.github.io/projects/more-munch">
+        <span class="tile" aria-hidden="true"><span class="orb o-munch"><i></i></span></span>
+        <span class="proj-main"><span class="proj-title">More Munch <span class="chip">Web Service</span></span>
+        <span class="proj-desc">A lunch-recommendation service for office workers. It auto-collects nearby restaurants (discoverable via the OpenClaw skill-optimized API) and suggests a fresh lunch every day based on your visit history and ratings.</span></span>
+        <span class="proj-stack">NestJS 11 · TypeScript · SQLite →</span></a></li>
+      <li><a class="proj-row" href="https://martianlee.github.io/projects/cheercat">
+        <span class="tile" aria-hidden="true"><span class="ring"></span><span class="orb o-cheer"><i></i></span><span class="ring front"></span></span>
+        <span class="proj-main"><span class="proj-title">CheerCat <span class="chip">Mobile App</span></span>
+        <span class="proj-desc">A daily journaling app that builds the habit of praising yourself every day — a small ritual for a positive mindset.</span></span>
+        <span class="proj-stack">React Native · Firebase · TypeScript →</span></a></li>
+      <li><a class="proj-row" href="https://martianlee.github.io/projects/fish-tank-simulator">
+        <span class="tile" aria-hidden="true"><span class="orb o-fish"><i></i></span></span>
+        <span class="proj-main"><span class="proj-title">Fish Tank Simulator <span class="chip">Idle Game</span></span>
+        <span class="proj-desc">A pixel-art idle productivity tool that blends a Pomodoro timer with an aquarium sim. Complete focus sessions to earn fish eggs, collect 12+ species, and grow your own tank.</span></span>
+        <span class="proj-stack">Phaser3 · TypeScript · Vercel →</span></a></li>
+    </ul>
+  </section>
+
+  <section class="sec" aria-labelledby="posts-h">
+    <div class="sec-head"><span class="sec-no">02</span><h2 id="posts-h">Recent posts</h2><a class="sec-link" href="https://martianlee.github.io/posts">All posts →</a></div>
+    <p class="lede">I take large codebases apart and write down how they actually work.</p>
+    <div class="feat">
+      <article>
+        <p class="meta">Oct 8, 2026 · 19 min read · game-modding / minecraft</p>
+        <h3><a href="https://martianlee.github.io/posts/2026-10-08-passthrough-bridge-spectrum">What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared</a></h3>
+        <p class="sum">Since late September, dozens of passthrough mods that run two games at once and merge them into one have gone public. This post opens the code of twelve of them, sorts them by what crosses the bridge (pixels, meshes, logic, or nothing at all), and looks at the traces of the most-cited original, SkyCraft, moving from a pixel design to meshes, and at why Minecraft is so often the guest.</p>
+      </article>
+      <article>
+        <p class="meta">Oct 7, 2026 · 30 min read · game-modding / minecraft</p>
+        <h3><a href="https://martianlee.github.io/posts/2026-10-07-minecraft-elden-ring-bridge">Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?</a></h3>
+        <p class="sum">Since late September, "passthrough modding", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, one of the implementations with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed.</p>
+      </article>
+    </div>
+    <ul class="rows">
+      <li><a href="https://martianlee.github.io/posts/2026-09-29-activerecord-anatomy"><span>What Does Active Record Build on Every Request? Measured the Same Way as Sequelize and GORM</span><time datetime="2026-09-29">Sep 29, 2026</time></a></li>
+      <li><a href="https://martianlee.github.io/posts/2026-09-28-request-layers"><span>Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart</span><time datetime="2026-09-28">Sep 28, 2026</time></a></li>
+      <li><a href="https://martianlee.github.io/posts/2026-09-12-archify-architecture"><span>Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?</span><time datetime="2026-09-12">Sep 12, 2026</time></a></li>
+    </ul>
+  </section>
+
+  <section class="sec" aria-labelledby="exp-h">
+    <div class="sec-head"><span class="sec-no">03</span><h2 id="exp-h">Experience</h2><a class="sec-link" href="https://linkedin.com/in/martianlee/">CV ↗</a></div>
+    <ol class="exp">
+      <li><h3>UJET<span class="role">Software Engineer 2</span></h3><span class="period">2024 – Present</span>
+        <p>UJET is AI-Powered Cloud Contact Center Platform for Premium CX</p>
+        <p class="stack">Rails · GCP · Node.js · TypeScript · Kubernetes</p></li>
+      <li><h3><a href="https://martianlee.github.io/climate">TomorrowUse</a><span class="role">Co-founder / CTO</span></h3><span class="period">2021 – 2023</span>
+        <p>Climate-tech startup (product: Stepping). Sole engineer on a three-person founding team; built carbon-measurement and offset products end-to-end: app, infra, and CI/CD.</p>
+        <p class="stack">Next.js · React · Nest.js · PostgreSQL · AWS</p></li>
+      <li><h3>Miso<span class="role">Frontend Developer</span></h3><span class="period">2020 – 2021</span>
+        <p>South Korea's leading home services platform. Responsible for client app maintenance and back-office development to improve CX operations.</p>
+        <p class="stack">React · React Native · Redux · TypeScript</p></li>
+    </ol>
+  </section>
+
+  <section class="contact" id="contact" aria-label="Contact">
+    <p class="status" style="margin:0"><i aria-hidden="true"></i>Open to senior / staff engineering roles — globally.</p>
+    <nav aria-label="Contact links"><a href="#contact">Email ↗</a><a href="https://github.com/MartianLee">GitHub ↗</a><a href="https://linkedin.com/in/martianlee/">LinkedIn ↗</a></nav>
+  </section>
+  <footer class="foot"><span>© 2026 MartianLee</span><span>Seoul · UTC+9</span></footer>
+</main>
+
+<script>
+// Mars clock for direction A. Mars24 algorithm (Allison & McEwen 2000, NASA GISS).
+// Verified: 2000-01-06T00:00Z (TT-UTC 64.184 s) gives Ls 277.18759°, MSD 44795.99976, MTC 23:59:39 (matches the Mars24 worked example).
+// Today's sanity values: 2026-10-10T07:00Z → MSD 54308.773, MTC 18:33, Ls 4.93° (MY 39, northern spring),
+// Earth–Mars 1.600 AU → light time 798 s (13 min 18 s). Mars Year 39 began 2026-09-30T08:21Z (MSD 54299.0962).
+// Earth–Mars distance uses JPL "Approximate Positions of the Planets" Keplerian elements (valid 1800–2050);
+// checks: 2027-02-19 opposition 0.678 AU, 2026-01-09 conjunction 2.404 AU.
+function marsClock(ms) {
+  const D = Math.PI / 180, mod = (a, n) => ((a % n) + n) % n
+  const jdTT = 2440587.5 + ms / 8.64e7 + 69.184 / 86400 // TT-UTC = 37 leap s + 32.184 s (unchanged since 2017)
+  const dt = jdTT - 2451545.0
+  const M = (19.3871 + 0.52402073 * dt) * D
+  const aFMS = 270.3871 + 0.524038496 * dt
+  const A = [0.0071, 0.0057, 0.0039, 0.0037, 0.0021, 0.002, 0.0018]
+  const T = [2.2353, 2.7543, 1.1177, 15.7866, 2.1354, 2.4694, 32.8493]
+  const P = [49.409, 168.173, 191.837, 21.736, 15.704, 95.528, 49.095]
+  let pbs = 0
+  for (let i = 0; i < 7; i++) pbs += A[i] * Math.cos(((0.985626 * dt) / T[i] + P[i]) * D)
+  const vm = (10.691 + 3e-7 * dt) * Math.sin(M) + 0.623 * Math.sin(2 * M) + 0.05 * Math.sin(3 * M) + 0.005 * Math.sin(4 * M) + 0.0005 * Math.sin(5 * M) + pbs
+  const Ls = mod(aFMS + vm, 360)
+  const msd = (dt - 4.5) / 1.0274912517 + 44796.0 - 0.0009626
+  const mtc = mod(24 * msd, 24) // hours
+  const my = 39 + Math.floor((msd - 54299.0962) / 668.5991)
+  const season = ['spring', 'summer', 'autumn', 'winter'][Math.floor(Ls / 90)] // northern hemisphere
+  const lmstJezero = mod(mtc + 77.45 / 15, 24) // Jezero Crater 18.44°N 77.45°E (Perseverance)
+  // Earth–Mars light time
+  const Tc = dt / 36525
+  const kep = (e) => {
+    const a = e[0] + e[6] * Tc, ec = e[1] + e[7] * Tc, I = (e[2] + e[8] * Tc) * D, L = e[3] + e[9] * Tc, wb = e[4] + e[10] * Tc, O = e[5] + e[11] * Tc
+    const w = (wb - O) * D, Or = O * D, Mm = (mod(L - wb + 180, 360) - 180) * D
+    let E = Mm + ec * Math.sin(Mm)
+    for (let k = 0; k < 12; k++) E -= (E - ec * Math.sin(E) - Mm) / (1 - ec * Math.cos(E))
+    const x = a * (Math.cos(E) - ec), y = a * Math.sqrt(1 - ec * ec) * Math.sin(E)
+    const cw = Math.cos(w), sw = Math.sin(w), cO = Math.cos(Or), sO = Math.sin(Or), cI = Math.cos(I), sI = Math.sin(I)
+    return [(cw * cO - sw * sO * cI) * x + (-sw * cO - cw * sO * cI) * y, (cw * sO + sw * cO * cI) * x + (-sw * sO + cw * cO * cI) * y, sw * sI * x + cw * sI * y]
+  }
+  const ea = kep([1.00000261, 0.01671123, -0.00001531, 100.46457166, 102.93768193, 0, 0.00000562, -0.00004392, -0.01294668, 35999.37244981, 0.32327364, 0])
+  const ma = kep([1.52371034, 0.0933941, 1.84969142, -4.55343205, -23.94362959, 49.55953891, 0.00001847, 0.00007882, -0.00813131, 19140.30268499, 0.44441088, -0.29257343])
+  const au = Math.hypot(ma[0] - ea[0], ma[1] - ea[1], ma[2] - ea[2])
+  return { msd, mtc, Ls, my, season, lmstJezero, au, lightSec: au * 499.004784 }
+}
+
+/* ---------- live telemetry ---------- */
+;(() => {
+  const $ = (s) => document.getElementById(s)
+  const pad = (v) => String(v).padStart(2, '0')
+  const hms = (h) => { const s = Math.floor(h * 3600); return pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60) }
+  const el = { lmst: $('h-lmst'), mtc: $('h-mtc'), msd: $('h-msd'), season: $('h-season'), sea: $('h-sea'), light: $('h-light') }
+  const tick = () => {
+    const m = marsClock(Date.now())
+    el.lmst.textContent = hms(m.lmstJezero)
+    el.mtc.textContent = hms(m.mtc)
+    el.msd.textContent = m.msd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    el.season.textContent = 'MY ' + m.my + ' · Ls ' + m.Ls.toFixed(1) + '°'
+    el.sea.textContent = m.season
+    const s = Math.round(m.lightSec)
+    el.light.textContent = Math.floor(s / 60) + ' min ' + pad(s % 60) + ' s'
+  }
+  tick()
+  setInterval(() => { if (!document.hidden) tick() }, 1000)
+})()
+
+/* ---------- the horizon: one fragment shader ---------- */
+;(() => {
+  const hero = document.getElementById('hero'), cv = document.getElementById('mars'), fb = document.getElementById('dunes-fallback')
+  const h1 = hero.querySelector('h1'), root = document.documentElement
+  const mq = matchMedia('(prefers-color-scheme: dark)')
+  const isDark = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches }
+  const onTheme = (cb) => { new MutationObserver(cb).observe(root, { attributes: true, attributeFilter: ['data-theme'] }); mq.addEventListener('change', cb) }
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const hq = location.hash === '#hq' // review aid: full quality, no load animation
+
+  // Two palettes: Martian afternoon (light) and Martian sunset with its blue glow (dark).
+  const PAL = {
+    day: { z: '#c19870', m: '#dab894', h: '#ecd7b9', far: '#c79c79', sd: '#7d4a2d', mon: '#1c1712',
+      haze: '#ead2b0', glow: '#fff7ea', sun: '#ffe6c4', amb: '#b98f6b', pl: '#cf9064', sl: '#a0603d', sdk: '#5c3527', hm: 0.35 },
+    dusk: { z: '#0e131e', m: '#202838', h: '#4a4352', far: '#332a31', sd: '#1c1412', mon: '#ede3cf',
+      haze: '#5a5869', glow: '#a8cdf3', sun: '#d39468', amb: '#323a4d', pl: '#5e3b2b', sl: '#532f22', sdk: '#1f1511', hm: 0.28 },
+  }
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+  for (const p of [PAL.day, PAL.dusk]) for (const k in p) if (typeof p[k] === 'string') p[k] = rgb(p[k])
+  const lerp = (a, b, k) => a + (b - a) * k
+  const mixc = (a, b, k) => a.map((v, i) => lerp(v, b[i], k))
+  const hex = (c) => '#' + c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join('')
+  const CSSV = { z: '--sky-z', m: '--sky-m', h: '--sky-h', far: '--far', sd: '--sand-d', mon: '--monument' }
+  const paintCss = (k, clear) => { for (const key in CSSV) clear ? hero.style.removeProperty(CSSV[key]) : hero.style.setProperty(CSSV[key], hex(mixc(PAL.day[key], PAL.dusk[key], k))) }
+
+  const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'
+  const FS = `#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 R,PD;uniform float T,K,U,F,H0,CN,HK,HM,SX,BL;uniform vec4 V;uniform vec3 C,S,cHaze,cGlow,cSun,cAmb,cPL,cSL,cSD,cFar;
+float h12(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h12(i),h12(i+vec2(1,0)),f.x),mix(h12(i+vec2(0,1)),h12(i+vec2(1,1)),f.x),f.y);}
+float dn(vec2 p,float lod){
+  vec2 q=p+22.*(vec2(n2(p*.021),n2(p*.021+7.7))-.5);
+  q+=5.*(1.-lod)*(vec2(n2(q*.09+3.1),n2(q*.09+11.4))-.5);
+  float s=fract(dot(q,vec2(.906,.423))/13.);
+  float a=s/.75,b=(1.-s)*4.,k=mix(.09,.22,lod);
+  float r=-k*log(exp(-a/k)+exp(-b/k));
+  return pow(max(r,0.),1.6)*smoothstep(.12,.5,n2(p*.012+2.));
+}
+float terr(vec2 p){
+  float dc=length(p-C.xz),lod=smoothstep(28.,100.,dc);
+  float h=1.9*dn(p,lod)+.5*n2(p*.06)+.12*(1.-lod)*n2(p*.27);
+  return h*U*smoothstep(3.,10.,dc)*(1.-.6*smoothstep(35.,120.,dc));
+}
+float march(vec3 ro,vec3 rd){
+  if(rd.y>-.0005)return -1.;
+  float t=max(.5,(ro.y-2.55)/-rd.y),lt=t,ld=1.;
+  for(int i=0;i<110;i++){
+    vec3 p=ro+rd*t;float d=p.y-terr(p.xz);
+    if(d<.002*t){
+      if(d>=0.)return t;
+      float a=lt,da=ld,b=t,db=d;
+      for(int j=0;j<4;j++){float m=a+(b-a)*da/max(da-db,1e-5);vec3 q=ro+rd*m;float dm=q.y-terr(q.xz);if(dm<0.){b=m;db=dm;}else{a=m;da=dm;}}
+      return a+(b-a)*da/max(da-db,1e-5);
+    }
+    lt=t;ld=d;t+=max(.45*d,.02+.02*t);if(t>160.)return -1.;
+  }
+  return t;
+}
+vec3 nor(vec2 p,float t){float e=.03+.006*t;float h=terr(p);return normalize(vec3(h-terr(p+vec2(e,0.)),e,h-terr(p+vec2(0.,e))));}
+float shd(vec3 p){float s=1.,t=.2;for(int i=0;i<12;i++){vec3 q=p+S*t;float d=q.y-terr(q.xz);s=min(s,10.*d/t);t+=clamp(d,.25,2.5);if(s<.02||q.y>2.5)break;}return clamp(s,0.,1.);}
+vec3 shade(vec3 p,vec3 rd,float t){
+  vec3 n=nor(p.xz,t);
+  float w=(1.-smoothstep(4.,16.,t))*.06;vec2 kd=vec2(.906,.423);
+  float c=cos(dot(p.xz,kd)*9.+n2(p.xz*1.1)*5.);
+  n=normalize(n-w*c*vec3(kd.x,0.,kd.y));
+  float dif=max(dot(n,S),0.);
+  float sh=dif<.001?0.:1.;
+  if(dif>=.001&&t<48.)sh=mix(shd(p+n*.05),1.,smoothstep(34.,48.,t));
+  float lod=smoothstep(28.,100.,t),du=dn(p.xz,lod);
+  vec3 sand=mix(cSD,cSL,smoothstep(.2,1.,du)*(.8+.2*n2(p.xz*.4)));
+  float ws=mix(n2(vec2(dot(p.xz,kd)*2.6,dot(p.xz,vec2(-kd.y,kd.x))*.22)),.5,lod);
+  vec3 alb=mix(cPL*(.88+.2*n2(p.xz*.7)),sand,smoothstep(.04,.22,du))*(.92+.14*ws);
+  vec3 col=alb*(cSun*dif*sh*1.45+cAmb*(.45+.55*n.y));
+  float fs=max(dot(rd,S),0.);
+  col+=mix(cSun,cGlow,.3)*pow(clamp(1.+dot(n,rd),0.,1.),3.)*pow(fs,4.)*(.12+.5*K);
+  float f=1.-exp(-pow(t*.013,1.5));
+  col=mix(col,cFar,f);
+  return col+cGlow*pow(fs,24.)*f*(.07+.09*K);
+}
+float mesa(float u){
+  float m=.85*smoothstep(-1.02,-.97,u)*(1.-smoothstep(-.78,-.74,u));
+  m=max(m,.42*smoothstep(-.80,-.62,u)*(1.-smoothstep(-.40,-.22,u)));
+  m=max(m,.62*smoothstep(-.20,-.16,u)*(1.-smoothstep(-.02,.02,u)));
+  m=max(m,.30*smoothstep(.02,.12,u)*(1.-smoothstep(.22,.34,u)));
+  m=max(m,.75*smoothstep(.62,.72,u)*(1.-smoothstep(1.05,1.15,u)));
+  return m;
+}
+vec4 over(vec4 a,vec4 b){return a+b*(1.-a.a);}
+void main(){
+  vec2 ndc=gl_FragCoord.xy/R*2.-1.;
+  float asp=R.x/R.y,pit=atan(-H0*F);
+  vec3 rc=normalize(vec3(ndc.x*asp*F,ndc.y*F,1.));
+  float cp=cos(pit),sp=sin(pit);
+  vec3 rd=vec3(rc.x,rc.y*cp+rc.z*sp,rc.z*cp-rc.y*sp);
+  float dy=max(ndc.y-H0,0.),cs=dot(rd,S);
+  // sky: stars, moons, haze, sun glow (premultiplied, transparent so the CSS sky and the name show through)
+  vec4 sky=vec4(0.);
+  float st=step(.9979,h12(floor(gl_FragCoord.xy*.7)))*K*smoothstep(.55,1.25,dy)*(.6+.4*sin(T*1.7+h12(floor(gl_FragCoord.xy*.7)+3.)*40.));
+  sky=over(vec4(vec3(st*.8),st*.8),sky);
+  vec2 pc=vec2(-.5+.05*sin(T*.013),.62);vec2 d=(ndc-pc)*vec2(asp,1.);
+  float pa=atan(d.y,d.x),pr2=length(d/vec2(1.,.74)),rr=.017*(1.+.14*n2(vec2(pa*2.,3.)));
+  float pm=smoothstep(rr,rr-.0035,pr2);
+  vec2 L=normalize(vec2(S.x,S.y+.15));
+  float lit=clamp(.3+1.1*dot(d/max(pr2,1e-4),L)*min(pr2/rr,1.),0.,1.);
+  float pA=pm*(.2+.7*K);
+  sky=over(vec4(mix(mix(vec3(.62,.52,.44),vec3(.24,.21,.2),K),vec3(.9,.85,.78),lit)*pA,pA),sky);
+  float dA=smoothstep(.0065,.002,length((ndc-vec2(-.13,.85))*vec2(asp,1.)))*(.35+.55*K);
+  sky=over(vec4(vec3(.9)*dA,dA),sky);
+  float ha=HM*exp(-dy*HK)+(h12(gl_FragCoord.xy+fract(T))-.5)*.006;ha=max(ha,0.);
+  float disc=smoothstep(.999955,.999975,cs);
+  float halo=pow(max(cs,0.),2400.)*.75+pow(max(cs,0.),160.)*.24+pow(max(cs,0.),12.)*(.03+.15*K);
+  float ga=clamp(disc+halo,0.,1.);
+  sky=over(vec4(mix(cGlow,vec3(1.),disc)*ga,ga),over(vec4(cHaze*ha,ha),sky));
+  // ground: raymarched dunes in front, a far mesa skyline behind them
+  float su=ndc.x;
+  float full=min(.05+.05*n2(vec2(su*70.,2.))+.03*n2(vec2(su*13.,5.))+.38*mesa(su)*(.82+.18*n2(vec2(su*24.,1.)))*smoothstep(.035,.13,abs(su-SX)),.35);
+  float low=(.006+.032*n2(vec2(su*9.,7.)))*smoothstep(PD.y*.9,PD.y*2.2,abs(su-PD.x));
+  float skl=BL+CN*U*mix(full,low,smoothstep(V.x,V.y,su)*(1.-smoothstep(V.z,V.w,su)));
+  vec4 g=vec4(0.);
+  float t=march(C,rd);
+  if(t>0.)g=vec4(shade(C+rd*t,rd,t),1.);
+  else if(rd.y<0.)g=vec4(cFar+cGlow*pow(max(cs,0.),24.)*(.07+.09*K),1.);
+  else{
+    float e=smoothstep(skl,skl-2.4/R.y,ndc.y);
+    if(e>0.){
+      float hz=clamp((ndc.y-H0)/max(skl-H0,1e-3),0.,1.);
+      float strata=.05*sin((ndc.y-H0)/CN*30.+n2(vec2(su*9.,ndc.y*40.))*4.);
+      vec3 fc=cFar*(mix(.84,1.03,hz)+strata)*(.94+.08*n2(vec2(su*38.,ndc.y*26.)))+cGlow*pow(max(cs,0.),40.)*.5;
+      g=vec4(fc*e,e);
+    }
+  }
+  vec4 o=over(g,sky);
+  // wind-blown dust drifting along the horizon
+  float band=exp(-abs(ndc.y-H0)*5.);
+  float du=n2(vec2(ndc.x*2.2*asp-T*.05,ndc.y*7.+T*.012))*n2(vec2(ndc.x*5.*asp-T*.09,ndc.y*15.));
+  float da=band*du*.2*U;
+  gl_FragColor=over(vec4(cHaze*da,da),o);
+}`
+
+  let gl, prog, loc = {}, buf, raf = 0, running = false, visible = true
+  // render scale (x device pixels): capable machines start at 0.75, small/touch/low-core ones at 0.5; steps down only when frames run over budget
+  const lowPower = matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4
+  let scale = hq ? 1 : lowPower ? 0.5 : 0.75, frames = 0, acc = 0, last = 0, time = hq ? 30 : 0, rise = hq ? 1 : 0
+  let W = 2, H = 2, F = 0.364, CN = 0.3, asp = 1, SX = 0.35, BL = -0.1, H0 = -0.1, V = [9, 9, 9, 9], PD = [9, 0.01]
+  let capRatio = 0.72 // Archivo cap height / em, re-measured once the font loads
+  let K = isDark() ? 1 : 0, Kt = K, px = 0, py = 0, cx = 0, cy = 0
+
+  const sunDay = (() => { const az = (75 * Math.PI) / 180, el = (19 * Math.PI) / 180; return [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)] })()
+  const sunDusk = () => {
+    // a point just above the notch in the skyline (screen column SX), turned into a world direction with the shader's camera
+    const x = SX, y = H0 + CN * 0.32, pit = Math.atan(-H0 * F)
+    const r = [x * asp * F, y * F, 1], l = Math.hypot(r[0], r[1], r[2])
+    const cp = Math.cos(pit), sp = Math.sin(pit), v = r.map((q) => q / l)
+    return [v[0], v[1] * cp + v[2] * sp, v[2] * cp - v[1] * sp]
+  }
+  const norm = (v) => { const l = Math.hypot(v[0], v[1], v[2]); return v.map((q) => q / l) }
+
+  function fail() {
+    running = false
+    cancelAnimationFrame(raf)
+    cv.hidden = true
+    fb.hidden = false
+    drawFallback()
+    new ResizeObserver(drawFallback).observe(hero)
+  }
+  function drawFallback() {
+    measure()
+    const r = hero.getBoundingClientRect(), Wd = Math.round(r.width), Hd = Math.round(r.height)
+    const py = (n) => ((1 - n) / 2) * Hd, ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
+    const mesa = (u) => Math.max(0.85 * ss(-1.02, -0.97, u) * (1 - ss(-0.78, -0.74, u)), 0.42 * ss(-0.8, -0.62, u) * (1 - ss(-0.4, -0.22, u)), 0.62 * ss(-0.2, -0.16, u) * (1 - ss(-0.02, 0.02, u)), 0.3 * ss(0.02, 0.12, u) * (1 - ss(0.22, 0.34, u)), 0.75 * ss(0.62, 0.72, u) * (1 - ss(1.05, 1.15, u)))
+    let d = 'M0 ' + Hd
+    for (let i = 0; i <= 96; i++) {
+      const u = (i / 96) * 2 - 1
+      const full = Math.min(0.06 + 0.38 * mesa(u) * ss(0.035, 0.13, Math.abs(u - SX)), 0.35)
+      const low = 0.02 * ss(PD[1] * 0.9, PD[1] * 2.2, Math.abs(u - PD[0]))
+      const v = ss(V[0], V[1], u) * (1 - ss(V[2], V[3], u))
+      d += ' L' + ((i / 96) * Wd).toFixed(1) + ' ' + py(BL + CN * (full + (low - full) * v)).toFixed(1)
+    }
+    const hz = py(H0), sand = 'M0 ' + Hd + ' V' + (hz + Hd * 0.06).toFixed(1) + ' C' + Wd * 0.2 + ' ' + (hz + Hd * 0.02) + ' ' + Wd * 0.45 + ' ' + (hz + Hd * 0.11) + ' ' + Wd * 0.62 + ' ' + (hz + Hd * 0.05) + ' S' + Wd * 0.88 + ' ' + (hz + Hd * 0.03) + ' ' + Wd + ' ' + (hz + Hd * 0.07) + ' V' + Hd + 'z'
+    fb.setAttribute('viewBox', '0 0 ' + Wd + ' ' + Hd)
+    fb.style.top = '0'
+    fb.style.height = '100%'
+    fb.children[0].setAttribute('d', d + ' L' + Wd + ' ' + Hd + 'z')
+    fb.children[1].setAttribute('d', sand)
+  }
+  function build() {
+    const sh = (type, src) => {
+      const s = gl.createShader(type)
+      gl.shaderSource(s, src)
+      gl.compileShader(s)
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS) && !gl.isContextLost()) { console.warn(gl.getShaderInfoLog(s)); return null }
+      return s
+    }
+    const v = sh(gl.VERTEX_SHADER, VS), f = sh(gl.FRAGMENT_SHADER, FS)
+    if (!v || !f) return false
+    prog = gl.createProgram()
+    gl.attachShader(prog, v)
+    gl.attachShader(prog, f)
+    gl.linkProgram(prog)
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false
+    gl.useProgram(prog)
+    buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+    const a = gl.getAttribLocation(prog, 'p')
+    gl.enableVertexAttribArray(a)
+    gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0)
+    for (const n of ['R', 'PD', 'T', 'K', 'U', 'F', 'H0', 'CN', 'HK', 'HM', 'SX', 'BL', 'V', 'C', 'S', 'cHaze', 'cGlow', 'cSun', 'cAmb', 'cPL', 'cSL', 'cSD', 'cFar']) loc[n] = gl.getUniformLocation(prog, n)
+    return true
+  }
+  function measure() {
+    // Everything in the scene that touches the name is placed from the real text layout:
+    // horizon on the baseline, sun in the word gap, low valley under "LEE.", period kept clear.
+    const r = hero.getBoundingClientRect(), Wr = Math.max(r.width, 1), Hr = Math.max(r.height, 1)
+    const nx = (x) => ((x - r.left) / Wr) * 2 - 1, ny = (y) => 1 - ((y - r.top) / Hr) * 2
+    const a = h1.querySelector('.w1').getBoundingClientRect(), b = h1.querySelector('.w2').getBoundingClientRect()
+    const dot = h1.querySelector('.dot').getBoundingClientRect(), base = h1.querySelector('.bl').getBoundingClientRect()
+    const oneLine = Math.abs(a.top - b.top) < 4
+    asp = Wr / Hr
+    F = asp < 0.8 ? 0.5 : 0.364
+    CN = (2 * parseFloat(getComputedStyle(h1).fontSize) * capRatio) / Hr
+    BL = ny(base.top)
+    H0 = BL - 0.012 * CN
+    SX = nx(oneLine ? (a.right + b.left) / 2 : (b.right + r.right) / 2)
+    const end = nx(dot.right) + 0.015
+    V = oneLine ? [nx(a.right), nx(b.left), end, end + 0.08] : [-1.4, -1.3, Math.max(end, SX + 0.12), Math.max(end, SX + 0.12) + 0.12]
+    PD = [nx((dot.left + dot.right) / 2), (dot.right - dot.left) / Wr]
+    hero.style.setProperty('--hz', ((1 - (H0 + 1) / 2) * 100).toFixed(2) + '%')
+  }
+  function resize() {
+    measure()
+    const r = hero.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2)
+    let w = r.width * dpr * scale, h = r.height * dpr * scale
+    const cap = Math.min(1, 1600 / w)
+    W = cv.width = Math.max(2, Math.round(w * cap))
+    H = cv.height = Math.max(2, Math.round(h * cap))
+    if (gl) gl.viewport(0, 0, W, H)
+  }
+  function draw() {
+    const k = K * K * (3 - 2 * K), u = 1 - Math.pow(1 - rise, 3)
+    const P = (n) => mixc(PAL.day[n], PAL.dusk[n], k)
+    gl.uniform2f(loc.R, W, H)
+    gl.uniform1f(loc.T, time)
+    gl.uniform1f(loc.K, k)
+    gl.uniform1f(loc.U, u)
+    gl.uniform1f(loc.F, F)
+    gl.uniform1f(loc.H0, H0)
+    gl.uniform1f(loc.CN, CN)
+    gl.uniform1f(loc.HK, 1.2 / CN)
+    gl.uniform1f(loc.HM, lerp(PAL.day.hm, PAL.dusk.hm, k))
+    gl.uniform3f(loc.C, cx * 1.8, 3.6 - cy * 0.3, time * 0.7)
+    gl.uniform3fv(loc.S, norm(mixc(sunDay, sunDusk(), k)))
+    gl.uniform3fv(loc.cHaze, P('haze'))
+    gl.uniform3fv(loc.cGlow, P('glow'))
+    gl.uniform3fv(loc.cSun, P('sun'))
+    gl.uniform3fv(loc.cAmb, P('amb'))
+    gl.uniform1f(loc.SX, SX)
+    gl.uniform1f(loc.BL, BL)
+    gl.uniform4fv(loc.V, V)
+    gl.uniform2fv(loc.PD, PD)
+    gl.uniform3fv(loc.cPL, P('pl'))
+    gl.uniform3fv(loc.cSL, P('sl'))
+    gl.uniform3fv(loc.cSD, P('sdk'))
+    gl.uniform3fv(loc.cFar, P('far'))
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+  }
+  function frame(now) {
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000))
+    last = now
+    time += dt
+    if (!hq && ++frames > 20) {
+      acc += dt
+      if (frames === 60) {
+        if (acc / 40 > 0.022 && scale > 0.3) { scale = Math.max(0.3, scale * 0.85); resize() }
+        frames = 20
+        acc = 0
+      }
+    }
+    if (K !== Kt) {
+      K += (Kt - K) * Math.min(1, dt * 2.2)
+      if (Math.abs(Kt - K) < 0.003) K = Kt
+      paintCss(K, K === Kt)
+    }
+    if (rise < 1) rise = Math.min(1, rise + dt / 1.7)
+    cx += (px - cx) * 0.04
+    cy += (py - cy) * 0.04
+    draw()
+    raf = running ? requestAnimationFrame(frame) : 0
+  }
+  function sync() {
+    const go = visible && !document.hidden && !still
+    if (go && !running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame) }
+    else if (!go && running) { running = false; cancelAnimationFrame(raf) }
+  }
+  function boot() {
+    gl = cv.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false })
+    if (!gl || !build()) return fail()
+    resize()
+    new ResizeObserver(() => { resize(); if (!running && gl) draw() }).observe(hero)
+    if (document.fonts) document.fonts.ready.then(() => {
+      try {
+        const c = document.createElement('canvas').getContext('2d')
+        c.font = '800 100px Archivo'
+        const m = c.measureText('E').actualBoundingBoxAscent / 100
+        if (m > 0.5 && m < 0.9) capRatio = m
+      } catch (_) {}
+      resize()
+      if (!running && gl) draw()
+    })
+    cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); fail() })
+    cv.addEventListener('webglcontextrestored', () => { if (build()) { cv.hidden = false; fb.hidden = true; resize(); draw(); sync() } })
+    onTheme(() => {
+      Kt = isDark() ? 1 : 0
+      if (still || !running) { K = Kt; paintCss(K, true); draw() }
+      else paintCss(K, false)
+    })
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect()
+      px = ((e.clientX - r.left) / r.width) * 2 - 1
+      py = ((e.clientY - r.top) / r.height) * 2 - 1
+    })
+    hero.addEventListener('pointerleave', () => { px = py = 0 })
+    if (still) { rise = 1; time = 30 }
+    draw()
+    requestAnimationFrame(() => cv.classList.add('on'))
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; sync() }).observe(hero)
+    document.addEventListener('visibilitychange', sync)
+    sync()
+  }
+  const later = () => (window.requestIdleCallback || ((f) => setTimeout(f, 60)))(boot, { timeout: 400 })
+  if (document.readyState === 'complete') later()
+  else addEventListener('load', later, { once: true })
+})()
+</script>
+
+<!-- ===== DIRECTIONS BAR (shared review UI, not part of the design) =====
+     Paste at the very end of <body>. Set data-current (a|b|c), data-name, data-weight ("18.6 KB gz"). -->
+<nav class="dirbar" id="dirbar" aria-label="Design directions" data-current="a" data-name="Red Horizon" data-weight="18.3 KB gz">
+  <a class="dirbar-all" href="./" title="All directions" aria-label="All directions">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2.5 2.5h4.5v4.5H2.5zM9 2.5h4.5v4.5H9zM2.5 9h4.5v4.5H2.5zM9 9h4.5v4.5H9z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+  </a>
+  <span class="dirbar-seg"><a href="a.html" data-k="a">A</a><a href="b.html" data-k="b">B</a><a href="c.html" data-k="c">C</a></span>
+  <span class="dirbar-name"></span>
+  <span class="dirbar-stats"><span class="dirbar-w"></span><span class="dirbar-fcp"></span><span class="dirbar-fps">… fps</span></span>
+  <button class="dirbar-theme" type="button" aria-label="Switch between light and dark">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="5.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 2.2a5.8 5.8 0 0 1 0 11.6z" fill="currentColor"/></svg>
+  </button>
+</nav>
+<style>
+.dirbar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:10px;height:40px;padding:0 5px;border-radius:999px;background:rgba(18,16,13,.86);color:#efe9dc;font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.09);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);max-width:calc(100vw - 24px);white-space:nowrap;color-scheme:dark}
+.dirbar a,.dirbar button{color:inherit;text-decoration:none;font:inherit}
+.dirbar-all,.dirbar-theme{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;border:0;background:transparent;cursor:pointer;opacity:.82;flex:none}
+.dirbar-all:hover,.dirbar-theme:hover{background:rgba(255,255,255,.1);opacity:1}
+.dirbar-seg{display:flex;gap:2px;padding:2px;border-radius:999px;background:rgba(255,255,255,.07);flex:none}
+.dirbar-seg a{display:grid;place-items:center;min-width:30px;height:26px;border-radius:999px;opacity:.7}
+.dirbar-seg a:hover{opacity:1;background:rgba(255,255,255,.08)}
+.dirbar-seg a[aria-current="page"]{opacity:1;background:#efe9dc;color:#16130f;font-weight:700}
+.dirbar-name{font-weight:600}
+.dirbar-stats{display:flex;gap:8px;opacity:.62;font-variant-numeric:tabular-nums}
+.dirbar-stats>span:not(:first-child)::before{content:"·";margin-right:8px;opacity:.7}
+.dirbar :focus-visible{outline:2px solid #ffb35c;outline-offset:2px}
+@media (max-width:640px){.dirbar-name{display:none}}
+@media (max-width:420px){.dirbar-w,.dirbar-fcp{display:none}}
+</style>
+<script>
+(() => {
+  const bar = document.getElementById('dirbar');
+  if (!bar) return;
+  const cur = bar.dataset.current;
+  bar.querySelectorAll('.dirbar-seg a').forEach((a) => { if (a.dataset.k === cur) a.setAttribute('aria-current', 'page'); });
+  bar.querySelector('.dirbar-name').textContent = cur.toUpperCase() + ' · ' + bar.dataset.name;
+  const w = bar.querySelector('.dirbar-w');
+  if (bar.dataset.weight) w.textContent = bar.dataset.weight; else w.remove();
+  const fcpEl = bar.querySelector('.dirbar-fcp');
+  const showFcp = (t) => { fcpEl.textContent = 'FCP ' + Math.round(t) + ' ms'; };
+  try {
+    const e = performance.getEntriesByName('first-contentful-paint')[0];
+    if (e) showFcp(e.startTime);
+    else new PerformanceObserver((l) => l.getEntries().forEach((en) => en.name === 'first-contentful-paint' && showFcp(en.startTime))).observe({ type: 'paint', buffered: true });
+  } catch (_) { fcpEl.remove(); }
+  const fpsEl = bar.querySelector('.dirbar-fps');
+  let frames = 0, last = performance.now();
+  const tick = (now) => {
+    frames++;
+    if (now - last >= 500) { fpsEl.textContent = Math.round((frames * 1000) / (now - last)) + ' fps'; frames = 0; last = now; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', () => { frames = 0; last = performance.now(); });
+  const root = document.documentElement, mq = matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches; };
+  bar.querySelector('.dirbar-theme').addEventListener('click', () => root.setAttribute('data-theme', isDark() ? 'light' : 'dark'));
+})();
+</script>
+<!-- ===== /DIRECTIONS BAR ===== -->
+</body>
+</html>
