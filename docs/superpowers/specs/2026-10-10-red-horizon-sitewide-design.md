@@ -67,13 +67,13 @@
 - 그래서 전역 `font-sans`는 그대로 두고, Space Grotesk와 `--font-family-sans` 줄도 그대로 두되 `preload: false`로 바꿉니다. 쓰는 글자가 있는 페이지에서만 내려받습니다(KB 차트 라벨 유지).
 - Display: **Archivo** 정적 인스턴스 2개(next/font/local, `variable: '--font-archivo'`, 라틴 서브셋 각 약 14.5 KB). 이름·밴드 제목은 `font-stretch: 125%` + 800, 제목류는 100% + 700. 가변 폰트(next/font/google, `axes: ['wdth']`)의 라틴 파일이 88 KB로 측정되어 아래 규칙대로 전환했습니다. 굵기 800 = 확장형(wdth 125) 파일, 700 = 표준 폭(wdth 100) 파일로 1:1 대응하므로, 800 표준 폭이나 700 확장형 조합은 쓰지 않습니다(브라우저는 폭을 합성하지 않음).
 - A 컴포넌트는 `--rh-display`(Archivo 스택), `--rh-serif`(Newsreader + 42dot Sans 스택), `--rh-mono`(JetBrains Mono + 42dot Sans 스택)를 명시적으로 씁니다. A 페이지의 최상위 래퍼(`.rh-page`)가 본문 기본 서체를 `--rh-serif`로 정합니다(프리뷰에서 body가 하던 역할).
-- 빌드 후 Archivo woff2 크기를 재고, 라틴 서브셋이 80 KB를 넘으면 `next/font/local`로 두 정적 인스턴스(wdth 100/700, wdth 125/800)를 셀프 호스팅합니다.
+- 규칙(적용 완료): 빌드 후 Archivo woff2 크기를 쟀고, 라틴 서브셋이 80 KB를 넘어 `next/font/local`로 두 정적 인스턴스(wdth 100/700, wdth 125/800)를 셀프 호스팅했습니다.
 
 ### 3.3 CSS 구성
 
 - `css/red-horizon.css` 하나를 새로 만들어 `css/tailwind.css`에서 `@import` 합니다. site.css, inner.css, 각 페이지 레퍼런스의 `<style>`을 여기로 옮깁니다.
 - **모든 클래스는 `rh-` 접두어**를 붙입니다(`.proj-row` → `.rh-proj-row`). 예외적인 이름: `.site-head` → `.rh-head`, `.ring` → `.rh-orb-ring`(Tailwind `ring` 유틸리티와 충돌), 글 본문 규칙(`.prose …`)은 `.rh-reading …`으로 범위를 좁힙니다(KB의 `.prose`를 건드리지 않기 위해).
-- 오브 조명은 inner.css 방식(`--lx`/`--ly` CSS 변수)으로 통일합니다. site.css의 고정값(36% 32%)은 기본값으로만 남깁니다.
+- 오브 조명은 inner.css 방식(`--rh-lx`/`--rh-ly` CSS 변수, REF의 `--lx`/`--ly`)으로 통일합니다. site.css의 고정값(36% 32%)은 기본값으로만 남깁니다.
 - 기존 Bold Editorial 유틸리티(`.eyebrow .sec-head .sec-num .chip .list-row .ghost-btn .reading-measure` 등)는 마지막 태스크에서 사용처를 확인해, 아무도 쓰지 않는 것만 삭제합니다.
 - 모든 애니메이션은 `prefers-reduced-motion: reduce`에서 꺼집니다.
 

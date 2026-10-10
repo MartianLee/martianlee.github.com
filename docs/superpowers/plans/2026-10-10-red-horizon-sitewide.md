@@ -42,7 +42,7 @@ Spec: `docs/superpowers/specs/2026-10-10-red-horizon-sitewide-design.md`. Previe
 | `lib/mars/globe-renderer.ts` | About WebGL globe (lazy chunk). `mountGlobe()`. |
 | `css/red-horizon.css` | The whole Red Horizon system (`rh-` classes, `--rh-` tokens). |
 | `components/hooks/useDarkTheme.ts` | Returns `isDark` and re-renders on `html.dark` changes. |
-| `components/hooks/usePointerSun.ts` | Sets `--lx/--ly` on planet orbs from the pointer. |
+| `components/hooks/usePointerSun.ts` | Sets `--rh-lx/--rh-ly` on planet orbs from the pointer. |
 | `components/hooks/useSettleOnView.ts` | Adds the settle class when a section title enters the viewport. |
 | `components/HorizonBand.tsx` | Inner-page sky band (monument / headline / slim). |
 | `components/ProjectOrb.tsx` | Procedural planet tile for a project `orb` key. |
@@ -719,11 +719,11 @@ Write the file in this order. Apply the Global Constraints CSS rules (rename `--
 2. `.rh-page { font: 400 17px/1.55 var(--rh-serif); color: var(--rh-ink); }` (REF set this on `body`; we scope it to Red Horizon pages so KB and climate keep their fonts).
 3. Header — port `REF/site.css` lines 31–44 (`.site-head` … `@media (max-width:760px)`), renaming `.site-head` → `.rh-head`, `.wordmark` → `.rh-wordmark`, `.nav` → `.rh-nav`, `.tools` → `.rh-tools`, `.lang` → `.rh-lang`, `.icon-btn` → `.rh-icon-btn`, `.menu-btn` → `.rh-menu-btn`. Add: `.rh-nav a[aria-current="page"] { color: var(--rh-accent); }`. Change REF's `@media (max-width:760px)` breakpoint for hiding `.rh-nav` to `@media (max-width: 639px)`: the existing `MobileNav` button is `sm:hidden` (shown only below 640px), so both must switch at the same width or the nav disappears between 640 and 760px. REF's `.rh-menu-btn` rules are not needed (MobileNav renders its own button).
 4. Editorial column + sections — `REF/site.css` lines 46–55 (`.wrap`, `.sec`, `.sec-head`, `.sec-no`, `.sec-head h2`, `.sec-link`, `.chip`, `.meta`) → `.rh-wrap`, `.rh-sec`, `.rh-sec-head`, `.rh-sec-no`, `.rh-sec-link`, `.rh-chip`, `.rh-meta`.
-5. Orbs — `REF/site.css` lines 57–67 (`.tile`, `.orb`, `.orb i`, `.orb::after`, `.ring`, `.ring.front`, `.o-hanji`, `.o-munch`, `.o-cheer`, `.o-fish`) then `REF/inner/inner.css` lines 71–81 (pointer-lit `.orb` override with `--lx/--ly`, `.o-invaders`, `.o-shoulder`, `.o-defense`, `.o-gukbap`, `.o-tracker`, `.o-sontab`, `.moonlet`) → `.rh-tile`, `.rh-orb`, `.rh-orb-ring`, `.rh-o-<key>`, `.rh-moonlet`.
+5. Orbs — `REF/site.css` lines 57–67 (`.tile`, `.orb`, `.orb i`, `.orb::after`, `.ring`, `.ring.front`, `.o-hanji`, `.o-munch`, `.o-cheer`, `.o-fish`) then `REF/inner/inner.css` lines 71–81 (pointer-lit `.orb` override with `--lx/--ly`, renamed `--rh-lx/--rh-ly`, `.o-invaders`, `.o-shoulder`, `.o-defense`, `.o-gukbap`, `.o-tracker`, `.o-sontab`, `.moonlet`) → `.rh-tile`, `.rh-orb`, `.rh-orb-ring`, `.rh-o-<key>`, `.rh-moonlet`.
 6. Project rows — `REF/inner/inner.css` lines 54–70 (`.proj`, `.proj-row` …, `.proj-stack`, and its media queries) → `.rh-proj…`.
 7. Band — `REF/inner/inner.css` lines 21–47 (`.band` … `.monument`, keyframes `dust`, `ping`, `settle` renamed `rh-dust`, `rh-ping`, `rh-settle`) → `.rh-band`, `.rh-band-sky`, `.rh-band-far`, `.rh-band-ground`, `.rh-band-inner`, `.rh-band-tele`, `.rh-monument`. Add the two variants:
    ```css
-   .rh-band--headline .rh-monument { font-stretch: 100%; font-weight: 700; font-size: clamp(34px, 5.4vw, 64px); line-height: 1.02; letter-spacing: -.02em; white-space: normal; text-wrap: balance; text-transform: none; max-width: 20ch; }
+   .rh-band--headline .rh-monument { /* = REF/post.html .ptitle (amended after Task 3 review) */ margin: 0 0 .04em; max-width: 21ch; font-stretch: 100%; font-weight: 700; font-size: clamp(31px, 4.3vw, 58px); line-height: 1.05; letter-spacing: -.022em; white-space: normal; text-wrap: balance; text-transform: none; animation: rh-rise-in 1s cubic-bezier(.2,.7,.1,1) both; }  @keyframes rh-rise-in { from { transform: translateY(10px); } }
    .rh-band--slim { min-height: clamp(150px, 20vh, 190px); }
    .rh-band-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 24px clamp(24px, 4vw, 56px); }
    .rh-band-row > :first-child { min-width: 0; }
@@ -1169,7 +1169,7 @@ export default function MarsHorizon(): JSX.Element
 
 - [ ] **Step 1: Hero CSS**
 
-Port `REF/index.html` lines 11–42 (`/* hero (unchanged from A) */`) into `css/red-horizon.css` under `/* home hero */`: `.hero` → `.rh-hero`, `.sky` → `.rh-sky`, `.title` → `.rh-title`, `.eyebrow` → `.rh-eyebrow`, `.nw` → `.rh-nw`, `.bl` → `.rh-bl`, `.br` → `.rh-br`, `.dot` (inside `.rh-title h1`) → `.rh-dot`, `#mars` → `.rh-mars-canvas`, `.dunes` → `.rh-dunes`, `.fade` → `.rh-fade`, `.lead` → `.rh-lead`, `.hero-foot` → `.rh-hero-foot`, `.cta` → `.rh-cta`, `.cta-main` → `.rh-cta-main`, `.hud` → `.rh-hud`, `.live` → `.rh-live`, `.opt` → `.rh-opt`, `.w1/.w2` → `.rh-w1/.rh-w2`; keyframes `settle`/`ping` reuse `rh-settle`/`rh-ping`. Tokens it needs (`--sky-*`, `--far`, `--sand-d`, `--monument`) are the `--rh-` ones from Task 3. The hero sits under the absolute global header, so drop REF's `.site-head` inside the hero.
+Port `REF/index.html` lines 11–42 (`/* hero (unchanged from A) */`) into `css/red-horizon.css` under `/* home hero */`: `.hero` → `.rh-hero`, `.sky` → `.rh-sky`, `.title` → `.rh-title`, `.eyebrow` → `.rh-eyebrow`, `.nw` → `.rh-nw`, `.bl` → `.rh-bl`, `.br` → `.rh-br`, `.dot` (inside `.rh-title h1`) → `.rh-dot`, `#mars` → `.rh-mars-canvas`, `.dunes` → `.rh-dunes`, `.fade` → `.rh-fade`, `.lead` → `.rh-lead`, `.hero-foot` → `.rh-hero-foot`, `.cta` → `.rh-cta`, `.cta-main` → `.rh-cta-main`, `.hud` → `.rh-hud`, `.live` → `.rh-live`, `.opt` → `.rh-opt`, `.w1/.w2` → `.rh-w1/.rh-w2`; keyframes: REF's hero `settle` (`.012em` → `-.03em`, REF/index.html line 21) differs from the inner `rh-settle` (`.01em` → `-.035em`), so port it as its own `@keyframes rh-hero-settle` with REF's values; compare REF's hero `ping` with the existing `rh-ping` and reuse it only if identical. Tokens it needs (`--sky-*`, `--far`, `--sand-d`, `--monument`) are the `--rh-` ones from Task 3. The hero sits under the absolute global header, so drop REF's `.site-head` inside the hero.
 
 - [ ] **Step 2: `components/home/MarsHud.tsx`**
 
@@ -1359,7 +1359,7 @@ git commit -m "feat(home): Mars horizon hero with live telemetry (lazy WebGL, SV
 
 **Interfaces:**
 ```ts
-export function usePointerSun(listRef: RefObject<HTMLElement | null>): void   // sets --lx/--ly on every .rh-orb inside; REF/index.html 693–778
+export function usePointerSun(listRef: RefObject<HTMLElement | null>): void   // sets --rh-lx/--rh-ly on every .rh-orb inside; REF/index.html 693–778
 export function useSettleOnView(ref: RefObject<HTMLElement | null>): void     // toggles .rh-pre → removed when visible; REF CSS lines 43–46
 export default function TenureChart(props: { roles: Career[] }): JSX.Element  // REF/index.html 253–280 markup, 779–829 script, CSS 93–126
 ```
@@ -1398,7 +1398,7 @@ export function useSettleOnView(ref: RefObject<HTMLElement | null>): void {
   }, [ref])
 }
 ```
-`components/hooks/usePointerSun.ts`: port `REF/index.html` lines 693–778 (the projects part of the second script) into a hook that receives the list element ref, uses one rAF per pointer move, skips touch-only devices (`matchMedia('(hover: none)')`), sets `--lx`/`--ly` (and the row light variables REF sets) on each `.rh-orb`/row, gives keyboard focus the "Sun over the title" state, eases back on pointer leave, and removes every listener in its cleanup.
+`components/hooks/usePointerSun.ts`: port `REF/index.html` lines 693–778 (the projects part of the second script) into a hook that receives the list element ref, uses one rAF per pointer move, skips touch-only devices (`matchMedia('(hover: none)')`), sets `--rh-lx`/`--rh-ly` (and the row light variables REF sets, `rh-` prefixed) on each `.rh-orb`/row, gives keyboard focus the "Sun over the title" state, eases back on pointer leave, and removes every listener in its cleanup.
 
 - [ ] **Step 3: `components/home/ProjectsSection.tsx`**
 
