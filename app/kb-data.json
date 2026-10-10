@@ -3111,7 +3111,7 @@
       ],
       "topic": "ai-infrastructure",
       "stage": "budding",
-      "summary": "Since late September, \"passthrough modding\", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, one of the implementations with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed."
+      "summary": "This post reads minecraft-crossover-bridge and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve."
     },
     {
       "slug": "2026-10-08-passthrough-bridge-spectrum",
@@ -3128,7 +3128,7 @@
       ],
       "topic": "ai-infrastructure",
       "stage": "budding",
-      "summary": "Since late September, dozens of passthrough mods that run two games at once and merge them into one have gone public. This post opens the code of twelve of them, sorts them by what crosses the bridge (pixels, meshes, logic, or nothing at all), and looks at the traces of the most-cited original, SkyCraft, moving from a pixel design to meshes, and at why Minecraft is so often the guest."
+      "summary": "This post opens the code of twelve passthrough mods that merge two running games into one and sorts them by what crosses the bridge: pixels, meshes, logic, or nothing at all."
     }
   ],
   "graph": {
@@ -4365,5 +4365,5 @@
       }
     ]
   },
-  "generatedAt": "2026-10-08T00:56:01.621Z"
+  "generatedAt": "2026-10-10T12:20:00.149Z"
 }
