@@ -26,6 +26,7 @@
   --rh-mono:
     var(--font-jetbrains), '42dot Sans', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --rh-accent-text: #9a3412;
+  --rh-accent-fill: #c2410c; /* accent as a fill under white text: 5.18:1 in both themes */
   /* accent for header text that sits on the sky zenith (--rh-sky-z); the values are checked against the rendered band
      pixels (sun glow, far mesas), not only the flat sky tokens */
   --rh-head-accent: #5c1d07;
@@ -818,9 +819,9 @@ a.rh-tagchip:hover {
   flex-wrap: wrap;
   gap: 8px;
 }
-.rh-tagchip span {
+.rh-tagchip-n {
   margin-left: 6px;
-  opacity: 0.65;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 
@@ -849,7 +850,8 @@ a.rh-tagchip:hover {
   color: var(--rh-accent);
 }
 .rh-btn--accent:hover {
-  background: var(--rh-accent);
+  background: var(--rh-accent-fill);
+  border-color: var(--rh-accent-fill);
   color: #fff;
 }
 

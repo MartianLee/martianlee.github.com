@@ -24,7 +24,7 @@ export default async function Page() {
                 aria-label={`View posts tagged ${t}`}
               >
                 {t.split(' ').join('-')}
-                <span>{tagCounts[t]}</span>
+                <span className="rh-tagchip-n">{tagCounts[t]}</span>
               </Link>
             </li>
           ))}
