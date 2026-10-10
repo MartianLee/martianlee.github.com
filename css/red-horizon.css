@@ -89,7 +89,8 @@ html.dark {
 /* ---------- header (absolute over the sky band on every page) ---------- */
 .rh-head {
   position: absolute;
-  z-index: 6;
+  /* above every page layer: the mobile menu overlay renders inside the header */
+  z-index: 30;
   top: 0;
   left: 0;
   right: 0;
@@ -100,6 +101,7 @@ html.dark {
   padding: calc(18px + env(safe-area-inset-top, 0px)) var(--rh-gutter) 0;
   font: 500 12px/1 var(--rh-mono);
   letter-spacing: 0.02em;
+  color: var(--rh-ink);
 }
 .rh-wordmark {
   font: 800 23px/1 var(--rh-display);
@@ -169,8 +171,23 @@ html.dark {
   width: 18px;
   height: 18px;
 }
+/* LanguageToggle keeps its markup. Over the sky its legacy muted grey falls under 2:1, so both labels use ink; the
+   active one is marked by weight plus the current-item underline (aria-pressed carries the state). */
+.rh-tools > div > button[aria-pressed] {
+  padding: 8px 5px;
+  color: var(--rh-ink);
+}
+.rh-tools > div > button[aria-pressed] + span {
+  color: var(--rh-ink);
+}
+.rh-tools > div > button[aria-pressed='true'],
+.rh-tools > div > button[aria-pressed='false']:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
 /* below 640px the MobileNav button (sm:hidden) takes over, so the nav hides at the same width */
-@media (max-width: 639px) {
+@media (width < 40rem) {
   .rh-nav {
     display: none;
   }
@@ -724,16 +741,24 @@ html.dark {
   }
 }
 /* variants (after the media query above so the slim height also holds on phones) */
+/* the post / project title in the band: REF .ptitle (rises in instead of settling) */
 .rh-band--headline .rh-monument {
+  margin: 0 0 0.04em;
+  max-width: 21ch;
   font-stretch: 100%;
   font-weight: 700;
-  font-size: clamp(34px, 5.4vw, 64px);
-  line-height: 1.02;
-  letter-spacing: -0.02em;
+  font-size: clamp(31px, 4.3vw, 58px);
+  line-height: 1.05;
+  letter-spacing: -0.022em;
   white-space: normal;
   text-wrap: balance;
   text-transform: none;
-  max-width: 20ch;
+  animation: rh-rise-in 1s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+@keyframes rh-rise-in {
+  from {
+    transform: translateY(10px);
+  }
 }
 .rh-band--slim {
   min-height: clamp(150px, 20vh, 190px);
@@ -912,6 +937,7 @@ a.rh-tagchip:hover {
 }
 .rh-footer {
   font-family: var(--rh-serif);
+  color: var(--rh-ink);
 }
 .rh-live-line {
   flex-basis: 100%;
