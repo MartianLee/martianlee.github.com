@@ -26,7 +26,8 @@
   --rh-mono:
     var(--font-jetbrains), '42dot Sans', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --rh-accent-text: #9a3412;
-  /* accent for header text that sits on the sky zenith (--rh-sky-z) */
+  /* accent for header text that sits on the sky zenith (--rh-sky-z); the values are checked against the rendered band
+     pixels (sun glow, far mesas), not only the flat sky tokens */
   --rh-head-accent: #5c1d07;
   /* horizon band */
   --rh-sun-x: 82%;
@@ -61,7 +62,7 @@ html.dark {
   --rh-sand-d: #1c1412;
   --rh-monument: #ede3cf;
   --rh-accent-text: #f6ab83;
-  --rh-head-accent: #ea580c;
+  --rh-head-accent: #f6ab83;
   --rh-sun-x: 84%;
   --rh-sun-y: 100%;
   --rh-sun-core: rgba(232, 242, 255, 0.98);
@@ -736,6 +737,10 @@ html.dark {
 }
 .rh-band--slim {
   min-height: clamp(150px, 20vh, 190px);
+}
+/* dark slim bands: the sky is short, so the sun's glow would sit right behind the header text */
+html.dark .rh-band--slim {
+  --rh-sun-glow: transparent;
 }
 .rh-band-row {
   display: grid;
