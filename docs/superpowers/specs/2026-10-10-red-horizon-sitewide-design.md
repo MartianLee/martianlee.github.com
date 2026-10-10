@@ -55,7 +55,7 @@
 | `--rh-line` | #dcd4c4 | #2c271f | |
 | `--rh-accent` | #c2410c | #ea580c | |
 | `--rh-accent-text` | #9a3412 | #f6ab83 | 하늘 위 작은 액센트 글자 대비용 |
-| `--rh-head-accent` | #5c1d07 | #ea580c | 헤더 액센트 글자(현재 메뉴·hover·CV). 하늘 꼭대기 `--rh-sky-z` 위 대비 라이트 4.89:1, 다크 5.22:1 (`--rh-accent`는 라이트 1.97:1) |
+| `--rh-head-accent` | #5c1d07 | #f6ab83 | 헤더 액센트 글자(현재 메뉴·hover·CV). 실제 밴드 픽셀 위 최저 대비 라이트 5.30:1, 다크 7.29:1(기본 밴드). `--rh-accent`는 라이트 1.97:1, 다크는 해 광륜·메사 위에서 1.96:1까지 떨어짐 |
 | `--rh-ok` | #2f7d46 | #4fb36d | 상태 점 |
 | `--rh-space` | #211c16 | #0b0907 | 오브 타일 바탕 |
 | `--rh-sky-z --rh-sky-m --rh-sky-h --rh-far --rh-sand-d --rh-monument` | site.css 값 | site.css 값 | 하늘 |
@@ -228,7 +228,7 @@ praisecat은 지금 `AuthorLayout`을 빌려 쓰고 있어서 About 리디자인
 
 - 실제 `<a>`/`<button>`, 보이는 `:focus-visible`, 장식 캔버스 `aria-hidden`.
 - 포인터로만 보이는 정보는 다른 곳에도 있습니다(오브 조명은 장식, 경력 막대는 텍스트 기간 병기, 스크러버는 키보드 slider).
-- 본문 대비 4.5:1 이상. 헤더 액센트 글자(현재 메뉴·hover·CV)는 하늘 꼭대기 위에 있으므로 `--rh-head-accent`를 쓰고, 현재 메뉴와 hover는 밑줄로도 표시합니다(색만으로 구분하지 않음). 그 밖의 하늘 위 작은 액센트 글자는 `--rh-accent-text`를 쓰되 실제 배경에서 대비를 잽니다.
+- 본문 대비 4.5:1 이상. 헤더 액센트 글자(현재 메뉴·hover·CV)는 하늘 꼭대기 위에 있으므로 `--rh-head-accent`를 쓰고, 현재 메뉴와 hover는 밑줄로도 표시합니다(색만으로 구분하지 않음). 그 밖의 하늘 위 작은 액센트 글자는 `--rh-accent-text`를 쓰되 실제 배경에서 대비를 잽니다(평평한 토큰 값이 아니라 렌더된 픽셀 기준). 다크 모드 slim 밴드는 하늘이 짧아 해 광륜이 헤더 뒤에 오므로 광륜을 끕니다(`html.dark .rh-band--slim { --rh-sun-glow: transparent }`).
 - 390px에서 가로 스크롤 없음, 거터 16px 이상.
 
 ## 9. i18n
