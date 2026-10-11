@@ -37,7 +37,9 @@ export interface UIStrings {
     older: string
     allTags: string
     readGauge: string
+    readMin: string
     pageOf: string
+    pagination: string
     filterByTag: string
     latestPosts: string
   }
@@ -151,7 +153,9 @@ export const ui: Record<Lang, UIStrings> = {
       older: 'Older →',
       allTags: 'All {n} tags →',
       readGauge: '{n} min read',
+      readMin: '{n} min',
       pageOf: '{current} / {total}',
+      pagination: 'Pagination',
       filterByTag: 'Filter by tag',
       latestPosts: 'Latest posts',
     },
@@ -272,7 +276,9 @@ export const ui: Record<Lang, UIStrings> = {
       older: '이전 →',
       allTags: '태그 {n}개 전체 →',
       readGauge: '{n}분 분량',
+      readMin: '{n}분',
       pageOf: '{current} / {total}',
+      pagination: '페이지 이동',
       filterByTag: '태그로 거르기',
       latestPosts: '최근 글',
     },

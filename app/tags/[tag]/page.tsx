@@ -1,17 +1,35 @@
 import { slug } from 'github-slugger'
 import siteMetadata from '@/data/siteMetadata'
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { canonicalBlogs, localizedList } from '@/lib/posts'
+import { canonicalBlogs, listedBlogs, localizedList } from '@/lib/posts'
 import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
-import SectionContainer from '@/components/SectionContainer'
+import { formatDate } from 'pliny/utils/formatDate'
+
+/**
+ * The tag as it is written in tag-data.json. generateStaticParams hands out encodeURI(tag), and Next 16.2 gives
+ * generateMetadata that string but the page itself an encoded copy of it (a Hangul tag arrives as %25EB%25B9...), so a
+ * single decodeURI left the page with a title of %EB%B9%85... and no posts. Decode until no escape is left: slugs never
+ * contain a literal %.
+ */
+function decodeTag(param: string) {
+  let tag = param
+  for (let i = 0; i < 3 && /%[0-9A-Fa-f]{2}/.test(tag); i++) {
+    try {
+      tag = decodeURIComponent(tag)
+    } catch {
+      break
+    }
+  }
+  return tag
+}
 
 export async function generateMetadata(props: {
   params: Promise<{ tag: string }>
 }): Promise<Metadata> {
   const params = await props.params
-  const tag = decodeURI(params.tag)
+  const tag = decodeTag(params.tag)
   return genPageMetadata({
     title: tag,
     description: `${siteMetadata.title} ${tag} tagged content`,
@@ -35,15 +53,19 @@ export const generateStaticParams = async () => {
 
 export default async function TagPage(props: { params: Promise<{ tag: string }> }) {
   const params = await props.params
-  const tag = decodeURI(params.tag)
+  const tag = decodeTag(params.tag)
   // Capitalize first letter and convert space to dash
   const title = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1)
   const filteredPosts = localizedList(
     canonicalBlogs().filter((post) => post.tags && post.tags.map((t) => slug(t)).includes(tag))
   )
-  return (
-    <SectionContainer>
-      <ListLayout posts={filteredPosts} title={title} />
-    </SectionContainer>
-  )
+  // the band and the gauge scale describe the whole log; only the latest date is this tag's
+  const listed = localizedList(listedBlogs())
+  const stats = {
+    listedTotal: listed.length,
+    tagTotal: Object.keys(tagData as Record<string, number>).length,
+    latest: filteredPosts[0] ? formatDate(filteredPosts[0].date, 'en-US') : '',
+    maxMinutes: Math.max(1, ...listed.map((p) => Math.ceil(p.readingTime.minutes))),
+  }
+  return <ListLayout posts={filteredPosts} title={title} stats={stats} />
 }
