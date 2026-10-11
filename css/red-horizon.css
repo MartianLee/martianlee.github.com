@@ -1937,6 +1937,568 @@ html.dark .rh-rows a:focus-visible {
   }
 }
 
+/* ---------- about (Task 10): the name on the horizon, a live Mars in an eyepiece, the bio on plain paper ---------- */
+/* REF about.html 11 to 108. The About band is its own (rh-about-*), not HorizonBand: it carries the stars, the mesas and the
+   globe. The bio below sits on plain paper with nothing moving behind it. */
+:root {
+  --rh-port: #0e0c0d;
+  --rh-reticle: rgba(26, 23, 18, 0.5);
+  --rh-star: transparent;
+  --rh-cap: #3e372d;
+  --rh-ground: 56px;
+  /* the Climate identity on the callout (the moss rule and the moss text of components/climate/styles.ts) */
+  --rh-moss: #8fae6c;
+  --rh-moss-text: #4a5a3a;
+}
+html.dark {
+  --rh-port: #05070b;
+  --rh-reticle: rgba(235, 228, 214, 0.42);
+  --rh-star: rgba(255, 250, 240, 0.8);
+  --rh-cap: #d6cebf;
+  --rh-moss: #5b7040;
+  --rh-moss-text: #94ab78;
+}
+
+/* band */
+.rh-about-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.rh-about-sky {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background: linear-gradient(
+    180deg,
+    var(--rh-sky-z) 0%,
+    var(--rh-sky-m) 46%,
+    var(--rh-sky-h) 100%
+  );
+}
+.rh-about-sky::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  box-shadow:
+    663px 154px 0 0.4px var(--rh-star),
+    1333px 49px 0 0px var(--rh-star),
+    1681px 548px 0 0px var(--rh-star),
+    748px 59px 0 0.4px var(--rh-star),
+    439px 38px 0 0px var(--rh-star),
+    888px 428px 0 0px var(--rh-star),
+    492px 92px 0 0.4px var(--rh-star),
+    869px 60px 0 0.4px var(--rh-star),
+    253px 228px 0 0.8px var(--rh-star),
+    1284px 63px 0 0.4px var(--rh-star),
+    1199px 406px 0 0px var(--rh-star),
+    452px 47px 0 0.4px var(--rh-star),
+    1758px 136px 0 0px var(--rh-star),
+    858px 147px 0 0.4px var(--rh-star),
+    241px 315px 0 0.4px var(--rh-star),
+    1671px 185px 0 0px var(--rh-star),
+    1191px 192px 0 0px var(--rh-star),
+    199px 560px 0 0.8px var(--rh-star),
+    128px 61px 0 0.4px var(--rh-star),
+    421px 508px 0 0.8px var(--rh-star),
+    1088px 437px 0 0px var(--rh-star),
+    953px 464px 0 0px var(--rh-star),
+    613px 254px 0 0px var(--rh-star),
+    1431px 249px 0 0px var(--rh-star),
+    1176px 307px 0 0.4px var(--rh-star),
+    1013px 351px 0 0.8px var(--rh-star),
+    919px 294px 0 0.4px var(--rh-star),
+    149px 120px 0 0.4px var(--rh-star),
+    856px 168px 0 0px var(--rh-star),
+    311px 500px 0 0.4px var(--rh-star),
+    80px 79px 0 0.4px var(--rh-star),
+    1173px 321px 0 0px var(--rh-star),
+    1423px 358px 0 0.4px var(--rh-star),
+    1017px 467px 0 0px var(--rh-star),
+    1720px 95px 0 0px var(--rh-star),
+    970px 66px 0 0px var(--rh-star),
+    1497px 317px 0 0.8px var(--rh-star),
+    1183px 456px 0 0px var(--rh-star),
+    1467px 395px 0 0.8px var(--rh-star),
+    710px 23px 0 0.4px var(--rh-star),
+    727px 172px 0 0.4px var(--rh-star),
+    239px 505px 0 0px var(--rh-star),
+    446px 294px 0 0px var(--rh-star),
+    1512px 253px 0 0.4px var(--rh-star),
+    800px 508px 0 0px var(--rh-star),
+    340px 459px 0 0.4px var(--rh-star),
+    1125px 284px 0 0px var(--rh-star),
+    1677px 440px 0 0.4px var(--rh-star),
+    570px 425px 0 0px var(--rh-star),
+    1398px 389px 0 0px var(--rh-star),
+    309px 84px 0 0px var(--rh-star),
+    309px 237px 0 0.8px var(--rh-star),
+    477px 12px 0 0.4px var(--rh-star),
+    1702px 186px 0 0px var(--rh-star),
+    577px 4px 0 0px var(--rh-star),
+    858px 547px 0 0px var(--rh-star),
+    1248px 326px 0 0px var(--rh-star),
+    1414px 527px 0 0.4px var(--rh-star),
+    1341px 55px 0 0.4px var(--rh-star),
+    1783px 401px 0 0.4px var(--rh-star),
+    817px 403px 0 0px var(--rh-star),
+    986px 410px 0 0px var(--rh-star),
+    390px 68px 0 0px var(--rh-star),
+    902px 166px 0 0px var(--rh-star),
+    696px 53px 0 0px var(--rh-star),
+    0px 154px 0 0.4px var(--rh-star),
+    207px 372px 0 0.4px var(--rh-star),
+    52px 72px 0 0px var(--rh-star),
+    1257px 385px 0 0px var(--rh-star),
+    1299px 258px 0 0px var(--rh-star),
+    1233px 372px 0 0.4px var(--rh-star),
+    251px 118px 0 0.4px var(--rh-star),
+    954px 491px 0 0.4px var(--rh-star),
+    638px 87px 0 0px var(--rh-star),
+    209px 350px 0 0.8px var(--rh-star),
+    542px 490px 0 0.8px var(--rh-star),
+    330px 528px 0 0px var(--rh-star),
+    420px 540px 0 0px var(--rh-star),
+    300px 556px 0 0px var(--rh-star),
+    1552px 540px 0 0px var(--rh-star),
+    1316px 93px 0 0.8px var(--rh-star),
+    1731px 267px 0 0.4px var(--rh-star),
+    751px 171px 0 0px var(--rh-star),
+    1580px 228px 0 0.4px var(--rh-star),
+    1109px 514px 0 0px var(--rh-star),
+    1303px 228px 0 0.4px var(--rh-star),
+    1661px 199px 0 0px var(--rh-star),
+    1675px 410px 0 0.8px var(--rh-star),
+    1645px 232px 0 0px var(--rh-star),
+    1060px 504px 0 0px var(--rh-star),
+    1497px 29px 0 0px var(--rh-star),
+    1618px 286px 0 0.4px var(--rh-star),
+    530px 198px 0 0.8px var(--rh-star),
+    1239px 352px 0 0.4px var(--rh-star),
+    1655px 357px 0 0px var(--rh-star);
+}
+.rh-about-land {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+  height: calc(96px + var(--rh-ground));
+  pointer-events: none;
+}
+.rh-about-land svg {
+  display: block;
+  width: 100%;
+  height: 96px;
+}
+.rh-about-land path {
+  fill: var(--rh-far);
+}
+.rh-about-land::after {
+  content: '';
+  display: block;
+  height: var(--rh-ground);
+  background: linear-gradient(180deg, var(--rh-far), var(--rh-paper));
+}
+.rh-about-in {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 28px clamp(28px, 4vw, 64px);
+  max-width: calc(var(--rh-col) + 2 * var(--rh-gutter));
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 104px) var(--rh-gutter) var(--rh-ground);
+}
+.rh-about-who {
+  min-width: 0;
+  padding-bottom: 2px;
+  container-type: inline-size;
+}
+.rh-about-eyebrow {
+  margin: 0 0 clamp(14px, 2.2vw, 24px);
+  font: 500 12px/1.55 var(--rh-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rh-ink);
+}
+.rh-about-name {
+  margin: 0;
+  font: 800 clamp(40px, 5.2vw, 80px) / 0.84 var(--rh-display);
+  /* the longest word fits the column at any width: 100cqi is the width of .rh-about-who */
+  font-size: min(86px, calc(100cqi / 7.9));
+  font-stretch: 125%;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--rh-monument);
+}
+.rh-about-name span {
+  display: block;
+}
+.rh-about-name .rh-dot {
+  display: inline;
+  color: var(--rh-accent);
+}
+
+/* eyepiece */
+.rh-about-globe {
+  margin: 0;
+  width: clamp(260px, 27vw, 380px);
+}
+.rh-about-port {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--rh-port);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rh-reticle) 70%, transparent),
+    0 18px 50px -18px rgba(20, 10, 4, 0.45);
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+}
+.rh-about-port.rh-drag {
+  cursor: grabbing;
+}
+/* the ring sits on the sky, so it uses the sky's accent (REF's --accent is 2.8:1 there) */
+.rh-about-port:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--rh-head-accent),
+    0 0 0 6px color-mix(in srgb, var(--rh-head-accent) 25%, transparent);
+}
+.rh-about-canvas,
+.rh-about-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.rh-about-canvas {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.rh-about-canvas.rh-on {
+  opacity: 1;
+}
+.rh-about-still {
+  transition: opacity 0.8s ease;
+}
+.rh-about-still.rh-off {
+  opacity: 0;
+}
+.rh-about-reticle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--rh-reticle);
+  pointer-events: none;
+  overflow: visible;
+}
+.rh-about-reticle text {
+  font: 500 7px var(--rh-mono);
+  fill: currentColor;
+  letter-spacing: 0.08em;
+}
+.rh-about-sun circle {
+  fill: var(--rh-accent);
+}
+.rh-about-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  pointer-events: none;
+  font: 500 10.5px/1 var(--rh-mono);
+  letter-spacing: 0.04em;
+  color: #f4ecdd;
+  /* a dark halo, not only REF's 0 1px 2px: the label sits on the lit disc, where it was about 2:1 */
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.8),
+    0 0 8px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  transition: opacity 0.3s;
+  will-change: transform;
+}
+.rh-about-pin::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid #ffb27a;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  flex: none;
+}
+.rh-about-pin.rh-flip {
+  flex-direction: row-reverse;
+}
+.rh-about-pin.rh-away {
+  opacity: 0;
+}
+.rh-about-cap {
+  margin-top: 46px;
+  font: 500 11px/1.65 var(--rh-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rh-cap);
+}
+.rh-about-live {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 6px;
+  color: var(--rh-ink);
+}
+.rh-about-live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rh-accent);
+  flex: none;
+  animation: rh-hero-ping 2.4s ease-out infinite;
+}
+/* The values wrap instead of overflowing: the season line is about 225px wide and the figure only reaches 373px (the width it
+   needs) from 1380px up, so below that REF's nowrap pushed the values off the right edge of the screen. */
+.rh-about-cap dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 14px;
+  margin: 0;
+}
+.rh-about-cap dt {
+  white-space: nowrap;
+}
+.rh-about-cap dd {
+  margin: 0;
+  text-align: right;
+  color: var(--rh-ink);
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+/* the controls appear when the canvas takes over; hidden, not removed, so the caption keeps its height */
+.rh-about-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 10px;
+  visibility: hidden;
+}
+.rh-about-ctl.rh-on {
+  visibility: visible;
+}
+/* the controls sit on the sky and the mesas: the sky's accent, not --rh-accent-text (3.0:1 on the far mesa) */
+.rh-about-ctl button {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--rh-head-accent);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1px;
+  background-position: 0 80%;
+  background-repeat: no-repeat;
+  transition: background-size 0.35s;
+}
+.rh-about-ctl button:hover {
+  background-size: 100% 1px;
+}
+.rh-about-hint {
+  color: var(--rh-cap);
+}
+
+/* bio (plain paper, reading first). The wrapper holds the measure and the type size so the Climate callout shares them; the
+   prose rules are scoped three classes deep, because the legacy .prose rules (tailwind.css, after this file) and a later
+   .rh-reading would otherwise win ties. */
+.rh-about-read {
+  max-width: 68ch;
+  padding-top: clamp(44px, 6vw, 80px);
+  font-size: 20px;
+  line-height: 1.72;
+  /* Korean wraps at spaces, not inside a word (no effect on the English copy); a word wider than its box still breaks */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-about-read .rh-about-bio.prose {
+  color: var(--rh-ink);
+}
+.rh-about-read .rh-about-bio.prose h2 {
+  margin: 2.1em 0 0.7em;
+  font: 700 clamp(24px, 2.6vw, 30px) / 1.18 var(--rh-display);
+  letter-spacing: -0.012em;
+  color: var(--rh-ink);
+  text-wrap: balance;
+}
+.rh-about-read .rh-about-bio.prose h2:first-child {
+  margin-top: 0;
+}
+.rh-about-read .rh-about-bio.prose p {
+  margin: 0 0 1em;
+  line-height: inherit;
+}
+.rh-about-read .rh-about-bio.prose strong {
+  font-weight: 600;
+  color: inherit;
+}
+.rh-about-read .rh-about-bio.prose a {
+  color: var(--rh-accent);
+  font-weight: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--rh-accent) 40%, transparent);
+  text-underline-offset: 3px;
+}
+.rh-about-read .rh-about-bio.prose a:hover {
+  text-decoration-color: var(--rh-accent);
+}
+.rh-about-read .rh-about-bio.prose ul {
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0;
+}
+.rh-about-read .rh-about-bio.prose li {
+  position: relative;
+  padding-left: 1.3em;
+  margin: 0 0 0.75em;
+  line-height: inherit;
+}
+.rh-about-read .rh-about-bio.prose li::before {
+  content: '';
+  position: absolute;
+  left: 0.1em;
+  top: 0.72em;
+  width: 0.42em;
+  height: 0.42em;
+  background: var(--rh-accent);
+}
+
+/* the Climate entry after the bio: Red Horizon surface, the moss rule stays the Climate identity */
+.rh-about-climate {
+  margin: 40px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--rh-line);
+  border-left: 3px solid var(--rh-moss);
+  border-radius: 6px;
+  background: var(--rh-surface);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.rh-about-climate-eyebrow {
+  margin: 0;
+  font: 500 11px/1.4 var(--rh-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rh-moss-text);
+}
+.rh-about-climate-body {
+  margin: 8px 0 0;
+  color: color-mix(in srgb, var(--rh-ink) 82%, transparent);
+}
+.rh-about-climate-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 0;
+  font: 500 12.5px/1.2 var(--rh-mono);
+  letter-spacing: 0.02em;
+  color: var(--rh-accent-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+.rh-about-climate-link:hover,
+.rh-about-climate-link:focus-visible {
+  text-decoration-thickness: 2px;
+}
+
+/* experience (compact rows; the role and period classes are the home's) */
+.rh-about-exp {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rh-about-exp li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rh-line);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-about-exp h3 {
+  margin: 0;
+  font: 800 22px/1.15 var(--rh-display);
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+}
+.rh-about-exp h3 a:hover,
+.rh-about-exp h3 a:focus-visible {
+  color: var(--rh-accent);
+}
+.rh-about-exp p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--rh-muted);
+  font-size: 16px;
+  max-width: 78ch;
+}
+.rh-about-exp .rh-about-stack {
+  font: 500 12px/1.5 var(--rh-mono);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 760px) {
+  .rh-about-in {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 84px);
+    gap: 34px;
+  }
+  .rh-about-globe {
+    order: -1;
+    width: 100%;
+  }
+  .rh-about-port {
+    width: min(72vw, 300px);
+    margin: 0 auto;
+  }
+  .rh-about-cap {
+    margin-top: 26px;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+  .rh-about-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .rh-about-read {
+    font-size: 19px;
+  }
+}
+@media (max-width: 560px) {
+  .rh-about-exp li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rh-about-hint {
+    display: none;
+  }
+}
+
 /* ---------- reduced motion: a still frame, no loops ---------- */
 @media (prefers-reduced-motion: reduce) {
   [class^='rh-'],
