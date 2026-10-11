@@ -323,6 +323,10 @@ export function mountHorizon(
   function fail() {
     running = false
     cancelAnimationFrame(raf)
+    // No frame will finish a theme cross-fade that was still running: settle it, so the inline colour overrides on the hero
+    // are removed and the CSS tokens apply (otherwise the still stays half-way between the two themes).
+    K = Kt
+    paintCss(K, true)
     fellBack = true
     cv.hidden = true
     // a class, not [hidden]: SVG elements have no .hidden property (REF's `fb.hidden = false` changed nothing)
@@ -343,6 +347,7 @@ export function mountHorizon(
       const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
       return t * t * (3 - 2 * t)
     }
+    // CPU twin of the shader's mesa() in FS (the SVG still draws the same skyline): change both together
     const mesa = (u: number) =>
       Math.max(
         0.85 * ss(-1.02, -0.97, u) * (1 - ss(-0.78, -0.74, u)),
@@ -420,7 +425,10 @@ export function mountHorizon(
     g.attachShader(prog, v)
     g.attachShader(prog, f)
     g.linkProgram(prog)
-    if (!g.getProgramParameter(prog, g.LINK_STATUS)) return false
+    if (!g.getProgramParameter(prog, g.LINK_STATUS)) {
+      if (!g.isContextLost()) console.warn(g.getProgramInfoLog(prog))
+      return false
+    }
     g.useProgram(prog)
     buf = g.createBuffer()
     g.bindBuffer(g.ARRAY_BUFFER, buf)
@@ -506,6 +514,7 @@ export function mountHorizon(
     g.drawArrays(g.TRIANGLES, 0, 3)
   }
   function frame(now: number) {
+    if (destroyed) return
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000))
     last = now
     time += dt
@@ -532,6 +541,7 @@ export function mountHorizon(
     raf = running ? requestAnimationFrame(frame) : 0
   }
   function sync() {
+    if (destroyed) return
     const go = visible && !document.hidden && !still && !fellBack
     if (go && !running) {
       running = true
@@ -600,6 +610,11 @@ export function mountHorizon(
     px = py = 0
   }
   function boot() {
+    // Registered before any early return to fail(): the SVG still must also be re-fitted once the name has settled and its
+    // font has swapped in (both handlers route to drawFallback() when fellBack), or the skyline stays placed from the first,
+    // mid-settle measurement.
+    if (document.fonts) void document.fonts.ready.then(onFontsReady)
+    el.title.querySelector('h1')?.addEventListener('animationend', refit)
     if (saveData) return fail()
     gl = cv.getContext('webgl', {
       alpha: true,
@@ -608,8 +623,6 @@ export function mountHorizon(
       depth: false,
       stencil: false,
     })
-    if (document.fonts) void document.fonts.ready.then(onFontsReady)
-    el.title.querySelector('h1')?.addEventListener('animationend', refit)
     if (!gl || !build()) return fail()
     resize()
     ro = new ResizeObserver(() => {

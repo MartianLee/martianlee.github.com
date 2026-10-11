@@ -1289,6 +1289,9 @@ html.dark {
   background: var(--rh-accent);
   animation: rh-hero-ping 2.4s ease-out infinite;
   flex: none;
+  /* its own layer: the ping repaints every frame, and in the HUD's layer that would re-raster all the HUD text with its halo
+     each time (a 3 to 4 times lower frame rate under software rendering, no difference on a GPU) */
+  will-change: transform;
 }
 .rh-hud dl {
   display: grid;
@@ -1307,6 +1310,57 @@ html.dark {
   white-space: nowrap;
   text-transform: none;
   letter-spacing: 0.02em;
+}
+/* The hero's small text sits on the terrain (HUD and links over the dunes, the dark tagline over the moon): a halo in the page
+   colour keeps the immediate surround of every glyph paper whatever the ground does, and is invisible where the ground already
+   is paper. text-shadow inherits, so .rh-hud covers its live line, labels and values. The light tagline needs none. Solid
+   reach is 2px (a 1px ring and the 2px ring twice: thin strokes, Hangul above all, need the outer ring doubled), soft reach 10px. */
+.rh-hud,
+.rh-cta a,
+html.dark .rh-lead {
+  text-shadow:
+    1px 0 var(--rh-paper),
+    -1px 0 var(--rh-paper),
+    0 1px var(--rh-paper),
+    0 -1px var(--rh-paper),
+    1px 1px var(--rh-paper),
+    -1px 1px var(--rh-paper),
+    1px -1px var(--rh-paper),
+    -1px -1px var(--rh-paper),
+    2px 0 var(--rh-paper),
+    -2px 0 var(--rh-paper),
+    0 2px var(--rh-paper),
+    0 -2px var(--rh-paper),
+    2px 1px var(--rh-paper),
+    2px -1px var(--rh-paper),
+    -2px 1px var(--rh-paper),
+    -2px -1px var(--rh-paper),
+    1px 2px var(--rh-paper),
+    -1px 2px var(--rh-paper),
+    1px -2px var(--rh-paper),
+    -1px -2px var(--rh-paper),
+    2px 2px var(--rh-paper),
+    -2px 2px var(--rh-paper),
+    2px -2px var(--rh-paper),
+    -2px -2px var(--rh-paper),
+    2px 0 var(--rh-paper),
+    -2px 0 var(--rh-paper),
+    0 2px var(--rh-paper),
+    0 -2px var(--rh-paper),
+    2px 1px var(--rh-paper),
+    2px -1px var(--rh-paper),
+    -2px 1px var(--rh-paper),
+    -2px -1px var(--rh-paper),
+    1px 2px var(--rh-paper),
+    -1px 2px var(--rh-paper),
+    1px -2px var(--rh-paper),
+    -1px -2px var(--rh-paper),
+    2px 2px var(--rh-paper),
+    -2px 2px var(--rh-paper),
+    2px -2px var(--rh-paper),
+    -2px -2px var(--rh-paper),
+    0 0 4px var(--rh-paper),
+    0 0 10px color-mix(in srgb, var(--rh-paper) 50%, transparent);
 }
 /* the hero ping grows to 9px; rh-ping (band telemetry) stops at 8px */
 @keyframes rh-hero-ping {

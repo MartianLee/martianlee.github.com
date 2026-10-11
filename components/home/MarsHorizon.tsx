@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useRef } from 'react'
+import Link from '@/components/Link'
 import siteMetadata from '@/data/siteMetadata'
 import type { HorizonHandle } from '@/lib/mars/horizon-renderer'
 import MarsHud from './MarsHud'
@@ -67,6 +68,9 @@ export default function MarsHorizon() {
             </Fragment>
           ))}
         </p>
+        {/* The renderer's measure() reads this h1 and the .rh-w1, .rh-w2, .rh-dot and .rh-bl inside the title div to place the
+            skyline, the sun and the horizon, and silently skips the placement when one of them is missing: these class names
+            are load-bearing. */}
         <h1>
           <span className="rh-w1">MARTIAN</span> <br className="rh-br" />
           <span className="rh-w2">
@@ -102,7 +106,7 @@ export default function MarsHorizon() {
           <a className="rh-cta-main" href="#projects">
             {ui.masthead.viewProjects}
           </a>
-          <a href="/posts">{ui.masthead.writing}</a>
+          <Link href="/posts">{ui.masthead.writing}</Link>
           <a href={siteMetadata.linkedin}>{ui.cv}</a>
           <a href={siteMetadata.github}>GitHub ↗</a>
         </nav>
