@@ -1407,6 +1407,536 @@ html.dark .rh-lead {
   }
 }
 
+/* ---------- home sections: settle, pointer-lit planets, directional underlines, tenure bars ---------- */
+/* REF index.html 43 to 126. The section system, the project rows, .rh-chip, .rh-meta, .rh-lede, .rh-tile and .rh-orb above are
+   reused as they are; this block adds only what the home changes, scoped under .rh-proj, .rh-sec-head and the home's own classes. */
+
+/* section titles settle as they arrive; useSettleOnView toggles .rh-pre and the title reads fine in both states */
+.rh-sec-head h2 {
+  transition: letter-spacing 1.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+.rh-sec-head h2.rh-pre {
+  letter-spacing: 0.014em;
+}
+/* Korean wraps at spaces, not inside a word (no effect on the English copy); a word wider than its box still breaks */
+.rh-proj .rh-proj-main,
+.rh-sec-head + .rh-lede,
+.rh-feat article,
+.rh-rows a span,
+.rh-exp li {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 01 projects: the pointer is the Sun. usePointerSun writes --rh-lx/--rh-ly, --rh-hx/--rh-hy, --rh-sx/--rh-sy, --rh-t0..2, --rh-d1/--rh-d2,
+   --rh-act, --rh-rx/--rh-ry and --rh-sc on each .rh-orb itself (the orb re-declares --rh-lx/--rh-ly, so a value set on an ancestor would be
+   ignored), --rh-act/--rh-gx/--rh-gy on its .rh-tile and --rh-mx on the row. The fallbacks below are the resting light. */
+.rh-proj {
+  /* REF's home has no sun token: the planets rest lit from the upper left, which is where usePointerSun eases back to */
+  --rh-orb-lx: 36%;
+  --rh-orb-ly: 32%;
+  /* strength of the pool of light under the pointer. REF's 12% leaves the muted text at 4.38:1 at the peak on the light paper,
+     so the light theme runs it softer (8%: 4.63:1) and the dark theme keeps REF's value (6.1:1) */
+  --rh-pool: 8%;
+}
+html.dark .rh-proj {
+  --rh-pool: 12%;
+}
+.rh-proj .rh-proj-row {
+  isolation: isolate;
+}
+/* a pool of sunlight under the pointer instead of the sweep the other lists use */
+.rh-proj .rh-proj-row::before {
+  z-index: -1;
+  background: radial-gradient(
+    400px 150px at var(--rh-mx, 22%) 50%,
+    color-mix(in srgb, var(--rh-accent) var(--rh-pool), transparent),
+    transparent 72%
+  );
+  transform: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.rh-proj .rh-proj-row:hover::before,
+.rh-proj .rh-proj-row:focus-visible::before {
+  transform: none;
+  opacity: 1;
+}
+.rh-proj .rh-tile {
+  perspective: 240px;
+}
+/* the hover scale is --rh-sc now, so the tilt survives it (hover and focus restate the transform to outrank the row rule above) */
+.rh-proj .rh-orb,
+.rh-proj .rh-proj-row:hover .rh-orb,
+.rh-proj .rh-proj-row:focus-visible .rh-orb {
+  transform: rotateX(var(--rh-rx, 0deg)) rotateY(var(--rh-ry, 0deg)) scale(var(--rh-sc, 1));
+  transition: none;
+}
+/* highlight under the Sun and a terminator whose width and darkness grow with --rh-act */
+.rh-proj .rh-orb::after {
+  background:
+    radial-gradient(
+      circle at var(--rh-hx, 34%) var(--rh-hy, 30%),
+      rgb(255 248 236 / calc(var(--rh-act, 0) * 0.3)) 0,
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at var(--rh-sx, 30%) var(--rh-sy, 28%),
+      transparent var(--rh-t0, 30%),
+      rgb(8 5 3 / var(--rh-d1, 0.42)) var(--rh-t1, 58%),
+      rgb(8 5 3 / var(--rh-d2, 0.9)) var(--rh-t2, 90%)
+    );
+}
+.rh-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    70% 60% at var(--rh-gx, 20%) var(--rh-gy, 20%),
+    color-mix(in srgb, var(--rh-accent) 42%, transparent),
+    transparent 70%
+  );
+  opacity: var(--rh-act, 0);
+  pointer-events: none;
+}
+.rh-proj .rh-proj-stack {
+  transition:
+    color 0.3s,
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-proj .rh-proj-row:hover .rh-proj-stack,
+.rh-proj .rh-proj-row:focus-visible .rh-proj-stack {
+  color: var(--rh-ink);
+  transform: translateX(5px);
+}
+
+/* 02 posts: the underline and the rule above each post draw from the side you arrive and retract to the side you leave (--rh-o) */
+.rh-sec-head + .rh-lede {
+  margin: 0 0 34px;
+  max-width: 52ch;
+}
+.rh-feat {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 56px);
+}
+@media (max-width: 820px) {
+  .rh-feat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.rh-feat article {
+  position: relative;
+  padding-top: 16px;
+}
+.rh-feat article::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-top: 1px solid var(--rh-line);
+}
+.rh-feat article::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-top: 1px solid var(--rh-accent);
+  transform: scaleX(0);
+  transform-origin: var(--rh-o, 0%) 50%;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-feat article:hover::after,
+.rh-feat article:focus-within::after {
+  transform: scaleX(1);
+}
+.rh-feat .rh-meta {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.rh-meta b {
+  font-weight: 500;
+  color: var(--rh-ink);
+}
+.rh-feat h3 {
+  margin: 10px 0 0;
+  font: 700 clamp(23px, 2.3vw, 30px) / 1.16 var(--rh-display);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.rh-feat h3 a {
+  background: linear-gradient(var(--rh-accent), var(--rh-accent)) var(--rh-o, 0%) 100% / 0 2px
+    no-repeat;
+  transition:
+    background-size 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    color 0.3s;
+}
+.rh-feat h3 a:hover,
+.rh-feat h3 a:focus-visible {
+  background-size: 100% 2px;
+  color: var(--rh-accent);
+}
+.rh-sum {
+  margin: 12px 0 0;
+  color: var(--rh-muted);
+  font-size: 17px;
+  line-height: 1.55;
+  max-width: 54ch;
+}
+.rh-rows {
+  list-style: none;
+  margin: 44px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--rh-line);
+  /* the pool of light under the pointer: REF's 10% leaves the muted date at 4.49:1 on the light paper (8%: 4.63:1) */
+  --rh-pool: 8%;
+}
+html.dark .rh-rows {
+  --rh-pool: 10%;
+}
+.rh-rows a {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rh-line);
+  font: 700 17.5px/1.3 var(--rh-display);
+  letter-spacing: -0.005em;
+  transition: color 0.25s;
+}
+.rh-rows a::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(
+    340px 90px at var(--rh-mx, 18%) 50%,
+    color-mix(in srgb, var(--rh-accent) var(--rh-pool), transparent),
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+/* 17.5px bold is not large text: the accent is 3.9:1 on the pool in light, so light uses --rh-accent-text (5.6:1), as the hero links do */
+.rh-rows a:hover,
+.rh-rows a:focus-visible {
+  color: var(--rh-accent-text);
+}
+html.dark .rh-rows a:hover,
+html.dark .rh-rows a:focus-visible {
+  color: var(--rh-accent);
+}
+.rh-rows a:hover::before,
+.rh-rows a:focus-visible::before {
+  opacity: 1;
+}
+.rh-rows a span {
+  display: block;
+  min-width: 0;
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-rows a span::before {
+  content: '→';
+  position: absolute;
+  margin-left: -24px;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity 0.3s,
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-rows a:hover span,
+.rh-rows a:focus-visible span {
+  transform: translateX(24px);
+}
+.rh-rows a:hover span::before,
+.rh-rows a:focus-visible span::before {
+  opacity: 1;
+  transform: none;
+}
+.rh-rows time {
+  flex: none;
+  font: 500 12px/1 var(--rh-mono);
+  color: var(--rh-muted);
+}
+@media (max-width: 560px) {
+  .rh-rows a {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rh-rows a:hover span,
+  .rh-rows a:focus-visible span {
+    transform: none;
+  }
+  .rh-rows a span::before {
+    display: none;
+  }
+}
+
+/* 03 experience: whole-year bars on one axis, with a scrubber (TenureChart) */
+.rh-xp {
+  --rh-scrub: 0%;
+  position: relative;
+}
+.rh-exp {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rh-exp li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 24px;
+  padding: 22px 0 16px;
+  border-bottom: 1px solid var(--rh-line);
+}
+.rh-exp h3 {
+  margin: 0;
+  font: 800 24px/1.15 var(--rh-display);
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+}
+.rh-exp h3 a {
+  background: linear-gradient(var(--rh-accent), var(--rh-accent)) 0 100% / 0 2px no-repeat;
+  transition:
+    background-size 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+    color 0.3s;
+}
+.rh-exp h3 a:hover,
+.rh-exp h3 a:focus-visible {
+  color: var(--rh-accent);
+  background-size: 100% 2px;
+}
+.rh-role {
+  font: italic 400 18px/1.3 var(--rh-serif);
+  color: var(--rh-muted);
+  margin-left: 10px;
+  letter-spacing: 0;
+}
+.rh-period {
+  font: 500 12px/2 var(--rh-mono);
+  color: var(--rh-muted);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
+}
+.rh-exp p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--rh-muted);
+  font-size: 16px;
+  max-width: 78ch;
+}
+.rh-exp .rh-stack {
+  font: 500 12px/1.5 var(--rh-mono);
+  letter-spacing: 0.02em;
+}
+.rh-track {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 22px;
+  margin-top: 8px;
+  touch-action: pan-y;
+  cursor: ew-resize;
+}
+.rh-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 10px;
+  border-top: 1px dashed var(--rh-line);
+}
+.rh-bar {
+  position: absolute;
+  top: 5px;
+  left: var(--rh-a);
+  width: var(--rh-w);
+  height: 11px;
+  border-inline: 1.5px solid var(--rh-accent);
+  /* the ongoing bar grows to today's date once the page knows it */
+  transition:
+    opacity 0.35s,
+    width 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-bar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 3px;
+  background: var(--rh-accent);
+  transition: box-shadow 0.35s;
+}
+.rh-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3px;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--rh-accent), #fff3df 62%) 70%,
+    #fff8ee
+  );
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  opacity: 0;
+}
+.rh-xp.rh-lit .rh-bar::after {
+  animation: rh-energize 1.5s cubic-bezier(0.3, 0.6, 0.2, 1) calc(0.25s + var(--rh-i, 0) * 0.2s)
+    both;
+}
+@keyframes rh-energize {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.95;
+  }
+  72% {
+    transform: scaleX(1);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+/* the pulse on the ongoing bar is REF's ping: rh-hero-ping above */
+.rh-now {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rh-accent);
+  animation: rh-hero-ping 2.4s ease-out infinite;
+  flex: none;
+}
+.rh-bar .rh-now {
+  position: absolute;
+  right: -5px;
+  top: 2px;
+}
+.rh-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--rh-scrub);
+  width: 1.5px;
+  margin-left: -0.75px;
+  background: var(--rh-accent);
+  opacity: 0;
+  transition:
+    opacity 0.25s,
+    left 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.rh-xp.rh-scrub .rh-mark {
+  opacity: 1;
+}
+.rh-xp.rh-scrub li:not(.rh-on) .rh-bar {
+  opacity: 0.32;
+}
+.rh-xp.rh-scrub li.rh-on .rh-bar::before {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rh-accent) 30%, transparent),
+    0 0 12px color-mix(in srgb, var(--rh-accent) 65%, transparent);
+}
+.rh-xp.rh-scrub li.rh-on .rh-period {
+  color: var(--rh-accent);
+}
+.rh-axis {
+  position: relative;
+  height: 58px;
+  margin-top: 2px;
+  outline-offset: 6px;
+  touch-action: pan-y;
+  cursor: ew-resize;
+}
+.rh-axis::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-top: 1px solid var(--rh-ink);
+}
+.rh-tick {
+  position: absolute;
+  top: 0;
+  height: 14px;
+  border-left: 1px solid var(--rh-muted);
+  padding: 5px 0 0 5px;
+  font: 500 10.5px/1 var(--rh-mono);
+  letter-spacing: 0.06em;
+  color: var(--rh-muted);
+  font-variant-numeric: tabular-nums;
+}
+.rh-axis .rh-mark {
+  top: -8px;
+  bottom: auto;
+  height: 22px;
+}
+.rh-readout {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  padding: 6px 9px;
+  border-radius: 4px;
+  background: var(--rh-ink);
+  color: var(--rh-paper);
+  font: 500 11.5px/1.2 var(--rh-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transition:
+    opacity 0.25s,
+    left 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.rh-xp.rh-scrub .rh-readout {
+  opacity: 1;
+}
+.rh-hint {
+  margin: 0;
+  font: 500 11px/1.5 var(--rh-mono);
+  letter-spacing: 0.04em;
+  color: var(--rh-muted);
+  transition: opacity 0.3s;
+}
+.rh-xp.rh-scrub .rh-hint {
+  opacity: 0;
+}
+@media (max-width: 560px) {
+  .rh-exp li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rh-period {
+    text-align: left;
+  }
+  .rh-role {
+    display: block;
+    margin: 4px 0 0;
+  }
+  .rh-tick.rh-odd {
+    display: none;
+  }
+  .rh-readout {
+    font-size: 11px;
+    white-space: normal;
+    width: max-content;
+    max-width: min(78vw, 300px);
+  }
+}
+
 /* ---------- reduced motion: a still frame, no loops ---------- */
 @media (prefers-reduced-motion: reduce) {
   [class^='rh-'],
@@ -1417,7 +1947,14 @@ html.dark .rh-lead {
   [class*=' rh-']::after,
   [class^='rh-'] i,
   [class*=' rh-'] i,
-  .rh-title h1 {
+  .rh-title h1,
+  .rh-feat article::after,
+  .rh-feat h3 a,
+  .rh-rows a,
+  .rh-rows a::before,
+  .rh-rows a span,
+  .rh-rows a span::before,
+  .rh-exp h3 a {
     animation: none !important;
     transition: none !important;
   }
