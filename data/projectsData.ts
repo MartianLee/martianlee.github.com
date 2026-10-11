@@ -1,3 +1,17 @@
+export const ORB_KEYS = [
+  'hanji',
+  'munch',
+  'cheer',
+  'fish',
+  'invaders',
+  'shoulder',
+  'defense',
+  'gukbap',
+  'tracker',
+  'sontab',
+] as const
+export type OrbKey = (typeof ORB_KEYS)[number]
+
 export interface Project {
   title: string
   slug: string
@@ -5,6 +19,10 @@ export interface Project {
   kindKo?: string
   description: string
   descriptionKo?: string
+  /** One line for the home and the projects list. The long `description` stays on the detail page. */
+  summary: string
+  summaryKo: string
+  orb: OrbKey
   category: 'game' | 'non-game'
   href?: string
   imgSrc?: string
@@ -26,6 +44,10 @@ const projectsData: Project[] = [
       'A native macOS markdown editor for plain-file vaults, built on SwiftUI and TextKit 2 with a Swift extension SDK. Incremental Live Preview keeps a keystroke in a 4,000-line note at about 15 ms, with performance budgets checked in CI. Local-first, MIT licensed.',
     descriptionKo:
       '마크다운 파일 폴더(vault)를 여는 네이티브 macOS 에디터입니다. SwiftUI와 TextKit 2로 만들었고 Swift 확장 SDK를 제공합니다. 증분 Live Preview 덕분에 4,000줄 문서에서도 키 입력이 약 15ms에 반영됩니다. 이 지연 시간은 CI에서 매번 테스트합니다. 로컬 우선, MIT 라이선스입니다.',
+    summary:
+      'A native macOS markdown editor for plain-file vaults, built with SwiftUI and TextKit 2.',
+    summaryKo: 'SwiftUI와 TextKit 2로 만든, 마크다운 파일 폴더용 네이티브 macOS 에디터입니다.',
+    orb: 'hanji',
     category: 'non-game',
     techStack: [
       'Swift',
@@ -53,6 +75,9 @@ const projectsData: Project[] = [
       'A lunch-recommendation service for office workers. It auto-collects nearby restaurants (discoverable via the OpenClaw skill-optimized API) and suggests a fresh lunch every day based on your visit history and ratings.',
     descriptionKo:
       '직장인을 위한 점심 추천 서비스입니다. 주변 식당을 자동으로 수집(OpenClaw 스킬 최적화 API로 탐색 가능)하고, 방문 이력과 평점을 바탕으로 매일 새로운 점심을 추천합니다.',
+    summary: 'Picks a fresh office lunch every day from nearby restaurants and your visit history.',
+    summaryKo: '주변 식당과 방문 기록을 바탕으로 매일 새로운 점심을 골라 주는 서비스입니다.',
+    orb: 'munch',
     category: 'non-game',
     techStack: [
       'NestJS 11',
@@ -76,6 +101,9 @@ const projectsData: Project[] = [
       'A daily journaling app that builds the habit of praising yourself every day — a small ritual for a positive mindset.',
     descriptionKo:
       '매일 스스로를 칭찬하는 습관을 길러주는 일기 앱입니다. 긍정적인 마음가짐을 위한 작은 의식이죠.',
+    summary: 'A daily journal for praising yourself, one small ritual at a time.',
+    summaryKo: '매일 스스로를 칭찬하는 습관을 만드는 일기 앱입니다.',
+    orb: 'cheer',
     category: 'non-game',
     techStack: ['React Native', 'Firebase', 'TypeScript'],
     demo: 'https://play.google.com/store/apps/details?id=com.teiroleema.cheercat3',
@@ -91,6 +119,9 @@ const projectsData: Project[] = [
       'A Phaser3 arcade shooter. Fend off the aliens invading Earth, classic arcade style.',
     descriptionKo:
       'Phaser3로 만든 아케이드 슈팅 게임입니다. 지구를 침공하는 외계인을 고전 아케이드 방식으로 막아냅니다.',
+    summary: 'A Phaser 3 arcade shooter: hold off the aliens invading Earth.',
+    summaryKo: '지구를 침공하는 외계인을 막는 Phaser 3 아케이드 슈팅 게임입니다.',
+    orb: 'invaders',
     category: 'game',
     techStack: ['Phaser3', 'TypeScript', 'Rollup', 'Vercel'],
     workflow: ['Vercel Git Deploy'],
@@ -107,6 +138,9 @@ const projectsData: Project[] = [
       'A pixel-art idle productivity tool that blends a Pomodoro timer with an aquarium sim. Complete focus sessions to earn fish eggs, collect 12+ species, and grow your own tank.',
     descriptionKo:
       '뽀모도로 타이머와 아쿠아리움 시뮬레이션을 결합한 픽셀아트 방치형 생산성 도구입니다. 집중 세션을 완료해 물고기 알을 얻고, 12종 이상을 모아 나만의 수조를 키웁니다.',
+    summary: 'A pixel-art Pomodoro timer where finished focus sessions grow your aquarium.',
+    summaryKo: '집중 세션을 마칠 때마다 수조가 자라는 픽셀아트 뽀모도로 타이머입니다.',
+    orb: 'fish',
     category: 'game',
     techStack: ['Phaser3', 'TypeScript', 'Vercel'],
     workflow: ['Vercel Git Deploy'],
@@ -124,6 +158,9 @@ const projectsData: Project[] = [
       'A web app to calculate and track bag weight — a smart bag-weight checker for healthier shoulders. You can save your own bags for later.',
     descriptionKo:
       '가방 무게를 계산하고 추적하는 웹 앱입니다. 어깨 건강을 위한 똑똑한 가방 무게 체커예요. 나만의 가방을 저장해 놓을 수 있어요.',
+    summary: 'A bag-weight calculator for healthier shoulders, with saved bags.',
+    summaryKo: '어깨 건강을 위해 가방 무게를 계산하고 저장해 두는 웹 앱입니다.',
+    orb: 'shoulder',
     category: 'non-game',
     techStack: ['React', 'TypeScript', 'Next.js'],
     demo: 'https://www.shoulder-check.cloud/',
@@ -139,13 +176,17 @@ const projectsData: Project[] = [
       'A 2.5D roguelite tower-defense prototype built in Godot 4.6, designed around unit combos, tag synergies, real-time placement, and meta-progression.',
     descriptionKo:
       'Godot 4.6으로 만든 2.5D 로그라이트 타워 디펜스 프로토타입입니다. 유닛 조합, 태그 시너지, 실시간 배치, 메타 프로그레션을 중심으로 설계했습니다.',
+    summary: 'A 2.5D roguelite tower-defense prototype in Godot 4.6, built around unit combos.',
+    summaryKo:
+      '유닛 조합을 중심으로 설계한 Godot 4.6 기반 2.5D 로그라이트 타워 디펜스 프로토타입입니다.',
+    orb: 'defense',
     category: 'game',
     techStack: ['Godot 4.6', 'GDScript', 'GitHub Pages'],
     workflow: ['GitHub Actions: Godot Web Export', 'GitHub Pages Auto Deploy'],
     aiTools: ['Gemini CLI (Primary Build)', 'Claude CLI (Follow-up Improvements)'],
     demo: 'https://martianlee.github.io/godot-first-defense/',
     github: 'https://github.com/MartianLee/godot-first-defense',
-    imgSrc: '/static/projects/first-defense-thumbnail.png',
+    imgSrc: '/static/projects/first-defense-thumbnail.webp',
     featured: true,
   },
   {
@@ -157,6 +198,9 @@ const projectsData: Project[] = [
       'A vibe-coded collection of 90+ free Korean web tools for office and everyday life — random pickers, roulette, ladder games, tournament brackets, timers, and calculators. No login, no install — just open and use.',
     descriptionKo:
       '바이브 코딩으로 만든 90개 이상의 무료 웹 도구 모음입니다. 랜덤 뽑기, 룰렛, 사다리 타기, 대진표, 타이머, 각종 계산기를 로그인·설치 없이 바로 쓸 수 있습니다.',
+    summary: '90+ free Korean web tools for office and daily life. No login, no install.',
+    summaryKo: '로그인과 설치 없이 바로 쓰는 무료 웹 도구 90여 개 모음입니다.',
+    orb: 'gukbap',
     category: 'non-game',
     techStack: [
       'Next.js 16 (Static Export)',
@@ -180,6 +224,9 @@ const projectsData: Project[] = [
       'A macOS desktop app that tracks all your side projects in one window. For each GitHub repo it surfaces release stage, staleness detection, interest tags, and mood-matching, using the authenticated gh CLI and local git as data sources. Ships with an English/Korean UI.',
     descriptionKo:
       '모든 사이드 프로젝트를 한 창에서 추적하는 macOS 데스크톱 앱입니다. GitHub 레포별로 릴리스 단계, 방치 감지, 관심 태그, 무드 매칭을 인증된 gh CLI와 로컬 git을 데이터 소스로 제공합니다. 영어/한국어 UI를 지원합니다.',
+    summary: "A macOS app that tracks every side project's stage and staleness in one window.",
+    summaryKo: '모든 사이드 프로젝트의 단계와 방치 여부를 한 창에서 보여 주는 macOS 앱입니다.',
+    orb: 'tracker',
     category: 'non-game',
     techStack: ['Tauri v2', 'React', 'TypeScript', 'Vite', 'Rust'],
     workflow: ['npm run tauri build (.app)'],
@@ -197,6 +244,9 @@ const projectsData: Project[] = [
       'A lightweight, OneTab-style tab manager for Chrome. One click saves every tab in the window into a group and closes them — with catalog and by-domain views, search, starred tabs, OneTab import/export, and 5 languages. Local-only, no tracking, zero runtime dependencies.',
     descriptionKo:
       '가볍게 만든 OneTab 스타일의 크롬 탭 매니저입니다. 클릭 한 번으로 창의 모든 탭을 그룹으로 저장하고 닫아줍니다. 카탈로그·도메인별 보기, 검색, 별표 탭, OneTab 가져오기/내보내기, 5개 언어를 지원하며, 백엔드와 추적 없이 모든 데이터를 로컬에만 저장합니다.',
+    summary: 'A lightweight OneTab-style tab manager for Chrome. Local-only, no tracking.',
+    summaryKo: '로컬에만 저장하고 추적하지 않는 가벼운 OneTab 스타일 크롬 탭 매니저입니다.',
+    orb: 'sontab',
     category: 'non-game',
     techStack: ['Svelte 5', 'TypeScript', 'Vite', 'Chrome Manifest V3', 'Vitest'],
     aiTools: ['Claude Code (Primary Build)'],

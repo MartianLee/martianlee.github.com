@@ -1,20 +1,28 @@
 'use client'
 
+import { useRef } from 'react'
 import siteMetadata from '@/data/siteMetadata'
-import CareerList from '@/components/CareerList'
+import careerData from '@/data/careerData'
+import TenureChart from '@/components/TenureChart'
 import { useUI } from '@/components/useUI'
+import { useSettleOnView } from '@/components/hooks/useSettleOnView'
 
 export default function ExperienceSection() {
   const ui = useUI()
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  useSettleOnView(titleRef)
   return (
-    <section className="py-12">
-      <div className="sec-head">
-        <span className="sec-num">{ui.sections.experience}</span>
-        <a href={siteMetadata.linkedin} className="text-accent font-mono text-xs">
+    <section className="rh-sec" aria-labelledby="exp-h">
+      <div className="rh-sec-head">
+        <span className="rh-sec-no">03</span>
+        <h2 id="exp-h" ref={titleRef}>
+          {ui.home.experience}
+        </h2>
+        <a className="rh-sec-link" href={siteMetadata.linkedin}>
           {ui.cv}
         </a>
       </div>
-      <CareerList />
+      <TenureChart roles={careerData} />
     </section>
   )
 }

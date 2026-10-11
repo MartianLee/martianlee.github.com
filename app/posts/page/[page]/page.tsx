@@ -1,5 +1,6 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { listedBlogs, localizedList } from '@/lib/posts'
+import SectionContainer from '@/components/SectionContainer'
 
 const POSTS_PER_PAGE = 5
 
@@ -24,12 +25,14 @@ export default async function Page(props: { params: Promise<{ page: string }> })
   }
 
   return (
-    <ListLayout
-      posts={posts}
-      initialDisplayPosts={initialDisplayPosts}
-      pagination={pagination}
-      title="All Posts"
-      titleKo="전체 글"
-    />
+    <SectionContainer>
+      <ListLayout
+        posts={posts}
+        initialDisplayPosts={initialDisplayPosts}
+        pagination={pagination}
+        title="All Posts"
+        titleKo="전체 글"
+      />
+    </SectionContainer>
   )
 }

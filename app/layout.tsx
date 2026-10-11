@@ -2,19 +2,33 @@ import 'css/tailwind.css'
 import 'pliny/search/algolia.css'
 
 import { Space_Grotesk, JetBrains_Mono, Newsreader } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics, AnalyticsConfig } from 'pliny/analytics'
 import { SearchProvider, SearchConfig } from 'pliny/search'
 import Header from '@/components/Header'
-import SectionContainer from '@/components/SectionContainer'
 import Footer from '@/components/Footer'
 import siteMetadata from '@/data/siteMetadata'
 import { ThemeProviders } from './theme-providers'
 import { Metadata } from 'next'
 
+// Archivo as two static cuts (latin): 800 is the expanded wdth 125 cut, 700 the normal wdth 100 cut.
+// Every display rule pairs them that way (800 with font-stretch: 125%, 700 at 100%); there is no other combination.
+const archivo = localFont({
+  src: [
+    { path: './fonts/archivo-wdth100-wght700-latin.woff2', weight: '700', style: 'normal' },
+    { path: './fonts/archivo-wdth125-wght800-latin.woff2', weight: '800', style: 'normal' },
+  ],
+  display: 'swap',
+  variable: '--font-archivo',
+})
+
+// Still read through --font-family-sans (post headings in .reading-measure, the viz charts, which also render in KB
+// notes), so it stays; preload: false keeps it out of the per-page preload set, it is fetched only when text uses it.
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-space-grotesk',
+  preload: false,
 })
 
 const jetbrains_mono = JetBrains_Mono({
@@ -85,7 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang={siteMetadata.language}
-      className={`${space_grotesk.variable} ${jetbrains_mono.variable} ${newsreader.variable} scroll-smooth`}
+      className={`${archivo.variable} ${space_grotesk.variable} ${jetbrains_mono.variable} ${newsreader.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <link
@@ -108,15 +122,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-paper text-ink antialiased" suppressHydrationWarning>
         <ThemeProviders>
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
-          <SectionContainer>
-            <div className="flex h-screen flex-col justify-between font-sans">
-              <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
-                <Header />
-                <main className="mb-auto">{children}</main>
-              </SearchProvider>
-              <Footer />
-            </div>
-          </SectionContainer>
+          <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
+            <Header />
+            <main id="main">{children}</main>
+          </SearchProvider>
+          <Footer />
         </ThemeProviders>
       </body>
     </html>

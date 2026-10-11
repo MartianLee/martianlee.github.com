@@ -1,6 +1,7 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { listedBlogs, localizedList } from '@/lib/posts'
 import { genPageMetadata } from 'app/seo'
+import SectionContainer from '@/components/SectionContainer'
 
 const POSTS_PER_PAGE = 5
 
@@ -19,12 +20,14 @@ export default function BlogPage() {
   }
 
   return (
-    <ListLayout
-      posts={posts}
-      initialDisplayPosts={initialDisplayPosts}
-      pagination={pagination}
-      title="All Posts"
-      titleKo="전체 글"
-    />
+    <SectionContainer>
+      <ListLayout
+        posts={posts}
+        initialDisplayPosts={initialDisplayPosts}
+        pagination={pagination}
+        title="All Posts"
+        titleKo="전체 글"
+      />
+    </SectionContainer>
   )
 }

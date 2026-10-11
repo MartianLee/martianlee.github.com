@@ -13,6 +13,9 @@ import MagicTaxStack from './viz/MagicTaxStack'
 import StackedBars from './viz/StackedBars'
 import PassthroughCompositor from './viz/PassthroughCompositor'
 import PassthroughLayers from './viz/PassthroughLayers'
+import BridgeSpectrum from './viz/BridgeSpectrum'
+import PixelVsMesh from './viz/PixelVsMesh'
+import BridgeLineage from './viz/BridgeLineage'
 import YouTube from './YouTube'
 import CarbonDay from './viz/CarbonDay'
 import DayRoutine from './viz/DayRoutine'
@@ -36,6 +39,9 @@ export const components: MDXComponents = {
   StackedBars,
   PassthroughCompositor,
   PassthroughLayers,
+  BridgeSpectrum,
+  PixelVsMesh,
+  BridgeLineage,
   YouTube,
   CarbonDay,
   DayRoutine,

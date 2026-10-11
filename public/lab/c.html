@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Martian Lee · Vector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,100..800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<style>
+/* Layout: one 1100px instrument column. Hero = beam screen (2 canvases) + drawing title block; sections read as scope channels. */
+:root{
+  --paper:#f4efe4; --sheet:#f9f6ef; --ink:#1b1914; --ink-2:#47423a; --muted:#6a6356; --line:#d6cebd; --rule:#1b1914;
+  --accent:#b23f0e; --led:#2c8a4b; --ro:#5c5549; --glare:rgba(255,255,255,0); --vig:rgba(0,0,0,0); --amb:rgba(255,255,255,0);
+  --sheet-shadow:0 1px 0 #d6cebd, 0 26px 50px -38px rgba(27,25,20,.5);
+  --tb-line:#1b1914; --tb-bg:#f9f6ef; --chip:#ebe4d6;
+  /* canvas palette (6-digit hex, read by JS) */
+  --cv-ink:#1b1914; --cv-hot:#1b1914; --cv-glow:#1b1914; --cv-acc:#b23f0e; --cv-dim:#8a8173; --cv-grid:#d3cab8; --cv-label:#5c5549; --cv-fr1:#ff3d2e; --cv-fr2:#3c9bff;
+  --on-light:inline; --on-dark:none;
+  --f-mono:'Martian Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --f-serif:'Newsreader','Iowan Old Style','Times New Roman',Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0a0907; --sheet:#0d0b08; --ink:#f2e8d5; --ink-2:#d0c3aa; --muted:#a09480; --line:#2d271e; --rule:#6b5528;
+  --accent:#ffb000; --led:#46c46d; --ro:#c99c47; --glare:rgba(255,236,200,.035); --vig:rgba(0,0,0,.6); --amb:rgba(255,128,0,.06);
+  --sheet-shadow:0 0 0 1px rgba(255,176,0,.13), 0 40px 90px -50px rgba(255,140,0,.22);
+  --tb-line:rgba(255,176,0,.4); --tb-bg:rgba(10,9,7,.84); --chip:#1d1912;
+  --cv-ink:#ffb000; --cv-hot:#ffeccc; --cv-glow:#ff7a00; --cv-acc:#fff4de; --cv-dim:#ffb000; --cv-grid:#35280f; --cv-label:#b48a3c;
+  --on-light:none; --on-dark:inline; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#0a0907; --sheet:#0d0b08; --ink:#f2e8d5; --ink-2:#d0c3aa; --muted:#a09480; --line:#2d271e; --rule:#6b5528;
+  --accent:#ffb000; --led:#46c46d; --ro:#c99c47; --glare:rgba(255,236,200,.035); --vig:rgba(0,0,0,.6); --amb:rgba(255,128,0,.06);
+  --sheet-shadow:0 0 0 1px rgba(255,176,0,.13), 0 40px 90px -50px rgba(255,140,0,.22);
+  --tb-line:rgba(255,176,0,.4); --tb-bg:rgba(10,9,7,.84); --chip:#1d1912;
+  --cv-ink:#ffb000; --cv-hot:#ffeccc; --cv-glow:#ff7a00; --cv-acc:#fff4de; --cv-dim:#ffb000; --cv-grid:#35280f; --cv-label:#b48a3c;
+  --on-light:none; --on-dark:inline; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 14px/1.6 var(--f-mono);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p,ol,ul,dl,dd,figure{margin:0;padding:0}
+ol,ul{list-style:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:1148px;margin-inline:auto;padding-inline:24px}
+.acc{color:var(--accent)}
+.d-only{display:var(--on-dark)} .l-only{display:var(--on-light)}
+/* pen-drawn underline */
+.u{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .45s cubic-bezier(.2,.7,.2,1)}
+.u:hover,.u:focus-visible{background-size:100% 1px}
+
+/* ---------- header ---------- */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:22px 18px}
+.wordmark{font-weight:800;font-stretch:112.5%;font-size:21px;letter-spacing:-.02em}
+.nav{display:flex;gap:26px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase}
+.tools{display:flex;align-items:center;gap:6px}
+.lang{display:inline-flex;gap:5px;align-items:center;height:32px;padding-inline:8px;font-size:11.5px;letter-spacing:.06em;color:var(--muted)}
+.lang b{color:var(--ink);font-weight:700}
+.icon{display:grid;place-items:center;width:34px;height:34px;border-radius:2px}
+.icon:hover{background:var(--chip)}
+.menu{display:none}
+
+/* ---------- hero ---------- */
+.hero{padding-block:4px 30px}
+.eyebrow{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);padding-block:0 12px;display:flex;gap:10px;align-items:center}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--accent);flex:none}
+.instrument{position:relative}
+.screen{position:relative;height:clamp(380px,60svh,600px);background:radial-gradient(42% 46% at 36% 44%,var(--amb),rgba(0,0,0,0)),radial-gradient(120% 95% at 50% 46%,var(--sheet) 55%,var(--paper));box-shadow:var(--sheet-shadow);overflow:hidden;touch-action:pan-y}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,var(--glare) 0%,rgba(0,0,0,0) 38%),radial-gradient(130% 110% at 50% 50%,rgba(0,0,0,0) 58%,var(--vig))}
+.screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ro{position:absolute;z-index:1;font-size:10px;line-height:1.75;letter-spacing:.1em;text-transform:uppercase;color:var(--ro);pointer-events:none;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ro b{font-weight:600;color:var(--ink)}
+.ro-tl{left:40px;top:36px} .ro-tr{right:40px;top:36px;text-align:right} .ro-bl{left:40px;bottom:36px}
+.kick{position:absolute;z-index:2;left:36px;bottom:72px;height:28px;padding-inline:10px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;border-radius:2px;background:var(--tb-bg)}
+.kick:hover{background:var(--accent);color:var(--paper)}
+.tblock{position:absolute;z-index:2;right:40px;bottom:36px;width:min(360px,42%);border:1.5px solid var(--tb-line);background:var(--tb-bg);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.tb-title{padding:8px 12px 10px;border-bottom:1px solid var(--tb-line)}
+.tb-k,.tblock dt{display:block;color:var(--muted);font-size:9px;letter-spacing:.14em}
+.tb-name{font-size:clamp(20px,2.3vw,28px);line-height:1.15;font-weight:750;font-stretch:112.5%;letter-spacing:-.01em;text-transform:none;margin-top:3px}
+.tblock dl{display:grid;grid-template-columns:1.25fr .8fr .9fr 1.3fr}
+.tblock dl>div{padding:6px 10px 7px;min-width:0}
+.tblock dl>div+div{border-left:1px solid var(--tb-line)}
+.tblock dd{font-weight:600;color:var(--ink);font-size:11px;letter-spacing:.06em;white-space:nowrap}
+.hero-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px 40px;align-items:end;padding-top:30px}
+.tagline{font:400 clamp(27px,3.3vw,41px)/1.17 var(--f-serif);letter-spacing:-.012em;max-width:23ch;text-wrap:balance}
+.cta{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:12px;letter-spacing:.06em;padding-bottom:8px}
+.cta a{color:var(--muted)} .cta a:hover{color:var(--ink)}
+.cta .primary{color:var(--accent);background-size:100% 1.5px;padding-bottom:2px}
+.cta .primary:hover{color:var(--accent)}
+
+/* ---------- section scaffold: measured rule + channel label ---------- */
+.sec{padding-block:72px 8px}
+.chan{position:relative;display:flex;align-items:baseline;gap:16px;padding-top:20px;margin-bottom:30px}
+.chan::before{content:"";position:absolute;inset:0 0 auto 0;height:9px;background:
+  linear-gradient(var(--rule),var(--rule)) 0 0/100% 1px no-repeat,
+  repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px 10px) 0 0/100% 4px no-repeat,
+  repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px 50px) 0 0/100% 9px no-repeat;opacity:.9}
+.ch{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--accent)}
+.chan h2{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.more{margin-left:auto;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.more:hover{color:var(--ink)}
+
+/* projects */
+.proj{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:26px;align-items:center;padding-block:18px;border-bottom:1px solid var(--line)}
+.projs li:first-child .proj{padding-top:4px}
+.tile{width:118px;height:76px;display:block;color:var(--ink);overflow:visible}
+.tile .fr{stroke:var(--line)} .tile .ac{stroke:var(--accent)} .tile .lb{fill:var(--muted);font:500 7px var(--f-mono);letter-spacing:.12em}
+.tile [pathLength]{stroke-dasharray:1;stroke-dashoffset:0}
+.proj:hover .tile [pathLength],.proj:focus-visible .tile [pathLength]{animation:replot .9s cubic-bezier(.5,0,.2,1) both}
+.proj:hover .tile .ac,.proj:focus-visible .tile .ac{animation-delay:.25s}
+@keyframes replot{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.pm{min-width:0}
+.pm h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;font-size:18px;font-weight:650;letter-spacing:-.01em}
+.kind{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:2px 7px 1px;border-radius:2px}
+.pm p{font:400 16px/1.5 var(--f-serif);color:var(--ink-2);max-width:62ch;margin-top:6px}
+.stack{font-size:11px;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+.arr{display:inline-block;transition:transform .3s}
+.proj:hover .arr{transform:translateX(4px);color:var(--accent)}
+.u2{background:linear-gradient(var(--accent),var(--accent)) 0 100%/0 1.5px no-repeat;transition:background-size .5s cubic-bezier(.2,.7,.2,1)}
+.proj:hover .u2,.proj:focus-visible .u2,a.u2:hover,a.u2:focus-visible{background-size:100% 1.5px}
+
+/* posts */
+.intro{font:400 19px/1.5 var(--f-serif);color:var(--ink-2);max-width:60ch;margin-bottom:28px}
+.signal{border:1px solid var(--line);background:var(--sheet);padding:14px 16px 10px;margin-bottom:40px;box-shadow:var(--sheet-shadow)}
+.sig-head{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ro);margin-bottom:10px}
+.sig-head b{color:var(--ink);font-weight:650}
+.sig-scale{margin-left:auto}
+.sig-plot{position:relative;height:150px}
+.sig-plot canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sig-peak{position:absolute;right:5.6%;top:2px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding-right:10px;white-space:nowrap}
+.sig-years{position:relative;height:20px;font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:4px}
+.sig-years span{position:absolute;top:2px;padding-left:4px;border-left:1px solid var(--line);line-height:1.3}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px}
+.meta{font-size:11px;letter-spacing:.04em;color:var(--muted)}
+.feat h3{font-size:clamp(19px,1.9vw,23px);line-height:1.3;font-weight:650;font-stretch:87.5%;letter-spacing:-.01em;margin-top:8px;text-wrap:balance}
+.sum{font:400 16.5px/1.55 var(--f-serif);color:var(--ink-2);margin-top:10px}
+.rows{margin-top:36px;border-top:1px solid var(--line)}
+.rows a{display:flex;align-items:baseline;gap:14px;padding-block:14px;border-bottom:1px solid var(--line)}
+.rt{font-size:15px;font-weight:550;font-stretch:87.5%;min-width:0}
+.rows a:hover .rt{color:var(--accent)}
+.lead{flex:1;min-width:24px;border-bottom:1px dotted var(--muted);transform:translateY(-4px);opacity:.6}
+.rows time{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* experience */
+.xp li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:26px;padding-block:20px;border-bottom:1px solid var(--line)}
+.xp li:first-child{padding-top:4px}
+.xp .when{font:500 11.5px/1.6 var(--f-mono);letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:4px;margin:0}
+.xp h3{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.xp h3 a:hover{color:var(--accent)}
+.role{font-weight:400;color:var(--muted);font-size:14px;margin-left:8px}
+.xp p{font:400 16px/1.5 var(--f-serif);color:var(--ink-2);margin-top:6px;max-width:70ch}
+.xp .tech{font:400 11px/1.6 var(--f-mono);letter-spacing:.04em;color:var(--muted);margin-top:8px}
+.dim{position:relative;height:13px;margin-top:12px;max-width:70ch}
+.dim::before{content:"";position:absolute;left:0;right:0;top:6px;border-top:1px dashed var(--line)}
+.dim i{position:absolute;top:2px;height:9px;border-inline:1px solid var(--accent)}
+.dim i::before{content:"";position:absolute;left:0;right:0;top:4px;border-top:1px solid var(--accent)}
+.xp .axis{border-bottom:0;padding-top:10px}
+.axis .dim{height:16px;margin-top:0}
+.axis .dim::before{border-top-style:solid}
+.axis .dim span{position:absolute;top:2px;font:500 10px/1 var(--f-mono);letter-spacing:.06em;color:var(--muted);padding-left:4px;border-left:1px solid var(--muted);height:14px}
+
+/* contact + footer */
+.contact{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 28px;margin-top:64px;padding-block:24px;border-top:1.5px solid var(--rule)}
+.status{display:flex;align-items:center;gap:12px;font-size:13px}
+.led{width:8px;height:8px;border-radius:50%;background:var(--led);box-shadow:0 0 0 3px color-mix(in srgb,var(--led) 22%,transparent),0 0 12px var(--led);animation:led 2.6s ease-in-out infinite}
+@keyframes led{50%{opacity:.55}}
+.links{display:flex;gap:22px;font-size:12px;letter-spacing:.06em;color:var(--accent)}
+.foot{display:flex;justify-content:space-between;gap:16px;font-size:11px;letter-spacing:.06em;color:var(--muted);padding-block:22px 104px;border-top:1px solid var(--line)}
+
+/* ---------- small screens ---------- */
+@media (max-width:860px){
+  .nav{display:none} .menu{display:grid}
+  .hero-copy{grid-template-columns:minmax(0,1fr)}
+  .feat{grid-template-columns:minmax(0,1fr);gap:30px}
+}
+@media (max-width:720px){
+  .wrap{padding-inline:16px}
+  .screen{height:clamp(270px,46svh,360px)}
+  .ro-tl{left:30px;top:26px} .ro-tr{right:30px;top:26px} .ro-bl{left:30px;bottom:26px}
+  .ro-tr .hz{display:none}
+  .kick{left:auto;right:30px;bottom:20px}
+  .tblock{position:static;width:auto;margin-top:12px}
+  .proj{grid-template-columns:76px minmax(0,1fr);gap:16px;align-items:start}
+  .tile{width:76px;height:49px}
+  .stack{grid-column:2;white-space:normal}
+  .xp li{grid-template-columns:minmax(0,1fr);gap:4px}
+  .sec{padding-block:56px 4px}
+  .sig-scale{margin-left:0}
+  .sig-years span:nth-child(even){display:none}
+  .sig-plot{height:120px}
+  .rows a{flex-wrap:wrap;gap:6px 14px} .rt{flex-basis:100%} .lead{display:none}
+  .xp .axis{display:none}
+  .tagline{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .kick{display:none}
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap hdr">
+    <a class="wordmark" href="https://martianlee.github.io/" aria-label="MartianLee home">ML<span class="acc">.</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="u" href="https://martianlee.github.io/projects">Projects</a>
+      <a class="u" href="https://martianlee.github.io/posts">Posts</a>
+      <a class="u" href="https://martianlee.github.io/kb">Notes</a>
+      <a class="u" href="https://martianlee.github.io/about">About</a>
+      <a class="u acc" href="https://linkedin.com/in/martianlee/">CV ↗</a>
+    </nav>
+    <div class="tools">
+      <button class="lang" type="button" aria-label="Language: English. Korean is also available."><b>EN</b><span aria-hidden="true">/</span>KO</button>
+      <button class="icon" type="button" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+      <button class="icon menu" type="button" aria-label="Open menu"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h12M2 8h12M2 11.5h12" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero wrap" id="hero" aria-labelledby="name">
+  <p class="eyebrow">Software Engineer @ UJET · ex-Founder/CTO · Seoul, open to global roles</p>
+  <div class="instrument">
+    <div class="screen" id="screen">
+      <canvas id="bg" aria-hidden="true"></canvas>
+      <canvas id="fx" aria-hidden="true"></canvas>
+      <div class="ro ro-tl" aria-hidden="true"><span class="d-only">CH 1 · vector mode</span><span class="l-only">Plotter · 2 pens</span><br>Vectors <b id="roVec">0</b></div>
+      <div class="ro ro-tr" aria-hidden="true"><span class="hz">Refresh <b id="roHz">--</b><br></span><span class="d-only">Beam</span><span class="l-only">Pen</span> <b id="roState">ready</b></div>
+      <div class="ro ro-bl" aria-hidden="true"><span class="d-only">Defl</span><span class="l-only">Pos</span> X <b id="roX">+0.00</b> Y <b id="roY">+0.00</b><span class="l-only"> mm</span></div>
+      <button class="kick" id="kick" type="button"><span class="d-only">Degauss</span><span class="l-only">Re-plot</span></button>
+    </div>
+    <div class="tblock" id="tblock">
+      <div class="tb-title"><span class="tb-k">Title</span><h1 class="tb-name" id="name">MARTIAN LEE<span class="acc">.</span></h1></div>
+      <dl>
+        <div><dt>Drawn</dt><dd>M. LEE</dd></div>
+        <div><dt>Scale</dt><dd>1:1</dd></div>
+        <div><dt>Sheet</dt><dd>01/01</dd></div>
+        <div><dt>Date</dt><dd id="tbDate">2026-10-10</dd></div>
+      </dl>
+    </div>
+  </div>
+  <div class="hero-copy">
+    <p class="tagline">I move fast with AI — and keep the decisions that matter human.</p>
+    <nav class="cta" aria-label="Start here">
+      <a class="primary u" href="#projects">↓ View projects</a>
+      <a class="u" href="https://martianlee.github.io/posts">Posts</a>
+      <a class="u" href="https://linkedin.com/in/martianlee/">CV ↗</a>
+      <a class="u" href="https://github.com/MartianLee">GitHub ↗</a>
+    </nav>
+  </div>
+</section>
+
+<section class="wrap sec" id="projects" aria-labelledby="h-projects">
+  <div class="chan"><span class="ch">CH 01</span><h2 id="h-projects">Projects</h2><a class="more u" href="https://martianlee.github.io/projects">All projects →</a></div>
+  <ol class="projs">
+    <li><a class="proj" href="https://martianlee.github.io/projects/hanji">
+      <svg class="tile" viewBox="0 0 118 76" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect class="fr" x=".5" y=".5" width="117" height="75"/>
+        <path stroke="currentColor" pathLength="1" d="M38 11h34l9 9v45H38zM72 11v9h9"/>
+        <path stroke="currentColor" pathLength="1" d="M46 31h26M46 37h21M46 43h28M46 49h16M46 55h23"/>
+        <path class="ac" pathLength="1" d="M45 22.5h2.5M44.5 25h4M46 20.6v6.8M48.4 20.6v6.8"/>
+        <path class="ac" pathLength="1" d="M64.5 46.5v6"/>
+        <text class="lb" x="6" y="70">FIG. 1</text>
+      </svg>
+      <div class="pm"><h3><span class="u2">Hanji.md</span><span class="kind">macOS App</span></h3>
+        <p>A native macOS markdown editor for plain-file vaults, built on SwiftUI and TextKit 2 with a Swift extension SDK. Incremental Live Preview keeps a keystroke in a 4,000-line note at about 15 ms, with performance budgets checked in CI. Local-first, MIT licensed.</p></div>
+      <span class="stack">Swift · SwiftUI · TextKit 2 <span class="arr">→</span></span>
+    </a></li>
+    <li><a class="proj" href="https://martianlee.github.io/projects/more-munch">
+      <svg class="tile" viewBox="0 0 118 76" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect class="fr" x=".5" y=".5" width="117" height="75"/>
+        <path stroke="currentColor" pathLength="1" d="M32 40h54a27 21 0 0 1-54 0z"/>
+        <path stroke="currentColor" pathLength="1" d="M50 61h18"/>
+        <path stroke="currentColor" pathLength="1" d="M48 33c-3-4 3-6 0-11M58 33c-3-4 3-6 0-11M68 33c-3-4 3-6 0-11"/>
+        <path class="ac" pathLength="1" d="M74 13 96 37M80 11l18 22"/>
+        <text class="lb" x="6" y="70">FIG. 2</text>
+      </svg>
+      <div class="pm"><h3><span class="u2">More Munch</span><span class="kind">Web Service</span></h3>
+        <p>A lunch-recommendation service for office workers. It auto-collects nearby restaurants (discoverable via the OpenClaw skill-optimized API) and suggests a fresh lunch every day based on your visit history and ratings.</p></div>
+      <span class="stack">NestJS 11 · TypeScript · SQLite <span class="arr">→</span></span>
+    </a></li>
+    <li><a class="proj" href="https://martianlee.github.io/projects/cheercat">
+      <svg class="tile" viewBox="0 0 118 76" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect class="fr" x=".5" y=".5" width="117" height="75"/>
+        <path stroke="currentColor" pathLength="1" d="M40 36 43 16l11 10q5-1.5 10 0l11-10 3 20q2 22-19 24Q38 58 40 36z"/>
+        <path stroke="currentColor" pathLength="1" d="M48 39q3-3.5 6 0M64 39q3-3.5 6 0M56 46l3 2 3-2M30 44h11M31 50l10-2M88 44H77M87 50l-10-2"/>
+        <path class="ac" pathLength="1" d="M93 12l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>
+        <text class="lb" x="6" y="70">FIG. 3</text>
+      </svg>
+      <div class="pm"><h3><span class="u2">CheerCat</span><span class="kind">Mobile App</span></h3>
+        <p>A daily journaling app that builds the habit of praising yourself every day — a small ritual for a positive mindset.</p></div>
+      <span class="stack">React Native · Firebase · TypeScript <span class="arr">→</span></span>
+    </a></li>
+    <li><a class="proj" href="https://martianlee.github.io/projects/fish-tank-simulator">
+      <svg class="tile" viewBox="0 0 118 76" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect class="fr" x=".5" y=".5" width="117" height="75"/>
+        <path stroke="currentColor" pathLength="1" d="M24 14v48h70V14"/>
+        <path stroke="currentColor" pathLength="1" d="M24 22q8-3 17.5 0t17.5 0 17.5 0 17.5 0"/>
+        <path stroke="currentColor" pathLength="1" d="M44 42h4v-3h4v-3h12v3h4v3h4v-3h4v-3h4v18h-4v-3h-4v-3h-4v3h-4v3H52v-3h-4v-3h-4z"/>
+        <path class="ac" pathLength="1" d="M51 41h2v2h-2zM40 32a2 2 0 1 0 0 .1M36 26.5a1.5 1.5 0 1 0 0 .1"/>
+        <text class="lb" x="6" y="70">FIG. 4</text>
+      </svg>
+      <div class="pm"><h3><span class="u2">Fish Tank Simulator</span><span class="kind">Idle Game</span></h3>
+        <p>A pixel-art idle productivity tool that blends a Pomodoro timer with an aquarium sim. Complete focus sessions to earn fish eggs, collect 12+ species, and grow your own tank.</p></div>
+      <span class="stack">Phaser3 · TypeScript · Vercel <span class="arr">→</span></span>
+    </a></li>
+  </ol>
+</section>
+
+<section class="wrap sec" id="posts" aria-labelledby="h-posts">
+  <div class="chan"><span class="ch">CH 02</span><h2 id="h-posts">Recent posts</h2><a class="more u" href="https://martianlee.github.io/posts">All posts →</a></div>
+  <p class="intro">I take large codebases apart and write down how they actually work.</p>
+  <figure class="signal" role="img" aria-label="Posts per month from January 2017 to October 2026: 108 in total, with a peak of 23 in April 2026.">
+    <figcaption class="sig-head"><span>Writing signal</span><span><b>108 posts</b> · Jan 2017 to Oct 2026</span><span class="sig-scale">1 yr/div · 5 posts/div</span></figcaption>
+    <div class="sig-plot"><canvas id="sig" aria-hidden="true"></canvas><span class="sig-peak">Peak 23 · Apr 2026</span></div>
+    <div class="sig-years" aria-hidden="true"><span style="left:0%">2017</span><span style="left:10.17%">2018</span><span style="left:20.34%">2019</span><span style="left:30.51%">2020</span><span style="left:40.68%">2021</span><span style="left:50.85%">2022</span><span style="left:61.02%">2023</span><span style="left:71.19%">2024</span><span style="left:81.36%">2025</span><span style="left:91.53%">2026</span></div>
+  </figure>
+  <div class="feat">
+    <article>
+      <p class="meta">Oct 8, 2026 · 19 min read · game-modding / minecraft</p>
+      <h3><a class="u2" href="https://martianlee.github.io/posts/2026-10-08-passthrough-bridge-spectrum">What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared</a></h3>
+      <p class="sum">Since late September, dozens of passthrough mods that run two games at once and merge them into one have gone public. This post opens the code of twelve of them, sorts them by what crosses the bridge (pixels, meshes, logic, or nothing at all), and looks at the traces of the most-cited original, SkyCraft, moving from a pixel design to meshes, and at why Minecraft is so often the guest.</p>
+    </article>
+    <article>
+      <p class="meta">Oct 7, 2026 · 30 min read · game-modding / minecraft</p>
+      <h3><a class="u2" href="https://martianlee.github.io/posts/2026-10-07-minecraft-elden-ring-bridge">Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?</a></h3>
+      <p class="sum">Since late September, "passthrough modding", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, one of the implementations with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed.</p>
+    </article>
+  </div>
+  <ul class="rows">
+    <li><a href="https://martianlee.github.io/posts/2026-09-29-activerecord-anatomy"><span class="rt">What Does Active Record Build on Every Request? Measured the Same Way as Sequelize and GORM</span><span class="lead" aria-hidden="true"></span><time datetime="2026-09-29">Sep 29, 2026</time></a></li>
+    <li><a href="https://martianlee.github.io/posts/2026-09-28-request-layers"><span class="rt">Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart</span><span class="lead" aria-hidden="true"></span><time datetime="2026-09-28">Sep 28, 2026</time></a></li>
+    <li><a href="https://martianlee.github.io/posts/2026-09-12-archify-architecture"><span class="rt">Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?</span><span class="lead" aria-hidden="true"></span><time datetime="2026-09-12">Sep 12, 2026</time></a></li>
+  </ul>
+</section>
+
+<section class="wrap sec" id="experience" aria-labelledby="h-exp">
+  <div class="chan"><span class="ch">CH 03</span><h2 id="h-exp">Experience</h2><a class="more u acc" href="https://linkedin.com/in/martianlee/">CV ↗</a></div>
+  <ol class="xp">
+    <li><p class="when">2024 – Present</p><div>
+      <h3>UJET<span class="role">Software Engineer 2</span></h3>
+      <p>UJET is AI-Powered Cloud Contact Center Platform for Premium CX</p>
+      <p class="tech">Rails · GCP · Node.js · TypeScript · Kubernetes</p>
+      <div class="dim" aria-hidden="true"><i style="left:57.14%;width:39.68%"></i></div></div></li>
+    <li><p class="when">2021 – 2023</p><div>
+      <h3><a href="https://martianlee.github.io/climate">TomorrowUse</a><span class="role">Co-founder / CTO</span></h3>
+      <p>Climate-tech startup (product: Stepping). Sole engineer on a three-person founding team; built carbon-measurement and offset products end-to-end: app, infra, and CI/CD.</p>
+      <p class="tech">Next.js · React · Nest.js · PostgreSQL · AWS</p>
+      <div class="dim" aria-hidden="true"><i style="left:14.29%;width:28.57%"></i></div></div></li>
+    <li><p class="when">2020 – 2021</p><div>
+      <h3>Miso<span class="role">Frontend Developer</span></h3>
+      <p>South Korea's leading home services platform. Responsible for client app maintenance and back-office development to improve CX operations.</p>
+      <p class="tech">React · React Native · Redux · TypeScript</p>
+      <div class="dim" aria-hidden="true"><i style="left:0%;width:14.29%"></i></div></div></li>
+    <li class="axis" aria-hidden="true"><span></span><div class="dim"><span style="left:0%">2020</span><span style="left:28.57%">2022</span><span style="left:57.14%">2024</span><span style="left:85.71%">2026</span></div></li>
+  </ol>
+</section>
+
+<section class="wrap" aria-label="Contact">
+  <div class="contact" id="contact">
+    <p class="status"><span class="led" aria-hidden="true"></span>Open to senior / staff engineering roles — globally.</p>
+    <p class="links"><a class="u" href="#contact">Email ↗</a><a class="u" href="https://github.com/MartianLee">GitHub ↗</a><a class="u" href="https://linkedin.com/in/martianlee/">LinkedIn ↗</a></p>
+  </div>
+</section>
+</main>
+<footer class="wrap"><div class="foot"><span>© 2026 MartianLee</span><span>Seoul · UTC+9</span></div></footer>
+
+<script>
+(() => {
+  'use strict'
+  const root = document.documentElement, $ = (id) => document.getElementById(id)
+  const mq = matchMedia('(prefers-color-scheme: dark)')
+  const isDark = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches }
+  const onTheme = (cb) => { new MutationObserver(cb).observe(root, { attributes: true, attributeFilter: ['data-theme'] }); mq.addEventListener('change', cb) }
+  const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const pad2 = (n) => String(n).padStart(2, '0')
+  const now0 = new Date()
+  $('tbDate').textContent = `${now0.getFullYear()}-${pad2(now0.getMonth() + 1)}-${pad2(now0.getDate())}`
+
+  // canvas palette comes from the CSS tokens
+  let DARK = isDark()
+  const C = {}
+  const readPalette = () => {
+    DARK = isDark()
+    const cs = getComputedStyle(root)
+    for (const k of ['ink', 'hot', 'glow', 'acc', 'dim', 'grid', 'label', 'fr1', 'fr2']) C[k] = cs.getPropertyValue('--cv-' + k).trim()
+  }
+  const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})` }
+  readPalette()
+
+  /* ===== single-stroke glyphs (cap height 10, baseline 0) ===== */
+  const P = (a) => a.map(([x, y]) => [x, y, 1])
+  const arc = (cx, cy, r, a0, a1, n) => {
+    const o = []
+    for (let i = 0; i <= n; i++) {
+      const a = ((a0 + ((a1 - a0) * i) / n) * Math.PI) / 180
+      o.push([cx + r * Math.cos(a), cy + r * Math.sin(a), i === 0 || i === n ? 1 : 0])
+    }
+    return o
+  }
+  const GL = {
+    M: { w: 9.6, s: [P([[0, 0], [0, 10], [4.8, 2.6], [9.6, 10], [9.6, 0]])] },
+    A: { w: 8.4, s: [P([[0, 0], [4.2, 10], [8.4, 0]]), P([[1.43, 3.4], [6.97, 3.4]])] },
+    R: { w: 7.4, s: [[...P([[0, 0], [0, 10], [4.1, 10]]), ...arc(4.1, 7.6, 2.4, 90, -90, 16).slice(1), ...P([[0, 5.2]])], P([[3.3, 5.2], [7.4, 0]])] },
+    T: { w: 8.4, s: [P([[0, 10], [8.4, 10]]), P([[4.2, 10], [4.2, 0]])] },
+    I: { w: 0, s: [P([[0, 0], [0, 10]])] },
+    N: { w: 7.8, s: [P([[0, 0], [0, 10], [7.8, 0], [7.8, 10]])] },
+    L: { w: 6.2, s: [P([[0, 10], [0, 0], [6.2, 0]])] },
+    E: { w: 6.6, s: [P([[6.6, 10], [0, 10], [0, 0], [6.6, 0]]), P([[0, 5.2], [5.4, 5.2]])] },
+    '.': { w: 1.1, dot: [0.55, 0.55] },
+  }
+  const strokes = [], DOT = []
+  ;['MARTIAN', 'LEE.'].forEach((line, li) => {
+    let x = 0
+    for (let k = 0; k < line.length; k++) {
+      const g = GL[line[k]]
+      if (g.dot) DOT.push(g.dot[0] + x, g.dot[1] - li * 14)
+      else for (const s of g.s) strokes.push({ pts: s.map(([px, py, c]) => [px + x, py - li * 14, c]) })
+      x += g.w + (line[k + 1] === '.' ? 1.7 : 3)
+    }
+  })
+  // subdivide into short vectors so the magnet can bend long strokes; keep arc length for the beam
+  const PX = [], PY = [], SA = [], runs = [], corners = [], seen = new Set()
+  let L = 0, nVec = 0, bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9
+  for (const st of strokes) {
+    const i0 = PX.length
+    st.pts.forEach(([x, y, c], k) => {
+      bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y)
+      if (k === 0) { PX.push(x); PY.push(y); SA.push(L) } else {
+        const [qx, qy] = st.pts[k - 1], len = Math.hypot(x - qx, y - qy), n = Math.max(1, Math.ceil(len / 0.7))
+        for (let j = 1; j <= n; j++) { PX.push(qx + ((x - qx) * j) / n); PY.push(qy + ((y - qy) * j) / n); L += len / n; SA.push(L) }
+        nVec++
+      }
+      const key = Math.round(x * 20) + ',' + Math.round(y * 20)
+      if (c && !seen.has(key)) { seen.add(key); corners.push(PX.length - 1) }
+    })
+    runs.push({ i0, n: PX.length - i0 })
+  }
+  bx1 = Math.max(bx1, DOT[0] + 0.6)
+  const N = PX.length, CX = (bx0 + bx1) / 2, CY = (by0 + by1) / 2, BW = bx1 - bx0, BH = by1 - by0, DEPTH = 2.4
+  $('roVec').textContent = nVec * 2 + corners.length // front + hidden copy + depth edges
+  const fX = new Float32Array(N), fY = new Float32Array(N), bX = new Float32Array(N), bY = new Float32Array(N)
+  const dX = new Float32Array(N), dY = new Float32Array(N), gX = new Float32Array(25), gY = new Float32Array(25), oX = new Float32Array(1), oY = new Float32Array(1)
+
+  /* ===== hero canvases ===== */
+  const scr = $('screen'), bg = $('bg'), fx = $('fx')
+  const bctx = bg.getContext('2d'), ctx = fx.getContext('2d')
+  if (!ctx || !bctx) return
+  let W = 0, H = 0, DPR = 1, dprCap = Math.min(2, devicePixelRatio || 1), SC = 1, OX = 0, OY = 0
+  const spr = document.createElement('canvas')
+  spr.width = spr.height = 96
+  const makeSprite = () => {
+    const g = spr.getContext('2d'), gr = g.createRadialGradient(48, 48, 0, 48, 48, 48)
+    gr.addColorStop(0, rgba(C.acc, 1)); gr.addColorStop(0.1, rgba(C.hot, 0.85)); gr.addColorStop(0.32, rgba(C.glow, 0.2)); gr.addColorStop(1, rgba(C.glow, 0))
+    g.clearRect(0, 0, 96, 96); g.fillStyle = gr; g.fillRect(0, 0, 96, 96)
+  }
+  function layout() {
+    const r = scr.getBoundingClientRect()
+    W = r.width; H = r.height; DPR = dprCap
+    for (const c of [bg, fx]) { c.width = Math.max(1, Math.round(W * DPR)); c.height = Math.max(1, Math.round(H * DPR)) }
+    const over = getComputedStyle($('tblock')).position === 'absolute'
+    SC = Math.min((W * (over ? 0.7 : 0.74)) / BW, (H * (over ? 0.5 : 0.56)) / BH) * DPR
+    OX = W * (over ? 0.43 : 0.5) * DPR; OY = H * (over ? 0.43 : 0.5) * DPR
+    drawBG()
+  }
+  function drawBG() {
+    const c = bctx, w = bg.width, h = bg.height, d = DPR
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h); c.lineWidth = d
+    if (DARK) { // oscilloscope graticule: 10 x 8 divisions, minor ticks on the centre axes
+      const m = 22 * d, gw = w - 2 * m, gh = h - 2 * m, cx = m + gw / 2, cy = m + gh / 2, t = 3.5 * d
+      c.strokeStyle = C.grid; c.beginPath()
+      for (let i = 0; i <= 10; i++) { const x = Math.round(m + (gw * i) / 10) + 0.5; c.moveTo(x, m); c.lineTo(x, m + gh) }
+      for (let j = 0; j <= 8; j++) { const y = Math.round(m + (gh * j) / 8) + 0.5; c.moveTo(m, y); c.lineTo(m + gw, y) }
+      for (let i = 0; i <= 50; i++) { const x = m + (gw * i) / 50; c.moveTo(x, cy - t); c.lineTo(x, cy + t) }
+      for (let j = 0; j <= 40; j++) { const y = m + (gh * j) / 40; c.moveTo(cx - t, y); c.lineTo(cx + t, y) }
+      c.stroke()
+    } else { // drawing sheet: double border, zones 1–8 / A–F (ISO 5457 order), centring marks
+      const o = 9 * d, i = 27 * d, zx = (w - 2 * i) / 8, zy = (h - 2 * i) / 6
+      c.strokeStyle = C.ink
+      c.strokeRect(o + 0.5, o + 0.5, w - 2 * o - 1, h - 2 * o - 1)
+      c.lineWidth = 1.7 * d; c.strokeRect(i, i, w - 2 * i, h - 2 * i); c.lineWidth = d
+      c.beginPath()
+      for (let k = 1; k < 8; k++) { const x = Math.round(i + zx * k) + 0.5; c.moveTo(x, o); c.lineTo(x, i); c.moveTo(x, h - i); c.lineTo(x, h - o) }
+      for (let k = 1; k < 6; k++) { const y = Math.round(i + zy * k) + 0.5; c.moveTo(o, y); c.lineTo(i, y); c.moveTo(w - i, y); c.lineTo(w - o, y) }
+      c.moveTo(w / 2, i); c.lineTo(w / 2, i + 12 * d); c.moveTo(w / 2, h - i); c.lineTo(w / 2, h - i - 12 * d)
+      c.moveTo(i, h / 2); c.lineTo(i + 12 * d, h / 2); c.moveTo(w - i, h / 2); c.lineTo(w - i - 12 * d, h / 2)
+      c.stroke()
+      c.fillStyle = C.label; c.font = `500 ${8.5 * d}px "Martian Mono", ui-monospace, monospace`; c.textAlign = 'center'; c.textBaseline = 'middle'
+      for (let k = 0; k < 8; k++) { const x = i + zx * (k + 0.5); c.fillText(k + 1, x, (o + i) / 2); c.fillText(k + 1, x, h - (o + i) / 2) }
+      for (let k = 0; k < 6; k++) { const y = i + zy * (k + 0.5), ch = 'ABCDEF'[k]; c.fillText(ch, (o + i) / 2, y); c.fillText(ch, w - (o + i) / 2, y) }
+    }
+  }
+
+  /* ===== beam ===== */
+  const INTRO = 1.4, CYCLE = 2.6, NB = 6
+  let running = false, visible = true, raf = 0, last = 0, ema = 16.7, slow = 0, roT = 0
+  let introT = 0, dgT = -99, pxT = 0, pyT = 0, pxS = 0, pyS = 0
+  let magOn = false, mag = 0, mxT = 0, myT = 0, mx = 0, my = 0, state = 'ready'
+  const roX = $('roX'), roY = $('roY'), roHz = $('roHz'), roState = $('roState')
+  const hist = [] // recent frames, replayed as phosphor persistence while the beam is being disturbed
+
+  function render(t, dt, still) {
+    const d = DPR, c = ctx
+    const k1 = still ? 1 : 1 - Math.exp(-dt * 3.5), k2 = still ? 1 : 1 - Math.exp(-dt * 9)
+    pxS += (pxT - pxS) * k1; pyS += (pyT - pyS) * k1
+    mag += ((magOn && !still ? 1 : 0) - mag) * k2; mx += (mxT - mx) * k2; my += (myT - my) * k2
+    const yaw = still ? -0.27 : -0.22 + 0.17 * Math.sin(t * 0.42) + pxS * 0.2
+    const pitch = still ? 0.12 : 0.1 + 0.05 * Math.sin(t * 0.31 + 1.3) + pyS * 0.12
+    const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), F = 95
+    const dg = still ? 0 : Math.max(0, 1 - (t - dgT) / 1.2)
+    const R2 = (105 * d) ** 2, K = (DARK ? 26 : 17) * d * mag, SW = DARK ? 0.6 : 0.12, AMP = 15 * d * dg * dg
+    const proj = (x, y, z, ox, oy, i, keep) => {
+      x -= CX; y -= CY
+      const x1 = x * cyw + z * syw, z1 = -x * syw + z * cyw, y1 = y * cp - z1 * sp, z2 = y * sp + z1 * cp, s = (F / (F - z2)) * SC
+      const X = OX + x1 * s, Y = OY - y1 * s
+      let ddx = 0, ddy = 0
+      if (K > 0.05) { // magnet: radial push plus a swirl, gaussian falloff
+        const vx = X - mx, vy = Y - my, r2 = vx * vx + vy * vy, f = K * Math.exp(-r2 / R2)
+        if (f > 0.02) { const r = Math.sqrt(r2) + 1; ddx = ((vx - vy * SW) / r) * f; ddy = ((vy + vx * SW) / r) * f }
+      }
+      if (AMP > 0.05) { ddx += AMP * Math.sin(t * 31 + Y * 0.021); ddy += AMP * Math.cos(t * 27 + X * 0.017) }
+      ox[i] = X + ddx; oy[i] = Y + ddy
+      if (keep) { dX[i] = ddx; dY[i] = ddy }
+    }
+    for (let i = 0; i < N; i++) { proj(PX[i], PY[i], 0, fX, fY, i, true); proj(PX[i], PY[i], -DEPTH, bX, bY, i, false) }
+
+    let head = L, intro = false, dwell = false
+    if (!still) {
+      const e = t - introT
+      intro = e < INTRO
+      if (intro) head = (e / INTRO) * L
+      else { const u = ((e - INTRO) % CYCLE) / CYCLE; if (u < 0.88) head = (u / 0.88) * L; else dwell = true }
+    }
+    proj(DOT[0], DOT[1], 0, oX, oY, 0, false)
+    const showDot = !intro, dotR = 0.5 * SC
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, fx.width, fx.height)
+    c.lineCap = 'round'; c.lineJoin = 'round'; c.setLineDash([]); c.globalAlpha = 1
+
+    if (!DARK) { // lettering guidelines: cap line and baseline of both rows
+      c.globalCompositeOperation = 'source-over'; c.strokeStyle = C.grid; c.lineWidth = d; c.beginPath()
+      for (const gy of [10, 0, -4, -14]) {
+        for (let j = 0; j <= 24; j++) proj(bx0 - 3.5 + ((BW + 7) * j) / 24, gy, 0, gX, gY, j, false)
+        c.moveTo(gX[0], gY[0]); for (let j = 1; j <= 24; j++) c.lineTo(gX[j], gY[j])
+      }
+      c.stroke()
+    }
+    // hidden copy and depth edges, only as far as the beam has drawn
+    const back = new Path2D(), edges = new Path2D()
+    for (const r of runs) {
+      if (intro && SA[r.i0] > head) break
+      back.moveTo(bX[r.i0], bY[r.i0])
+      for (let k = 1; k < r.n; k++) { if (intro && SA[r.i0 + k] > head) break; back.lineTo(bX[r.i0 + k], bY[r.i0 + k]) }
+    }
+    for (const i of corners) { if (intro && SA[i] > head) continue; edges.moveTo(fX[i], fY[i]); edges.lineTo(bX[i], bY[i]) }
+    // front strokes, bucketed by afterglow (distance behind the beam)
+    const bp = []; for (let b = 0; b < NB; b++) bp.push(new Path2D())
+    const TAIL = L * 0.3
+    let hx = -1, hy = -1
+    for (const r of runs) {
+      let lb = -1
+      for (let k = 1; k < r.n; k++) {
+        const ia = r.i0 + k - 1, ib = ia + 1, s0 = SA[ia], s1 = SA[ib]
+        if (intro && s0 >= head) break
+        let ex = fX[ib], ey = fY[ib], cut = false
+        if ((intro || !still) && head >= s0 && head < s1) {
+          const u = (head - s0) / (s1 - s0); hx = fX[ia] + (fX[ib] - fX[ia]) * u; hy = fY[ia] + (fY[ib] - fY[ia]) * u
+          if (intro) { ex = hx; ey = hy; cut = true }
+        }
+        let b = NB - 2
+        if (!still) {
+          let dd = head - (s0 + s1) / 2; if (dd < 0) dd += L
+          b = intro ? (dd < L * 0.05 ? NB - 1 : NB - 3) : Math.min(NB - 1, Math.floor((0.36 + 0.64 * Math.exp(-dd / TAIL)) * NB))
+        }
+        const p = bp[b]
+        if (b === lb) p.lineTo(ex, ey); else { p.moveTo(fX[ia], fY[ia]); p.lineTo(ex, ey) }
+        lb = b
+        if (cut) break
+      }
+    }
+    if (dwell && !DARK) { hx = oX[0]; hy = oY[0] }
+    if (DARK) {
+      c.globalCompositeOperation = 'lighter'
+      const hue = dg > 0 ? 41 + 330 * (1 - dg) : -1
+      const cGlow = hue < 0 ? C.glow : `hsl(${hue - 14} 100% 46%)`, cInk = hue < 0 ? C.ink : `hsl(${hue} 100% 52%)`, cHot = hue < 0 ? C.hot : `hsl(${hue} 100% 86%)`
+      const active = mag > 0.05 || dg > 0
+      if (active) {
+        hist.forEach((g, j) => {
+          const a = [0.04, 0.08, 0.15, 0.26][j + 4 - hist.length]
+          c.strokeStyle = cInk; c.lineWidth = 4 * d; c.globalAlpha = a * 0.5; c.stroke(g)
+          c.strokeStyle = cHot; c.lineWidth = 1.4 * d; c.globalAlpha = a; c.stroke(g)
+        })
+        const all = new Path2D(); for (const p of bp) all.addPath(p)
+        hist.push(all); if (hist.length > 4) hist.shift()
+      } else hist.length = 0
+      c.strokeStyle = cInk; c.lineWidth = 3.2 * d; c.globalAlpha = 0.06; c.stroke(back); c.stroke(edges)
+      c.lineWidth = 1.1 * d; c.globalAlpha = 0.3; c.stroke(back); c.globalAlpha = 0.42; c.stroke(edges)
+      for (let b = 0; b < NB; b++) {
+        const I = (b + 1) / NB
+        c.strokeStyle = cGlow; c.lineWidth = 30 * d; c.globalAlpha = 0.016 * I; c.stroke(bp[b])
+        c.lineWidth = 13 * d; c.globalAlpha = 0.05 * I; c.stroke(bp[b])
+        c.strokeStyle = cInk; c.lineWidth = 4.6 * d; c.globalAlpha = 0.2 + 0.12 * I; c.stroke(bp[b])
+        c.strokeStyle = cHot; c.lineWidth = 1.7 * d; c.globalAlpha = 0.3 + 0.7 * I; c.stroke(bp[b])
+      }
+      if (showDot) { // beam dwell spot: the period flares while the beam rests on it
+        const s = (dwell ? 92 : 50) * d
+        c.globalAlpha = 1; c.drawImage(spr, oX[0] - s / 2, oY[0] - s / 2, s, s)
+        c.fillStyle = C.acc; c.beginPath(); c.arc(oX[0], oY[0], dotR * (dwell ? 1.1 : 0.85), 0, 7); c.fill()
+      }
+      if (mag > 0.04) { // chromatic fringe where the magnet bends the beam
+        const red = new Path2D(), blue = new Path2D()
+        for (const r of runs) for (let k = 1; k < r.n; k++) {
+          const ia = r.i0 + k - 1, ib = ia + 1
+          if (intro && SA[ib] > head) break
+          if (Math.abs(dX[ia]) + Math.abs(dY[ia]) < 1.5 * d) continue
+          const ax = fX[ia] - dX[ia], ay = fY[ia] - dY[ia], qx = fX[ib] - dX[ib], qy = fY[ib] - dY[ib]
+          red.moveTo(ax + dX[ia] * 1.4, ay + dY[ia] * 1.4); red.lineTo(qx + dX[ib] * 1.4, qy + dY[ib] * 1.4)
+          blue.moveTo(ax + dX[ia] * 0.6, ay + dY[ia] * 0.6); blue.lineTo(qx + dX[ib] * 0.6, qy + dY[ib] * 0.6)
+        }
+        c.lineWidth = 1.7 * d; c.globalAlpha = 0.5 * mag
+        c.strokeStyle = C.fr1; c.stroke(red); c.strokeStyle = C.fr2; c.stroke(blue)
+      }
+      if (hx >= 0) { const s = (intro ? 74 : 54) * d; c.globalAlpha = 1; c.drawImage(spr, hx - s / 2, hy - s / 2, s, s) }
+    } else {
+      c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1
+      c.strokeStyle = C.dim; c.lineWidth = 0.9 * d; c.setLineDash([4 * d, 3 * d]); c.stroke(back); c.setLineDash([]); c.stroke(edges)
+      c.strokeStyle = C.ink; c.lineWidth = 1.8 * d
+      for (let b = 0; b < NB - 1; b++) c.stroke(bp[b])
+      c.strokeStyle = C.acc; c.lineWidth = 2.1 * d; c.stroke(bp[NB - 1])
+      if (showDot) { c.fillStyle = C.acc; c.beginPath(); c.arc(oX[0], oY[0], dotR * 0.8, 0, 7); c.fill() }
+      if (hx >= 0) { // plotter pen: ring, crosshair, nib
+        c.strokeStyle = C.acc; c.lineWidth = 1.3 * d; c.beginPath(); c.arc(hx, hy, 6 * d, 0, 7)
+        c.moveTo(hx - 12 * d, hy); c.lineTo(hx - 8 * d, hy); c.moveTo(hx + 8 * d, hy); c.lineTo(hx + 12 * d, hy)
+        c.moveTo(hx, hy - 12 * d); c.lineTo(hx, hy - 8 * d); c.moveTo(hx, hy + 8 * d); c.lineTo(hx, hy + 12 * d); c.stroke()
+        c.fillStyle = C.acc; c.beginPath(); c.arc(hx, hy, 1.8 * d, 0, 7); c.fill()
+      }
+    }
+    // instrument readouts, 8 times a second
+    if (t - roT > 0.12 || still) {
+      roT = t
+      let sx = 0, sy = 0
+      if (magOn && !still) {
+        if (DARK) { sx = (mx / d - W / 2) / (W / 2); sy = -(my / d - H / 2) / (H / 2) }
+        else { sx = ((mx / d - 27) * 25.4) / 96; sy = ((H - 27 - my / d) * 25.4) / 96 }
+      }
+      const f = (v) => (DARK ? (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2) : v.toFixed(1))
+      roX.textContent = f(sx); roY.textContent = f(sy)
+      roHz.textContent = still ? '--' : Math.round(1000 / ema) + ' Hz'
+      const st = still ? 'hold' : dg > 0 ? 'degauss' : intro ? (DARK ? 'draw' : 'plot') : 'trace'
+      if (st !== state) { state = st; roState.textContent = st }
+    }
+  }
+
+  function loop(ms) {
+    raf = requestAnimationFrame(loop)
+    const dms = last ? ms - last : 16.7
+    last = ms
+    ema += (Math.min(100, dms) - ema) * 0.06
+    // adaptive quality: drop resolution if frames stay slow
+    if (ema > 24 && dprCap > 1) { if ((slow += dms) > 1500) { dprCap = Math.max(1, dprCap - 0.5); slow = 0; layout() } } else slow = 0
+    render(ms / 1000, Math.min(0.05, dms / 1000), false)
+  }
+  const start = () => { if (running || REDUCE || !visible || document.hidden) return; running = true; last = 0; raf = requestAnimationFrame(loop) }
+  const stop = () => { if (!running) return; running = false; cancelAnimationFrame(raf); roState.textContent = state = 'idle' }
+  const still = () => render(0, 0, true)
+
+  addEventListener('pointermove', (e) => { pxT = (e.clientX / innerWidth - 0.5) * 2; pyT = (e.clientY / innerHeight - 0.5) * 2 }, { passive: true })
+  const aim = (e) => { const r = scr.getBoundingClientRect(); mxT = (e.clientX - r.left) * DPR; myT = (e.clientY - r.top) * DPR; if (!magOn) { mx = mxT; my = myT } magOn = true }
+  scr.addEventListener('pointermove', aim)
+  scr.addEventListener('pointerdown', aim)
+  for (const ev of ['pointerleave', 'pointercancel']) scr.addEventListener(ev, () => { magOn = false })
+  scr.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') magOn = false })
+  const kick = () => { if (REDUCE) return; const t = performance.now() / 1000; if (DARK) dgT = t; else introT = t }
+  scr.addEventListener('click', kick)
+  $('kick').addEventListener('click', kick)
+
+  /* ===== writing signal: real monthly counts, 2017-01 to 2026-10 ===== */
+  const COUNTS = [1,0,0,2,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,2,7,1,2,1,0,1,0,0,0,0,1,0,1,2,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,1,1,0,0,3,0,0,1,0,0,1,1,1,0,0,2,0,0,0,0,0,0,3,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,23,9,9,8,0,8,3]
+  const sig = $('sig'), sctx = sig.getContext('2d')
+  let sD = 1, sRun = false, sRaf = 0, sVis = false, sT0 = 0
+  const sigSize = () => { const r = sig.getBoundingClientRect(); sD = Math.min(2, devicePixelRatio || 1); sig.width = Math.max(1, Math.round(r.width * sD)); sig.height = Math.max(1, Math.round(r.height * sD)) }
+  function sigDraw(t, still) {
+    const c = sctx, d = sD, w = sig.width, h = sig.height, n = COUNTS.length
+    const top = 4 * d, bot = h - 2 * d, X = (i) => (i / n) * w, Y = (v) => bot - (v / 25) * (bot - top)
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1
+    c.lineWidth = d; c.strokeStyle = C.grid; c.setLineDash([2 * d, 3 * d]); c.beginPath()
+    for (let i = 0; i <= n; i += 12) { const x = Math.min(w - d, Math.round(X(i))) + 0.5; c.moveTo(x, top); c.lineTo(x, bot) }
+    for (let v = 0; v <= 25; v += 5) { const y = Math.round(Y(v)) + 0.5; c.moveTo(0, y); c.lineTo(w, y) }
+    c.stroke(); c.setLineDash([])
+    const tr = new Path2D()
+    tr.moveTo(0, Y(COUNTS[0]))
+    for (let i = 0; i < n; i++) { tr.lineTo(X(i + 1), Y(COUNTS[i])); if (i + 1 < n) tr.lineTo(X(i + 1), Y(COUNTS[i + 1])) }
+    // peak cursor (2026-04, index 111)
+    const px = Math.round(X(111.5)) + 0.5
+    c.strokeStyle = C.acc; c.setLineDash([3 * d, 3 * d]); c.beginPath(); c.moveTo(px, top); c.lineTo(px, bot); c.stroke(); c.setLineDash([])
+    c.lineJoin = 'miter'; c.lineCap = 'butt'
+    const hx = still ? -1 : (((t - sT0) / 7) % 1) * w * 1.15
+    if (DARK) {
+      c.globalCompositeOperation = 'lighter'
+      c.strokeStyle = C.glow; c.lineWidth = 7 * d; c.globalAlpha = 0.07; c.stroke(tr)
+      c.strokeStyle = C.ink; c.lineWidth = 2.6 * d; c.globalAlpha = 0.3; c.stroke(tr)
+      c.strokeStyle = C.hot; c.lineWidth = 1.1 * d; c.globalAlpha = 0.75; c.stroke(tr)
+      if (hx > 0) {
+        const g = c.createLinearGradient(hx - w * 0.22, 0, hx, 0)
+        g.addColorStop(0, rgba(C.hot, 0)); g.addColorStop(1, rgba(C.hot, 1))
+        c.save(); c.beginPath(); c.rect(0, 0, Math.min(hx, w), h); c.clip()
+        c.strokeStyle = g; c.lineWidth = 2.2 * d; c.globalAlpha = 1; c.stroke(tr)
+        c.strokeStyle = C.glow; c.lineWidth = 9 * d; c.globalAlpha = 0.18; c.stroke(tr); c.restore()
+      }
+    } else {
+      c.strokeStyle = C.ink; c.lineWidth = 1.4 * d; c.stroke(tr)
+      if (hx > 0) {
+        const g = c.createLinearGradient(hx - w * 0.16, 0, hx, 0)
+        g.addColorStop(0, rgba(C.acc, 0)); g.addColorStop(1, rgba(C.acc, 1))
+        c.save(); c.beginPath(); c.rect(0, 0, Math.min(hx, w), h); c.clip(); c.strokeStyle = g; c.lineWidth = 2.2 * d; c.stroke(tr); c.restore()
+      }
+    }
+  }
+  const sigLoop = (ms) => { sRaf = requestAnimationFrame(sigLoop); sigDraw(ms / 1000, false) }
+  const sigStart = () => { if (sRun || REDUCE || !sVis || document.hidden) return; sRun = true; sT0 = performance.now() / 1000; sRaf = requestAnimationFrame(sigLoop) }
+  const sigStop = () => { sRun = false; cancelAnimationFrame(sRaf) }
+
+  /* ===== boot after first paint ===== */
+  const boot = () => {
+    readPalette(); makeSprite(); layout(); sigSize(); sigDraw(0, true)
+    introT = performance.now() / 1000
+    if (REDUCE) still()
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; visible ? start() : stop() }).observe(scr)
+    new IntersectionObserver(([en]) => { sVis = en.isIntersecting; sVis ? sigStart() : sigStop() }).observe(sig)
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); sigStop() } else { start(); sigStart() } })
+    new ResizeObserver(() => { layout(); if (REDUCE) still() }).observe(scr)
+    new ResizeObserver(() => { sigSize(); sigDraw(0, true) }).observe(sig)
+    onTheme(() => { readPalette(); makeSprite(); drawBG(); sigDraw(0, true); if (REDUCE) still() })
+    if (document.fonts) document.fonts.ready.then(() => { drawBG(); if (REDUCE) still() })
+  }
+  if (document.readyState === 'complete') requestAnimationFrame(boot)
+  else addEventListener('load', () => requestAnimationFrame(boot), { once: true })
+})()
+</script>
+
+<!-- ===== DIRECTIONS BAR (shared review UI, not part of the design) =====
+     Paste at the very end of <body>. Set data-current (a|b|c), data-name, data-weight ("18.6 KB gz"). -->
+<nav class="dirbar" id="dirbar" aria-label="Design directions" data-current="c" data-name="Vector" data-weight="17.5 KB gz">
+  <a class="dirbar-all" href="./" title="All directions" aria-label="All directions">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2.5 2.5h4.5v4.5H2.5zM9 2.5h4.5v4.5H9zM2.5 9h4.5v4.5H2.5zM9 9h4.5v4.5H9z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+  </a>
+  <span class="dirbar-seg"><a href="a.html" data-k="a">A</a><a href="b.html" data-k="b">B</a><a href="c.html" data-k="c">C</a></span>
+  <span class="dirbar-name"></span>
+  <span class="dirbar-stats"><span class="dirbar-w"></span><span class="dirbar-fcp"></span><span class="dirbar-fps">… fps</span></span>
+  <button class="dirbar-theme" type="button" aria-label="Switch between light and dark">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="5.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 2.2a5.8 5.8 0 0 1 0 11.6z" fill="currentColor"/></svg>
+  </button>
+</nav>
+<style>
+.dirbar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:10px;height:40px;padding:0 5px;border-radius:999px;background:rgba(18,16,13,.86);color:#efe9dc;font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.09);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);max-width:calc(100vw - 24px);white-space:nowrap;color-scheme:dark}
+.dirbar a,.dirbar button{color:inherit;text-decoration:none;font:inherit}
+.dirbar-all,.dirbar-theme{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;border:0;background:transparent;cursor:pointer;opacity:.82;flex:none}
+.dirbar-all:hover,.dirbar-theme:hover{background:rgba(255,255,255,.1);opacity:1}
+.dirbar-seg{display:flex;gap:2px;padding:2px;border-radius:999px;background:rgba(255,255,255,.07);flex:none}
+.dirbar-seg a{display:grid;place-items:center;min-width:30px;height:26px;border-radius:999px;opacity:.7}
+.dirbar-seg a:hover{opacity:1;background:rgba(255,255,255,.08)}
+.dirbar-seg a[aria-current="page"]{opacity:1;background:#efe9dc;color:#16130f;font-weight:700}
+.dirbar-name{font-weight:600}
+.dirbar-stats{display:flex;gap:8px;opacity:.62;font-variant-numeric:tabular-nums}
+.dirbar-stats>span:not(:first-child)::before{content:"·";margin-right:8px;opacity:.7}
+.dirbar :focus-visible{outline:2px solid #ffb35c;outline-offset:2px}
+@media (max-width:640px){.dirbar-name{display:none}}
+@media (max-width:420px){.dirbar-w,.dirbar-fcp{display:none}}
+</style>
+<script>
+(() => {
+  const bar = document.getElementById('dirbar');
+  if (!bar) return;
+  const cur = bar.dataset.current;
+  bar.querySelectorAll('.dirbar-seg a').forEach((a) => { if (a.dataset.k === cur) a.setAttribute('aria-current', 'page'); });
+  bar.querySelector('.dirbar-name').textContent = cur.toUpperCase() + ' · ' + bar.dataset.name;
+  const w = bar.querySelector('.dirbar-w');
+  if (bar.dataset.weight) w.textContent = bar.dataset.weight; else w.remove();
+  const fcpEl = bar.querySelector('.dirbar-fcp');
+  const showFcp = (t) => { fcpEl.textContent = 'FCP ' + Math.round(t) + ' ms'; };
+  try {
+    const e = performance.getEntriesByName('first-contentful-paint')[0];
+    if (e) showFcp(e.startTime);
+    else new PerformanceObserver((l) => l.getEntries().forEach((en) => en.name === 'first-contentful-paint' && showFcp(en.startTime))).observe({ type: 'paint', buffered: true });
+  } catch (_) { fcpEl.remove(); }
+  const fpsEl = bar.querySelector('.dirbar-fps');
+  let frames = 0, last = performance.now();
+  const tick = (now) => {
+    frames++;
+    if (now - last >= 500) { fpsEl.textContent = Math.round((frames * 1000) / (now - last)) + ' fps'; frames = 0; last = now; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', () => { frames = 0; last = performance.now(); });
+  const root = document.documentElement, mq = matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches; };
+  bar.querySelector('.dirbar-theme').addEventListener('click', () => root.setAttribute('data-theme', isDark() ? 'light' : 'dark'));
+})();
+</script>
+<!-- ===== /DIRECTIONS BAR ===== -->
+</body>
+</html>

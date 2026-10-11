@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './red-horizon.css';
 
 /* Tailwind v4 auto-content-detection skips node_modules, so utility classes
    used only inside pliny components (e.g. the kbar search palette's

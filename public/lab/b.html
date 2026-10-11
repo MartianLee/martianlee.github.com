@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mycelium · MartianLee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=JetBrains+Mono:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<style>
+/* Layout: a living slime-mold network grown between the real notes fills the hero; the name sits in a clearing.
+   Below, a 1100px column of herbarium-style specimen rows. */
+:root{
+  --paper:#eef1ea;--surface:#f6f8f3;--ink:#121712;--muted:#566457;--line:#d3dacd;
+  --accent:#2e7a3d;--vein:#5b7f4a;--scrim:rgba(238,241,234,.93);--tip-bg:#121712;--tip-fg:#eef1ea;
+  --f-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --f-serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#070b08;--surface:#0c130e;--ink:#e4ede2;--muted:#93a595;--line:#1e2c21;
+  --accent:#7dffb0;--vein:#3fbf7f;--scrim:rgba(7,11,8,.9);--tip-bg:#e4ede2;--tip-fg:#0a100b;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#070b08;--surface:#0c130e;--ink:#e4ede2;--muted:#93a595;--line:#1e2c21;
+  --accent:#7dffb0;--vein:#3fbf7f;--scrim:rgba(7,11,8,.9);--tip-bg:#e4ede2;--tip-fg:#0a100b;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--f-serif);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{width:100%;max-width:1148px;margin-inline:auto;padding-inline:24px}
+
+/* header */
+.site{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:22px}
+.mark{font:800 23px/1 var(--f-display);font-stretch:80%;letter-spacing:-.02em;text-decoration:none}
+.mark span,.name .dot{color:var(--accent)}
+.nav{display:flex;gap:24px;font:500 12.5px/1 var(--f-mono)}
+.nav a{text-decoration:none;padding-block:8px}
+.nav a:hover{color:var(--accent)}
+.nav .cv{color:var(--accent)}
+.tools{display:flex;align-items:center;gap:8px;font:500 12px/1 var(--f-mono)}
+.lang{display:flex;align-items:center;gap:5px;margin-right:6px}
+.lang b{font-weight:600}
+.lang span{color:var(--muted)}
+.lang button{all:unset;cursor:pointer;color:var(--muted);padding:8px 2px}
+.icon{display:grid;place-items:center;width:40px;height:40px;border:0;background:transparent;color:inherit;cursor:pointer}
+.menu{display:none}
+
+/* hero */
+.hero{position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:clamp(720px,94vh,920px);overflow:hidden;background:var(--paper)}
+.net,.dots,.fallback{position:absolute;inset:0;width:100%;height:100%}
+.net{z-index:0;opacity:0;transition:opacity 1.6s ease}
+.net.on{opacity:1}
+.dots{z-index:1;pointer-events:none}
+.fallback{z-index:0;color:var(--vein)}
+.stage{position:relative;z-index:2;flex:1;display:flex;align-items:center;padding-block:8px 36px;pointer-events:none}
+.intro{position:relative;max-width:620px;pointer-events:auto}
+.eyebrow{margin:0 0 24px;font:500 11.5px/1.6 var(--f-mono);letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.name{margin:0;font:800 clamp(4.4rem,10.6vw,9.6rem)/.8 var(--f-display);font-stretch:75%;letter-spacing:-.02em}
+.tagline{margin:30px 0 0;max-width:22ch;font:400 clamp(1.4rem,2.15vw,1.75rem)/1.3 var(--f-serif);text-wrap:balance}
+.tagline em{color:var(--accent)}
+.cta{margin:30px 0 0;display:flex;flex-wrap:wrap;gap:6px 24px;font:500 13px/1 var(--f-mono)}
+.cta a{text-decoration:none;color:var(--muted);padding-block:10px}
+.cta a:hover{color:var(--ink)}
+.cta .primary{color:var(--ink);box-shadow:inset 0 -2px var(--accent)}
+.legend{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 24px;align-items:center;padding-block:0 30px}
+.legend::before{content:"";position:absolute;inset:-10px -50vw -30px;z-index:-1;background:linear-gradient(transparent,var(--scrim) 78%);pointer-events:none}
+.live{margin:0;display:flex;align-items:center;gap:10px;font:500 12px/1.45 var(--f-mono);letter-spacing:.03em;color:var(--muted)}
+.pulse{flex:none;width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+.graph{font:500 12.5px/1 var(--f-mono);color:var(--accent);text-decoration:none;padding-block:10px;justify-self:end}
+.graph:hover{text-decoration:underline;text-underline-offset:4px}
+.chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 11px;border:1px solid var(--line);border-radius:2px;background:color-mix(in srgb,var(--paper) 82%,transparent);color:var(--ink);font:500 12px/1 var(--f-mono);cursor:pointer}
+.chip span{color:var(--muted)}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip[aria-pressed="true"] span{color:inherit;opacity:.7}
+.tip{position:absolute;left:0;top:0;z-index:4;max-width:min(290px,80vw);padding:10px 13px 11px;background:var(--tip-bg);color:var(--tip-fg);text-decoration:none;border-radius:2px;box-shadow:0 14px 34px rgba(0,0,0,.24);font:500 15.5px/1.28 var(--f-serif)}
+.tip b{display:block;font-weight:500}
+.tip small{display:block;margin-top:7px;font:500 10.5px/1.35 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+
+/* sections */
+.sec{padding-block:96px 8px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-top:2px solid var(--ink);padding-top:16px;margin-bottom:30px}
+.sec-head h2{margin:0;display:flex;align-items:baseline;gap:14px;font:700 clamp(1.7rem,3vw,2.3rem)/1 var(--f-display);font-stretch:78%;letter-spacing:-.01em}
+.sec-head h2 small{font:600 12px/1 var(--f-mono);letter-spacing:.08em;color:var(--accent)}
+.sec-head a{font:500 12.5px/1 var(--f-mono);color:var(--muted);text-decoration:none;padding-block:8px}
+.sec-head a:hover{color:var(--accent)}
+.specs{list-style:none;margin:0;padding:0}
+.spec>a{display:grid;grid-template-columns:96px minmax(0,1fr) 236px;gap:26px;align-items:start;padding-block:24px;border-bottom:1px solid var(--line);text-decoration:none}
+.tile{position:relative;display:block;width:96px;height:96px;border:1px solid var(--line);background:var(--surface);color:var(--vein);overflow:hidden}
+.tile svg{position:absolute;inset:0;width:100%;height:100%}
+.tile path{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:0}
+.tile b{position:absolute;left:8px;top:7px;font:800 15px/1 var(--f-display);font-stretch:80%;color:var(--ink)}
+.spec h3{margin:0;font:italic 400 clamp(1.55rem,2.5vw,1.95rem)/1.1 var(--f-serif);transition:color .25s}
+.spec p{margin:9px 0 0;max-width:60ch;color:var(--muted);font-size:16px;line-height:1.52}
+.label{margin:0;padding-top:10px;border-top:2px solid var(--ink);display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 12px;font:500 12px/1.45 var(--f-mono)}
+.label dt{padding-top:1px;color:var(--muted);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase}
+.label dd{margin:0}
+.spec>a:hover h3{color:var(--accent)}
+.spec>a:hover .tile path{animation:grow 1.3s cubic-bezier(.3,.7,.2,1) both}
+@keyframes grow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.lede{margin:-6px 0 32px;max-width:60ch;color:var(--muted);font-size:1.18rem}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font:500 11.5px/1.4 var(--f-mono);color:var(--muted)}
+.bud{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
+.post h3{margin:12px 0 0;font:700 1.5rem/1.14 var(--f-display);font-stretch:86%;letter-spacing:-.01em;text-wrap:balance}
+.post h3 a,.row{text-decoration:none}
+.post h3 a{background:linear-gradient(var(--accent),var(--accent)) 0 100%/0 2px no-repeat;transition:background-size .5s}
+.post h3 a:hover{background-size:100% 2px}
+.post p{margin:10px 0 0;color:var(--muted);font-size:16px;line-height:1.55}
+.rows{margin-top:44px;border-top:1px solid var(--line)}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding-block:16px;border-bottom:1px solid var(--line)}
+.row span{font:600 1.1rem/1.35 var(--f-display);font-stretch:92%;transition:color .2s}
+.row time{flex:none;font:500 12px/1 var(--f-mono);color:var(--muted)}
+.row:hover span{color:var(--accent)}
+.xp{position:relative;list-style:none;margin:0;padding:0 0 0 36px}
+.xp::before{content:"";position:absolute;left:7px;top:10px;bottom:24px;width:1.5px;background:var(--line)}
+.xp.js::before{display:none}
+.hy{position:absolute;left:0;top:0;width:16px;height:100%;overflow:visible;color:var(--vein);pointer-events:none}
+.hy path{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.hy .flow{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:.07 .93;animation:flow 5.5s linear infinite paused}
+.hy.on .flow{animation-play-state:running}
+@keyframes flow{from{stroke-dashoffset:.07}to{stroke-dashoffset:-.93}}
+.job{position:relative;padding-block:2px 32px}
+.job::before{content:"";position:absolute;left:-33px;top:9px;width:10px;height:10px;border-radius:50%;background:var(--paper);border:1.5px solid var(--accent)}
+.job h3{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;font:700 1.4rem/1.2 var(--f-display);font-stretch:88%}
+.job h3 a{text-decoration:none}
+.job h3 a:hover{color:var(--accent)}
+.role{font:italic 400 1.08rem/1.2 var(--f-serif);color:var(--muted)}
+.job time{margin-left:auto;font:500 12px/1 var(--f-mono);color:var(--muted)}
+.job p{margin:8px 0 0;max-width:68ch;color:var(--muted);font-size:16px}
+.stack{margin-top:8px;font:500 11.5px/1.5 var(--f-mono);color:var(--muted)}
+.contact{margin-top:64px;padding-block:22px;border-top:2px solid var(--ink);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px}
+.contact p{margin:0;display:flex;align-items:center;gap:10px;font:500 13px/1.4 var(--f-mono)}
+.contact nav{display:flex;flex-wrap:wrap;gap:4px 22px;font:500 13px/1 var(--f-mono)}
+.contact nav a{color:var(--accent);text-decoration:none;padding-block:10px}
+.contact nav a:hover{text-decoration:underline;text-underline-offset:4px}
+footer.wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px;margin-top:28px;padding-block:22px 104px;border-top:1px solid var(--line);font:500 11.5px/1.4 var(--f-mono);color:var(--muted)}
+
+@media (max-width:760px){
+  .nav{display:none}.menu{display:grid}
+  .spec>a{grid-template-columns:68px minmax(0,1fr);gap:14px 16px}
+  .tile{width:68px;height:68px}
+  .label{grid-column:1/-1}
+  .feat{grid-template-columns:1fr}
+  .row{flex-direction:column;gap:6px}
+  .job time{margin-left:0;flex-basis:100%}
+}
+@media (max-width:1099px){.stage{align-items:flex-start;padding-block:28px 440px}}
+@media (max-width:720px){
+  .stage{padding-block:20px 340px}
+  .legend{grid-template-columns:minmax(0,1fr)}
+  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none}
+  .graph{justify-self:start}
+}
+@media (max-width:600px){.wrap{padding-inline:16px}.sec{padding-block:72px 8px}}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<section class="hero" id="top" aria-label="Introduction">
+  <canvas class="net" id="net" aria-hidden="true"></canvas>
+  <canvas class="dots" id="dots" aria-hidden="true"></canvas>
+  <header class="site wrap">
+    <a class="mark" href="https://martianlee.github.io/" aria-label="MartianLee, home">ML<span>.</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="https://martianlee.github.io/projects">Projects</a>
+      <a href="https://martianlee.github.io/posts">Posts</a>
+      <a href="https://martianlee.github.io/kb">Notes</a>
+      <a href="https://martianlee.github.io/about">About</a>
+      <a class="cv" href="https://linkedin.com/in/martianlee/">CV ↗</a>
+    </nav>
+    <div class="tools">
+      <span class="lang"><b aria-current="true">EN</b><span aria-hidden="true">/</span><button type="button" aria-label="Korean">KO</button></span>
+      <button class="icon" type="button" aria-label="Search"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.6 12.6 17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button class="icon menu" type="button" aria-label="Open menu"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    </div>
+  </header>
+  <div class="wrap stage">
+    <div class="intro" id="intro">
+      <p class="eyebrow">Software Engineer @ UJET · ex-Founder/CTO · Seoul, open to global roles</p>
+      <h1 class="name">MARTIAN<br>LEE<span class="dot">.</span></h1>
+      <p class="tagline">I move fast with AI — and keep the decisions that matter <em>human.</em></p>
+      <p class="cta"><a class="primary" href="#projects">↓ View projects</a><a href="https://martianlee.github.io/posts">Posts</a><a href="https://linkedin.com/in/martianlee/">CV ↗</a><a href="https://github.com/MartianLee">GitHub ↗</a></p>
+    </div>
+  </div>
+  <div class="wrap legend" id="legend">
+    <p class="live"><span class="pulse" aria-hidden="true"></span><span id="status" aria-live="polite">108 notes · 178 links · grown live by a slime-mold model</span></p>
+    <a class="graph" href="https://martianlee.github.io/kb/graph">Open the graph of all 108 notes →</a>
+    <div class="chips" role="group" aria-label="Feed one topic so the network grows toward it">
+      <button class="chip" type="button" data-t="0" aria-pressed="false">AI Infrastructure <span>37</span></button>
+      <button class="chip" type="button" data-t="1" aria-pressed="false">LLM Research <span>19</span></button>
+      <button class="chip" type="button" data-t="2" aria-pressed="false">Dev Life <span>15</span></button>
+      <button class="chip" type="button" data-t="3" aria-pressed="false">Web Frontend <span>14</span></button>
+      <button class="chip" type="button" data-t="4" aria-pressed="false">Backend <span>7</span></button>
+      <button class="chip" type="button" data-t="5" aria-pressed="false">Backend Architecture <span>7</span></button>
+      <button class="chip" type="button" data-t="6" aria-pressed="false">Algorithms <span>4</span></button>
+      <button class="chip" type="button" data-t="7" aria-pressed="false">DevOps &amp; Cloud <span>3</span></button>
+      <button class="chip" type="button" data-t="8" aria-pressed="false">Software Engineering <span>1</span></button>
+      <button class="chip" type="button" data-t="9" aria-pressed="false">Climate <span>1</span></button>
+    </div>
+  </div>
+  <a class="tip" id="tip" href="https://martianlee.github.io/kb/graph" hidden><b></b><small></small></a>
+</section>
+
+<main>
+  <section class="sec wrap" id="projects" aria-labelledby="h-projects">
+    <div class="sec-head"><h2 id="h-projects"><small>01</small>Projects</h2><a href="https://martianlee.github.io/projects">All projects →</a></div>
+    <ol class="specs">
+      <li class="spec"><a href="https://martianlee.github.io/projects/hanji">
+        <span class="tile" data-seed="hanji"><b>Hj</b></span>
+        <span><h3>Hanji.md</h3><p>A native macOS markdown editor for plain-file vaults, built on SwiftUI and TextKit 2 with a Swift extension SDK. Incremental Live Preview keeps a keystroke in a 4,000-line note at about 15 ms, with performance budgets checked in CI. Local-first, MIT licensed.</p></span>
+        <dl class="label"><dt>Kind</dt><dd>macOS App</dd><dt>Stack</dt><dd>Swift · SwiftUI · TextKit 2</dd></dl>
+      </a></li>
+      <li class="spec"><a href="https://martianlee.github.io/projects/more-munch">
+        <span class="tile" data-seed="more-munch"><b>MM</b></span>
+        <span><h3>More Munch</h3><p>A lunch-recommendation service for office workers. It auto-collects nearby restaurants (discoverable via the OpenClaw skill-optimized API) and suggests a fresh lunch every day based on your visit history and ratings.</p></span>
+        <dl class="label"><dt>Kind</dt><dd>Web Service</dd><dt>Stack</dt><dd>NestJS 11 · TypeScript · SQLite</dd></dl>
+      </a></li>
+      <li class="spec"><a href="https://martianlee.github.io/projects/cheercat">
+        <span class="tile" data-seed="cheercat"><b>CC</b></span>
+        <span><h3>CheerCat</h3><p>A daily journaling app that builds the habit of praising yourself every day — a small ritual for a positive mindset.</p></span>
+        <dl class="label"><dt>Kind</dt><dd>Mobile App</dd><dt>Stack</dt><dd>React Native · Firebase · TypeScript</dd></dl>
+      </a></li>
+      <li class="spec"><a href="https://martianlee.github.io/projects/fish-tank-simulator">
+        <span class="tile" data-seed="fish-tank"><b>FT</b></span>
+        <span><h3>Fish Tank Simulator</h3><p>A pixel-art idle productivity tool that blends a Pomodoro timer with an aquarium sim. Complete focus sessions to earn fish eggs, collect 12+ species, and grow your own tank.</p></span>
+        <dl class="label"><dt>Kind</dt><dd>Idle Game</dd><dt>Stack</dt><dd>Phaser3 · TypeScript · Vercel</dd></dl>
+      </a></li>
+    </ol>
+  </section>
+
+  <section class="sec wrap" id="posts" aria-labelledby="h-posts">
+    <div class="sec-head"><h2 id="h-posts"><small>02</small>Recent posts</h2><a href="https://martianlee.github.io/posts">All posts →</a></div>
+    <p class="lede">I take large codebases apart and write down how they actually work.</p>
+    <div class="feat">
+      <article class="post">
+        <div class="meta"><span class="bud"><svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M7 13V6.5M7 6.5C5 6.3 4.2 4.6 4.6 2.6 6.5 2.8 7.3 4.4 7 6.5Zm0 0c2-.2 2.8-1.9 2.4-3.9C7.5 2.8 6.7 4.4 7 6.5Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>budding</span><span>Oct 8, 2026 · 19 min read · game-modding / minecraft</span></div>
+        <h3><a href="https://martianlee.github.io/posts/2026-10-08-passthrough-bridge-spectrum">What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared</a></h3>
+        <p>Since late September, dozens of passthrough mods that run two games at once and merge them into one have gone public. This post opens the code of twelve of them, sorts them by what crosses the bridge (pixels, meshes, logic, or nothing at all), and looks at the traces of the most-cited original, SkyCraft, moving from a pixel design to meshes, and at why Minecraft is so often the guest.</p>
+      </article>
+      <article class="post">
+        <div class="meta"><span class="bud"><svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M7 13V6.5M7 6.5C5 6.3 4.2 4.6 4.6 2.6 6.5 2.8 7.3 4.4 7 6.5Zm0 0c2-.2 2.8-1.9 2.4-3.9C7.5 2.8 6.7 4.4 7 6.5Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>budding</span><span>Oct 7, 2026 · 30 min read · game-modding / minecraft</span></div>
+        <h3><a href="https://martianlee.github.io/posts/2026-10-07-minecraft-elden-ring-bridge">Inside the Bridge That Runs Minecraft in Elden Ring: How Do Two Games Share One Frame?</a></h3>
+        <p>Since late September, "passthrough modding", which runs two games at once and merges them into one, has been everywhere. This post reads minecraft-crossover-bridge, one of the implementations with public code, and walks through what its shared-memory protocol, depth-tested compositing, terrain raycasts and hidden stand-in character each solve, and what the projects built on it changed.</p>
+      </article>
+    </div>
+    <div class="rows">
+      <a class="row" href="https://martianlee.github.io/posts/2026-09-29-activerecord-anatomy"><span>What Does Active Record Build on Every Request? Measured the Same Way as Sequelize and GORM</span><time datetime="2026-09-29">Sep 29, 2026</time></a>
+      <a class="row" href="https://martianlee.github.io/posts/2026-09-28-request-layers"><span>Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart</span><time datetime="2026-09-28">Sep 28, 2026</time></a>
+      <a class="row" href="https://martianlee.github.io/posts/2026-09-12-archify-architecture"><span>Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?</span><time datetime="2026-09-12">Sep 12, 2026</time></a>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="experience" aria-labelledby="h-xp">
+    <div class="sec-head"><h2 id="h-xp"><small>03</small>Experience</h2><a href="https://linkedin.com/in/martianlee/">CV ↗</a></div>
+    <ol class="xp">
+      <li class="job">
+        <h3><a href="https://ujet.cx/">UJET</a><span class="role">Software Engineer 2</span><time>2024 – Present</time></h3>
+        <p>UJET is AI-Powered Cloud Contact Center Platform for Premium CX</p>
+        <div class="stack">Rails · GCP · Node.js · TypeScript · Kubernetes</div>
+      </li>
+      <li class="job">
+        <h3><a href="https://martianlee.github.io/climate">TomorrowUse</a><span class="role">Co-founder / CTO</span><time>2021 – 2023</time></h3>
+        <p>Climate-tech startup (product: Stepping). Sole engineer on a three-person founding team; built carbon-measurement and offset products end-to-end: app, infra, and CI/CD.</p>
+        <div class="stack">Next.js · React · Nest.js · PostgreSQL · AWS</div>
+      </li>
+      <li class="job">
+        <h3><a href="https://miso.kr/">Miso</a><span class="role">Frontend Developer</span><time>2020 – 2021</time></h3>
+        <p>South Korea's leading home services platform. Responsible for client app maintenance and back-office development to improve CX operations.</p>
+        <div class="stack">React · React Native · Redux · TypeScript</div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="wrap" id="contact" aria-label="Contact">
+    <div class="contact">
+      <p><span class="pulse" aria-hidden="true"></span>Open to senior / staff engineering roles — globally.</p>
+      <nav aria-label="Contact links"><a href="#contact">Email ↗</a><a href="https://github.com/MartianLee">GitHub ↗</a><a href="https://linkedin.com/in/martianlee/">LinkedIn ↗</a></nav>
+    </div>
+  </section>
+</main>
+<footer class="wrap"><span>© 2026 MartianLee</span><span>Seoul · UTC+9</span></footer>
+
+<script>
+(() => {
+'use strict';
+const N=[["Comparing Blogging Tools",2,1,"2017-01","2017-01-29-blogging-tools"],["React Book Review",2,1,"2017-04","2017-04-28-book-review"],["Django Template Numeric For Loop",4,1,"2017-04","2017-04-28-django-template-for-loop"],["Getting Started with VueJS…",3,1,"2017-09","2017-09-09-first-vue"],["Joining Parti",2,1,"2018-01","2018-01-29-parti-union"],["Adding an SSH Key to GitHub",7,1,"2019-03","2019-03-12-ssh-github"],["Getting Started with Spring Boot",4,1,"2019-03","2019-03-30-spring-tutorial"],["190404",2,1,"2019-04","2019-04-04-question"],["Implementing Login with JWT in…",4,1,"2019-04","2019-04-09-JWT-springboot-login"],["Samsung Codeground Practice…",6,1,"2019-04","2019-04-11-dart-game"],["Customizing Your GitHub Blog…",2,1,"2019-04","2019-04-15-jekyll-blog"],["SCCC Homepage Renewal",2,1,"2019-04","2019-04-17-renwal-sccc-page"],["KAKAO Technical Interview Review",2,1,"2019-04","2019-04-22-kakao-interview-review"],["NAVER Technical Interview Review",2,1,"2019-04","2019-04-22-naver-interview-review"],["NDC 2019 Review",2,1,"2019-05","2019-05-07-NDC-review"],["Setting a Default Value for…",3,1,"2019-06","2019-06-12-angular-form"],["Async Server Requests with…",4,1,"2019-06","2019-06-25-rails-remote"],["Understanding the Architecture…",3,1,"2019-07","2019-07-25-angular-architecture"],["Setting Up a ReactJS Project",3,1,"2019-09","2019-07-25-react-architecture"],["Creating a Django Project and…",4,1,"2020-02","2020-02-09-django-gae-deploy"],["Problems and Solutions When…",3,1,"2020-04","2020-04-06-react-native-kakao-login-ios"],["200525 TIL",2,1,"2020-05","2020-05-25-TIL-first"],["200531 TIL",2,1,"2020-05","2020-05-31-TIL-react-native"],["Sentiment Analysis on News Data…",0,1,"2020-06","2020-06-28-manjum-result"],["Angular 9 to 10",3,1,"2021-01","2021-01-23-Angular-9-to-10"],["Jekyll openssl and webrick…",2,1,"2021-06","2021-06-14-jekyll-erro"],["Getting Started with…",3,1,"2022-01","2022-01-20-react-hook-form"],["220313 TIL",2,1,"2022-03","2022-03-13-TIL-css-grid"],["Setting Up react-native-testing…",3,1,"2022-04","2022-04-21-react-native-testing-library"],["Link Management Service Plan",3,1,"2022-07","2022-07-17-link-manage-service-plan"],["Maintaining image aspect ratio…",3,1,"2022-07","2022-07-29-aspect-ratio"],["Custom Dropdown for Selectbox",3,1,"2022-07","2022-07-29-custom-dropdown"],["Migrating My GitHub Blog from…",3,1,"2022-10","2022-10-10-gatsby-migration"],["Connecting Your Own Domain to…",7,1,"2023-01","2023-01-30-aws-imweb-domain"],["When You Have a Large Number of…",7,1,"2023-02","2023-02-25-github-author-problem"],["Gatsby v5 to v4 and MDX v1 to v2",3,1,"2023-03","2023-03-02-gatsby-v5-to-v4"],["How to Fix the postgresql…",4,1,"2023-06","2023-06-01-pg-duplicate-key-voilates"],["Fixing the Problem of Not Being…",2,1,"2023-06","2023-06-08-open-gov-hacking"],["Object Reference Problem in…",3,1,"2024-01","2024-01-21-firebase-functions-reference-problem"],["leetcode-1239 solutions",6,1,"2024-01","2024-01-24-leetcode-1239"],["JS Small Tricks for Problem…",6,1,"2024-01","2024-01-31-js-small-tricks-for-ps-1"],["LeetCode 201 Solutions",6,1,"2024-02","2024-02-21-leetcode-201"],["Ruby and Rails Knowledges 1",4,1,"2024-09","2024-09-16-til-ruby-rails"],["OpenClaw Architecture Analysis",0,1,"2026-03","2026-03-11-openclaw-architecture"],["Lightpanda Browser Architecture…",0,1,"2026-03","2026-03-13-lightpanda-architecture"],["LangChain Python Monorepo…",0,1,"2026-03","2026-03-13-langchain-architecture"],["NanoClaw Architecture Analysis",0,1,"2026-03","2026-03-13-nanoclaw-architecture"],["Ollama Architecture Analysis",0,1,"2026-03","2026-03-15-ollama-architecture"],["agent-browser Architecture…",0,1,"2026-04","2026-04-09-agent-browser-architecture"],["Beads (bd) Project Analysis…",0,1,"2026-04","2026-04-13-beads-architecture"],["Adding Mermaid Diagram Support…",2,1,"2026-04","2026-04-13-adding-mermaid-to-nextjs-blog"],["Paperclip Architecture Analysis",0,1,"2026-04","2026-04-15-paperclip-architecture"],["Playwright vs agent-browser vs…",0,1,"2026-04","2026-04-16-browser-automation-comparison"],["Attention Is All You Need (2017)",1,0,"2026-04","2026-04-17-attention-is-all-you-need-paper-note"],["cross-entropy and perplexity",1,0,"2026-04","2026-04-17-llm-learning-basics-cross-entropy-perplexity"],["LLM Math Basics 2",1,0,"2026-04","2026-04-17-llm-math-basics-softmax"],["LLM Math Basics 1",1,0,"2026-04","2026-04-17-llm-math-basics-vector-dot-product"],["LLM Paper Evolution Map (MOC)",1,1,"2026-04","2026-04-17-llm-paper-evolution-moc"],["Intuition Behind Q, K, and V",1,0,"2026-04","2026-04-17-transformer-basics-qkv-intuition"],["Residual, LayerNorm, FFN",1,0,"2026-04","2026-04-17-transformer-basics-residual-layernorm-ffn"],["Playwright Architecture…",0,1,"2026-04","2026-04-17-playwright-architecture"],["Using Superpowers",0,1,"2026-04","2026-04-18-superpowers-architecture"],["BERT (2018) Paper Notes",1,0,"2026-04","2026-04-18-bert-paper-note"],["Checking Duplicate IDs Among…",5,0,"2026-04","2026-04-18-bloom-filter-membership-check-at-scale"],["LLM Architecture Basics",1,0,"2026-04","2026-04-18-llm-architecture-basics-encoder-only-decoder-only"],["LLM Basics",1,0,"2026-04","2026-04-18-llm-basics-rnn-sequential-processing"],["Masked Language Model",1,0,"2026-04","2026-04-18-llm-learning-basics-masked-language-model"],["Pre-training and Fine-tuning",1,0,"2026-04","2026-04-18-llm-learning-basics-pretraining-finetuning"],["RedisBloom in Production",5,1,"2026-04","2026-04-18-redisbloom-signup-architecture"],["Encoder and Decoder",1,0,"2026-04","2026-04-18-transformer-basics-encoder-decoder"],["Claude Code Game Studios…",0,1,"2026-04","2026-04-18-claude-code-game-studios-architecture"],["agentmemory Architecture…",0,1,"2026-05","2026-05-13-agentmemory-architecture"],["Hermes Agent Architecture",0,1,"2026-05","2026-05-13-hermes-agent-architecture"],["Dify Project Analysis",0,1,"2026-05","2026-05-17-dify-architecture"],["OpenHands Project Analysis",0,1,"2026-05","2026-05-17-openhands-architecture"],["Analyzing Qwen Code",0,1,"2026-05","2026-05-17-qwen-code-architecture"],["Ruflo Architecture",0,1,"2026-05","2026-05-17-ruflo-architecture"],["GPT-2 (2019) Paper Notes",1,0,"2026-05","2026-05-17-gpt-2-paper-note"],["WeKnora Architecture Analysis",0,1,"2026-05","2026-05-30-weknora-architecture"],["spec-kit vs superpowers",0,1,"2026-05","2026-06-01-spec-kit-vs-superpowers"],["CodeGraph Architecture Analysis",0,1,"2026-06","2026-06-04-codegraph-architecture"],["Semble Architecture Analysis",0,1,"2026-06","2026-06-04-semble-architecture"],["Why I Made Markdown the Source…",8,1,"2026-06","2026-06-05-markdown-source-of-truth"],["GPT-3 (2020) Paper Notes",1,0,"2026-06","2026-06-21-gpt-3-paper-note"],["InstructGPT (2022) Paper Notes",1,0,"2026-06","2026-06-29-instructgpt-paper-note"],["Analyzing OpenCode",0,1,"2026-06","2026-06-29-opencode-architecture"],["Analyzing Cline",0,1,"2026-06","2026-06-30-cline-architecture"],["Analyzing Browser Use",0,1,"2026-06","2026-06-30-browser-use-architecture"],["Analyzing ponytail",0,1,"2026-06","2026-06-30-ponytail-architecture"],["Analyzing SkillSpector",0,1,"2026-07","2026-07-03-skillspector-architecture"],["Analyzing Firecrawl",0,1,"2026-07","2026-07-06-firecrawl-architecture"],["LLaMA (2023) Paper Notes",1,0,"2026-07","2026-07-10-llama-paper-note"],["Analyzing Floci",0,1,"2026-07","2026-07-10-floci-architecture"],["Llama 2 (2023) Paper Notes",1,0,"2026-07","2026-07-13-llama-2-paper-note"],["Llama 3 (2024) Paper Notes",1,0,"2026-07","2026-07-24-llama-3-paper-note"],["Hallmark Architecture",0,1,"2026-07","2026-07-24-hallmark-architecture"],["bitchat Architecture",5,1,"2026-07","2026-07-25-bitchat-architecture"],["Is Rails Slow?",5,1,"2026-09","2026-09-01-framework-magic-tax"],["Carbon Basics 1",9,1,"2026-09","2026-09-05-carbon-basics-what-is-carbon"],["Analyzing DeepSeek Harness",0,1,"2026-09","2026-09-05-deepseek-harness-architecture"],["WebMCP Explained",0,1,"2026-09","2026-09-05-webmcp-explained"],["DeepSeek Harness Hands-On",0,1,"2026-09","2026-09-09-deepseek-harness-hands-on"],["Archify dissected",0,1,"2026-09","2026-09-12-archify-architecture"],["Where Does One Rails Request…",5,1,"2026-09","2026-09-28-request-layers"],["What Does Active Record Build…",5,1,"2026-09","2026-09-29-activerecord-anatomy"],["HyperFrames Architecture",5,1,"2026-10","2026-10-07-hyperframes-architecture"],["Inside the Bridge That Runs…",0,1,"2026-10","2026-10-07-minecraft-elden-ring-bridge"],["Passthrough bridge spectrum",0,1,"2026-10","2026-10-08-passthrough-bridge-spectrum"]];
+const L=[43,72,52,60,48,52,44,52,52,61,53,65,53,58,53,56,53,55,53,69,53,59,53,64,53,62,53,57,57,62,57,77,57,83,57,84,57,91,57,93,57,94,56,57,55,57,54,57,57,65,57,69,57,58,57,59,57,64,57,67,57,66,48,60,62,65,62,69,62,67,62,64,59,62,62,66,54,62,49,61,61,72,43,61,51,61,45,73,47,73,73,76,71,73,55,77,54,77,58,77,59,77,69,77,64,77,67,77,62,77,66,77,77,83,74,76,61,74,72,74,71,74,74,75,73,75,75,76,61,75,71,75,61,76,71,76,72,76,43,76,73,78,45,78,71,78,74,78,75,78,47,78,72,80,75,80,74,80,70,80,60,80,61,80,71,80,78,80,52,80,80,81,78,81,72,81,75,81,60,81,54,83,58,83,59,83,64,83,67,83,62,83,83,84,67,84,54,84,55,84,64,84,84,91,75,85,74,85,73,85,76,85,61,85,60,87,52,87,85,87,86,87,75,86,85,86,74,86,61,86,61,88,85,88,86,88,72,88,88,89,61,89,80,89,81,89,87,90,60,90,73,90,78,90,68,92,83,91,53,91,58,91,59,91,64,91,67,91,91,93,84,93,83,93,58,93,93,94,61,95,89,95,71,95,91,94,84,94,83,94,63,96,71,96,90,96,85,99,86,99,75,99,43,99,76,99,61,99,71,99,60,100,48,100,87,100,44,100,90,100,52,100,99,101,85,101,86,101,43,101,50,102,99,102,101,102,61,102,100,102,60,105,44,105,87,105,70,106,89,106,106,107,70,107,89,107];
+const TOPICS = [['AI Infrastructure', 37], ['LLM Research', 19], ['Dev Life', 15], ['Web Frontend', 14], ['Backend', 7], ['Backend Architecture', 7], ['Algorithms', 4], ['DevOps & Cloud', 3], ['Software Engineering', 1], ['Climate', 1]];
+const STAGE = ['seedling', 'budding', 'evergreen'];
+const MON = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
+const $ = (s) => document.querySelector(s);
+const hero = $('.hero'), net = $('#net'), dots = $('#dots'), intro = $('#intro'), legend = $('#legend'), head = $('.site'), tip = $('#tip'), status = $('#status');
+const dc = dots.getContext('2d');
+const root = document.documentElement, mq = matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches; };
+const onTheme = (cb) => { new MutationObserver(cb).observe(root, { attributes: true, attributeFilter: ['data-theme'] }); mq.addEventListener('change', cb); };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fast = /grown/.test(location.hash); // #grown fast-forwards the growth (handy for screenshots)
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rng = (s) => () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+
+/* ---------- layout: topic islands, notes in phyllotaxis (newest at the heart) ---------- */
+let W = 0, H = 0, nodes = [], isles = [], walls = [], mask = null, focus = -1, hover = -1, pinned = false;
+function push(s, f) {
+  const qx = clamp(s.x, f.x, f.x + f.w), qy = clamp(s.y, f.y, f.y + f.h), dx = s.x - qx, dy = s.y - qy, d = Math.hypot(dx, dy);
+  if (!d) {
+    const m = Math.min(s.x - f.x, f.x + f.w - s.x, s.y - f.y, f.y + f.h - s.y);
+    if (m === s.x - f.x) s.x = f.x - s.r; else if (m === f.x + f.w - s.x) s.x = f.x + f.w + s.r; else if (m === s.y - f.y) s.y = f.y - s.r; else s.y = f.y + f.h + s.r;
+  } else if (d < s.r) { s.x = qx + (dx / d) * s.r; s.y = qy + (dy / d) * s.r; }
+}
+function layout() {
+  const hb = hero.getBoundingClientRect(); W = hb.width; H = hb.height;
+  const rel = (el, p) => { const b = el.getBoundingClientRect(); return { x: b.left - hb.left - p, y: b.top - hb.top - p, w: b.width + 2 * p, h: b.height + 2 * p }; };
+  const small = W < 720, stack = W < 1100, sp = small ? 18 : 27, ib = rel(intro, small ? 4 : 22), lg = rel(legend, 6), hd = rel(head, 0), no = [ib, lg, hd];
+  const cx = stack ? W / 2 : (ib.x + ib.w + W) / 2, cy = stack ? (ib.y + ib.h + lg.y) / 2 : (hd.y + hd.h + lg.y) / 2;
+  const R = rng(1729);
+  isles = TOPICS.map(([label, n], i) => { const core = sp * 0.62 * Math.sqrt(n); return { i, label, n, core, r: Math.max(core + (small ? 9 : 18), small ? 0 : (label.length + 4) * 3.3 + 4), x: 0, y: 0 }; });
+  isles.forEach((s, k) => { const a = k * 2.39996 - 0.5, d = k ? (small ? 22 : 44) * Math.sqrt(k) : 0; s.x = cx + Math.cos(a) * d * (stack ? 1.6 : 1); s.y = cy + Math.sin(a) * d * (stack ? 0.6 : 0.85); });
+  const gap = small ? 8 : 26;
+  for (let it = 0; it < 500; it++) {
+    for (let a = 0; a < isles.length; a++) for (let b = a + 1; b < isles.length; b++) {
+      const A = isles[a], B = isles[b], dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 0.01, m = A.r + B.r + gap;
+      if (d < m) { const k = (m - d) / d, wa = (B.n + 2) / (A.n + B.n + 4); A.x -= dx * k * wa; A.y -= dy * k * wa; B.x += dx * k * (1 - wa); B.y += dy * k * (1 - wa); }
+    }
+    for (const s of isles) {
+      s.x += (cx - s.x) * 0.012; s.y += (cy - s.y) * 0.012;
+      for (const f of no) push(s, f);
+      s.x = clamp(s.x, s.r + 4, W - s.r - 4); s.y = clamp(s.y, s.r + 4, H - s.r - 4);
+    }
+  }
+  const tr = (el, p) => { const rg = document.createRange(); rg.selectNodeContents(el); return [...rg.getClientRects()].map((q) => ({ x: q.left - hb.left - p, y: q.top - hb.top - p, w: q.width + 2 * p, h: q.height + 2 * p })); };
+  walls = [...[...intro.children].flatMap((el) => tr(el, small ? 10 : 16)), ...[...head.querySelectorAll('.mark,.nav a,.lang,.icon'), ...legend.querySelectorAll('.live,.graph,.chip')].map((el) => rel(el, 8))].filter((q) => q.w > 20 && q.h > 18);
+  nodes = new Array(N.length);
+  const per = TOPICS.map(() => []);
+  N.forEach((n, i) => per[n[1]].push(i));
+  per.forEach((list, t) => {
+    const s = isles[t], rot = R() * 6.283;
+    list.reverse().forEach((ni, k) => {
+      const rr = sp * 0.62 * Math.sqrt(k + 0.5), a = k * 2.39996 + rot, j = sp * 0.22;
+      nodes[ni] = { i: ni, t, s: N[ni][2], x: s.x + Math.cos(a) * rr + (R() - 0.5) * j, y: s.y + Math.sin(a) * rr + (R() - 0.5) * j };
+    });
+  });
+}
+
+/* ---------- overlay: note cells, island labels, hover ---------- */
+const tok = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+function drawDots() {
+  const d2 = Math.min(devicePixelRatio || 1, 2);
+  if (dots.width !== Math.round(W * d2) || dots.height !== Math.round(H * d2)) { dots.width = Math.round(W * d2); dots.height = Math.round(H * d2); }
+  const g = dc, dk = isDark(), ink = tok('--ink'), paper = tok('--paper'), acc = tok('--accent'), mut = tok('--muted');
+  g.setTransform(d2, 0, 0, d2, 0, 0); g.clearRect(0, 0, W, H);
+  if (W >= 720) {
+    g.font = '600 10px "JetBrains Mono", ui-monospace, monospace'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    for (const s of isles) {
+      const on = focus < 0 || focus === s.i, txt = s.label.toUpperCase() + '  ' + s.n, y = s.y - s.core - 13, w = g.measureText(txt).width + 10;
+      g.globalAlpha = on ? 0.92 : 0.4; g.fillStyle = paper; g.fillRect(s.x - w / 2, y - 10, w, 14);
+      g.fillStyle = focus === s.i ? acc : mut; g.fillText(txt, s.x, y);
+    }
+  }
+  g.lineWidth = 1.25;
+  for (const n of nodes) {
+    const on = focus < 0 || n.t === focus;
+    g.globalAlpha = on ? 1 : 0.3;
+    g.beginPath(); g.arc(n.x, n.y, n.s ? 3.2 : 2.3, 0, 6.2832);
+    g.fillStyle = paper; g.fill(); g.strokeStyle = dk ? acc : ink; g.stroke();
+  }
+  if (hover >= 0) {
+    const n = nodes[hover]; g.globalAlpha = 1; g.strokeStyle = acc; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(n.x, n.y, 8.5, 0, 6.2832); g.stroke();
+    for (const [x, y] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { g.beginPath(); g.moveTo(n.x + x * 12, n.y + y * 12); g.lineTo(n.x + x * 16, n.y + y * 16); g.stroke(); }
+  }
+  g.globalAlpha = 1;
+}
+function showTip() {
+  if (hover < 0) { tip.hidden = true; return; }
+  const n = nodes[hover], d = N[hover];
+  tip.href = 'https://martianlee.github.io/posts/' + d[4];
+  tip.firstChild.textContent = d[0];
+  tip.lastChild.textContent = TOPICS[d[1]][0] + ' · ' + STAGE[d[2]] + ' · ' + MON[+d[3].slice(5) - 1] + ' ' + d[3].slice(0, 4);
+  tip.hidden = false;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let y = n.y - th - 18; if (y < head.offsetHeight + 4) y = n.y + 18;
+  tip.style.transform = `translate(${clamp(n.x - tw / 2, 8, W - tw - 8)}px,${y}px)`;
+}
+
+/* ---------- physarum on the GPU ---------- */
+const VS = '#version 300 es\nlayout(location=0) in vec2 p;out vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0,1);}';
+const HEAD = '#version 300 es\nprecision highp float;precision highp sampler2D;';
+// agents: xy = position (trail px), z = heading, w = awake. Sleeping agents wake when the lobed growth front,
+// spreading from the accent dot of the name (O, radius U), reaches them, so the colony visibly grows outward.
+const UPD = HEAD + `uniform sampler2D A,T,G;uniform vec2 R,O;uniform float F,SA,RA,SO,SS,U,RJ;uniform vec4 B;out vec4 o;
+float h(vec2 p){vec3 q=fract(p.xyx*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+float s(vec2 p,float a){return textureLod(T,(p+vec2(cos(a),sin(a))*SO)/R,0.).r;}
+void main(){vec2 c=gl_FragCoord.xy;vec4 a=texelFetch(A,ivec2(c),0);vec2 p=a.xy;float d=a.z,r=h(c+F*7.13),q=h(c.yx*1.7+F*3.1);
+bool bu=B.w>0.&&q<B.w;
+if(a.w<.5&&!bu){vec2 v=p-O;float an=atan(v.y,v.x);if(length(v)>U*(1.+.17*sin(an*3.+1.1)+.08*sin(an*7.+2.3))-40.*h(c*.71)){o=a;return;}}
+float f=s(p,d),l=s(p,d+SA),g=s(p,d-SA);
+if(f>l&&f>g){}else if(f<l&&f<g)d+=(r-.5)*2.*RA;else if(l>g)d+=RA;else if(g>l)d-=RA;
+d+=(q-.5)*.12;p+=vec2(cos(d),sin(d))*SS;
+if(p.x<1.||p.y<1.||p.x>R.x-1.||p.y>R.y-1.){p=clamp(p,vec2(1.5),R-1.5);d=r*6.2832;}
+if(textureLod(G,p/R,0.).g>.5){p=a.xy;d=r*6.2832;}
+if(bu){float an=r*6.2832;p=B.xy+vec2(cos(an),sin(an))*B.z*sqrt(h(c*1.31+F));d=an;}
+else if(h(c*.93+F*1.37)<RJ)p=vec2(h(c+F*.31),h(c.yx+F*.57))*R;
+o=vec4(p,d,1.);}`;
+const DEPV = '#version 300 es\nprecision highp float;precision highp sampler2D;uniform sampler2D A;uniform vec2 R;uniform int W;void main(){vec4 a=texelFetch(A,ivec2(gl_VertexID%W,gl_VertexID/W),0);gl_Position=a.w<.5?vec4(2,2,0,1):vec4(a.xy/R*2.-1.,0,1);gl_PointSize=1.;}';
+const DEPF = HEAD + 'uniform float D;out vec4 o;void main(){o=vec4(D,0,0,1);}';
+const DIF = HEAD + `uniform sampler2D T,G;uniform vec2 R;uniform float DE,DI,FR,CAP;uniform vec3 P;in vec2 uv;out vec4 o;
+void main(){vec2 e=1./R;float c=textureLod(T,uv,0.).r,s=0.;
+for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++)s+=textureLod(T,uv+vec2(x,y)*e,0.).r;
+vec2 q=uv*R-P.xy;vec4 fd=texture(G,uv);float v=(mix(c,s/9.,DI)*DE+fd.r*FR+P.z*exp(-dot(q,q)*.025))*(1.-fd.g);
+o=vec4(min(v,CAP),0,0,1);}`;
+const SHOW = HEAD + `uniform sampler2D T;uniform vec2 R,O;uniform float DK,K,Z;in vec2 uv;out vec4 o;
+void main(){float z=(length(uv*R-O)-Z)/46.,v=textureLod(T,uv,0.).r*(1.+.55*exp(-z*z)),b=textureLod(T,uv,2.5).r,c=1.-exp(-v*K),g=1.-exp(-b*K);
+if(DK>.5){vec3 col=mix(vec3(.05,.24,.16),vec3(.22,.86,.55),smoothstep(.22,.62,c));col=mix(col,vec3(.82,1.,.62),smoothstep(.62,.9,c));col=mix(col,vec3(.97,1.,.95),smoothstep(.9,1.,c));
+float a=smoothstep(.05,.5,c);o=vec4(col*a+vec3(.1,.55,.34)*g*.5*(1.-a),max(a,g*.35));}
+else{vec3 col=mix(vec3(.3,.45,.27),vec3(.04,.07,.04),smoothstep(.5,.9,c));float a=smoothstep(.16,.52,c)*.97,hl=g*.05*(1.-a);
+o=vec4(col*a+vec3(.33,.47,.29)*hl,a+hl);}}`;
+
+// Jones-style physarum: sensor angle/offset, turn, step, deposit, decay, diffusion, food rate, link food, display gain (dark/light),
+// growth-front speed, respawn rate (keeps the network exploring), trail cap (limits coarsening)
+const S = { SA: 0.45, RA: 0.55, SO: 9, SS: 1, D: 0.015, DE: 0.92, DI: 0.15, FR: 0.9, LK: 0.025, K: 2, KL: 1, GROW: 2, RJ: 0.002, CAP: 2 };
+let org = [0, 0], gl, P = {}, tri, pts, aT = [], aF = [], tT = [], tF = [], foodT, foodCv, AW = 512, AH = 256, rows = 256, TW = 0, TH = 0, sc = 0.5;
+let ai = 0, ti = 0, steps = 0, spf = 2, burst = null, ptr = [0, 0, 0], running = false, raf = 0, ema = 16, last = 0, frames = 0, lit = false, mode = 'none';
+function prog(vs, fs) {
+  const p = gl.createProgram();
+  for (const [t, s] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); gl.attachShader(p, sh); }
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link');
+  p.u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const nm = gl.getActiveUniform(p, i).name; p.u[nm] = gl.getUniformLocation(p, nm); }
+  return p;
+}
+function set(p, o) {
+  gl.useProgram(p);
+  for (const k in o) { const l = p.u[k], v = o[k]; if (!l) continue; if (k.length === 1 && 'ATG'.includes(k) && Number.isInteger(v)) gl.uniform1i(l, v); else if (k === 'W') gl.uniform1i(l, v); else if (Array.isArray(v)) gl[`uniform${v.length}fv`](l, v); else gl.uniform1f(l, v); }
+}
+function bind(u, t) { gl.activeTexture(gl.TEXTURE0 + u); gl.bindTexture(gl.TEXTURE_2D, t); }
+function mkTex(w, h, fmt, levels, filt) {
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texStorage2D(gl.TEXTURE_2D, levels, fmt, w, h);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filt[0]); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filt[1]);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+function mkFbo(t) {
+  const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error('fbo');
+  return f;
+}
+function initGL() {
+  gl = net.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'high-performance' });
+  if (!gl || !gl.getExtension('EXT_color_buffer_float')) return false;
+  P.u = prog(VS, UPD); P.d = prog(DEPV, DEPF); P.f = prog(VS, DIF); P.s = prog(VS, SHOW);
+  tri = gl.createVertexArray(); gl.bindVertexArray(tri);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  pts = gl.createVertexArray();
+  foodT = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, foodT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  foodCv = document.createElement('canvas');
+  return true;
+}
+function alloc() {
+  const small = W < 720, slow = (navigator.hardwareConcurrency || 8) <= 4;
+  sc = small ? 0.6 : 0.5; TW = Math.max(64, Math.round(W * sc)); TH = Math.max(64, Math.round(H * sc));
+  AW = 512; AH = slow ? 128 : small ? 256 : 512; rows = AH;
+  const dpr = Math.min(devicePixelRatio || 1, 1.5); net.width = Math.round(W * dpr); net.height = Math.round(H * dpr);
+  [...aT, ...tT].forEach((t) => gl.deleteTexture(t)); [...aF, ...tF].forEach((f) => gl.deleteFramebuffer(f));
+  const lv = Math.floor(Math.log2(Math.max(TW, TH))) + 1;
+  tT = [0, 1].map(() => mkTex(TW, TH, gl.R16F, lv, [gl.LINEAR_MIPMAP_LINEAR, gl.LINEAR])); tF = tT.map(mkFbo);
+  aT = [0, 1].map(() => mkTex(AW, AH, gl.RGBA32F, 1, [gl.NEAREST, gl.NEAREST])); aF = aT.map(mkFbo);
+  for (const f of tF) { gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.viewport(0, 0, TW, TH); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
+  tT.forEach((t) => { gl.bindTexture(gl.TEXTURE_2D, t); gl.generateMipmap(gl.TEXTURE_2D); });
+  // the colony wakes from the accent dot of the name and spreads out from there
+  const db = $('.name .dot').getBoundingClientRect(), hb = hero.getBoundingClientRect();
+  org = [(db.left + db.width / 2 - hb.left) * sc, (H - (db.top + db.height * 0.72 - hb.top)) * sc];
+  feed();
+  const R = rng(42), data = new Float32Array(AW * AH * 4);
+  for (let i = 0; i < AW * AH; i++) {
+    let x, y;
+    do { x = 1 + R() * (TW - 2); y = 1 + R() * (TH - 2); } while (mask[(TH - 1 - (y | 0)) * TW + (x | 0)]);
+    data[i * 4] = x; data[i * 4 + 1] = y; data[i * 4 + 2] = R() * 6.2832;
+  }
+  gl.bindTexture(gl.TEXTURE_2D, aT[0]); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, AW, AH, gl.RGBA, gl.FLOAT, data);
+  ai = ti = steps = frames = 0; spf = small ? 1 : 2;
+}
+function feed() { // R = food (notes + faint links), G = walls around the text
+  const c = foodCv; c.width = TW; c.height = TH;
+  const g = c.getContext('2d', { willReadFrequently: true }), wt = (t) => (focus < 0 ? 0.8 : t === focus ? 1 : 0.05);
+  g.fillStyle = '#000'; g.fillRect(0, 0, TW, TH); g.globalCompositeOperation = 'lighter'; g.lineWidth = 1.1; g.lineCap = 'round';
+  for (let k = 0; k < L.length; k += 2) {
+    const a = nodes[L[k]], b = nodes[L[k + 1]];
+    g.strokeStyle = `rgba(255,0,0,${(S.LK * Math.min(wt(a.t), wt(b.t))).toFixed(3)})`;
+    g.beginPath(); g.moveTo(a.x * sc, a.y * sc); g.lineTo(b.x * sc, b.y * sc); g.stroke();
+  }
+  for (const n of nodes) {
+    const x = n.x * sc, y = n.y * sc, r = n.s ? 3.6 : 2.8, gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, `rgba(255,0,0,${(wt(n.t) * (n.s ? 1 : 0.6)).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  g.fillStyle = '#0f0';
+  for (const q of walls) { g.beginPath(); if (g.roundRect) g.roundRect(q.x * sc, q.y * sc, q.w * sc, q.h * sc, 6 * sc); else g.rect(q.x * sc, q.y * sc, q.w * sc, q.h * sc); g.fill(); }
+  const px = g.getImageData(0, 0, TW, TH).data; mask = new Uint8Array(TW * TH);
+  for (let i = 0; i < mask.length; i++) mask[i] = px[i * 4 + 1] > 127 ? 1 : 0;
+  gl.bindTexture(gl.TEXTURE_2D, foodT); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+}
+function step() {
+  gl.bindVertexArray(tri);
+  set(P.u, { A: 0, T: 1, G: 2, R: [TW, TH], O: org, U: 10 + steps * S.GROW, F: steps % 997, SA: S.SA, RA: S.RA, SO: S.SO, SS: S.SS, RJ: S.RJ, B: burst || [0, 0, 0, 0] });
+  bind(0, aT[ai]); bind(1, tT[ti]); bind(2, foodT); gl.bindFramebuffer(gl.FRAMEBUFFER, aF[1 - ai]); gl.viewport(0, 0, AW, rows); gl.drawArrays(gl.TRIANGLES, 0, 3); ai = 1 - ai;
+  burst = null;
+  set(P.d, { A: 0, R: [TW, TH], W: AW, D: S.D });
+  bind(0, aT[ai]); gl.bindFramebuffer(gl.FRAMEBUFFER, tF[ti]); gl.viewport(0, 0, TW, TH);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.bindVertexArray(pts); gl.drawArrays(gl.POINTS, 0, AW * rows); gl.disable(gl.BLEND);
+  gl.bindVertexArray(tri);
+  set(P.f, { T: 0, G: 1, R: [TW, TH], DE: S.DE, DI: S.DI, FR: S.FR, CAP: S.CAP, P: ptr });
+  bind(0, tT[ti]); bind(1, foodT); gl.bindFramebuffer(gl.FRAMEBUFFER, tF[1 - ti]); gl.drawArrays(gl.TRIANGLES, 0, 3); ti = 1 - ti;
+  steps++;
+}
+function show() {
+  bind(0, tT[ti]); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, net.width, net.height);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.bindVertexArray(tri); set(P.s, { T: 0, R: [TW, TH], O: org, Z: reduce ? -999 : ((performance.now() / 1000) * 150) % 1500 - 300, DK: isDark() ? 1 : 0, K: isDark() ? S.K : S.KL }); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  if (!lit) { lit = true; net.classList.add('on'); }
+}
+function frame(t) {
+  raf = 0;
+  if (!running) return;
+  const dt = last ? t - last : 16; last = t; ema = ema * 0.95 + dt * 0.05;
+  const n = fast && steps < 380 ? 10 : spf;
+  for (let k = 0; k < n; k++) step();
+  show(); frames++;
+  if (!fast && frames > 120 && frames % 60 === 0) { if (ema > 24 && spf > 1) spf = 1; else if (ema > 30 && rows > 32) rows >>= 1; }
+  raf = requestAnimationFrame(frame);
+}
+function play() { if (running && !raf && mode === 'gl' && !reduce) { last = 0; raf = requestAnimationFrame(frame); } }
+function still(n) { // reduced motion: grow out of sight, then show one frame
+  let k = 0;
+  const chunk = () => { for (let i = 0; i < 40 && k < n; i++, k++) step(); if (k < n) requestAnimationFrame(chunk); else show(); };
+  chunk();
+}
+
+/* ---------- fallback: a static drawing of the same network ---------- */
+function fallback() {
+  mode = 'svg'; hero.querySelector('.fallback')?.remove();
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+  svg.setAttribute('class', 'fallback'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  let d = '';
+  const seg = (a, b, bend) => { const mx = (a.x + b.x) / 2 + (b.y - a.y) * bend, my = (a.y + b.y) / 2 - (b.x - a.x) * bend; d += `M${a.x.toFixed(1)} ${a.y.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`; };
+  for (let k = 0; k < L.length; k += 2) seg(nodes[L[k]], nodes[L[k + 1]], 0.12);
+  const per = TOPICS.map(() => []); nodes.forEach((n) => per[n.t].push(n));
+  per.forEach((list) => list.forEach((n, k) => { if (!k) return; let best = list[0], bd = 1e9; for (let j = 0; j < k; j++) { const o = list[j], dd = (o.x - n.x) ** 2 + (o.y - n.y) ** 2; if (dd < bd) { bd = dd; best = o; } } seg(best, n, 0.08); }));
+  const done = [isles[0]];
+  while (done.length < isles.length) { let bd = 1e12, pr = null; for (const a of done) for (const b of isles) if (!done.includes(b)) { const dd = (a.x - b.x) ** 2 + (a.y - b.y) ** 2; if (dd < bd) { bd = dd; pr = [a, b]; } } done.push(pr[1]); seg(pr[0], pr[1], 0.1); }
+  path.setAttribute('d', d); path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.2'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('opacity', '.55');
+  svg.appendChild(path); hero.insertBefore(svg, dots);
+}
+
+/* ---------- boot ---------- */
+function build() {
+  layout();
+  if (mode !== 'svg') {
+    try { if (!gl && !initGL()) throw 0; alloc(); mode = 'gl'; }
+    catch (e) { mode = 'svg'; }
+  }
+  if (mode === 'svg') fallback();
+  drawDots(); hover = -1; showTip();
+  if (mode === 'gl') { if (reduce) still(fast ? 380 : 360); else play(); }
+}
+net.addEventListener('webglcontextlost', (e) => { e.preventDefault(); cancelAnimationFrame(raf); raf = 0; mode = 'svg'; net.classList.remove('on'); fallback(); drawDots(); });
+const pick = (x, y, r) => { let best = -1, bd = r * r; for (const n of nodes) { const dd = (n.x - x) ** 2 + (n.y - y) ** 2; if (dd < bd) { bd = dd; best = n.i; } } return best; };
+const loc = (e) => { const b = hero.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+hero.addEventListener('pointermove', (e) => { // the pointer is food: veins reach toward it
+  const [x, y] = loc(e);
+  if (!reduce) ptr = [x * sc, (H - y) * sc, 2.4];
+  if (pinned || tip.contains(e.target)) return;
+  const best = pick(x, y, 14);
+  if (best !== hover) { hover = best; drawDots(); showTip(); }
+});
+hero.addEventListener('pointerleave', () => { ptr = [0, 0, 0]; if (!pinned) { hover = -1; drawDots(); showTip(); } });
+hero.addEventListener('pointerdown', (e) => { // tap a note to pin its card; tap empty ground for a spore burst
+  if (e.target.closest('a,button,.intro,.legend,.site')) return;
+  const [x, y] = loc(e), best = pick(x, y, e.pointerType === 'touch' ? 22 : 14);
+  if (best >= 0) { hover = best; pinned = true; drawDots(); showTip(); return; }
+  if (pinned) { pinned = false; hover = -1; drawDots(); showTip(); }
+  if (mode === 'gl' && !reduce) burst = [x * sc, (H - y) * sc, 9, 0.045];
+});
+document.querySelectorAll('.chip').forEach((btn) => btn.addEventListener('click', () => {
+  const t = +btn.dataset.t; focus = focus === t ? -1 : t;
+  document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(+c.dataset.t === focus)));
+  status.textContent = focus < 0 ? '108 notes · 178 links · grown live by a slime-mold model' : `Feeding ${TOPICS[focus][0]} (${TOPICS[focus][1]} notes): the network regrows toward it`;
+  drawDots();
+  if (mode === 'gl') { feed(); if (reduce) still(200); }
+}));
+onTheme(() => { drawDots(); if (mode === 'gl' && (reduce || !running)) show(); });
+const io = new IntersectionObserver((es) => { running = es[0].isIntersecting && !document.hidden; if (running) play(); }, { threshold: 0.02 });
+document.addEventListener('visibilitychange', () => { running = !document.hidden && hero.getBoundingClientRect().bottom > 0; if (running) play(); });
+let rw = 0, rh = 0, rt = 0;
+const ro = new ResizeObserver(() => { const w = hero.clientWidth, h = hero.clientHeight; if (Math.abs(w - rw) < 2 && Math.abs(h - rh) < 80) return; const first = !rw; rw = w; rh = h; if (first) return; clearTimeout(rt); rt = setTimeout(() => { cancelAnimationFrame(raf); raf = 0; lit = false; net.classList.remove('on'); build(); }, 180); });
+const start = () => { rw = hero.clientWidth; rh = hero.clientHeight; build(); io.observe(hero); ro.observe(hero); };
+addEventListener('load', () => Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1200))]).then(() => requestAnimationFrame(start)));
+
+/* ---------- specimen tiles + experience hypha (decorative) ---------- */
+const hash = (s) => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+document.querySelectorAll('.tile').forEach((el) => {
+  const R = rng(hash(el.dataset.seed)), P3 = [[], [], []], w = 96, h = 96;
+  const br = (x, y, a, len, dep) => {
+    let d = `M${x.toFixed(1)} ${y.toFixed(1)}`;
+    for (let i = 0; i < 5; i++) {
+      a += (R() - 0.5) * 0.6; x += (Math.cos(a) * len) / 5; y += (Math.sin(a) * len) / 5; d += `L${x.toFixed(1)} ${y.toFixed(1)}`;
+      if (dep < 4 && R() < 0.5) br(x, y, a + (R() < 0.5 ? -1 : 1) * (0.4 + R() * 0.7), len * (0.48 + R() * 0.2), dep + 1);
+    }
+    P3[Math.min(dep, 2)].push(d);
+  };
+  br(w * (0.3 + R() * 0.15), h + 2, -1.5708 + (R() - 0.5) * 0.5, h * 0.9, 0); br(w * (0.6 + R() * 0.15), h + 2, -1.5708 + (R() - 0.5) * 0.5, h * 0.7, 1);
+  el.insertAdjacentHTML('afterbegin', `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${P3.map((p, i) => `<path pathLength="1" stroke-width="${[1.7, 1.1, 0.75][i]}" d="${p.join('')}"/>`).join('')}</svg>`);
+});
+const xp = $('.xp');
+if (xp) {
+  const h = xp.offsetHeight - 20, R = rng(7); let d = 'M8 4';
+  for (let y = 4; y < h; y += 26) d += `Q${(8 + (R() - 0.5) * 9).toFixed(1)} ${y + 13} 8 ${Math.min(y + 26, h)}`;
+  xp.insertAdjacentHTML('afterbegin', `<svg class="hy" viewBox="0 0 16 ${xp.offsetHeight}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}"/><path class="flow" pathLength="1" d="${d}"/></svg>`);
+  xp.classList.add('js');
+  const hy = xp.firstElementChild;
+  new IntersectionObserver((es) => hy.classList.toggle('on', es[0].isIntersecting)).observe(xp);
+}
+})();
+</script>
+<!-- ===== DIRECTIONS BAR (shared review UI, not part of the design) =====
+     Paste at the very end of <body>. Set data-current (a|b|c), data-name, data-weight ("18.6 KB gz"). -->
+<nav class="dirbar" id="dirbar" aria-label="Design directions" data-current="b" data-name="Mycelium" data-weight="21.5 KB gz">
+  <a class="dirbar-all" href="./" title="All directions" aria-label="All directions">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2.5 2.5h4.5v4.5H2.5zM9 2.5h4.5v4.5H9zM2.5 9h4.5v4.5H2.5zM9 9h4.5v4.5H9z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+  </a>
+  <span class="dirbar-seg"><a href="a.html" data-k="a">A</a><a href="b.html" data-k="b">B</a><a href="c.html" data-k="c">C</a></span>
+  <span class="dirbar-name"></span>
+  <span class="dirbar-stats"><span class="dirbar-w"></span><span class="dirbar-fcp"></span><span class="dirbar-fps">… fps</span></span>
+  <button class="dirbar-theme" type="button" aria-label="Switch between light and dark">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="5.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 2.2a5.8 5.8 0 0 1 0 11.6z" fill="currentColor"/></svg>
+  </button>
+</nav>
+<style>
+.dirbar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:10px;height:40px;padding:0 5px;border-radius:999px;background:rgba(18,16,13,.86);color:#efe9dc;font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.09);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);max-width:calc(100vw - 24px);white-space:nowrap;color-scheme:dark}
+.dirbar a,.dirbar button{color:inherit;text-decoration:none;font:inherit}
+.dirbar-all,.dirbar-theme{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;border:0;background:transparent;cursor:pointer;opacity:.82;flex:none}
+.dirbar-all:hover,.dirbar-theme:hover{background:rgba(255,255,255,.1);opacity:1}
+.dirbar-seg{display:flex;gap:2px;padding:2px;border-radius:999px;background:rgba(255,255,255,.07);flex:none}
+.dirbar-seg a{display:grid;place-items:center;min-width:30px;height:26px;border-radius:999px;opacity:.7}
+.dirbar-seg a:hover{opacity:1;background:rgba(255,255,255,.08)}
+.dirbar-seg a[aria-current="page"]{opacity:1;background:#efe9dc;color:#16130f;font-weight:700}
+.dirbar-name{font-weight:600}
+.dirbar-stats{display:flex;gap:8px;opacity:.62;font-variant-numeric:tabular-nums}
+.dirbar-stats>span:not(:first-child)::before{content:"·";margin-right:8px;opacity:.7}
+.dirbar :focus-visible{outline:2px solid #ffb35c;outline-offset:2px}
+@media (max-width:640px){.dirbar-name{display:none}}
+@media (max-width:420px){.dirbar-w,.dirbar-fcp{display:none}}
+</style>
+<script>
+(() => {
+  const bar = document.getElementById('dirbar');
+  if (!bar) return;
+  const cur = bar.dataset.current;
+  bar.querySelectorAll('.dirbar-seg a').forEach((a) => { if (a.dataset.k === cur) a.setAttribute('aria-current', 'page'); });
+  bar.querySelector('.dirbar-name').textContent = cur.toUpperCase() + ' · ' + bar.dataset.name;
+  const w = bar.querySelector('.dirbar-w');
+  if (bar.dataset.weight) w.textContent = bar.dataset.weight; else w.remove();
+  const fcpEl = bar.querySelector('.dirbar-fcp');
+  const showFcp = (t) => { fcpEl.textContent = 'FCP ' + Math.round(t) + ' ms'; };
+  try {
+    const e = performance.getEntriesByName('first-contentful-paint')[0];
+    if (e) showFcp(e.startTime);
+    else new PerformanceObserver((l) => l.getEntries().forEach((en) => en.name === 'first-contentful-paint' && showFcp(en.startTime))).observe({ type: 'paint', buffered: true });
+  } catch (_) { fcpEl.remove(); }
+  const fpsEl = bar.querySelector('.dirbar-fps');
+  let frames = 0, last = performance.now();
+  const tick = (now) => {
+    frames++;
+    if (now - last >= 500) { fpsEl.textContent = Math.round((frames * 1000) / (now - last)) + ' fps'; frames = 0; last = now; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', () => { frames = 0; last = performance.now(); });
+  const root = document.documentElement, mq = matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches; };
+  bar.querySelector('.dirbar-theme').addEventListener('click', () => root.setAttribute('data-theme', isDark() ? 'light' : 'dark'));
+})();
+</script>
+<!-- ===== /DIRECTIONS BAR ===== -->
+
+</body>
+</html>
