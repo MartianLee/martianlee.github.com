@@ -1242,6 +1242,9 @@ html.dark {
   gap: 20px 32px;
 }
 .rh-cta {
+  /* below 900px the HUD stacks above the links: the links stay above its haze */
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 4px 22px;
@@ -1251,12 +1254,17 @@ html.dark {
   padding: 8px 0;
   color: var(--rh-muted);
 }
+/* light: the accent is 4.52:1 on paper and the fade under the links is not quite paper, so the main link and hover use --rh-accent-text */
 .rh-cta a:hover {
-  color: var(--rh-accent);
+  color: var(--rh-accent-text);
 }
 .rh-cta .rh-cta-main {
-  color: var(--rh-accent);
+  color: var(--rh-accent-text);
   box-shadow: inset 0 -2px 0 var(--rh-accent);
+}
+html.dark .rh-cta a:hover,
+html.dark .rh-cta .rh-cta-main {
+  color: var(--rh-accent);
 }
 /* live telemetry (REF .hud); .rh-live is also scoped under .rh-band-tele, this is the hero's own rule */
 .rh-hud {
@@ -1265,6 +1273,8 @@ html.dark {
   text-transform: uppercase;
   color: var(--rh-muted);
   min-width: 0;
+  position: relative;
+  isolation: isolate;
   /* The server renders dashes, whose width is far from the live values (the right-aligned block would jump 145px left on
      hydration at 1440px), so it appears once the first reading is in. */
   opacity: 0;
@@ -1289,8 +1299,8 @@ html.dark {
   background: var(--rh-accent);
   animation: rh-hero-ping 2.4s ease-out infinite;
   flex: none;
-  /* its own layer: the ping repaints every frame, and in the HUD's layer that would re-raster all the HUD text with its halo
-     each time (a 3 to 4 times lower frame rate under software rendering, no difference on a GPU) */
+  /* its own layer: the ping repaints every frame, and in the HUD's layer that would re-raster the HUD text and its blurred haze
+     each time */
   will-change: transform;
 }
 .rh-hud dl {
@@ -1311,56 +1321,27 @@ html.dark {
   text-transform: none;
   letter-spacing: 0.02em;
 }
-/* The hero's small text sits on the terrain (HUD and links over the dunes, the dark tagline over the moon): a halo in the page
-   colour keeps the immediate surround of every glyph paper whatever the ground does, and is invisible where the ground already
-   is paper. text-shadow inherits, so .rh-hud covers its live line, labels and values. The light tagline needs none. Solid
-   reach is 2px (a 1px ring and the 2px ring twice: thin strokes, Hangul above all, need the outer ring doubled), soft reach 10px. */
-.rh-hud,
-.rh-cta a,
+/* The telemetry sits over the dunes at most heights (REF's labels measure 1.8 to 3.7:1 there). A soft paper haze grows out of
+   the bottom-right corner behind it, as if the fade pooled there. It rides on the HUD, so it follows the block in both
+   languages and fades in with it, and it runs past the hero's right and bottom edges, so only its soft top and left show. */
+.rh-hud::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -46px;
+  left: -76px;
+  right: calc(-1 * var(--rh-gutter) - 70px);
+  bottom: -100px;
+  border-top-left-radius: 90px;
+  background: color-mix(in srgb, var(--rh-paper) 90%, transparent);
+  filter: blur(32px);
+  pointer-events: none;
+}
+/* the dark tagline: a soft glow in the page colour where the moon passes behind it on narrow screens */
 html.dark .rh-lead {
   text-shadow:
-    1px 0 var(--rh-paper),
-    -1px 0 var(--rh-paper),
-    0 1px var(--rh-paper),
-    0 -1px var(--rh-paper),
-    1px 1px var(--rh-paper),
-    -1px 1px var(--rh-paper),
-    1px -1px var(--rh-paper),
-    -1px -1px var(--rh-paper),
-    2px 0 var(--rh-paper),
-    -2px 0 var(--rh-paper),
-    0 2px var(--rh-paper),
-    0 -2px var(--rh-paper),
-    2px 1px var(--rh-paper),
-    2px -1px var(--rh-paper),
-    -2px 1px var(--rh-paper),
-    -2px -1px var(--rh-paper),
-    1px 2px var(--rh-paper),
-    -1px 2px var(--rh-paper),
-    1px -2px var(--rh-paper),
-    -1px -2px var(--rh-paper),
-    2px 2px var(--rh-paper),
-    -2px 2px var(--rh-paper),
-    2px -2px var(--rh-paper),
-    -2px -2px var(--rh-paper),
-    2px 0 var(--rh-paper),
-    -2px 0 var(--rh-paper),
-    0 2px var(--rh-paper),
-    0 -2px var(--rh-paper),
-    2px 1px var(--rh-paper),
-    2px -1px var(--rh-paper),
-    -2px 1px var(--rh-paper),
-    -2px -1px var(--rh-paper),
-    1px 2px var(--rh-paper),
-    -1px 2px var(--rh-paper),
-    1px -2px var(--rh-paper),
-    -1px -2px var(--rh-paper),
-    2px 2px var(--rh-paper),
-    -2px 2px var(--rh-paper),
-    2px -2px var(--rh-paper),
-    -2px -2px var(--rh-paper),
-    0 0 4px var(--rh-paper),
-    0 0 10px color-mix(in srgb, var(--rh-paper) 50%, transparent);
+    0 0 6px var(--rh-paper),
+    0 0 14px var(--rh-paper);
 }
 /* the hero ping grows to 9px; rh-ping (band telemetry) stops at 8px */
 @keyframes rh-hero-ping {
