@@ -68,6 +68,8 @@ export interface UIStrings {
     figure: string
     previous: string
     next: string
+    spec: string
+    more: string
   }
   about: {
     experience: string
@@ -182,6 +184,8 @@ export const ui: Record<Lang, UIStrings> = {
       figure: 'Fig. 1',
       previous: 'Previous',
       next: 'Next',
+      spec: 'Spec sheet',
+      more: 'More projects',
     },
     about: {
       experience: 'Experience',
@@ -303,6 +307,8 @@ export const ui: Record<Lang, UIStrings> = {
       figure: '그림 1',
       previous: '이전',
       next: '다음',
+      spec: '사양서',
+      more: '다른 프로젝트',
     },
     about: {
       experience: '경력',

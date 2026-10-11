@@ -8,7 +8,7 @@ interface HorizonBandProps {
   titleKo?: string
   dot?: boolean
   tele?: ReactNode
-  variant?: 'monument' | 'headline' | 'slim'
+  variant?: 'monument' | 'headline' | 'slim' | 'name'
   aside?: ReactNode
   children?: ReactNode
   headingId?: string

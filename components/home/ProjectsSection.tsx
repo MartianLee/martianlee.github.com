@@ -2,31 +2,11 @@
 
 import { useRef } from 'react'
 import Link from '@/components/Link'
-import ProjectOrb from '@/components/ProjectOrb'
+import ProjectRow from '@/components/projects/ProjectRow'
 import projectsData from '@/data/projectsData'
-import { useUI, useLocalized } from '@/components/useUI'
+import { useUI } from '@/components/useUI'
 import { usePointerSun } from '@/components/hooks/usePointerSun'
 import { useSettleOnView } from '@/components/hooks/useSettleOnView'
-import type { Project } from '@/data/projectsData'
-
-function Row({ p }: { p: Project }) {
-  const summary = useLocalized(p.summary, p.summaryKo)
-  const kind = useLocalized(p.kind, p.kindKo)
-  return (
-    <li>
-      <Link href={`/projects/${p.slug}`} className="rh-proj-row">
-        <ProjectOrb orb={p.orb} glow />
-        <span className="rh-proj-main">
-          <span className="rh-proj-title">
-            {p.title} <span className="rh-chip">{kind}</span>
-          </span>
-          <span className="rh-proj-desc">{summary}</span>
-        </span>
-        <span className="rh-proj-stack">{(p.techStack ?? []).slice(0, 3).join(' · ')} →</span>
-      </Link>
-    </li>
-  )
-}
 
 export default function ProjectsSection() {
   const ui = useUI()
@@ -48,7 +28,7 @@ export default function ProjectsSection() {
       </div>
       <ul className="rh-proj" ref={listRef}>
         {featured.map((p) => (
-          <Row key={p.slug} p={p} />
+          <ProjectRow key={p.slug} p={p} />
         ))}
       </ul>
     </section>

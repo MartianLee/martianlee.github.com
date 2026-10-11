@@ -1937,6 +1937,525 @@ html.dark .rh-rows a:focus-visible {
   }
 }
 
+/* ---------- projects (Task 9) ---------- */
+/* REF inner/projects.src.html and inner/project.src.html. The list reuses the home's rows (.rh-proj, .rh-proj-row, .rh-tile, .rh-orb and
+   the pointer-lit rules above, driven by usePointerSun); this block adds the list's group heads and hint, the project band with its rising
+   planet, and the detail body (lede, framed screenshot, spec sheet, neighbors). */
+:root {
+  --rh-halo: rgba(255, 240, 214, 0.55);
+}
+html.dark {
+  --rh-halo: rgba(120, 162, 230, 0.28);
+}
+
+/* list: group heads and the hint line (REF .hint is .rh-sun-hint here: .rh-hint is the tenure hint) */
+.rh-sec-count {
+  margin-left: auto;
+  font: 500 12px/1 var(--rh-mono);
+  color: var(--rh-muted);
+  font-variant-numeric: tabular-nums;
+}
+.rh-sun-hint {
+  margin: 10px 0 0;
+  font: 500 11.5px/1.5 var(--rh-mono);
+  letter-spacing: 0.06em;
+  color: var(--rh-muted);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-sun-hint i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 65% 35%, #fff6e2, var(--rh-accent) 70%);
+  vertical-align: -1px;
+}
+@media (hover: none) {
+  .rh-sun-hint {
+    display: none;
+  }
+}
+
+/* detail band (REF .band--project): the sun sits left in light and low right in dark, the planet is lit from the same side */
+.rh-band--name {
+  --rh-sun-x: 14%;
+  --rh-sun-y: 40%;
+  --rh-orb-lx: 34%;
+  --rh-orb-ly: 32%;
+  --rh-big: clamp(150px, 23vw, 310px);
+  min-height: clamp(300px, 46vh, 420px);
+}
+html.dark .rh-band--name {
+  --rh-sun-x: 84%;
+  --rh-sun-y: 100%;
+  --rh-orb-lx: 78%;
+  --rh-orb-ly: 54%;
+}
+@media (max-width: 640px) {
+  .rh-band--name {
+    min-height: 300px;
+  }
+}
+/* REF .monument--name */
+.rh-band--name .rh-monument {
+  text-transform: none;
+  font-size: clamp(44px, 9.6vw, 138px);
+  letter-spacing: -0.04em;
+}
+.rh-band--name .rh-band-tele a {
+  display: inline-flex;
+  padding: 4px 0;
+}
+/* The planet is placed against the band itself (REF .bigbody), so the column is neither positioned nor a stacking context here
+   (as on the 404): the planet then rises behind the mesas and the ground. The row is a plain block, the planet takes no column. */
+.rh-band--name .rh-band-inner {
+  position: static;
+  z-index: auto;
+}
+.rh-band--name .rh-band-row {
+  display: block;
+}
+
+/* REF has one sample (Hanji.md) and nowrap; the site has names up to 20 characters. Wide screens keep one line and size the name to the
+   room between its left edge and the planet (24px short of it): n characters take about n * 0.66em, and 0.9 leaves the headroom
+   rh-settle needs while the tracking closes. --rh-name-n is the title length and --rh-name-w its longest word (ProjectDetail sets both
+   on the page wrapper). */
+.rh-band--name {
+  --rh-name-room: calc(
+    100vw - max(var(--rh-gutter), 8vw) - var(--rh-big) - 24px -
+      max(var(--rh-gutter), (100vw - var(--rh-col)) / 2)
+  );
+}
+.rh-band--name .rh-monument {
+  font-size: clamp(
+    44px,
+    min(9.6vw, calc(var(--rh-name-room) * 0.9 / (var(--rh-name-n, 8) * 0.66))),
+    138px
+  );
+}
+/* narrow desktops, tablets and phones (below about 860px a 19 or 20 character name no longer fits in one line): the text column
+   (telemetry line and name) keeps to the room beside the planet and the name wraps, balanced, inside it. Only the longest word has to
+   fit, so REF's size stays unless that word would reach the planet; a floor stops it shrinking further. The tele's last words would
+   otherwise sit on the planet's limb (light text on the pale hanji planet was 2.2:1 in dark). */
+@media (max-width: 860px) {
+  .rh-band--name .rh-band-row > :first-child {
+    max-width: var(--rh-name-room);
+  }
+  .rh-band--name .rh-monument {
+    white-space: normal;
+    text-wrap: balance;
+    font-size: clamp(
+      var(--rh-name-min, 44px),
+      min(
+        clamp(44px, 9.6vw, 138px),
+        calc(var(--rh-name-room) * 0.95 / (var(--rh-name-w, 8) * 0.66))
+      ),
+      138px
+    );
+  }
+}
+/* phones: the planet sits 6% past the right edge, so the room is measured to its left limb there */
+@media (max-width: 760px) {
+  .rh-band--name {
+    --rh-name-room: calc(106vw - var(--rh-big) - 20px - var(--rh-gutter));
+  }
+}
+/* 360px is the common Android width: a slightly smaller planet and a 38px floor keep a long single word (CheerCat, Simulator)
+   clear of it, where REF's 150px planet and 44px floor leave the word on its limb */
+@media (max-width: 400px) {
+  .rh-band--name {
+    --rh-big: 128px;
+    --rh-name-min: 38px;
+  }
+}
+/* when the tele wraps beside the planet a separator can be left dangling at the end of a line: phones drop the dots and keep the gaps */
+@media (max-width: 460px) {
+  .rh-band--name .rh-band-tele {
+    column-gap: 18px;
+  }
+  .rh-band--name .rh-band-tele .rh-sep {
+    display: none;
+  }
+}
+
+/* the planet: REF .bigbody. The tile is the body, the orb fills it, the texture strip turns once in 90s */
+.rh-tile--hero {
+  position: absolute;
+  z-index: -3;
+  right: max(var(--rh-gutter), 8%);
+  bottom: calc(var(--rh-ground-h) - var(--rh-big) * 0.34);
+  display: block;
+  width: var(--rh-big);
+  height: var(--rh-big);
+  border-radius: 50%;
+  background: none;
+  overflow: visible;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 70px 6px var(--rh-halo);
+  animation: rh-planet-rise 2.2s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+.rh-tile--hero::before {
+  content: none;
+}
+.rh-tile--hero .rh-orb {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.rh-tile--hero .rh-orb i {
+  animation: rh-planet-spin 90s linear infinite;
+}
+@keyframes rh-planet-spin {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes rh-planet-rise {
+  from {
+    transform: translateY(14%);
+  }
+}
+@media (max-width: 760px) {
+  .rh-tile--hero {
+    right: -6%;
+  }
+}
+/* the hero is six times the size of a row planet: hanji gets the larger paper-fiber texture of REF, ring and moonlet scale with it */
+.rh-tile--hero .rh-o-hanji {
+  --rh-tex:
+    radial-gradient(ellipse 24% 0.7% at 22% 30%, rgba(90, 66, 40, 0.24), transparent),
+    radial-gradient(ellipse 18% 0.6% at 60% 22%, rgba(90, 66, 40, 0.2), transparent),
+    radial-gradient(ellipse 30% 0.8% at 48% 58%, rgba(90, 66, 40, 0.22), transparent),
+    radial-gradient(ellipse 16% 0.6% at 78% 72%, rgba(90, 66, 40, 0.2), transparent),
+    radial-gradient(ellipse 20% 0.6% at 30% 84%, rgba(90, 66, 40, 0.18), transparent),
+    radial-gradient(ellipse 0.7% 20% at 34% 50%, rgba(90, 66, 40, 0.17), transparent),
+    radial-gradient(ellipse 0.6% 16% at 68% 40%, rgba(90, 66, 40, 0.16), transparent),
+    radial-gradient(ellipse 0.5% 12% at 84% 22%, rgba(90, 66, 40, 0.14), transparent),
+    radial-gradient(ellipse 22% 10% at 30% 70%, rgba(150, 120, 80, 0.15), transparent 70%),
+    radial-gradient(ellipse 18% 9% at 70% 30%, rgba(150, 120, 80, 0.13), transparent 70%),
+    radial-gradient(ellipse 30% 14% at 52% 44%, rgba(255, 255, 255, 0.2), transparent 70%);
+}
+.rh-tile--hero .rh-orb-ring {
+  width: 165%;
+  height: 165%;
+  margin: -82.5% 0 0 -82.5%;
+  border-width: 5px;
+}
+.rh-tile--hero .rh-moonlet {
+  top: 2%;
+  right: auto;
+  left: 96%;
+  width: 17%;
+  height: 17%;
+  box-shadow: calc(var(--rh-big) * -0.16) calc(var(--rh-big) * 0.33) 0 calc(var(--rh-big) * -0.04)
+    #b9ae8e;
+}
+
+/* pointer is the Sun, here for the hero and the neighbor planets (the rules for the rows are scoped to .rh-proj). usePointerSun writes
+   --rh-lx/--rh-ly (the light), --rh-hx/--rh-hy and --rh-act (the highlight) and, for the small planets, the live terminator
+   (--rh-sx/--rh-sy, --rh-t0..2, --rh-d1/--rh-d2); until it writes, the band's own light (--rh-orb-lx / --rh-orb-ly) rests. */
+.rh-pnav .rh-orb::after {
+  background:
+    radial-gradient(
+      circle at var(--rh-hx, var(--rh-lx)) var(--rh-hy, var(--rh-ly)),
+      rgb(255 248 236 / calc(var(--rh-act, 0) * 0.3)) 0,
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at var(--rh-sx, calc(var(--rh-lx) - 6%)) var(--rh-sy, calc(var(--rh-ly) - 4%)),
+      transparent var(--rh-t0, 32%),
+      rgb(8 5 3 / var(--rh-d1, 0.42)) var(--rh-t1, 60%),
+      rgb(8 5 3 / var(--rh-d2, 0.9)) var(--rh-t2, 92%)
+    );
+}
+/* the hero is six times the size of a row planet: the live terminator would turn it into a black disc with a thin crescent whenever the
+   pointer is far away, and the planet is there to show the project's own colours. It keeps the highlight and the light position
+   (REF's detail page moves only the light) and the fixed, softer terminator of the resting planet. */
+.rh-tile--hero .rh-orb::after {
+  background:
+    radial-gradient(
+      circle at var(--rh-hx, var(--rh-lx)) var(--rh-hy, var(--rh-ly)),
+      rgb(255 248 236 / calc(var(--rh-act, 0) * 0.3)) 0,
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at calc(var(--rh-lx) - 6%) calc(var(--rh-ly) - 4%),
+      transparent 32%,
+      rgb(8 5 3 / 0.42) 60%,
+      rgb(8 5 3 / 0.9) 92%
+    );
+}
+
+/* detail body: intro, framed screenshot, spec sheet */
+.rh-p-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px 40px;
+  align-items: end;
+  margin-top: clamp(26px, 3.4vw, 40px);
+}
+.rh-p-lede {
+  margin: 0;
+  max-width: 58ch;
+  font: 400 clamp(20px, 1.9vw, 23px) / 1.5 var(--rh-serif);
+  color: var(--rh-ink);
+  text-wrap: pretty;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rh-shot {
+  margin: clamp(36px, 5vw, 64px) 0 0;
+}
+.rh-shot-frame {
+  position: relative;
+  padding: clamp(18px, 3.4vw, 44px);
+  background: var(--rh-surface);
+  border-radius: 4px;
+}
+.rh-shot-frame img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 22px 40px rgba(20, 12, 6, 0.28));
+}
+/* crop marks */
+.rh-cm {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: var(--rh-muted);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.8;
+}
+.rh-cm--tl {
+  left: 8px;
+  top: 8px;
+  border-left-width: 1px;
+  border-top-width: 1px;
+}
+.rh-cm--tr {
+  right: 8px;
+  top: 8px;
+  border-right-width: 1px;
+  border-top-width: 1px;
+}
+.rh-cm--bl {
+  left: 8px;
+  bottom: 8px;
+  border-left-width: 1px;
+  border-bottom-width: 1px;
+}
+.rh-cm--br {
+  right: 8px;
+  bottom: 8px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+.rh-shot figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 12px;
+  font: 400 15px/1.5 var(--rh-serif);
+  color: var(--rh-muted);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-cap-no {
+  font: 500 11px/1.9 var(--rh-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rh-accent);
+}
+.rh-cap-sep {
+  font: 500 11px/1.9 var(--rh-mono);
+  color: var(--rh-muted);
+}
+.rh-spec {
+  margin: 0;
+  display: grid;
+}
+.rh-spec > div {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 6px 28px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rh-line);
+}
+.rh-spec > div:first-child {
+  border-top: 1px solid var(--rh-line);
+}
+.rh-spec dt {
+  font: 500 11.5px/1.9 var(--rh-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.rh-spec dd {
+  margin: 0;
+  font: 400 17px/1.55 var(--rh-serif);
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-spec ol,
+.rh-spec-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.rh-spec ol {
+  counter-reset: w;
+}
+.rh-spec ol li {
+  counter-increment: w;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+.rh-spec ol li::before {
+  content: counter(w, decimal-leading-zero);
+  font: 500 12px/1.9 var(--rh-mono);
+  color: var(--rh-accent);
+}
+.rh-stack-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rh-stack-list li {
+  font: 500 12px/1 var(--rh-mono);
+  padding: 7px 10px;
+  border: 1px solid var(--rh-line);
+  border-radius: 999px;
+  background: var(--rh-paper);
+}
+.rh-spec a {
+  color: var(--rh-accent);
+}
+.rh-spec a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .rh-p-intro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rh-spec > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* neighbors (REF .neighbors, here with each project's planet and one-liner); the slot of a missing neighbor links back to the list */
+.rh-pnav {
+  --rh-orb-lx: 36%;
+  --rh-orb-ly: 32%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: clamp(40px, 5vw, 64px);
+}
+.rh-pnav-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--rh-line);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-pnav-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--rh-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-pnav-card:hover,
+.rh-pnav-card:focus-visible {
+  border-color: color-mix(in srgb, var(--rh-accent) 45%, var(--rh-line));
+}
+.rh-pnav-card:hover::before,
+.rh-pnav-card:focus-visible::before {
+  transform: none;
+}
+.rh-pnav-card:hover .rh-orb i,
+.rh-pnav-card:focus-visible .rh-orb i {
+  transform: translateX(-50%);
+}
+.rh-pnav-card--next {
+  grid-template-columns: minmax(0, 1fr) auto;
+  text-align: right;
+}
+.rh-pnav-card--next::before {
+  transform-origin: 100% 50%;
+}
+.rh-pnav-card--next .rh-tile {
+  order: 2;
+}
+.rh-pnav-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.rh-pnav-text:only-child {
+  grid-column: 1 / -1;
+}
+.rh-pnav-label {
+  font: 500 11.5px/1 var(--rh-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.rh-pnav-title {
+  font: 700 20px/1.2 var(--rh-display);
+  letter-spacing: -0.01em;
+}
+.rh-pnav-sum {
+  color: var(--rh-muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+@media (max-width: 760px) {
+  .rh-pnav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rh-pnav-card--next {
+    grid-template-columns: auto minmax(0, 1fr);
+    text-align: left;
+  }
+  .rh-pnav-card--next::before {
+    transform-origin: 0 50%;
+  }
+  .rh-pnav-card--next .rh-tile {
+    order: 0;
+  }
+}
+
 /* ---------- reduced motion: a still frame, no loops ---------- */
 @media (prefers-reduced-motion: reduce) {
   [class^='rh-'],
