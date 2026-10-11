@@ -1937,6 +1937,626 @@ html.dark .rh-rows a:focus-visible {
   }
 }
 
+/* ---------- post detail (Task 8) ---------- */
+
+/* band: the title leads, the meta line above it carries the back link, author, date and reading time */
+.rh-band--headline {
+  min-height: 0;
+}
+.rh-band--headline .rh-band-inner {
+  padding-top: clamp(28px, 5vw, 64px);
+}
+.rh-band--headline .rh-band-tele time {
+  font-variant-numeric: tabular-nums;
+}
+/* study-note marker: it sits on the sky, so it takes the sky-safe accent (contrast measured on rendered pixels) */
+.rh-note-mark {
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--rh-head-accent) 55%, transparent);
+  border-radius: 999px;
+  color: var(--rh-head-accent);
+}
+
+/* summary, stage chip and tags under the band */
+.rh-post-intro {
+  display: grid;
+  gap: 16px;
+  max-width: 68ch;
+  margin-top: clamp(24px, 3.2vw, 38px);
+}
+.rh-post-sum {
+  margin: 0;
+  font: 400 clamp(20px, 1.8vw, 22.5px) / 1.5 var(--rh-serif);
+  color: var(--rh-muted);
+  text-wrap: pretty;
+}
+.rh-post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.rh-stage {
+  /* --rh-ok is 4.4:1 on paper at this size, so the light chip text uses a darker green */
+  --rh-stage: #2a6e3d;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--rh-stage) 45%, transparent);
+  border-radius: 999px;
+  font: 500 10.5px / 1 var(--rh-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rh-stage);
+}
+html.dark .rh-stage {
+  --rh-stage: var(--rh-ok);
+}
+.rh-stage::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* reading progress hairline: fixed under the header (z 30), scaled by --rh-p from PostToc */
+.rh-progress {
+  position: fixed;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  pointer-events: none;
+}
+.rh-progress i {
+  display: block;
+  height: 100%;
+  background: var(--rh-accent);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--rh-p, 0));
+}
+
+/* Korean breaks between words, never inside one (no effect on Latin text). Set per block, not on the article, so the viz
+   figures inside it keep inheriting the plain break rules they were built with. */
+.rh-band--headline .rh-monument,
+.rh-post-sum,
+.rh-toc a,
+.rh-toc-m a,
+.rh-pn-card b,
+.prose.rh-reading > :is(p, ul, ol, dl, blockquote, h1, h2, h3, h4) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* article + table of contents. Below 1100px the sticky column hides and the <details> list leads the article. */
+.rh-post-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: clamp(30px, 4vw, 52px);
+  align-items: start;
+  margin-top: clamp(30px, 4vw, 52px);
+}
+.rh-toc {
+  display: none;
+}
+.rh-toc-m {
+  order: -1;
+  border-top: 1px solid var(--rh-ink);
+  border-bottom: 1px solid var(--rh-line);
+}
+@media (width >= 1100px) {
+  .rh-post-grid {
+    grid-template-columns: minmax(0, 68ch) 232px;
+    justify-content: space-between;
+    column-gap: 48px;
+  }
+  .rh-post-grid > .rh-reading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .rh-toc {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .rh-toc-m {
+    display: none;
+  }
+}
+.rh-toc {
+  position: sticky;
+  top: 28px;
+  /* long lists (up to 80 entries) scroll inside the column; the bottom margin keeps clear of the floating scroll buttons */
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rh-line) transparent;
+  padding-top: 12px;
+  border-top: 1px solid var(--rh-ink);
+}
+.rh-toc-h {
+  margin: 0 0 10px;
+  font: 500 11.5px / 1 var(--rh-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.rh-toc-track {
+  position: relative;
+}
+.rh-toc-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rh-toc,
+.rh-toc-m {
+  --rh-toc-pad: 12px;
+}
+.rh-toc-m {
+  --rh-toc-pad: 0px;
+}
+.rh-toc a,
+.rh-toc-m a {
+  display: block;
+  padding: 6px 0 6px var(--rh-toc-pad);
+  font: 400 15px / 1.35 var(--rh-serif);
+  color: var(--rh-muted);
+  transition: color 0.25s;
+}
+.rh-toc-list--n a {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 4px;
+}
+.rh-toc-n {
+  font: 500 11px / 1.9 var(--rh-mono);
+  color: inherit;
+}
+.rh-toc a[data-depth='3'],
+.rh-toc-m a[data-depth='3'] {
+  display: block;
+  padding-left: calc(var(--rh-toc-pad) + 14px);
+  font-size: 14px;
+}
+.rh-toc-list--n a[data-depth='3'] {
+  padding-left: calc(var(--rh-toc-pad) + 26px);
+}
+.rh-toc a:hover,
+.rh-toc-m a:hover,
+.rh-toc a[aria-current='true'] {
+  color: var(--rh-ink);
+}
+.rh-toc a[aria-current='true'] .rh-toc-n {
+  color: var(--rh-accent);
+}
+.rh-toc a:focus-visible {
+  outline-offset: -2px;
+}
+.rh-toc-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--rh-accent);
+  transform: translateY(var(--rh-y, 6px));
+  opacity: var(--rh-o, 0);
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.3s;
+}
+.rh-toc-m summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  cursor: pointer;
+  list-style: none;
+  font: 500 11.5px / 1 var(--rh-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.rh-toc-m summary::-webkit-details-marker {
+  display: none;
+}
+.rh-toc-m summary::after {
+  content: '+';
+  font: 400 18px / 1 var(--rh-mono);
+  color: var(--rh-accent);
+  transition: transform 0.3s;
+}
+.rh-toc-m[open] summary::after {
+  transform: rotate(45deg);
+}
+.rh-toc-m nav {
+  max-height: min(60vh, 440px);
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+/* ---- the reading column (REF inner.css 82 to 143) ----
+   The article also carries .prose: mermaid, KaTeX, the viz figures and the dark-mode mermaid overrides in tailwind.css
+   key off it. Those unlayered .prose rules come later in the stylesheet than this file, so every selector below is
+   written .prose.rh-reading to out-rank them without editing them. Block rules look at direct children only and the
+   inline ones skip figures, so a viz component keeps the margins and type it always had. */
+.prose.rh-reading {
+  max-width: 68ch;
+  font: 400 20px / 1.72 var(--rh-serif);
+  color: color-mix(in srgb, var(--rh-ink) 90%, transparent);
+  overflow-wrap: break-word;
+}
+.prose.rh-reading figure {
+  line-height: 1.5;
+}
+/* rhythm: every text block opens with one paragraph gap; blocks with a margin of their own keep it */
+.prose.rh-reading > :is(p, ul, ol, dl, blockquote, h1, h2, h3, h4, hr) {
+  margin: 0;
+}
+.prose.rh-reading > * + :is(p, ul, ol, dl) {
+  margin-top: 1.05em;
+}
+.prose.rh-reading > p {
+  line-height: 1.72;
+  text-wrap: pretty;
+}
+.prose.rh-reading :is(h1, h2) {
+  position: relative;
+  margin: 2.3em 0 0;
+  font: 700 clamp(25px, 2.6vw, 31px) / 1.18 var(--rh-display);
+  letter-spacing: -0.015em;
+  color: var(--rh-ink);
+  scroll-margin-top: 24px;
+  text-wrap: balance;
+}
+.prose.rh-reading h3 {
+  position: relative;
+  margin: 1.9em 0 0;
+  font: 700 clamp(20px, 2vw, 23px) / 1.25 var(--rh-display);
+  letter-spacing: -0.01em;
+  color: var(--rh-ink);
+  scroll-margin-top: 24px;
+  text-wrap: balance;
+}
+.prose.rh-reading h4 {
+  position: relative;
+  margin: 1.6em 0 0;
+  font: 700 18px / 1.3 var(--rh-display);
+  letter-spacing: -0.005em;
+  color: var(--rh-ink);
+  scroll-margin-top: 24px;
+  text-wrap: balance;
+}
+.prose.rh-reading > :is(h1, h2) + :is(p, ul, ol, dl) {
+  margin-top: 0.75em;
+}
+.prose.rh-reading > :is(h3, h4) + :is(p, ul, ol, dl) {
+  margin-top: 0.6em;
+}
+/* the heading permalink rehype-autolink-headings prepends (aria-hidden, no class): a rust "#" that appears on hover */
+.prose.rh-reading :is(h2, h3, h4) > a[aria-hidden='true'] {
+  position: absolute;
+  left: -1.1em;
+  top: 0;
+  padding-right: 0.3em;
+  color: var(--rh-accent);
+  font-weight: 500;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.prose.rh-reading :is(h2, h3, h4) > a[aria-hidden='true']::before {
+  content: '#';
+}
+.prose.rh-reading :is(h2, h3, h4):hover > a[aria-hidden='true'] {
+  opacity: 1;
+}
+/* section numbers, only for posts whose headings are not already numbered (data-autonum) */
+.prose.rh-reading[data-autonum='on'] {
+  counter-reset: rh-sec;
+}
+.prose.rh-reading[data-autonum='on'] h2 {
+  counter-increment: rh-sec;
+}
+.prose.rh-reading[data-autonum='on'] h2::before {
+  content: counter(rh-sec) '.';
+  margin-right: 0.55em;
+  font: 500 0.56em / 1 var(--rh-mono);
+  letter-spacing: 0.02em;
+  color: var(--rh-accent);
+  vertical-align: 0.34em;
+}
+.prose.rh-reading strong:not(figure *) {
+  font-weight: 600;
+  color: var(--rh-ink);
+}
+.prose.rh-reading :is(h1, h2, h3, h4) strong {
+  font-weight: inherit;
+}
+.prose.rh-reading a:not(figure *) {
+  color: var(--rh-accent);
+  font-weight: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--rh-accent) 38%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.prose.rh-reading a:not(figure *):hover {
+  text-decoration-color: var(--rh-accent);
+}
+.prose.rh-reading code:not(figure *) {
+  padding: 0.12em 0.38em;
+  border: 1px solid var(--rh-line);
+  border-radius: 4px;
+  background: var(--rh-surface);
+  font: 500 0.8em / 1 var(--rh-mono);
+  color: var(--rh-ink);
+}
+.prose.rh-reading pre {
+  margin: 1.6em 0;
+  padding: 18px 20px;
+  overflow-x: auto;
+  border: 0;
+  border-radius: 8px;
+  background: var(--rh-code-bg);
+  color: var(--rh-code-fg);
+  font: 400 14px / 1.6 var(--rh-mono);
+}
+.prose.rh-reading pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+/* a code block under a title bar (remark-code-title) stays joined to it */
+.prose.rh-reading .remark-code-title + div > pre {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.prose.rh-reading > :is(ul, ol) {
+  padding-left: 1.2em;
+}
+.prose.rh-reading > :is(ul, ol) li {
+  margin-bottom: 0;
+  line-height: 1.72;
+}
+.prose.rh-reading > :is(ul, ol) li + li {
+  margin-top: 0.35em;
+}
+.prose.rh-reading > :is(ul, ol) :is(ul, ol) {
+  margin: 0.35em 0 0;
+  padding-left: 1.2em;
+}
+.prose.rh-reading > :is(ul, ol) li > p {
+  margin: 0;
+  line-height: inherit;
+}
+.prose.rh-reading > :is(ul, ol) li > p + p {
+  margin-top: 0.5em;
+}
+.prose.rh-reading > ul li::marker {
+  color: var(--rh-accent);
+}
+.prose.rh-reading hr {
+  width: 72px;
+  margin: 2.4em auto;
+  border: 0;
+  border-top: 1px solid var(--rh-line);
+}
+/* blockquote = data plate: mono, ruled top and bottom. Lines the author broke with a newline stay on their own line. */
+.prose.rh-reading blockquote {
+  margin: 1.8em 0;
+  padding: 16px 0;
+  border: 0;
+  border-top: 1px solid var(--rh-ink);
+  border-bottom: 1px solid var(--rh-line);
+  background: none;
+  font: 400 13.5px / 1.75 var(--rh-mono);
+  color: var(--rh-muted);
+}
+.prose.rh-reading blockquote p {
+  margin: 0;
+  line-height: inherit;
+  white-space: pre-line;
+}
+.prose.rh-reading blockquote p + p {
+  margin-top: 0.6em;
+}
+/* tables: ruled box, mono caps headers, right-aligned numbers (the markdown alignment colon) in tabular mono */
+.prose.rh-reading > div:has(> table) {
+  margin: 1.6em 0;
+  overflow-x: auto;
+  border-top: 1px solid var(--rh-ink);
+  border-bottom: 1px solid var(--rh-line);
+}
+.prose.rh-reading > div > table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font: 400 15px / 1.45 var(--rh-serif);
+}
+.prose.rh-reading > div > table thead {
+  border-bottom-width: 0;
+}
+.prose.rh-reading > div > table th {
+  padding: 12px 14px 10px 0;
+  border-bottom: 1px solid var(--rh-line);
+  text-align: left;
+  vertical-align: bottom;
+  font: 500 11px / 1.4 var(--rh-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.prose.rh-reading > div > table td {
+  padding: 11px 14px 11px 0;
+  border-bottom: 1px solid var(--rh-line);
+  vertical-align: top;
+}
+.prose.rh-reading > div > table tbody tr:last-child td {
+  border-bottom-width: 0;
+}
+.prose.rh-reading > div > table :is(th, td)[style*='text-align:right'] {
+  font: 500 13.5px / 1.45 var(--rh-mono);
+  font-variant-numeric: tabular-nums;
+}
+.prose.rh-reading > div > table td[style*='text-align:right'] {
+  white-space: nowrap;
+}
+.prose.rh-reading > div > table th[style*='text-align:right'] {
+  font-size: 11px;
+}
+.prose.rh-reading > div > table tbody tr {
+  transition: background 0.2s;
+}
+.prose.rh-reading > div > table tbody tr:hover {
+  background: var(--rh-shade);
+}
+
+/* end of article: tags again, edit link */
+.rh-post-end {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  max-width: 68ch;
+  margin-top: clamp(40px, 5vw, 60px);
+  padding-top: 18px;
+  border-top: 1px solid var(--rh-line);
+}
+.rh-edit {
+  padding: 8px 0;
+  font: 500 12.5px / 1 var(--rh-mono);
+  color: var(--rh-accent);
+  white-space: nowrap;
+}
+.rh-edit:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* previous / next cards (full column width) */
+.rh-pn {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: clamp(40px, 5vw, 64px);
+}
+.rh-pn-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--rh-line);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.rh-pn-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--rh-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rh-pn-card:hover {
+  border-color: color-mix(in srgb, var(--rh-accent) 45%, var(--rh-line));
+}
+.rh-pn-card:hover::before,
+.rh-pn-card:focus-visible::before {
+  transform: none;
+}
+.rh-pn-card span {
+  font: 500 11.5px / 1 var(--rh-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.rh-pn-card b {
+  font: 700 clamp(17px, 1.6vw, 19px) / 1.3 var(--rh-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.rh-pn-next {
+  grid-column: 2;
+  text-align: right;
+}
+.rh-pn-next::before {
+  transform-origin: 100% 50%;
+}
+@media (max-width: 760px) {
+  .rh-pn {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rh-pn-next {
+    grid-column: auto;
+    text-align: left;
+  }
+}
+
+/* comments: the "Load Comments" button reads as an .rh-btn, the widget follows the reading column */
+.rh-comments {
+  max-width: 68ch;
+  margin-top: clamp(40px, 5vw, 60px);
+}
+.rh-comments > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--rh-ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rh-ink);
+  font: 500 13px / 1 var(--rh-mono);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.25s,
+    color 0.25s;
+}
+.rh-comments > button:hover {
+  background: var(--rh-ink);
+  color: var(--rh-paper);
+}
+
+@media (max-width: 640px) {
+  .prose.rh-reading {
+    font-size: 18.5px;
+  }
+  .prose.rh-reading :is(h2, h3, h4) > a[aria-hidden='true'] {
+    display: none;
+  }
+}
+/* the global reduced-motion rule only reaches elements that carry an rh- class; these are class-less descendants */
+@media (prefers-reduced-motion: reduce) {
+  .prose.rh-reading a,
+  .prose.rh-reading tbody tr,
+  .rh-toc a,
+  .rh-toc-m summary::after,
+  .rh-comments > button {
+    transition: none !important;
+  }
+}
+
 /* ---------- reduced motion: a still frame, no loops ---------- */
 @media (prefers-reduced-motion: reduce) {
   [class^='rh-'],
