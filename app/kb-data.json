@@ -163,19 +163,20 @@
       ]
     },
     {
+      "id": "climate",
+      "label": "Climate",
+      "count": 2,
+      "slugs": [
+        "2026-09-05-carbon-basics-what-is-carbon",
+        "2026-09-12-carbon-basics-daily-life"
+      ]
+    },
+    {
       "id": "software-engineering",
       "label": "Software Engineering",
       "count": 1,
       "slugs": [
         "2026-06-05-markdown-source-of-truth"
-      ]
-    },
-    {
-      "id": "climate",
-      "label": "Climate",
-      "count": 1,
-      "slugs": [
-        "2026-09-05-carbon-basics-what-is-carbon"
       ]
     }
   ],
@@ -1359,6 +1360,7 @@
       "2026-04-18-superpowers-architecture",
       "2026-09-05-webmcp-explained"
     ],
+    "2026-09-12-carbon-basics-daily-life": [],
     "2026-09-28-request-layers": [],
     "2026-09-29-activerecord-anatomy": [],
     "2026-10-07-hyperframes-architecture": [
@@ -3037,6 +3039,21 @@
       "summary": "Archify has the agent write a typed JSON IR and lets a deterministic compiler turn it into a self-contained HTML artifact. I read the repository end to end and built four diagrams with it, watching what the validator refuses, why deliver, visual-check, and human review are kept apart, and what changes when this blog’s own mermaid is ported over."
     },
     {
+      "slug": "2026-09-12-carbon-basics-daily-life",
+      "title": "Carbon Basics 2: Where carbon hides in daily life",
+      "shortTitle": "Carbon Basics 2",
+      "date": "2026-09-12T09:00:00.000Z",
+      "tags": [
+        "climate",
+        "carbon",
+        "carbon-basics",
+        "daily-life"
+      ],
+      "topic": "climate",
+      "stage": "budding",
+      "summary": "Following one ordinary day to pull the hidden emissions out of food, travel, goods and electricity, in five 3D visuals. Of the 26 kg in that day, 58% came from a single lunch."
+    },
+    {
       "slug": "2026-09-28-request-layers",
       "title": "Where Does One Rails Request Spend Its CPU? HTTP, Routing, Database and ORM, Measured Apart",
       "shortTitle": "Where Does One Rails Request…",
@@ -4365,5 +4382,5 @@
       }
     ]
   },
-  "generatedAt": "2026-10-10T12:20:00.149Z"
+  "generatedAt": "2026-10-11T04:20:49.499Z"
 }

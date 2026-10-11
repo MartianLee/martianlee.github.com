@@ -81,6 +81,7 @@ export interface UIStrings {
     faceSun: string
     faceJezero: string
     drag: string
+    climate: { eyebrow: string; body: string; link: string }
   }
   hud: {
     live: string
@@ -194,6 +195,11 @@ export const ui: Record<Lang, UIStrings> = {
       faceSun: 'Face the Sun',
       faceJezero: 'Face Jezero',
       drag: 'Drag to rotate',
+      climate: {
+        eyebrow: 'Earth Driven Developer',
+        body: 'The carbon measurement and offset products I built at a climate-tech startup, plus a series that explains carbon from first principles.',
+        link: 'Climate →',
+      },
     },
     hud: {
       live: 'Live · Jezero Crater 18.44°N 77.45°E',
@@ -310,6 +316,11 @@ export const ui: Record<Lang, UIStrings> = {
       faceSun: '해 쪽 보기',
       faceJezero: '제제로 보기',
       drag: '끌어서 돌리기',
+      climate: {
+        eyebrow: 'Earth Driven Developer',
+        body: '기후테크 스타트업에서 만든 탄소 측정·상쇄 제품과, 탄소를 기본 원리부터 풀어 쓰는 시리즈를 모아 두었습니다.',
+        link: 'Climate 페이지 →',
+      },
     },
     hud: {
       live: '실시간 · 제제로 크레이터 18.44°N 77.45°E',

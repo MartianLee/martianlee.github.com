@@ -17,6 +17,12 @@ import BridgeSpectrum from './viz/BridgeSpectrum'
 import PixelVsMesh from './viz/PixelVsMesh'
 import BridgeLineage from './viz/BridgeLineage'
 import YouTube from './YouTube'
+import CarbonDay from './viz/CarbonDay'
+import DayRoutine from './viz/DayRoutine'
+import FoodMasses from './viz/FoodMasses'
+import TravelLanes from './viz/TravelLanes'
+import EmbodiedGoods from './viz/EmbodiedGoods'
+import GridTiles from './viz/GridTiles'
 
 export const components: MDXComponents = {
   Image,
@@ -37,4 +43,10 @@ export const components: MDXComponents = {
   PixelVsMesh,
   BridgeLineage,
   YouTube,
+  CarbonDay,
+  DayRoutine,
+  FoodMasses,
+  TravelLanes,
+  EmbodiedGoods,
+  GridTiles,
 }
