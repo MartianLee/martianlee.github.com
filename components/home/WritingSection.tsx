@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import Link from '@/components/Link'
 import PostLink from '@/components/PostLink'
 import { formatDate } from 'pliny/utils/formatDate'
-import siteMetadata from '@/data/siteMetadata'
 import type { LocalizedListItem } from '@/lib/posts'
 import { useUI } from '@/components/useUI'
 import { useLanguage } from '@/components/LanguageProvider'
@@ -58,6 +57,7 @@ export default function WritingSection({ posts }: { posts: LocalizedListItem[] }
   }, [posts])
 
   const pick = (en: string, ko?: string) => (lang === 'ko' && ko ? ko : en)
+  const dateLocale = lang === 'ko' ? 'ko-KR' : 'en-US'
   const featured = posts.slice(0, 2)
   const rest = posts.slice(2, 5)
   return (
@@ -78,7 +78,7 @@ export default function WritingSection({ posts }: { posts: LocalizedListItem[] }
           return (
             <article key={post.slug}>
               <p className="rh-meta">
-                <b>{formatDate(post.date, siteMetadata.locale)}</b> · {post.readingTime.text}
+                <b>{formatDate(post.date, dateLocale)}</b> · {post.readingTime.text}
                 {tags ? ` · ${tags}` : ''}
               </p>
               <h3>
@@ -94,7 +94,7 @@ export default function WritingSection({ posts }: { posts: LocalizedListItem[] }
           <li key={post.slug}>
             <PostLink slug={post.slug}>
               <span>{pick(post.title, post.titleKo)}</span>
-              <time dateTime={post.date}>{formatDate(post.date, siteMetadata.locale)}</time>
+              <time dateTime={post.date}>{formatDate(post.date, dateLocale)}</time>
             </PostLink>
           </li>
         ))}

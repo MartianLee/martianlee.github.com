@@ -1937,6 +1937,389 @@ html.dark .rh-rows a:focus-visible {
   }
 }
 
+/* ---------- posts list and tag pages (Task 7) ---------- */
+/* a tag name can make a long title, and the monument is one nowrap line: past 6 capitals (.rh-posts--fit) it is fitted to
+   the column instead. The layout sets --rh-fit (the title's length in capitals) and --rh-word (its longest word, hyphen
+   included). The title stays on one line while that is 64px or larger, and otherwise sits at 64px (less on a narrow
+   screen) and wraps after its hyphens. 0.95em per capital leaves room: the widest words in the tag set measure 0.87em.
+   It rises in like the headline variant instead of settling: a letter-spacing change would re-wrap titles that fit
+   only just, and on a phone that moves the page. */
+.rh-posts--fit .rh-band-inner {
+  container-type: inline-size;
+}
+.rh-posts--fit .rh-monument {
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  font-size: min(
+    clamp(46px, 11vw, 150px),
+    max(calc(100cqw / (var(--rh-fit) * 0.95)), min(calc(100cqw / (var(--rh-word) * 0.95)), 64px))
+  );
+  animation: rh-rise-in 1s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+
+/* a tag rail beside rows that carry a reading-time gauge (REF inner/posts.src.html) */
+.rh-plist {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 56px);
+  margin-top: clamp(30px, 4vw, 48px);
+  align-items: start;
+}
+.rh-rail {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+.rh-rail-h {
+  margin: 0 0 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rh-ink);
+  font: 500 11.5px / 1 var(--rh-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rh-muted);
+}
+.rh-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+}
+.rh-rail-list a {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0 5px 14px;
+  font: 500 13px / 1.35 var(--rh-mono);
+  color: var(--rh-muted);
+  transition: color 0.2s;
+}
+/* REF dims the counts to 70% opacity, which leaves them at 2.9:1 on the paper; a lighter weight keeps the hierarchy */
+.rh-rail-list a span {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.rh-rail-list a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 6px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition:
+    opacity 0.2s,
+    transform 0.3s;
+}
+.rh-rail-list a:hover {
+  color: var(--rh-ink);
+}
+.rh-rail-list a:hover::before {
+  opacity: 1;
+  transform: none;
+}
+.rh-rail-list a[aria-current='page'] {
+  color: var(--rh-accent);
+}
+.rh-rail-list a[aria-current='page']::before {
+  opacity: 1;
+  transform: none;
+  width: 8px;
+  height: 2px;
+}
+.rh-rail-more {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 6px 0 6px 14px;
+  font: 500 12px / 1 var(--rh-mono);
+  color: var(--rh-accent);
+}
+.rh-rail-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.rh-prows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rh-ink);
+  /* the tint that sweeps across a hovered row: REF's 9% leaves the muted summary at 4.57:1 in light (8%: 4.63:1) */
+  --rh-pool: 8%;
+}
+html.dark .rh-prows {
+  --rh-pool: 9%;
+}
+.rh-prow {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 8px clamp(18px, 3vw, 40px);
+  padding: 22px 0 22px;
+  border-bottom: 1px solid var(--rh-line);
+  overflow: hidden;
+}
+/* behind the text (REF paints it over), so every text colour is checked against the tinted paper only */
+.rh-prow::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--rh-accent) var(--rh-pool), transparent) 60%,
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.rh-prow:hover::before,
+.rh-prow:focus-within::before {
+  transform: translateX(100%);
+}
+.rh-prow-meta {
+  margin: 3px 0 0;
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  font: 500 12px / 1.2 var(--rh-mono);
+  color: var(--rh-muted);
+  font-variant-numeric: tabular-nums;
+}
+.rh-prow-meta time {
+  color: var(--rh-ink);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.rh-gauge {
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 3px;
+  background: var(--rh-line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.rh-gauge i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--rh-v) * 100%);
+  background: var(--rh-muted);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.rh-prow:hover .rh-gauge i,
+.rh-prow:focus-within .rh-gauge i {
+  background: var(--rh-accent);
+  animation: rh-charge 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes rh-charge {
+  from {
+    width: 0;
+  }
+}
+.rh-rt {
+  letter-spacing: 0.02em;
+}
+/* 12px text on the tint: the accent is 4.05:1 there in light, so light uses --rh-accent-text (5.71:1); dark keeps the accent (4.84:1) */
+.rh-prow:hover .rh-prow-meta time,
+.rh-prow:focus-within .rh-prow-meta time {
+  color: var(--rh-accent-text);
+}
+html.dark .rh-prow:hover .rh-prow-meta time,
+html.dark .rh-prow:focus-within .rh-prow-meta time {
+  color: var(--rh-accent);
+}
+.rh-prow-main {
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rh-prow-title {
+  margin: 0;
+  font: 700 clamp(19px, 1.7vw, 22px) / 1.22 var(--rh-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.rh-prow-title a {
+  background: linear-gradient(var(--rh-accent), var(--rh-accent)) 0 100% / 0 2px no-repeat;
+  transition:
+    background-size 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    color 0.3s;
+}
+/* the whole row is the title link's hit area; the tag chips sit above it */
+.rh-prow-title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.rh-prow-title a:focus-visible {
+  outline: none;
+}
+/* REF draws the ring inside the row (-2px), where it cuts through the first letters of the date; outside it clears them */
+.rh-prow:has(.rh-prow-title a:focus-visible) {
+  outline: 2px solid var(--rh-accent);
+  outline-offset: 4px;
+}
+/* 19 to 22px bold is large text (3:1), and the accent is 4.05:1 on the tint in light */
+.rh-prow:hover .rh-prow-title a,
+.rh-prow:focus-within .rh-prow-title a {
+  background-size: 100% 2px;
+  color: var(--rh-accent);
+}
+.rh-prow-sum {
+  margin: 8px 0 0;
+  max-width: 64ch;
+  color: var(--rh-muted);
+  font-size: 16.5px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rh-prow-tags {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+}
+/* 10.5px text again: accent-text on the tinted row in light */
+.rh-prow-tags a.rh-tagchip:hover {
+  color: var(--rh-accent-text);
+  border-color: var(--rh-accent-text);
+}
+html.dark .rh-prow-tags a.rh-tagchip:hover {
+  color: var(--rh-accent);
+  border-color: var(--rh-accent);
+}
+.rh-prow-tags .rh-more {
+  font: 500 11px / 1 var(--rh-mono);
+  color: var(--rh-muted);
+  padding-left: 2px;
+}
+
+.rh-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  font: 500 13px / 1 var(--rh-mono);
+}
+.rh-pager a,
+.rh-pager span {
+  padding: 10px 0;
+}
+.rh-pager a {
+  color: var(--rh-accent);
+}
+.rh-pager a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.rh-pager .rh-off {
+  color: var(--rh-muted);
+  opacity: 0.45;
+}
+.rh-pager .rh-pos {
+  color: var(--rh-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 860px) {
+  .rh-plist {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .rh-rail {
+    position: static;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .rh-rail-h {
+    display: none;
+  }
+  .rh-rail-list {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(-1 * var(--rh-gutter));
+    padding: 2px var(--rh-gutter);
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 var(--rh-gutter),
+      #000 calc(100% - 44px),
+      transparent
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 var(--rh-gutter),
+      #000 calc(100% - 44px),
+      transparent
+    );
+    flex: 1;
+    min-width: 0;
+  }
+  .rh-rail-list::-webkit-scrollbar {
+    display: none;
+  }
+  .rh-rail-list li {
+    flex: none;
+  }
+  .rh-rail-list a {
+    padding: 8px 12px;
+    border: 1px solid var(--rh-line);
+    border-radius: 999px;
+    white-space: nowrap;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .rh-rail-list a::before {
+    display: none;
+  }
+  .rh-rail-list a[aria-current='page'] {
+    border-color: var(--rh-accent);
+  }
+  .rh-rail-more {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .rh-prow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 20px 0;
+  }
+  .rh-prow-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+  }
+  .rh-gauge {
+    width: 48px;
+  }
+}
+
 /* ---------- reduced motion: a still frame, no loops ---------- */
 @media (prefers-reduced-motion: reduce) {
   [class^='rh-'],
