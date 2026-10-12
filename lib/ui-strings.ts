@@ -82,6 +82,7 @@ export interface UIStrings {
     globeLabel: string
     litAt: string
     subsolar: string
+    jezero: string
     jezeroTime: string
     season: string
     faceSun: string
@@ -202,6 +203,7 @@ export const ui: Record<Lang, UIStrings> = {
       globeLabel: 'Mars as lit by the Sun right now',
       litAt: 'Mars as lit at {time} UTC',
       subsolar: 'Subsolar point',
+      jezero: 'Jezero',
       jezeroTime: 'Jezero local time',
       season: 'Season',
       faceSun: 'Face the Sun',
@@ -329,6 +331,7 @@ export const ui: Record<Lang, UIStrings> = {
       globeLabel: '지금 태양 빛을 받는 화성',
       litAt: '{time} UTC 기준 화성',
       subsolar: '태양 직하점',
+      jezero: '제제로',
       jezeroTime: '제제로 현지 시각',
       season: '계절',
       faceSun: '해 쪽 보기',
