@@ -50,6 +50,8 @@ export interface UIStrings {
     next: string
     editOnGitHub: string
     studyNote: string
+    stage: string
+    morePosts: string
   }
   projectsPage: {
     eyebrow: string
@@ -166,6 +168,8 @@ export const ui: Record<Lang, UIStrings> = {
       next: 'NEXT →',
       editOnGitHub: 'Edit on GitHub ↗',
       studyNote: 'Study note · analyzed with AI',
+      stage: 'Digital garden stage',
+      morePosts: 'More posts',
     },
     projectsPage: {
       eyebrow: 'Side projects',
@@ -289,6 +293,8 @@ export const ui: Record<Lang, UIStrings> = {
       next: '다음 글 →',
       editOnGitHub: 'GitHub에서 편집 ↗',
       studyNote: '학습 노트 · AI와 함께 분석',
+      stage: '디지털 가든 단계',
+      morePosts: '다른 글',
     },
     projectsPage: {
       eyebrow: '사이드 프로젝트',
