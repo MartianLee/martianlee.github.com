@@ -1,20 +1,33 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { usePathname } from 'next/navigation'
 import { slug } from 'github-slugger'
-import { formatDate } from 'pliny/utils/formatDate'
 import Link from '@/components/Link'
-import PostLink from '@/components/PostLink'
-import Tag from '@/components/Tag'
-import siteMetadata from '@/data/siteMetadata'
+import HorizonBand from '@/components/HorizonBand'
+import PostRow from '@/components/posts/PostRow'
 import tagData from 'app/tag-data.json'
 import type { LocalizedListItem } from '@/lib/posts'
+import { fill } from '@/lib/ui-strings'
 import { useUI } from '@/components/useUI'
 import { useLanguage } from '@/components/LanguageProvider'
+
+const RAIL_TAGS = 18
+/** Titles longer than this many capitals (the dot included) are fitted to the column; shorter ones keep the monument as designed. */
+const FIT_FROM = 6
+
+/** Width of a monument string in capital letters: CJK glyphs are wider, so they count a little more. */
+const weigh = (s: string) => [...s].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2e7f ? 1.15 : 1), 0)
 
 interface PaginationProps {
   totalPages: number
   currentPage: number
+}
+interface ListStats {
+  listedTotal: number
+  tagTotal: number
+  latest: string
+  maxMinutes: number
 }
 interface ListLayoutProps {
   posts: LocalizedListItem[]
@@ -22,6 +35,7 @@ interface ListLayoutProps {
   titleKo?: string
   initialDisplayPosts?: LocalizedListItem[]
   pagination?: PaginationProps
+  stats: ListStats
 }
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
@@ -31,31 +45,30 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
   const prevPage = currentPage - 1 > 0
   const nextPage = currentPage + 1 <= totalPages
   return (
-    <nav className="border-line mt-10 flex items-center justify-between border-t pt-6 font-mono text-sm">
+    <nav className="rh-pager" aria-label={ui.list.pagination}>
       {prevPage ? (
         <Link
-          href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
+          href={currentPage - 1 === 1 ? `/${basePath}` : `/${basePath}/page/${currentPage - 1}`}
           rel="prev"
-          className="hover:text-accent"
         >
           {ui.list.newer}
         </Link>
       ) : (
-        <span className="text-muted/40">{ui.list.newer}</span>
+        <span className="rh-off" aria-disabled="true">
+          {ui.list.newer}
+        </span>
       )}
-      <span className="text-muted">
-        {currentPage} / {totalPages}
+      <span className="rh-pos">
+        {fill(ui.list.pageOf, { current: currentPage, total: totalPages })}
       </span>
       {nextPage ? (
-        <Link
-          href={`/${basePath}/page/${currentPage + 1}`}
-          rel="next"
-          className="hover:text-accent"
-        >
+        <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
           {ui.list.older}
         </Link>
       ) : (
-        <span className="text-muted/40">{ui.list.older}</span>
+        <span className="rh-off" aria-disabled="true">
+          {ui.list.older}
+        </span>
       )}
     </nav>
   )
@@ -67,92 +80,97 @@ export default function ListLayoutWithTags({
   titleKo,
   initialDisplayPosts = [],
   pagination,
+  stats,
 }: ListLayoutProps) {
   const pathname = usePathname()
   const ui = useUI()
   const { lang } = useLanguage()
-  const pick = (en: string, ko?: string) => (lang === 'ko' && ko ? ko : en)
   const tagCounts = tagData as Record<string, number>
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
 
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
+  const onPostsPages = pathname.startsWith('/posts')
+  // a tag name can make a long title: the CSS fits the monument to the column from its length and its longest word
+  const shown = `${lang === 'ko' && titleKo ? titleKo : title}.`
+  const words = shown.split('-').map((w, i, all) => (i < all.length - 1 ? `${w}-` : w))
+  const length = weigh(shown)
+  const fit = { '--rh-fit': length, '--rh-word': Math.max(...words.map(weigh)) }
+  const pageClass = ['rh-page', 'rh-posts', length > FIT_FROM && 'rh-posts--fit']
+    .filter(Boolean)
+    .join(' ')
+  const sep = (
+    <span className="rh-sep" aria-hidden="true">
+      ·
+    </span>
+  )
 
   return (
-    <div>
-      <div className="pt-2 pb-8">
-        <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">
-          {pick(title, titleKo)}
-        </h1>
-      </div>
-      <div className="grid gap-10 md:grid-cols-[180px_1fr]">
-        <aside className="hidden md:block">
-          <div className="sec-num mb-3">{ui.list.tags}</div>
-          <div className="flex flex-col gap-1.5 font-mono text-sm">
-            <Link
-              href="/posts"
-              className={
-                pathname.startsWith('/posts') && !pathname.includes('/tags/')
-                  ? 'text-accent'
-                  : 'text-muted hover:text-accent'
-              }
-            >
-              {ui.list.all}
-            </Link>
-            {sortedTags.map((t) => (
-              <Link
-                key={t}
-                href={`/tags/${slug(t)}`}
-                className={
-                  pathname.split('/tags/')[1] === slug(t)
-                    ? 'text-accent'
-                    : 'text-muted hover:text-accent'
-                }
-              >
-                {t} <span className="opacity-50">({tagCounts[t]})</span>
-              </Link>
-            ))}
-          </div>
-        </aside>
-        <div>
-          {displayPosts.map((post) => {
-            const { path, date, summary, tags } = post
-            return (
-              <article
-                key={path}
-                className="list-row flex-col items-start sm:flex-row sm:items-baseline"
-              >
-                <div className="sm:pr-8">
-                  <h2 className="text-xl font-bold tracking-tight">
-                    <PostLink slug={post.slug} className="hover:text-accent transition-colors">
-                      {pick(post.title, post.titleKo)}
-                    </PostLink>
-                  </h2>
-                  {summary && (
-                    <p className="text-muted mt-1.5 max-w-[60ch] font-serif">
-                      {pick(summary, post.summaryKo)}
-                    </p>
-                  )}
-                  {tags && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {tags.map((t) => (
-                        <Tag key={t} text={t} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <time
-                  dateTime={date}
-                  className="text-muted mt-2 shrink-0 font-mono text-xs sm:mt-0"
+    <div className={pageClass} style={fit as CSSProperties}>
+      <HorizonBand
+        title={title}
+        titleKo={titleKo}
+        tele={
+          <>
+            <span>{ui.band.writingLog}</span>
+            {sep}
+            <span>{fill(ui.band.postCount, { n: stats.listedTotal })}</span>
+            {sep}
+            <span>{fill(ui.band.tagCount, { n: stats.tagTotal })}</span>
+            {stats.latest && (
+              <>
+                {sep}
+                <span>{fill(ui.band.latest, { date: stats.latest })}</span>
+              </>
+            )}
+          </>
+        }
+      />
+      <div className="rh-wrap">
+        {onPostsPages && <p className="rh-lede">{ui.sections.writingIntro}</p>}
+        <div className="rh-plist">
+          <aside className="rh-rail" aria-label={ui.list.filterByTag}>
+            <h2 className="rh-rail-h">{ui.list.tags}</h2>
+            {/* the rh-rail-link class also brings the links under the reduced-motion rule, which only matches rh- classes */}
+            <ul className="rh-rail-list">
+              <li>
+                <Link
+                  href="/posts"
+                  className="rh-rail-link"
+                  aria-current={onPostsPages && !pathname.includes('/tags/') ? 'page' : undefined}
                 >
-                  {formatDate(date, siteMetadata.locale)}
-                </time>
-              </article>
-            )
-          })}
-          {pagination && pagination.totalPages > 1 && (
-            <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
-          )}
+                  {ui.list.all}
+                  <span>{stats.listedTotal}</span>
+                </Link>
+              </li>
+              {sortedTags.slice(0, RAIL_TAGS).map((t) => (
+                <li key={t}>
+                  <Link
+                    href={`/tags/${slug(t)}`}
+                    className="rh-rail-link"
+                    aria-current={pathname.split('/tags/')[1] === slug(t) ? 'page' : undefined}
+                  >
+                    {t}
+                    <span>{tagCounts[t]}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link className="rh-rail-more" href="/tags">
+              {fill(ui.list.allTags, { n: stats.tagTotal })}
+            </Link>
+          </aside>
+          <div className="rh-list">
+            <h2 className="sr-only">{ui.list.latestPosts}</h2>
+            <ol className="rh-prows">
+              {displayPosts.map((post) => (
+                <PostRow key={post.path} post={post} maxMinutes={stats.maxMinutes} />
+              ))}
+            </ol>
+            {pagination && pagination.totalPages > 1 && (
+              <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
+            )}
+          </div>
         </div>
       </div>
     </div>

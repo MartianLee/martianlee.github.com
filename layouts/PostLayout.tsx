@@ -1,15 +1,16 @@
 import { ReactNode } from 'react'
 import { CoreContent } from 'pliny/utils/contentlayer'
+import { slug as slugify } from 'github-slugger'
 import type { Blog, Authors } from '.contentlayer/generated'
 import Comments from '@/components/Comments'
+import HorizonBand from '@/components/HorizonBand'
 import Link from '@/components/Link'
 import PostLink from '@/components/PostLink'
-import SectionContainer from '@/components/SectionContainer'
-import Tag from '@/components/Tag'
-import siteMetadata from '@/data/siteMetadata'
+import PostToc from '@/components/posts/PostToc'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
-import { formatDate } from 'pliny/utils/formatDate'
-import { ui } from '@/lib/ui-strings'
+import siteMetadata from '@/data/siteMetadata'
+import { hasNumberedHeadings, parseToc } from '@/lib/headings'
+import { fill, ui } from '@/lib/ui-strings'
 
 const editUrl = (path: string) => `${siteMetadata.siteRepo}/blob/main/data/${path}`
 
@@ -21,132 +22,110 @@ interface LayoutProps {
   children: ReactNode
 }
 
+const Sep = () => (
+  <span className="rh-sep" aria-hidden="true">
+    ·
+  </span>
+)
+
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
   const { filePath, path, slug, date, title, tags, readingTime } = content
   const basePath = path.split('/')[0]
-  const t = ui[(content as { language?: string }).language === 'ko' ? 'ko' : 'en'].post
+  // The post's own language drives both the strings and the date; siteMetadata.locale would print Korean dates on English posts.
+  const lang = content.language === 'ko' ? 'ko' : 'en'
+  const t = ui[lang].post
   const author = authorDetails[0]
-  const toc: { value: string; url: string; depth: number }[] = Array.isArray(content.toc)
-    ? (content.toc as { value: string; url: string; depth: number }[])
-    : (() => {
-        try {
-          const parsed = JSON.parse(content.toc as unknown as string)
-          return Array.isArray(parsed) ? parsed : []
-        } catch {
-          return []
-        }
-      })()
+  const toc = parseToc(content.toc)
+  const autonum = hasNumberedHeadings(toc) ? 'off' : 'on'
+  const minutes = Math.max(1, Math.ceil(readingTime.minutes))
+  const published = new Date(date).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+  const chips = tags.map((tag) => (
+    <Link key={tag} className="rh-tagchip" href={`/tags/${slugify(tag)}`}>
+      {tag.split(' ').join('-')}
+    </Link>
+  ))
 
   return (
-    <SectionContainer>
-      <ScrollTopAndComment />
-      <article>
-        <header className="pt-6">
-          <Link href={`/${basePath}`} className="text-muted hover:text-accent font-mono text-xs">
-            {t.backToWriting}
-          </Link>
-          {tags && (
-            <div className="mt-7 flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Tag key={tag} text={tag} />
-              ))}
-            </div>
-          )}
-          <h1 className="mt-3 max-w-[18ch] text-4xl leading-[1.05] font-bold tracking-[-0.03em] sm:text-5xl">
-            {title}
-          </h1>
-          {content.summary && (
-            <p className="text-muted mt-4 max-w-[60ch] font-serif text-xl leading-snug">
-              {content.summary}
-            </p>
-          )}
-          <div className="text-muted mt-6 flex flex-wrap items-center gap-3 font-mono text-xs">
+    <div className="rh-page">
+      <HorizonBand
+        variant="headline"
+        title={title}
+        dot={false}
+        tele={
+          <>
+            <Link href={`/${basePath}`}>{t.backToWriting}</Link>
             {author?.name && (
               <>
+                <Sep />
                 <span>{author.name}</span>
-                <span>·</span>
               </>
             )}
-            <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
-            <span>·</span>
-            <span>{readingTime.text}</span>
+            <Sep />
+            <time dateTime={date}>{published}</time>
+            <Sep />
+            <span>{fill(ui[lang].list.readGauge, { n: minutes })}</span>
             {content.kind === 'note' && (
               <>
-                <span>·</span>
-                <span className="text-accent">{t.studyNote}</span>
+                <Sep />
+                <span className="rh-note-mark">{t.studyNote}</span>
               </>
             )}
-          </div>
-        </header>
-
-        <hr className="border-line mt-6" />
-
-        <div className="reading-measure pt-9">
-          {toc.length > 2 && (
-            <nav className="border-line mb-9 rounded-lg border p-4 font-mono text-[12.5px] leading-relaxed">
-              <div className="text-muted mb-1.5 text-[10px] tracking-[0.1em] uppercase">
-                {t.onThisPage}
-              </div>
-              {toc
-                .filter((h) => h.depth <= 3)
-                .map((h) => (
-                  <a
-                    key={h.url}
-                    href={h.url}
-                    className="hover:text-accent block"
-                    style={{ paddingLeft: `${(h.depth - 1) * 12}px` }}
-                  >
-                    {h.value}
-                  </a>
-                ))}
-            </nav>
-          )}
-
-          <div className="prose max-w-none break-words">{children}</div>
-
-          <div className="border-line mt-12 flex items-center justify-between border-t pt-5 font-mono text-xs">
-            <div className="flex flex-wrap gap-2">
-              {tags?.map((tag) => (
-                <Tag key={tag} text={tag} />
-              ))}
-            </div>
-            <Link href={editUrl(filePath)} className="text-accent whitespace-nowrap">
-              {t.editOnGitHub}
-            </Link>
-          </div>
-
-          {(prev || next) && (
-            <div className="mt-7 flex justify-between gap-5">
-              <div>
-                {prev?.slug && (
-                  <>
-                    <div className="text-muted font-mono text-[11px]">{t.previous}</div>
-                    <PostLink slug={prev.slug} className="hover:text-accent font-semibold">
-                      {prev.title}
-                    </PostLink>
-                  </>
-                )}
-              </div>
-              <div className="text-right">
-                {next?.slug && (
-                  <>
-                    <div className="text-muted font-mono text-[11px]">{t.next}</div>
-                    <PostLink slug={next.slug} className="hover:text-accent font-semibold">
-                      {next.title}
-                    </PostLink>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {siteMetadata.comments && (
-            <div className="pt-10" id="comment">
-              <Comments slug={slug} />
-            </div>
-          )}
+          </>
+        }
+      />
+      <div className="rh-wrap">
+        <div className="rh-post-intro">
+          {content.summary && <p className="rh-post-sum">{content.summary}</p>}
+          <p className="rh-post-tags">
+            <span className="rh-stage" title={t.stage}>
+              {content.stage}
+            </span>
+            {chips}
+          </p>
         </div>
-      </article>
-    </SectionContainer>
+
+        <div className="rh-post-grid">
+          <article className="prose rh-reading" data-autonum={autonum}>
+            {children}
+          </article>
+          <PostToc toc={toc} label={t.onThisPage} />
+        </div>
+
+        <div className="rh-post-end">
+          {tags.length > 0 && <p className="rh-post-tags">{chips}</p>}
+          <a className="rh-edit" href={editUrl(filePath)} target="_blank" rel="noopener noreferrer">
+            {t.editOnGitHub}
+          </a>
+        </div>
+
+        {(prev?.slug || next?.slug) && (
+          <nav className="rh-pn" aria-label={t.morePosts}>
+            {prev?.slug && (
+              <PostLink slug={prev.slug} className="rh-pn-card">
+                <span>{t.previous}</span>
+                <b>{prev.title}</b>
+              </PostLink>
+            )}
+            {next?.slug && (
+              <PostLink slug={next.slug} className="rh-pn-card rh-pn-next">
+                <span>{t.next}</span>
+                <b>{next.title}</b>
+              </PostLink>
+            )}
+          </nav>
+        )}
+
+        {siteMetadata.comments && (
+          <div className="rh-comments" id="comment">
+            <Comments slug={slug} />
+          </div>
+        )}
+      </div>
+      <ScrollTopAndComment />
+    </div>
   )
 }

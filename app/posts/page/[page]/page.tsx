@@ -1,8 +1,9 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { listedBlogs, localizedList } from '@/lib/posts'
-import SectionContainer from '@/components/SectionContainer'
+import tagData from 'app/tag-data.json'
+import { formatDate } from 'pliny/utils/formatDate'
 
-const POSTS_PER_PAGE = 5
+const POSTS_PER_PAGE = 10
 
 export const generateStaticParams = async () => {
   const totalPages = Math.ceil(listedBlogs().length / POSTS_PER_PAGE)
@@ -23,16 +24,21 @@ export default async function Page(props: { params: Promise<{ page: string }> })
     currentPage: pageNumber,
     totalPages: Math.ceil(posts.length / POSTS_PER_PAGE),
   }
+  const stats = {
+    listedTotal: posts.length,
+    tagTotal: Object.keys(tagData as Record<string, number>).length,
+    latest: posts[0] ? formatDate(posts[0].date, 'en-US') : '',
+    maxMinutes: Math.max(1, ...posts.map((p) => Math.ceil(p.readingTime.minutes))),
+  }
 
   return (
-    <SectionContainer>
-      <ListLayout
-        posts={posts}
-        initialDisplayPosts={initialDisplayPosts}
-        pagination={pagination}
-        title="All Posts"
-        titleKo="전체 글"
-      />
-    </SectionContainer>
+    <ListLayout
+      posts={posts}
+      initialDisplayPosts={initialDisplayPosts}
+      pagination={pagination}
+      title="Posts"
+      titleKo="글"
+      stats={stats}
+    />
   )
 }

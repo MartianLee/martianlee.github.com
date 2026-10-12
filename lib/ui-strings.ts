@@ -37,7 +37,9 @@ export interface UIStrings {
     older: string
     allTags: string
     readGauge: string
+    readMin: string
     pageOf: string
+    pagination: string
     filterByTag: string
     latestPosts: string
   }
@@ -48,6 +50,8 @@ export interface UIStrings {
     next: string
     editOnGitHub: string
     studyNote: string
+    stage: string
+    morePosts: string
   }
   projectsPage: {
     eyebrow: string
@@ -68,6 +72,8 @@ export interface UIStrings {
     figure: string
     previous: string
     next: string
+    spec: string
+    more: string
   }
   about: {
     experience: string
@@ -76,6 +82,7 @@ export interface UIStrings {
     globeLabel: string
     litAt: string
     subsolar: string
+    jezero: string
     jezeroTime: string
     season: string
     faceSun: string
@@ -151,7 +158,9 @@ export const ui: Record<Lang, UIStrings> = {
       older: 'Older →',
       allTags: 'All {n} tags →',
       readGauge: '{n} min read',
+      readMin: '{n} min',
       pageOf: '{current} / {total}',
+      pagination: 'Pagination',
       filterByTag: 'Filter by tag',
       latestPosts: 'Latest posts',
     },
@@ -162,6 +171,8 @@ export const ui: Record<Lang, UIStrings> = {
       next: 'NEXT →',
       editOnGitHub: 'Edit on GitHub ↗',
       studyNote: 'Study note · analyzed with AI',
+      stage: 'Digital garden stage',
+      morePosts: 'More posts',
     },
     projectsPage: {
       eyebrow: 'Side projects',
@@ -182,6 +193,8 @@ export const ui: Record<Lang, UIStrings> = {
       figure: 'Fig. 1',
       previous: 'Previous',
       next: 'Next',
+      spec: 'Spec sheet',
+      more: 'More projects',
     },
     about: {
       experience: 'Experience',
@@ -190,6 +203,7 @@ export const ui: Record<Lang, UIStrings> = {
       globeLabel: 'Mars as lit by the Sun right now',
       litAt: 'Mars as lit at {time} UTC',
       subsolar: 'Subsolar point',
+      jezero: 'Jezero',
       jezeroTime: 'Jezero local time',
       season: 'Season',
       faceSun: 'Face the Sun',
@@ -272,7 +286,9 @@ export const ui: Record<Lang, UIStrings> = {
       older: '이전 →',
       allTags: '태그 {n}개 전체 →',
       readGauge: '{n}분 분량',
+      readMin: '{n}분',
       pageOf: '{current} / {total}',
+      pagination: '페이지 이동',
       filterByTag: '태그로 거르기',
       latestPosts: '최근 글',
     },
@@ -283,6 +299,8 @@ export const ui: Record<Lang, UIStrings> = {
       next: '다음 글 →',
       editOnGitHub: 'GitHub에서 편집 ↗',
       studyNote: '학습 노트 · AI와 함께 분석',
+      stage: '디지털 가든 단계',
+      morePosts: '다른 글',
     },
     projectsPage: {
       eyebrow: '사이드 프로젝트',
@@ -303,6 +321,8 @@ export const ui: Record<Lang, UIStrings> = {
       figure: '그림 1',
       previous: '이전',
       next: '다음',
+      spec: '사양서',
+      more: '다른 프로젝트',
     },
     about: {
       experience: '경력',
@@ -311,6 +331,7 @@ export const ui: Record<Lang, UIStrings> = {
       globeLabel: '지금 태양 빛을 받는 화성',
       litAt: '{time} UTC 기준 화성',
       subsolar: '태양 직하점',
+      jezero: '제제로',
       jezeroTime: '제제로 현지 시각',
       season: '계절',
       faceSun: '해 쪽 보기',
