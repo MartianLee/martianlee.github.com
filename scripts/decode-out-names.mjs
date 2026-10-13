@@ -37,29 +37,40 @@ function kind(p) {
   }
 }
 
-/** Move `src` to `dest`. A folder that already exists there takes the contents; a different file already there wins. */
+/**
+ * Move `src` to `dest`. A folder that already exists there takes the contents; a different file already there wins.
+ * A file against a folder cannot be merged: both stay as they are and the clash is reported. Nothing is deleted recursively.
+ * Returns false when `src` is still there.
+ */
 function moveInto(src, dest, log, tally) {
   const from = kind(src)
   const to = kind(dest)
   if (to === null) {
     renameSync(src, dest)
-    return
+    return true
   }
   if (from === 'dir' && to === 'dir') {
     for (const child of readdirSync(src)) {
       moveInto(path.join(src, child), path.join(dest, child), log, tally)
     }
+    if (readdirSync(src).length > 0) return false // something inside could not move: the folder stays with it
     rmdirSync(src)
     tally.merged += 1
-    return
+    return true
   }
-  if (from === 'file' && to === 'file' && readFileSync(src).equals(readFileSync(dest))) {
-    rmSync(src) // the same bytes are already there
-    return
+  if (from === 'file' && to === 'file') {
+    if (!readFileSync(src).equals(readFileSync(dest))) {
+      log(
+        `decode-out-names: ${dest} already exists with different content, kept it and dropped ${src}`
+      )
+      tally.conflicts.push(dest)
+    }
+    rmSync(src) // the same bytes are already there, or the existing file wins
+    return true
   }
-  log(`decode-out-names: ${dest} already exists with different content, kept it and dropped ${src}`)
-  rmSync(src, { recursive: true, force: true })
+  log(`decode-out-names: ${src} is a ${from} but ${dest} is a ${to}, left both as they are`)
   tally.conflicts.push(dest)
+  return false
 }
 
 function walk(dir, log, tally) {
@@ -74,15 +85,15 @@ function walk(dir, log, tally) {
       tally.left.push(full)
       continue
     }
-    moveInto(full, path.join(dir, decoded), log, tally)
-    tally.renamed += 1
+    if (moveInto(full, path.join(dir, decoded), log, tally)) tally.renamed += 1
   }
 }
 
 /**
  * Rename every file and folder under `root` whose name has a percent-escape to its decoded name, once, deepest first.
  * A decoded folder that exists already gets the contents merged in; a decoded file that exists with different content is
- * kept and the encoded one is dropped (both logged).
+ * kept and the encoded one is dropped (both logged and listed in `conflicts`, which postbuild turns into a failed build);
+ * a file against a folder is left as it is, also in `conflicts`. Names that do not decode are in `left`.
  */
 export function decodeOutNames(root, log = console.log) {
   const tally = { renamed: 0, merged: 0, conflicts: [], left: [] }

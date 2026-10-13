@@ -15,6 +15,12 @@ export default function MarsHorizon() {
   const titleRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // a visitor who asked to save data keeps the still: the WebGL chunk is not fetched at all
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    if (connection?.saveData === true) {
+      fallbackRef.current?.classList.add('rh-on')
+      return
+    }
     let handle: HorizonHandle | null = null
     let cancelled = false
     const start = async () => {

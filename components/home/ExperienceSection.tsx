@@ -7,7 +7,7 @@ import TenureChart from '@/components/TenureChart'
 import { useUI } from '@/components/useUI'
 import { useSettleOnView } from '@/components/hooks/useSettleOnView'
 
-export default function ExperienceSection() {
+export default function ExperienceSection({ initialYear }: { initialYear: number }) {
   const ui = useUI()
   const titleRef = useRef<HTMLHeadingElement>(null)
   useSettleOnView(titleRef)
@@ -22,7 +22,7 @@ export default function ExperienceSection() {
           {ui.cv}
         </a>
       </div>
-      <TenureChart roles={careerData} />
+      <TenureChart roles={careerData} initialYear={initialYear} />
     </section>
   )
 }

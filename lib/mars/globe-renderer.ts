@@ -277,6 +277,8 @@ export function mountGlobe(el: GlobeElements, opts: GlobeOptions): GlobeHandle {
   let ro: ResizeObserver | null = null
   let io: IntersectionObserver | null = null
   let stopTheme: (() => void) | null = null
+  // the Sun mark's last angle (see overlay)
+  let sunAng = 0
 
   const setPinText = () => {
     const t = formatClock(m.lmstJezero, false)
@@ -367,8 +369,10 @@ export function mountGlobe(el: GlobeElements, opts: GlobeOptions): GlobeHandle {
     pin.classList.toggle('rh-flip', flip)
     pin.style.transform = `translate(${(flip ? X - pinW + 4.5 : X - 4.5).toFixed(1)}px,${Y.toFixed(1)}px) translateY(-50%)`
     pin.classList.toggle('rh-away', z < 0.18)
-    const ang = Math.atan2(dot(sun, b.n), dot(sun, b.e)) / D2R
-    sunMark.setAttribute('transform', `rotate(${(90 - ang).toFixed(2)})`)
+    // Facing the Sun head-on leaves both components at float noise, and atan2 of noise points anywhere (west, right after
+    // "Face the Sun"): the mark keeps the angle it had.
+    if (Math.abs(dot(sun, b.o)) <= 0.995) sunAng = Math.atan2(dot(sun, b.n), dot(sun, b.e)) / D2R
+    sunMark.setAttribute('transform', `rotate(${(90 - sunAng).toFixed(2)})`)
   }
   function step(now: number) {
     if (destroyed) return

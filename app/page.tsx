@@ -12,7 +12,8 @@ export default async function Page() {
       <div className="rh-wrap">
         <ProjectsSection />
         <WritingSection posts={posts} />
-        <ExperienceSection />
+        {/* the year of the build: the chart's first render matches this page, then it reads the visitor's clock */}
+        <ExperienceSection initialYear={new Date().getFullYear()} />
       </div>
     </div>
   )
