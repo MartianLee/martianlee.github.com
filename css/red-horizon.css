@@ -46,6 +46,9 @@
   --rh-code-fg: #e9e3d5;
   --rh-orb-lx: 62%;
   --rh-orb-ly: 30%;
+  /* the 404 lander and its beacon halo */
+  --rh-probe: #3a2a20;
+  --rh-beam: rgba(194, 65, 12, 0.35);
 }
 html.dark {
   --rh-paper: #14110b;
@@ -79,6 +82,8 @@ html.dark {
   --rh-code-fg: #e9e3d5;
   --rh-orb-lx: 78%;
   --rh-orb-ly: 54%;
+  --rh-probe: #0b0907;
+  --rh-beam: rgba(234, 88, 12, 0.4);
 }
 
 /* ---------- page wrapper: the body type of a Red Horizon page (scoped, so the KB and climate keep their fonts) ---------- */
@@ -135,21 +140,6 @@ html.dark {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-.rh-icon-btn {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: inherit;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.rh-icon-btn:hover {
-  background: color-mix(in srgb, var(--rh-ink) 12%, transparent);
 }
 /* The existing ThemeSwitch / SearchButton / MobileNav buttons keep their markup. Size their icons here and give them
    the 36px round hit area of the reference icon button (padding, so utilities such as sm:hidden still decide display).
@@ -274,7 +264,6 @@ html.dark {
   height: 52px;
   border-radius: 50%;
   overflow: hidden;
-  background: radial-gradient(circle at 36% 32%, var(--rh-a), var(--rh-b) 78%);
   transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .rh-orb i {
@@ -292,12 +281,6 @@ html.dark {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at 30% 28%,
-    transparent 32%,
-    rgba(8, 5, 3, 0.42) 60%,
-    rgba(8, 5, 3, 0.9) 92%
-  );
   box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.35);
 }
 .rh-orb-ring {
@@ -358,7 +341,7 @@ html.dark {
     radial-gradient(ellipse 26% 5% at 44% 24%, rgba(255, 255, 255, 0.6), transparent 75%),
     radial-gradient(ellipse 20% 4% at 82% 80%, rgba(255, 255, 255, 0.5), transparent 75%);
 }
-/* pointer is the Sun: orbs take their light from the cursor (JS sets --rh-lx/--rh-ly; the defaults come from the theme tokens) */
+/* the lit sphere and its terminator: the orb takes its light from the cursor (JS sets --rh-lx/--rh-ly; the defaults come from the theme tokens) */
 .rh-orb {
   --rh-lx: var(--rh-orb-lx);
   --rh-ly: var(--rh-orb-ly);
@@ -786,9 +769,6 @@ html.dark .rh-band--slim {
   color: var(--rh-muted);
   text-wrap: pretty;
 }
-.rh-status {
-  margin: 0;
-}
 .rh-tagchip {
   display: inline-flex;
   align-items: center;
@@ -866,8 +846,10 @@ a.rh-tagchip:hover {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin: 0;
 }
 .rh-status i {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -882,10 +864,6 @@ a.rh-tagchip:hover {
 }
 .rh-contact nav a {
   padding: 6px 0;
-}
-.rh-contact nav a:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 .rh-foot {
   display: flex;
@@ -909,11 +887,7 @@ a.rh-tagchip:hover {
 }
 .rh-contact nav a:hover,
 .rh-contact nav a:focus-visible {
-  text-decoration: none;
   background-size: 100% 1px;
-}
-.rh-status i {
-  position: relative;
 }
 .rh-contact.rh-tx .rh-status i {
   animation: rh-pingok 1.2s ease-out;
@@ -993,14 +967,6 @@ a.rh-tagchip:hover {
 }
 
 /* ---------- 404: a lost lander on the horizon, beacon still blinking ---------- */
-:root {
-  --rh-probe: #3a2a20;
-  --rh-beam: rgba(194, 65, 12, 0.35);
-}
-html.dark {
-  --rh-probe: #0b0907;
-  --rh-beam: rgba(234, 88, 12, 0.4);
-}
 .rh-nf .rh-band {
   min-height: clamp(380px, 62vh, 560px);
 }
@@ -1427,7 +1393,7 @@ html.dark .rh-lead {
    --rh-act, --rh-rx/--rh-ry and --rh-sc on each .rh-orb itself (the orb re-declares --rh-lx/--rh-ly, so a value set on an ancestor would be
    ignored), --rh-act/--rh-gx/--rh-gy on its .rh-tile and --rh-mx on the row. The fallbacks below are the resting light. */
 .rh-proj {
-  /* REF's home has no sun token: the planets rest lit from the upper left, which is where usePointerSun eases back to */
+  /* REF's home has no sun token: the planets rest lit from the upper left. usePointerSun reads this token as the light it eases back to */
   --rh-orb-lx: 36%;
   --rh-orb-ly: 32%;
   /* strength of the pool of light under the pointer. REF's 12% leaves the muted text at 4.38:1 at the peak on the light paper,
