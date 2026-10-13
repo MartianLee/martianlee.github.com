@@ -6,13 +6,6 @@ import { formatClock, formatLightTime, formatMsd } from '@/lib/mars/format'
 import { useUI } from '../useUI'
 import { useLanguage } from '../LanguageProvider'
 
-/** REF's readout pads the seconds ("13 min 05 s"; the shared formatter does not). Korean has no REF and keeps the natural "13분 5초". */
-function lightTime(sec: number, lang: 'en' | 'ko'): string {
-  if (lang === 'ko') return formatLightTime(sec, 'ko')
-  const whole = Math.round(sec)
-  return `${Math.floor(whole / 60)} min ${String(whole % 60).padStart(2, '0')} s`
-}
-
 /** Live Mars telemetry: Jezero local solar time, MTC, sol date, season and Earth-Mars light time, once a second. */
 export default function MarsHud() {
   const ui = useUI()
@@ -52,7 +45,7 @@ export default function MarsHud() {
           )}
         </dd>
         <dt>{ui.hud.light}</dt>
-        <dd>{c ? lightTime(c.lightSec, lang) : dash}</dd>
+        <dd>{c ? formatLightTime(c.lightSec, lang, { pad: true }) : dash}</dd>
       </dl>
     </aside>
   )

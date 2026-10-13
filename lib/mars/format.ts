@@ -8,11 +8,20 @@ export function formatClock(hours: number, withSeconds = true): string {
   return withSeconds ? `${pad2(h)}:${pad2(m)}:${pad2(s)}` : `${pad2(h)}:${pad2(m)}`
 }
 
-export function formatLightTime(sec: number, lang: 'en' | 'ko'): string {
+/**
+ * "13 min 5 s" / "13분 5초". `pad` keeps the English seconds two digits wide ("13 min 05 s") for a readout that ticks in place;
+ * Korean has no such reference and stays natural.
+ */
+export function formatLightTime(
+  sec: number,
+  lang: 'en' | 'ko',
+  opts: { pad?: boolean } = {}
+): string {
   const whole = Math.round(sec)
   const m = Math.floor(whole / 60)
   const s = whole % 60
-  return lang === 'ko' ? `${m}분 ${s}초` : `${m} min ${s} s`
+  if (lang === 'ko') return `${m}분 ${s}초`
+  return `${m} min ${opts.pad ? pad2(s) : s} s`
 }
 
 export function formatMsd(msd: number): string {
