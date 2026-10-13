@@ -83,6 +83,51 @@ test('keeps an existing file with different content and drops the encoded one, l
   )
 })
 
+test('a file against a folder is left as it is and reported, nothing is deleted', () => {
+  const logs = []
+  withOut(
+    { 'x%20y/inner.txt': 'folder', 'x y': 'file', 'p%20q': 'file', 'p q/child.txt': 'folder' },
+    (root) => {
+      const tally = decodeOutNames(root, (m) => logs.push(m))
+      assert.deepEqual(listing(root), [
+        'p q/',
+        'p q/child.txt',
+        'p%20q',
+        'x y',
+        'x%20y/',
+        'x%20y/inner.txt',
+      ])
+      assert.equal(readFileSync(path.join(root, 'x%20y/inner.txt'), 'utf8'), 'folder')
+      assert.equal(tally.renamed, 0)
+      assert.deepEqual(
+        tally.conflicts.sort(),
+        [path.join(root, 'p q'), path.join(root, 'x y')].sort()
+      )
+      assert.equal(logs.length, 2)
+      assert.match(logs[0], /left both as they are/)
+    }
+  )
+})
+
+test('a folder that cannot be emptied into its decoded twin stays, with what was left in it', () => {
+  withOut(
+    { 'a%20b/ok.txt': 'moves', 'a%20b/clash': 'file', 'a b/clash/inner.txt': 'folder' },
+    (root) => {
+      const tally = decodeOutNames(root, () => {})
+      assert.deepEqual(listing(root), [
+        'a b/',
+        'a b/clash/',
+        'a b/clash/inner.txt',
+        'a b/ok.txt',
+        'a%20b/',
+        'a%20b/clash',
+      ])
+      assert.equal(tally.merged, 0)
+      assert.equal(tally.conflicts.length, 1)
+    }
+  )
+})
+
 test('leaves names that do not decode to a plain name, and never decodes twice', () => {
   const logs = []
   withOut({ 'a%2Fb.txt': '1', '%E0.txt': '2', '100%2541.txt': '3', '..%2F.txt': '4' }, (root) => {

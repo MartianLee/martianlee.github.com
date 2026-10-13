@@ -9,6 +9,7 @@ import PostRow from '@/components/posts/PostRow'
 import tagData from 'app/tag-data.json'
 import type { LocalizedListItem } from '@/lib/posts'
 import { fill } from '@/lib/ui-strings'
+import { formatPostDate } from '@/lib/post-date'
 import { useUI } from '@/components/useUI'
 import { useLanguage } from '@/components/LanguageProvider'
 
@@ -26,6 +27,7 @@ interface PaginationProps {
 interface ListStats {
   listedTotal: number
   tagTotal: number
+  /** the newest post's date as stored (ISO); the layout prints it in the reading language */
   latest: string
   maxMinutes: number
 }
@@ -120,7 +122,7 @@ export default function ListLayoutWithTags({
             {stats.latest && (
               <>
                 {sep}
-                <span>{fill(ui.band.latest, { date: stats.latest })}</span>
+                <span>{fill(ui.band.latest, { date: formatPostDate(stats.latest, lang) })}</span>
               </>
             )}
           </>
@@ -131,12 +133,10 @@ export default function ListLayoutWithTags({
         <div className="rh-plist">
           <aside className="rh-rail" aria-label={ui.list.filterByTag}>
             <h2 className="rh-rail-h">{ui.list.tags}</h2>
-            {/* the rh-rail-link class also brings the links under the reduced-motion rule, which only matches rh- classes */}
             <ul className="rh-rail-list">
               <li>
                 <Link
                   href="/posts"
-                  className="rh-rail-link"
                   aria-current={onPostsPages && !pathname.includes('/tags/') ? 'page' : undefined}
                 >
                   {ui.list.all}
@@ -147,7 +147,6 @@ export default function ListLayoutWithTags({
                 <li key={t}>
                   <Link
                     href={`/tags/${slug(t)}`}
-                    className="rh-rail-link"
                     aria-current={pathname.split('/tags/')[1] === slug(t) ? 'page' : undefined}
                   >
                     {t}
@@ -155,6 +154,10 @@ export default function ListLayoutWithTags({
                   </Link>
                 </li>
               ))}
+              {/* the "All N tags" link below the list is hidden on phones, where the list is a scroller: its last pill takes over */}
+              <li className="rh-rail-all">
+                <Link href="/tags">{fill(ui.list.allTags, { n: stats.tagTotal })}</Link>
+              </li>
             </ul>
             <Link className="rh-rail-more" href="/tags">
               {fill(ui.list.allTags, { n: stats.tagTotal })}

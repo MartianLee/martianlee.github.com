@@ -1,23 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { isDarkNow, watchDarkTheme } from '@/lib/theme'
 
-const isDarkNow = (): boolean => document.documentElement.classList.contains('dark')
-
-/** Calls `cb` whenever next-themes flips the `dark` class on <html>. Returns an unsubscribe function. */
-export function watchDarkTheme(cb: (dark: boolean) => void): () => void {
-  const root = document.documentElement
-  let last = isDarkNow()
-  const obs = new MutationObserver(() => {
-    const now = isDarkNow()
-    if (now !== last) {
-      last = now
-      cb(now)
-    }
-  })
-  obs.observe(root, { attributes: true, attributeFilter: ['class'] })
-  return () => obs.disconnect()
-}
+// the watcher lives in lib/theme.ts (no React); re-exported so imports of it from here keep working
+export { watchDarkTheme }
 
 /** React state that follows the site theme (false during SSR and the first client render). */
 export function useDarkTheme(): boolean {

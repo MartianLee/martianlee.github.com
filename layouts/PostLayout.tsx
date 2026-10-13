@@ -10,6 +10,7 @@ import PostToc from '@/components/posts/PostToc'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
 import siteMetadata from '@/data/siteMetadata'
 import { hasNumberedHeadings, parseToc } from '@/lib/headings'
+import { formatPostDate } from '@/lib/post-date'
 import { fill, ui } from '@/lib/ui-strings'
 
 const editUrl = (path: string) => `${siteMetadata.siteRepo}/blob/main/data/${path}`
@@ -38,11 +39,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
   const toc = parseToc(content.toc)
   const autonum = hasNumberedHeadings(toc) ? 'off' : 'on'
   const minutes = Math.max(1, Math.ceil(readingTime.minutes))
-  const published = new Date(date).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const published = formatPostDate(date, lang)
   const chips = tags.map((tag) => (
     <Link key={tag} className="rh-tagchip" href={`/tags/${slugify(tag)}`}>
       {tag.split(' ').join('-')}
@@ -82,17 +79,19 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
           {content.summary && <p className="rh-post-sum">{content.summary}</p>}
           <p className="rh-post-tags">
             <span className="rh-stage" title={t.stage}>
-              {content.stage}
+              <span className="sr-only">{t.stageLabel}: </span>
+              {t.stages[content.stage]}
             </span>
             {chips}
           </p>
         </div>
 
         <div className="rh-post-grid">
-          <article className="prose rh-reading" data-autonum={autonum}>
+          {/* before the article, so keyboard and screen-reader users meet the list first; the grid places the two by column and row from 1100px */}
+          <PostToc toc={toc} label={t.onThisPage} />
+          <article id="post-body" className="prose rh-reading" data-autonum={autonum}>
             {children}
           </article>
-          <PostToc toc={toc} label={t.onThisPage} />
         </div>
 
         <div className="rh-post-end">

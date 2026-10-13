@@ -34,6 +34,14 @@ function resolveInternalHref(href: string, pathname: string | null): string {
   return href
 }
 
+/**
+ * A link to a file of the export (an image, a PDF, a download) rather than to a page. next/link would prefetch such an href as a
+ * route payload, and the static host answers that request with a 404 each time one scrolls into view.
+ */
+const FILE_HREF =
+  /^\/static\/|\.(?:png|jpe?g|gif|webp|avif|svg|ico|pdf|zip|mp3|mp4|webm|xml|json|txt|csv)$/i
+const isFileHref = (href: string): boolean => FILE_HREF.test(href.split(/[?#]/)[0])
+
 const CustomLink = ({
   href,
   children,
@@ -44,8 +52,16 @@ const CustomLink = ({
   const isAnchorLink = typeof href === 'string' && href.startsWith('#')
 
   if (isInternalLink) {
+    const to = resolveInternalHref(href, pathname)
+    if (isFileHref(to)) {
+      return (
+        <a href={to} {...rest}>
+          {children}
+        </a>
+      )
+    }
     return (
-      <Link href={resolveInternalHref(href, pathname)} {...rest}>
+      <Link href={to} {...rest}>
         {children}
       </Link>
     )

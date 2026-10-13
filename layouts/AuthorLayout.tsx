@@ -1,8 +1,6 @@
 'use client'
 
 import { Fragment, ReactNode } from 'react'
-import type { Authors } from '.contentlayer/generated'
-import { CoreContent } from 'pliny/utils/contentlayer'
 import siteMetadata from '@/data/siteMetadata'
 import careerData from '@/data/careerData'
 import Link from '@/components/Link'
@@ -13,9 +11,8 @@ import ClimateCallout from '@/components/about/ClimateCallout'
 import MarsGlobe from '@/components/about/MarsGlobe'
 
 interface Props {
+  // the bio in the author's MDX; the name comes from the UI strings and the contact links live in the footer
   children: ReactNode
-  // the author's front matter: the name comes from the UI strings now and the contact links live in the footer
-  content: CoreContent<Authors>
 }
 
 export default function AuthorLayout({ children }: Props) {
@@ -80,6 +77,7 @@ export default function AuthorLayout({ children }: Props) {
               <li key={c.company}>
                 <h3>
                   {c.href ? <Link href={c.href}>{c.company}</Link> : c.company}
+                  <span className="sr-only">{', '}</span>
                   <span className="rh-role">{pick(c.role, c.roleKo)}</span>
                 </h3>
                 <span className="rh-period">{c.period}</span>

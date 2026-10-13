@@ -63,6 +63,9 @@ export default function MarsGlobe() {
   }, [])
 
   useEffect(() => {
+    // a visitor who asked to save data keeps the still (the controls stay hidden): the WebGL chunk is not fetched at all
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    if (connection?.saveData === true) return
     let cancelled = false
     const start = async () => {
       let mod: typeof import('@/lib/mars/globe-renderer')
@@ -110,7 +113,7 @@ export default function MarsGlobe() {
   const c = reading?.clock
   const utc = reading ? new Date(reading.at).toISOString().slice(11, 16) : dash
   return (
-    <figure className="rh-about-globe" aria-label={ui.about.globeLabel}>
+    <figure className="rh-about-globe">
       <div
         className="rh-about-port"
         ref={portRef}
@@ -120,6 +123,7 @@ export default function MarsGlobe() {
         role="application"
         aria-roledescription="globe"
         aria-label={ui.about.globeLabel}
+        aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
         aria-describedby="rh-about-cap"
       >
         <svg

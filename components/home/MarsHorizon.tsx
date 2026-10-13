@@ -15,6 +15,8 @@ export default function MarsHorizon() {
   const titleRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // save-data visitors still load the small renderer chunk: it starts no WebGL for them and draws the still fitted
+    // to the measured name (the markup still is not)
     let handle: HorizonHandle | null = null
     let cancelled = false
     const start = async () => {

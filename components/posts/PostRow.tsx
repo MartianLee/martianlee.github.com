@@ -2,20 +2,18 @@
 
 import type { CSSProperties } from 'react'
 import { slug } from 'github-slugger'
-import { formatDate } from 'pliny/utils/formatDate'
 import Link from '@/components/Link'
 import PostLink from '@/components/PostLink'
 import { useLanguage } from '@/components/LanguageProvider'
 import { useUI } from '@/components/useUI'
 import { fill } from '@/lib/ui-strings'
+import { formatPostDate } from '@/lib/post-date'
 import type { LocalizedListItem } from '@/lib/posts'
 
 const MAX_CHIPS = 3
 
 /**
  * One row of the posts list: date and reading-time gauge, the title as the row's link, a two-line summary, the first tags.
- * The date and the title link carry rh- classes (rh-prow-date, rh-prow-link) so the reduced-motion rule, which only
- * matches rh- classes, also stops their transitions.
  */
 export default function PostRow({
   post,
@@ -36,9 +34,7 @@ export default function PostRow({
   return (
     <li className="rh-prow">
       <p className="rh-prow-meta">
-        <time className="rh-prow-date" dateTime={post.date}>
-          {formatDate(post.date, lang === 'ko' ? 'ko-KR' : 'en-US')}
-        </time>
+        <time dateTime={post.date}>{formatPostDate(post.date, lang)}</time>
         <span
           className="rh-gauge"
           role="img"
@@ -53,9 +49,7 @@ export default function PostRow({
       </p>
       <div className="rh-prow-main">
         <h2 className="rh-prow-title">
-          <PostLink slug={post.slug} className="rh-prow-link">
-            {pick(post.title, post.titleKo)}
-          </PostLink>
+          <PostLink slug={post.slug}>{pick(post.title, post.titleKo)}</PostLink>
         </h2>
         {summary && <p className="rh-prow-sum">{summary}</p>}
         {shown.length > 0 && (
@@ -65,7 +59,15 @@ export default function PostRow({
                 {t.split(' ').join('-')}
               </Link>
             ))}
-            {hidden > 0 && <span className="rh-more">+{hidden}</span>}
+            {hidden > 0 && (
+              <span
+                className="rh-more"
+                role="img"
+                aria-label={fill(ui.list.moreTags, { n: hidden })}
+              >
+                +{hidden}
+              </span>
+            )}
           </p>
         )}
       </div>

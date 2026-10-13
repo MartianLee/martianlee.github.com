@@ -22,9 +22,6 @@ export interface UIStrings {
     writing: string
   }
   sections: {
-    projects: string
-    writing: string
-    experience: string
     allProjects: string
     allPosts: string
     writingIntro: string
@@ -42,6 +39,7 @@ export interface UIStrings {
     pagination: string
     filterByTag: string
     latestPosts: string
+    moreTags: string
   }
   post: {
     backToWriting: string
@@ -50,12 +48,13 @@ export interface UIStrings {
     next: string
     editOnGitHub: string
     studyNote: string
+    table: string
     stage: string
+    stageLabel: string
+    stages: { seedling: string; budding: string; evergreen: string }
     morePosts: string
   }
   projectsPage: {
-    eyebrow: string
-    title: string
     apps: string
     games: string
     back: string
@@ -77,7 +76,6 @@ export interface UIStrings {
   }
   about: {
     experience: string
-    occupation: string
     name: string
     globeLabel: string
     litAt: string
@@ -103,9 +101,6 @@ export interface UIStrings {
   home: { projects: string; posts: string; experience: string }
   tenure: { label: string; hint: string; now: string; readout: string }
   band: {
-    posts: string
-    projects: string
-    tags: string
     writingLog: string
     postCount: string
     tagCount: string
@@ -138,9 +133,6 @@ export const ui: Record<Lang, UIStrings> = {
       writing: 'Posts',
     },
     sections: {
-      projects: '01 — Projects',
-      writing: '02 — Recent posts',
-      experience: '03 — Experience',
       allProjects: 'All projects →',
       allPosts: 'All posts →',
       writingIntro: 'I take large codebases apart and write down how they actually work.',
@@ -163,6 +155,7 @@ export const ui: Record<Lang, UIStrings> = {
       pagination: 'Pagination',
       filterByTag: 'Filter by tag',
       latestPosts: 'Latest posts',
+      moreTags: '{n} more tags',
     },
     post: {
       backToWriting: '← Posts',
@@ -171,12 +164,13 @@ export const ui: Record<Lang, UIStrings> = {
       next: 'NEXT →',
       editOnGitHub: 'Edit on GitHub ↗',
       studyNote: 'Study note · analyzed with AI',
+      table: 'Table',
       stage: 'Digital garden stage',
+      stageLabel: 'Stage',
+      stages: { seedling: 'Seedling', budding: 'Budding', evergreen: 'Evergreen' },
       morePosts: 'More posts',
     },
     projectsPage: {
-      eyebrow: 'Side projects',
-      title: "Things I've built",
       apps: 'Apps & tools',
       games: 'Games',
       back: '← Projects',
@@ -198,7 +192,6 @@ export const ui: Record<Lang, UIStrings> = {
     },
     about: {
       experience: 'Experience',
-      occupation: 'Software Engineer',
       name: 'SeongHwa Lee',
       globeLabel: 'Mars as lit by the Sun right now',
       litAt: 'Mars as lit at {time} UTC',
@@ -233,9 +226,6 @@ export const ui: Record<Lang, UIStrings> = {
       readout: '{year} · {roles}',
     },
     band: {
-      posts: 'Posts',
-      projects: 'Projects',
-      tags: 'Tags',
       writingLog: 'Writing log',
       postCount: '{n} posts',
       tagCount: '{n} tags',
@@ -266,9 +256,6 @@ export const ui: Record<Lang, UIStrings> = {
       writing: '글',
     },
     sections: {
-      projects: '01 — 프로젝트',
-      writing: '02 — 최근 글',
-      experience: '03 — 경력',
       allProjects: '전체 프로젝트 →',
       allPosts: '전체 글 →',
       writingIntro: '거대한 코드베이스를 뜯어보고, 실제로 어떻게 동작하는지 기록합니다.',
@@ -291,6 +278,7 @@ export const ui: Record<Lang, UIStrings> = {
       pagination: '페이지 이동',
       filterByTag: '태그로 거르기',
       latestPosts: '최근 글',
+      moreTags: '태그 {n}개 더',
     },
     post: {
       backToWriting: '← 글 목록',
@@ -299,12 +287,13 @@ export const ui: Record<Lang, UIStrings> = {
       next: '다음 글 →',
       editOnGitHub: 'GitHub에서 편집 ↗',
       studyNote: '학습 노트 · AI와 함께 분석',
+      table: '표',
       stage: '디지털 가든 단계',
+      stageLabel: '단계',
+      stages: { seedling: '새싹', budding: '성장 중', evergreen: '상록수' },
       morePosts: '다른 글',
     },
     projectsPage: {
-      eyebrow: '사이드 프로젝트',
-      title: '제가 만든 것들',
       apps: '앱 & 도구',
       games: '게임',
       back: '← 프로젝트',
@@ -326,7 +315,6 @@ export const ui: Record<Lang, UIStrings> = {
     },
     about: {
       experience: '경력',
-      occupation: '소프트웨어 엔지니어',
       name: '이성화',
       globeLabel: '지금 태양 빛을 받는 화성',
       litAt: '{time} UTC 기준 화성',
@@ -361,9 +349,6 @@ export const ui: Record<Lang, UIStrings> = {
       readout: '{year} · {roles}',
     },
     band: {
-      posts: '글',
-      projects: '프로젝트',
-      tags: '태그',
       writingLog: '글 기록',
       postCount: '글 {n}편',
       tagCount: '태그 {n}개',

@@ -69,7 +69,7 @@ export default function PostToc({ toc, label }: PostTocProps) {
   // goes stale after a jump (End key, scrollbar drag, anchor link) that lands past several headings at once.
   useEffect(() => {
     const el = bar.current
-    const article = document.querySelector<HTMLElement>('.rh-reading')
+    const article = document.getElementById('post-body')
     if (!el || !article) return
     const heads = showToc
       ? items.flatMap((it, i) => {

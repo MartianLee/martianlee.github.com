@@ -42,7 +42,10 @@ function Neighbor({ p, side }: { p: Project; side: Side }) {
   )
 }
 
-/** Fills the slot of a missing neighbor (first / last project) with the way back to the list, as REF does on its left. */
+/**
+ * Fills the slot of a missing neighbor (first / last project) with the way back to the list, as REF does on its left.
+ * The left slot says "← Projects"; the right one has no arrow to point at, so it says "More projects".
+ */
 function AllProjects({ side }: { side: Side }) {
   const ui = useUI()
   return (
@@ -51,7 +54,9 @@ function AllProjects({ side }: { side: Side }) {
       className={side === 'next' ? 'rh-pnav-card rh-pnav-card--next' : 'rh-pnav-card'}
     >
       <span className="rh-pnav-text">
-        <span className="rh-pnav-label">{ui.projectsPage.back}</span>
+        <span className="rh-pnav-label">
+          {side === 'prev' ? ui.projectsPage.back : ui.projectsPage.more}
+        </span>
         <span className="rh-pnav-title">
           {fill(ui.band.projectCount, { n: projectsData.length })}
         </span>
@@ -146,7 +151,8 @@ export default function ProjectDetail({ project, shot }: ProjectDetailProps) {
             <div className="rh-shot-frame">
               <Image
                 src={imgSrc}
-                alt={title}
+                // the figure is captioned with the project's name: a second description would only repeat it
+                alt=""
                 width={size.width}
                 height={size.height}
                 loading="lazy"

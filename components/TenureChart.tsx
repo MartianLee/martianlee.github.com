@@ -17,14 +17,21 @@ const TOUCH_HOLD_MS = 2600
  * Whole-year bars on one axis, with a scrubber (REF index.html 253 to 280 and 779 to 829).
  * Hover or tap a bar track or the axis, or focus the axis and use the arrow keys, Home and End, to read any year.
  */
-export default function TenureChart({ roles }: { roles: Career[] }) {
+export default function TenureChart({
+  roles,
+  initialYear,
+}: {
+  roles: Career[]
+  initialYear: number
+}) {
   const ui = useUI()
   const { lang } = useLanguage()
-  // The year comes from the clock on both sides (only a build and a first visit that straddle New Year would disagree);
-  // the fraction of the year differs on every render, so it waits for the effect and the first client render matches the static HTML.
-  const [nowYear] = useState(() => new Date().getFullYear())
-  const [now, setNow] = useState(nowYear + 0.5)
-  const [year, setYear] = useState(nowYear)
+  // The server's year (the one the static page was built in) is what the first client render uses, so it matches the HTML even for a
+  // page built before New Year and opened after it; the effect swaps in the visitor's year. The fraction of the year differs on
+  // every render, so it waits for the effect as well.
+  const [nowYear, setNowYear] = useState(initialYear)
+  const [now, setNow] = useState(initialYear + 0.5)
+  const [year, setYear] = useState(initialYear)
   const [scrub, setScrub] = useState(false)
   const [lit, setLit] = useState(false)
   const [readoutLeft, setReadoutLeft] = useState(0)
@@ -42,12 +49,14 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
   const chronological = [...roles].sort(byStart)
   const active = activeRoles(roles, year, nowYear).sort(byStart)
   const roleName = (r: Career) => (lang === 'ko' && r.roleKo ? r.roleKo : r.role)
+  // the last stop is today: REF's reading says "Now" there instead of the year
+  const stop = year === nowYear ? ui.tenure.now : String(year)
   const readout = active.length
     ? fill(ui.tenure.readout, {
-        year,
+        year: stop,
         roles: active.map((r) => `${r.company}, ${roleName(r)}`).join(' · '),
       })
-    : String(year)
+    : stop
 
   const yearAt = (clientX: number) => {
     const r = axisRef.current?.getBoundingClientRect()
@@ -56,8 +65,8 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
     return Math.min(nowYear, Math.max(axis.from, y))
   }
   const release = () => {
-    // the reading stays up while the axis has keyboard focus
-    if (document.activeElement !== axisRef.current) setScrub(false)
+    // the reading stays up while the axis has keyboard focus (a click focuses it too, but that is not keyboard focus)
+    if (!axisRef.current?.matches(':focus-visible')) setScrub(false)
   }
   const read = (e: PointerEvent<HTMLElement>) => {
     window.clearTimeout(holdTimer.current)
@@ -84,9 +93,14 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
   }
 
   useEffect(() => {
-    setNow(yearFraction(new Date()))
+    const today = new Date()
+    if (today.getFullYear() !== initialYear) {
+      setNowYear(today.getFullYear())
+      setYear(today.getFullYear())
+    }
+    setNow(yearFraction(today))
     return () => window.clearTimeout(holdTimer.current)
-  }, [])
+  }, [initialYear])
 
   // the bars glow once, the first time the chart is mostly in view (they are drawn either way)
   useEffect(() => {
@@ -135,6 +149,8 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
             <li key={r.company} className={active.includes(r) ? 'rh-on' : undefined}>
               <h3>
                 {r.href ? <Link href={r.href}>{r.company}</Link> : r.company}
+                {/* the company and the role run together in the markup: a reader would announce "UJETSoftware Engineer 2" */}
+                <span className="sr-only">{', '}</span>
                 <span className="rh-role">{roleName(r)}</span>
               </h3>
               <span className="rh-period">{r.period}</span>
@@ -170,7 +186,9 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
         aria-valuenow={year}
         aria-valuetext={readout}
         onKeyDown={onKeyDown}
-        onFocus={() => setScrub(true)}
+        onFocus={(e) => {
+          if (e.currentTarget.matches(':focus-visible')) setScrub(true)
+        }}
         onBlur={() => setScrub(false)}
         {...pointerProps}
       >
