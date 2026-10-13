@@ -2,12 +2,12 @@
 
 import type { CSSProperties } from 'react'
 import { slug } from 'github-slugger'
-import { formatDate } from 'pliny/utils/formatDate'
 import Link from '@/components/Link'
 import PostLink from '@/components/PostLink'
 import { useLanguage } from '@/components/LanguageProvider'
 import { useUI } from '@/components/useUI'
 import { fill } from '@/lib/ui-strings'
+import { formatPostDate } from '@/lib/post-date'
 import type { LocalizedListItem } from '@/lib/posts'
 
 const MAX_CHIPS = 3
@@ -37,7 +37,7 @@ export default function PostRow({
     <li className="rh-prow">
       <p className="rh-prow-meta">
         <time className="rh-prow-date" dateTime={post.date}>
-          {formatDate(post.date, lang === 'ko' ? 'ko-KR' : 'en-US')}
+          {formatPostDate(post.date, lang)}
         </time>
         <span
           className="rh-gauge"

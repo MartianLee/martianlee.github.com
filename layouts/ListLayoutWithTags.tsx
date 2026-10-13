@@ -9,6 +9,7 @@ import PostRow from '@/components/posts/PostRow'
 import tagData from 'app/tag-data.json'
 import type { LocalizedListItem } from '@/lib/posts'
 import { fill } from '@/lib/ui-strings'
+import { formatPostDate } from '@/lib/post-date'
 import { useUI } from '@/components/useUI'
 import { useLanguage } from '@/components/LanguageProvider'
 
@@ -26,6 +27,7 @@ interface PaginationProps {
 interface ListStats {
   listedTotal: number
   tagTotal: number
+  /** the newest post's date as stored (ISO); the layout prints it in the reading language */
   latest: string
   maxMinutes: number
 }
@@ -120,7 +122,7 @@ export default function ListLayoutWithTags({
             {stats.latest && (
               <>
                 {sep}
-                <span>{fill(ui.band.latest, { date: stats.latest })}</span>
+                <span>{fill(ui.band.latest, { date: formatPostDate(stats.latest, lang) })}</span>
               </>
             )}
           </>

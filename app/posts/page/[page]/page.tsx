@@ -1,7 +1,6 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
 import { listedBlogs, localizedList } from '@/lib/posts'
 import tagData from 'app/tag-data.json'
-import { formatDate } from 'pliny/utils/formatDate'
 
 const POSTS_PER_PAGE = 10
 
@@ -27,7 +26,7 @@ export default async function Page(props: { params: Promise<{ page: string }> })
   const stats = {
     listedTotal: posts.length,
     tagTotal: Object.keys(tagData as Record<string, number>).length,
-    latest: posts[0] ? formatDate(posts[0].date, 'en-US') : '',
+    latest: posts[0]?.date ?? '',
     maxMinutes: Math.max(1, ...posts.map((p) => Math.ceil(p.readingTime.minutes))),
   }
 

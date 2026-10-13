@@ -5,7 +5,6 @@ import { canonicalBlogs, listedBlogs, localizedList } from '@/lib/posts'
 import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
-import { formatDate } from 'pliny/utils/formatDate'
 
 /**
  * The tag as it is written in tag-data.json. generateStaticParams hands out encodeURI(tag), and Next 16.2 gives
@@ -64,7 +63,7 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
   const stats = {
     listedTotal: listed.length,
     tagTotal: Object.keys(tagData as Record<string, number>).length,
-    latest: filteredPosts[0] ? formatDate(filteredPosts[0].date, 'en-US') : '',
+    latest: filteredPosts[0]?.date ?? '',
     maxMinutes: Math.max(1, ...listed.map((p) => Math.ceil(p.readingTime.minutes))),
   }
   return <ListLayout posts={filteredPosts} title={title} stats={stats} />
