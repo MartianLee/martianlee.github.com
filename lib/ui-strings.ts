@@ -48,6 +48,8 @@ export interface UIStrings {
     editOnGitHub: string
     studyNote: string
     stage: string
+    stageLabel: string
+    stages: { seedling: string; budding: string; evergreen: string }
     morePosts: string
   }
   projectsPage: {
@@ -160,6 +162,8 @@ export const ui: Record<Lang, UIStrings> = {
       editOnGitHub: 'Edit on GitHub ↗',
       studyNote: 'Study note · analyzed with AI',
       stage: 'Digital garden stage',
+      stageLabel: 'Stage',
+      stages: { seedling: 'Seedling', budding: 'Budding', evergreen: 'Evergreen' },
       morePosts: 'More posts',
     },
     projectsPage: {
@@ -279,6 +283,8 @@ export const ui: Record<Lang, UIStrings> = {
       editOnGitHub: 'GitHub에서 편집 ↗',
       studyNote: '학습 노트 · AI와 함께 분석',
       stage: '디지털 가든 단계',
+      stageLabel: '단계',
+      stages: { seedling: '새싹', budding: '성장 중', evergreen: '상록수' },
       morePosts: '다른 글',
     },
     projectsPage: {

@@ -2375,7 +2375,7 @@ html.dark .rh-stage {
   overflow-wrap: break-word;
 }
 
-/* article + table of contents. Below 1100px the sticky column hides and the <details> list leads the article. */
+/* article + table of contents. Below 1100px the sticky column hides and the <details> list leads the article (it comes first in the markup too). */
 .rh-post-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2387,7 +2387,6 @@ html.dark .rh-stage {
   display: none;
 }
 .rh-toc-m {
-  order: -1;
   border-top: 1px solid var(--rh-ink);
   border-bottom: 1px solid var(--rh-line);
 }
@@ -2480,8 +2479,14 @@ html.dark .rh-stage {
 .rh-toc a[aria-current='true'] .rh-toc-n {
   color: var(--rh-accent);
 }
-.rh-toc a:focus-visible {
+.rh-toc a:focus-visible,
+.rh-toc-m a:focus-visible {
+  outline: 2px solid var(--rh-accent);
   outline-offset: -2px;
+}
+.rh-toc-m summary:focus-visible {
+  outline: 2px solid var(--rh-accent);
+  outline-offset: 2px;
 }
 .rh-toc-marker {
   position: absolute;
@@ -2654,6 +2659,11 @@ html.dark .rh-stage {
   background: var(--rh-code-bg);
   color: var(--rh-code-fg);
   font: 400 14px / 1.6 var(--rh-mono);
+}
+/* a diagram drawn at build time (rehype-mermaid) is an <svg> straight in the article: it gets the code block's rhythm */
+.prose.rh-reading > svg {
+  display: block;
+  margin: 1.6em 0;
 }
 .prose.rh-reading pre code {
   padding: 0;
