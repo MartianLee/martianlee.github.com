@@ -49,6 +49,17 @@
   /* the 404 lander and its beacon halo */
   --rh-probe: #3a2a20;
   --rh-beam: rgba(194, 65, 12, 0.35);
+  /* project detail: the halo around the rising planet */
+  --rh-halo: rgba(255, 240, 214, 0.55);
+  /* about: the eyepiece, its reticle and stars, the caption, the ground strip under the band */
+  --rh-port: #0e0c0d;
+  --rh-reticle: rgba(26, 23, 18, 0.5);
+  --rh-star: transparent;
+  --rh-cap: #3e372d;
+  --rh-about-ground: 56px;
+  /* the Climate identity on the About callout (the moss rule and the moss text of components/climate/styles.ts) */
+  --rh-moss: #8fae6c;
+  --rh-moss-text: #4a5a3a;
 }
 html.dark {
   --rh-paper: #14110b;
@@ -84,6 +95,13 @@ html.dark {
   --rh-orb-ly: 54%;
   --rh-probe: #0b0907;
   --rh-beam: rgba(234, 88, 12, 0.4);
+  --rh-halo: rgba(120, 162, 230, 0.28);
+  --rh-port: #05070b;
+  --rh-reticle: rgba(235, 228, 214, 0.42);
+  --rh-star: rgba(255, 250, 240, 0.8);
+  --rh-cap: #d6cebf;
+  --rh-moss: #5b7040;
+  --rh-moss-text: #94ab78;
 }
 
 /* ---------- page wrapper: the body type of a Red Horizon page (scoped, so the KB and climate keep their fonts) ---------- */
@@ -472,27 +490,11 @@ html.dark {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--rh-accent) 10%, transparent) 60%,
-    transparent
-  );
-  transform: translateX(-100%);
-  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
   pointer-events: none;
-}
-.rh-proj-row:hover::before,
-.rh-proj-row:focus-visible::before {
-  transform: translateX(100%);
 }
 .rh-proj-row:hover .rh-orb i,
 .rh-proj-row:focus-visible .rh-orb i {
   transform: translateX(-50%);
-}
-.rh-proj-row:hover .rh-orb,
-.rh-proj-row:focus-visible .rh-orb {
-  transform: scale(1.07);
 }
 .rh-proj-main {
   min-width: 0;
@@ -686,6 +688,15 @@ html.dark {
   }
   100% {
     box-shadow: 0 0 0 8px transparent;
+  }
+}
+/* the ping of the home hero, the About band and the ongoing tenure bar grows to 9px; rh-ping (band telemetry) stops at 8px */
+@keyframes rh-hero-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--rh-accent) 65%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 9px transparent;
   }
 }
 .rh-monument {
@@ -1304,15 +1315,6 @@ html.dark .rh-lead {
     0 0 6px var(--rh-paper),
     0 0 14px var(--rh-paper);
 }
-/* the hero ping grows to 9px; rh-ping (band telemetry) stops at 8px */
-@keyframes rh-hero-ping {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--rh-accent) 65%, transparent);
-  }
-  100% {
-    box-shadow: 0 0 0 9px transparent;
-  }
-}
 @media (max-width: 900px) {
   .rh-hero-foot {
     flex-direction: column-reverse;
@@ -1406,7 +1408,7 @@ html.dark .rh-proj {
 .rh-proj .rh-proj-row {
   isolation: isolate;
 }
-/* a pool of sunlight under the pointer instead of the sweep the other lists use */
+/* a pool of sunlight under the pointer (usePointerSun sets --rh-mx) */
 .rh-proj .rh-proj-row::before {
   z-index: -1;
   background: radial-gradient(
@@ -1414,22 +1416,18 @@ html.dark .rh-proj {
     color-mix(in srgb, var(--rh-accent) var(--rh-pool), transparent),
     transparent 72%
   );
-  transform: none;
   opacity: 0;
   transition: opacity 0.5s ease;
 }
 .rh-proj .rh-proj-row:hover::before,
 .rh-proj .rh-proj-row:focus-visible::before {
-  transform: none;
   opacity: 1;
 }
 .rh-proj .rh-tile {
   perspective: 240px;
 }
-/* the hover scale is --rh-sc now, so the tilt survives it (hover and focus restate the transform to outrank the row rule above) */
-.rh-proj .rh-orb,
-.rh-proj .rh-proj-row:hover .rh-orb,
-.rh-proj .rh-proj-row:focus-visible .rh-orb {
+/* the lit row grows through --rh-sc, which usePointerSun eases, so the tilt and the scale share one transform */
+.rh-proj .rh-orb {
   transform: rotateX(var(--rh-rx, 0deg)) rotateY(var(--rh-ry, 0deg)) scale(var(--rh-sc, 1));
   transition: none;
 }
@@ -2394,9 +2392,21 @@ html.dark .rh-stage {
   margin-top: clamp(30px, 4vw, 52px);
 }
 .rh-toc {
+  --rh-toc-pad: 12px;
   display: none;
+  position: sticky;
+  top: 28px;
+  /* long lists (up to 80 entries) scroll inside the column; the bottom margin keeps clear of the floating scroll buttons */
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rh-line) transparent;
+  padding-top: 12px;
+  border-top: 1px solid var(--rh-ink);
 }
 .rh-toc-m {
+  --rh-toc-pad: 0px;
   border-top: 1px solid var(--rh-ink);
   border-bottom: 1px solid var(--rh-line);
 }
@@ -2419,18 +2429,6 @@ html.dark .rh-stage {
     display: none;
   }
 }
-.rh-toc {
-  position: sticky;
-  top: 28px;
-  /* long lists (up to 80 entries) scroll inside the column; the bottom margin keeps clear of the floating scroll buttons */
-  max-height: calc(100vh - 160px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--rh-line) transparent;
-  padding-top: 12px;
-  border-top: 1px solid var(--rh-ink);
-}
 .rh-toc-h {
   margin: 0 0 10px;
   font: 500 11.5px / 1 var(--rh-mono);
@@ -2447,13 +2445,6 @@ html.dark .rh-stage {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-.rh-toc,
-.rh-toc-m {
-  --rh-toc-pad: 12px;
-}
-.rh-toc-m {
-  --rh-toc-pad: 0px;
 }
 .rh-toc a,
 .rh-toc-m a {
@@ -2925,13 +2916,6 @@ html.dark .rh-stage {
 /* REF inner/projects.src.html and inner/project.src.html. The list reuses the home's rows (.rh-proj, .rh-proj-row, .rh-tile, .rh-orb and
    the pointer-lit rules above, driven by usePointerSun); this block adds the list's group heads and hint, the project band with its rising
    planet, and the detail body (lede, framed screenshot, spec sheet, neighbors). */
-:root {
-  --rh-halo: rgba(255, 240, 214, 0.55);
-}
-html.dark {
-  --rh-halo: rgba(120, 162, 230, 0.28);
-}
-
 /* list: group heads and the hint line (REF .hint is .rh-sun-hint here: .rh-hint is the tenure hint) */
 .rh-sec-count {
   margin-left: auto;
@@ -2969,6 +2953,14 @@ html.dark {
   --rh-orb-lx: 34%;
   --rh-orb-ly: 32%;
   --rh-big: clamp(150px, 23vw, 310px);
+  /* REF has one sample (Hanji.md) and nowrap; the site has names up to 20 characters. Wide screens keep one line and size the name to
+     the room between its left edge and the planet (24px short of it): n characters take about n * 0.66em, and 0.9 leaves the headroom
+     rh-settle needs while the tracking closes. --rh-name-n is the title length and --rh-name-w its longest word (ProjectDetail sets
+     both on the page wrapper). */
+  --rh-name-room: calc(
+    100vw - max(var(--rh-gutter), 8vw) - var(--rh-big) - 24px -
+      max(var(--rh-gutter), (100vw - var(--rh-col)) / 2)
+  );
   min-height: clamp(300px, 46vh, 420px);
 }
 html.dark .rh-band--name {
@@ -2982,10 +2974,14 @@ html.dark .rh-band--name {
     min-height: 300px;
   }
 }
-/* REF .monument--name */
+/* REF .monument--name, sized to the room beside the planet (see --rh-name-room) */
 .rh-band--name .rh-monument {
   text-transform: none;
-  font-size: clamp(44px, 9.6vw, 138px);
+  font-size: clamp(
+    44px,
+    min(9.6vw, calc(var(--rh-name-room) * 0.9 / (var(--rh-name-n, 8) * 0.66))),
+    138px
+  );
   letter-spacing: -0.04em;
 }
 .rh-band--name .rh-band-tele a {
@@ -3002,23 +2998,6 @@ html.dark .rh-band--name {
   display: block;
 }
 
-/* REF has one sample (Hanji.md) and nowrap; the site has names up to 20 characters. Wide screens keep one line and size the name to the
-   room between its left edge and the planet (24px short of it): n characters take about n * 0.66em, and 0.9 leaves the headroom
-   rh-settle needs while the tracking closes. --rh-name-n is the title length and --rh-name-w its longest word (ProjectDetail sets both
-   on the page wrapper). */
-.rh-band--name {
-  --rh-name-room: calc(
-    100vw - max(var(--rh-gutter), 8vw) - var(--rh-big) - 24px -
-      max(var(--rh-gutter), (100vw - var(--rh-col)) / 2)
-  );
-}
-.rh-band--name .rh-monument {
-  font-size: clamp(
-    44px,
-    min(9.6vw, calc(var(--rh-name-room) * 0.9 / (var(--rh-name-n, 8) * 0.66))),
-    138px
-  );
-}
 /* narrow desktops, tablets and phones (below about 860px a 19 or 20 character name no longer fits in one line): the text column
    (telemetry line and name) keeps to the room beside the planet and the name wraps, balanced, inside it. Only the longest word has to
    fit, so REF's size stays unless that word would reach the planet; a floor stops it shrinking further. The tele's last words would
@@ -3443,24 +3422,6 @@ html.dark .rh-band--name {
 /* ---------- about (Task 10): the name on the horizon, a live Mars in an eyepiece, the bio on plain paper ---------- */
 /* REF about.html 11 to 108. The About band is its own (rh-about-*), not HorizonBand: it carries the stars, the mesas and the
    globe. The bio below sits on plain paper with nothing moving behind it. */
-:root {
-  --rh-port: #0e0c0d;
-  --rh-reticle: rgba(26, 23, 18, 0.5);
-  --rh-star: transparent;
-  --rh-cap: #3e372d;
-  --rh-ground: 56px;
-  /* the Climate identity on the callout (the moss rule and the moss text of components/climate/styles.ts) */
-  --rh-moss: #8fae6c;
-  --rh-moss-text: #4a5a3a;
-}
-html.dark {
-  --rh-port: #05070b;
-  --rh-reticle: rgba(235, 228, 214, 0.42);
-  --rh-star: rgba(255, 250, 240, 0.8);
-  --rh-cap: #d6cebf;
-  --rh-moss: #5b7040;
-  --rh-moss-text: #94ab78;
-}
 
 /* band */
 .rh-about-band {
@@ -3590,7 +3551,7 @@ html.dark {
   right: 0;
   bottom: 0;
   z-index: -2;
-  height: calc(96px + var(--rh-ground));
+  height: calc(96px + var(--rh-about-ground));
   pointer-events: none;
 }
 .rh-about-land svg {
@@ -3604,7 +3565,7 @@ html.dark {
 .rh-about-land::after {
   content: '';
   display: block;
-  height: var(--rh-ground);
+  height: var(--rh-about-ground);
   background: linear-gradient(180deg, var(--rh-far), var(--rh-paper));
 }
 .rh-about-in {
@@ -3615,7 +3576,7 @@ html.dark {
   gap: 28px clamp(28px, 4vw, 64px);
   max-width: calc(var(--rh-col) + 2 * var(--rh-gutter));
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top, 0px) + 104px) var(--rh-gutter) var(--rh-ground);
+  padding: calc(env(safe-area-inset-top, 0px) + 104px) var(--rh-gutter) var(--rh-about-ground);
 }
 .rh-about-who {
   min-width: 0;
@@ -3828,14 +3789,14 @@ html.dark {
   color: var(--rh-cap);
 }
 
-/* bio (plain paper, reading first). The wrapper holds the measure and the type size so the Climate callout shares them; the
-   prose rules are scoped three classes deep, because the legacy .prose rules (tailwind.css, after this file) and a later
+/* bio (plain paper, reading first). The wrapper holds the measure so the Climate callout shares it: 68ch at the reading column's 20px.
+   The bio and the callout set their own type, so font-size here only gives ch its meaning (without it the measure drops from 770px to
+   655px). The prose rules are scoped three classes deep, because the legacy .prose rules (tailwind.css, after this file) and a later
    .rh-reading would otherwise win ties. */
 .rh-about-read {
   max-width: 68ch;
   padding-top: clamp(44px, 6vw, 80px);
   font-size: 20px;
-  line-height: 1.72;
   /* Korean wraps at spaces, not inside a word (no effect on the English copy); a word wider than its box still breaks */
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -3852,6 +3813,10 @@ html.dark {
 }
 .rh-about-read .rh-about-bio.prose h2:first-child {
   margin-top: 0;
+}
+/* the heading permalink rehype-autolink-headings adds belongs to the post reading column: here it would only be a hidden tab stop */
+.rh-about-read .rh-about-bio h2 > a[aria-hidden='true'] {
+  display: none;
 }
 .rh-about-read .rh-about-bio.prose p {
   margin: 0 0 1em;
@@ -3990,9 +3955,6 @@ html.dark {
     font-size: 11px;
     letter-spacing: 0.08em;
   }
-  .rh-about-read {
-    font-size: 19px;
-  }
 }
 @media (max-width: 560px) {
   .rh-about-exp li {
@@ -4022,7 +3984,13 @@ html.dark {
   .rh-rows a::before,
   .rh-rows a span,
   .rh-rows a span::before,
-  .rh-exp h3 a {
+  .rh-exp h3 a,
+  .rh-rail-list a,
+  .rh-rail-list a::before,
+  .rh-prow-meta time,
+  .rh-prow-title a,
+  .rh-toc-m a,
+  .rh-about-ctl button {
     animation: none !important;
     transition: none !important;
   }
