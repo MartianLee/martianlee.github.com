@@ -157,6 +157,12 @@ export default function ListLayoutWithTags({
                   </Link>
                 </li>
               ))}
+              {/* the "All N tags" link below the list is hidden on phones, where the list is a scroller: its last pill takes over */}
+              <li className="rh-rail-all">
+                <Link href="/tags" className="rh-rail-link">
+                  {fill(ui.list.allTags, { n: stats.tagTotal })}
+                </Link>
+              </li>
             </ul>
             <Link className="rh-rail-more" href="/tags">
               {fill(ui.list.allTags, { n: stats.tagTotal })}

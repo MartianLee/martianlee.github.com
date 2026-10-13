@@ -49,6 +49,8 @@ const MobileNav = () => {
         </svg>
       </button>
       <div
+        // closed, the overlay is only off screen: inert keeps its links out of the tab order and the reading order
+        inert={!navShow}
         className={`bg-paper fixed top-0 left-0 z-10 h-full w-full transform opacity-95 duration-300 ease-in-out dark:opacity-[0.98] ${
           navShow ? 'translate-x-0' : 'translate-x-full'
         }`}

@@ -65,7 +65,15 @@ export default function PostRow({
                 {t.split(' ').join('-')}
               </Link>
             ))}
-            {hidden > 0 && <span className="rh-more">+{hidden}</span>}
+            {hidden > 0 && (
+              <span
+                className="rh-more"
+                role="img"
+                aria-label={fill(ui.list.moreTags, { n: hidden })}
+              >
+                +{hidden}
+              </span>
+            )}
           </p>
         )}
       </div>

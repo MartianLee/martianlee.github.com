@@ -1994,6 +1994,9 @@ html.dark .rh-rows a:focus-visible {
   width: 8px;
   height: 2px;
 }
+.rh-rail-all {
+  display: none;
+}
 .rh-rail-more {
   display: inline-block;
   margin-top: 14px;
@@ -2222,7 +2225,8 @@ html.dark .rh-prow-tags a.rh-tagchip:hover {
     overflow-x: auto;
     scrollbar-width: none;
     margin-inline: calc(-1 * var(--rh-gutter));
-    padding: 2px var(--rh-gutter);
+    /* the room on the right keeps the last pill out of the fade */
+    padding: 2px calc(var(--rh-gutter) + 44px) 2px var(--rh-gutter);
     -webkit-mask-image: linear-gradient(
       90deg,
       transparent 0,
@@ -2245,6 +2249,12 @@ html.dark .rh-prow-tags a.rh-tagchip:hover {
   }
   .rh-rail-list li {
     flex: none;
+  }
+  .rh-rail-all {
+    display: block;
+  }
+  .rh-rail-list .rh-rail-all a {
+    color: var(--rh-accent);
   }
   .rh-rail-list a {
     padding: 8px 12px;
@@ -3661,6 +3671,9 @@ html.dark {
 }
 /* the ring sits on the sky, so it uses the sky's accent (REF's --accent is 2.8:1 there) */
 .rh-about-port:focus-visible {
+  /* forced-colors mode drops box-shadows but paints a transparent outline in a system colour */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   box-shadow:
     0 0 0 2px var(--rh-head-accent),
     0 0 0 6px color-mix(in srgb, var(--rh-head-accent) 25%, transparent);

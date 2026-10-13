@@ -39,6 +39,7 @@ export interface UIStrings {
     pagination: string
     filterByTag: string
     latestPosts: string
+    moreTags: string
   }
   post: {
     backToWriting: string
@@ -47,6 +48,7 @@ export interface UIStrings {
     next: string
     editOnGitHub: string
     studyNote: string
+    table: string
     stage: string
     stageLabel: string
     stages: { seedling: string; budding: string; evergreen: string }
@@ -153,6 +155,7 @@ export const ui: Record<Lang, UIStrings> = {
       pagination: 'Pagination',
       filterByTag: 'Filter by tag',
       latestPosts: 'Latest posts',
+      moreTags: '{n} more tags',
     },
     post: {
       backToWriting: '← Posts',
@@ -161,6 +164,7 @@ export const ui: Record<Lang, UIStrings> = {
       next: 'NEXT →',
       editOnGitHub: 'Edit on GitHub ↗',
       studyNote: 'Study note · analyzed with AI',
+      table: 'Table',
       stage: 'Digital garden stage',
       stageLabel: 'Stage',
       stages: { seedling: 'Seedling', budding: 'Budding', evergreen: 'Evergreen' },
@@ -274,6 +278,7 @@ export const ui: Record<Lang, UIStrings> = {
       pagination: '페이지 이동',
       filterByTag: '태그로 거르기',
       latestPosts: '최근 글',
+      moreTags: '태그 {n}개 더',
     },
     post: {
       backToWriting: '← 글 목록',
@@ -282,6 +287,7 @@ export const ui: Record<Lang, UIStrings> = {
       next: '다음 글 →',
       editOnGitHub: 'GitHub에서 편집 ↗',
       studyNote: '학습 노트 · AI와 함께 분석',
+      table: '표',
       stage: '디지털 가든 단계',
       stageLabel: '단계',
       stages: { seedling: '새싹', budding: '성장 중', evergreen: '상록수' },
