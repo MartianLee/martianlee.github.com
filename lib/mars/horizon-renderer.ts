@@ -2,7 +2,7 @@
 // <h1> show through. The skyline, the horizon and the sun are placed from the measured title layout, never from guessed numbers.
 // Ported from the approved reference (REF/index.html, "the horizon: one fragment shader"). components/home/MarsHorizon.tsx loads this
 // file lazily and calls mountHorizon() from an effect; there is no React here and no DOM access at module scope.
-import { watchDarkTheme } from '../../components/hooks/useDarkTheme'
+import { watchDarkTheme } from '../theme'
 
 export interface HorizonElements {
   hero: HTMLElement
@@ -244,6 +244,9 @@ const UNIFORMS = [
   'cSD',
   'cFar',
 ]
+// A lost context hands out no extensions, so the object that can bring it back is kept per canvas while the context is alive
+// (a mount on a canvas whose previous mount released its context, such as a Fast Refresh in development, needs it).
+const loseExt = new WeakMap<HTMLCanvasElement, WEBGL_lose_context>()
 
 /**
  * Starts the horizon on the hero. Everything it starts (frame loop, observers, listeners, GL context) is released by destroy().
@@ -306,6 +309,7 @@ export function mountHorizon(
   let fbRo: ResizeObserver | null = null
   let io: IntersectionObserver | null = null
   let stopTheme: (() => void) | null = null
+  let restoreTimer = 0
 
   const sunDusk = (): RGB => {
     // a point just above the notch in the skyline (screen column SX), turned into a world direction with the shader's camera
@@ -623,7 +627,25 @@ export function mountHorizon(
       depth: false,
       stencil: false,
     })
-    if (!gl || !build()) return fail()
+    if (!gl) return fail()
+    if (gl.isContextLost()) {
+      // A re-mount on the same canvas is handed the context the previous mount released: ask for it back, and
+      // webglcontextrestored finishes the set-up. The request waits a task so that the loss event the release queued has
+      // been dispatched (restoreContext() is refused before that).
+      const ext = loseExt.get(cv)
+      if (!ext) return fail()
+      cv.addEventListener('webglcontextrestored', start, { once: true })
+      restoreTimer = window.setTimeout(() => ext.restoreContext(), 0)
+      return
+    }
+    start()
+  }
+  // The set-up that needs a live context: the program, the observers and listeners, the first frame.
+  function start() {
+    if (destroyed || !gl) return
+    const ext = gl.getExtension('WEBGL_lose_context')
+    if (ext) loseExt.set(cv, ext)
+    if (!build()) return fail()
     resize()
     ro = new ResizeObserver(() => {
       resize()
@@ -668,10 +690,19 @@ export function mountHorizon(
       hero.removeEventListener('pointerleave', onPointerLeave)
       cv.removeEventListener('webglcontextlost', onContextLost)
       cv.removeEventListener('webglcontextrestored', onContextRestored)
+      cv.removeEventListener('webglcontextrestored', start)
+      window.clearTimeout(restoreTimer)
       el.title.querySelector('h1')?.removeEventListener('animationend', refit)
       paintCss(0, true)
+      // the elements go back to the markup's first state, in case the same ones are mounted again
       cv.classList.remove('rh-on')
-      if (gl && !gl.isContextLost()) gl.getExtension('WEBGL_lose_context')?.loseContext()
+      cv.hidden = false
+      fb.classList.remove('rh-on')
+      if (gl && !gl.isContextLost()) {
+        // the loss event has to be cancelled once, or the context could never be restored by a later mount on this canvas
+        cv.addEventListener('webglcontextlost', (e) => e.preventDefault(), { once: true })
+        loseExt.get(cv)?.loseContext()
+      }
     },
   }
 }

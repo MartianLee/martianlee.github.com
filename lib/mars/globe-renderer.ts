@@ -3,7 +3,7 @@
 // DOM on top of the canvas. Ported from the approved reference (REF/about.html, "the eyepiece"), with the Mars24 clock replaced by
 // lib/mars/clock.ts. components/about/MarsGlobe.tsx loads this file lazily and calls mountGlobe() from an effect; there is no
 // React here and no DOM access at module scope.
-import { watchDarkTheme } from '../../components/hooks/useDarkTheme'
+import { watchDarkTheme } from '../theme'
 import { JEZERO, type MarsClock } from './clock'
 import { formatClock } from './format'
 
