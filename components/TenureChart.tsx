@@ -42,12 +42,14 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
   const chronological = [...roles].sort(byStart)
   const active = activeRoles(roles, year, nowYear).sort(byStart)
   const roleName = (r: Career) => (lang === 'ko' && r.roleKo ? r.roleKo : r.role)
+  // the last stop is today: REF's reading says "Now" there instead of the year
+  const stop = year === nowYear ? ui.tenure.now : String(year)
   const readout = active.length
     ? fill(ui.tenure.readout, {
-        year,
+        year: stop,
         roles: active.map((r) => `${r.company}, ${roleName(r)}`).join(' · '),
       })
-    : String(year)
+    : stop
 
   const yearAt = (clientX: number) => {
     const r = axisRef.current?.getBoundingClientRect()
@@ -135,6 +137,8 @@ export default function TenureChart({ roles }: { roles: Career[] }) {
             <li key={r.company} className={active.includes(r) ? 'rh-on' : undefined}>
               <h3>
                 {r.href ? <Link href={r.href}>{r.company}</Link> : r.company}
+                {/* the company and the role run together in the markup: a reader would announce "UJETSoftware Engineer 2" */}
+                <span className="sr-only">{', '}</span>
                 <span className="rh-role">{roleName(r)}</span>
               </h3>
               <span className="rh-period">{r.period}</span>

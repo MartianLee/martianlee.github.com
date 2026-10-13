@@ -80,6 +80,7 @@ export default function AuthorLayout({ children }: Props) {
               <li key={c.company}>
                 <h3>
                   {c.href ? <Link href={c.href}>{c.company}</Link> : c.company}
+                  <span className="sr-only">{', '}</span>
                   <span className="rh-role">{pick(c.role, c.roleKo)}</span>
                 </h3>
                 <span className="rh-period">{c.period}</span>

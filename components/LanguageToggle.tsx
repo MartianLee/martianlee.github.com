@@ -22,7 +22,7 @@ export default function LanguageToggle() {
 
   return (
     <div
-      className="font-mono text-xs"
+      className="rh-lang font-mono text-xs"
       title="Reading language (switches the article on post pages)"
     >
       <button
