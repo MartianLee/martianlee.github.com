@@ -15,6 +15,9 @@ import PassthroughCompositor from './viz/PassthroughCompositor'
 import PassthroughLayers from './viz/PassthroughLayers'
 import BridgeSpectrum from './viz/BridgeSpectrum'
 import PixelVsMesh from './viz/PixelVsMesh'
+import FmgWorldBuilder from './viz/FmgWorldBuilder'
+import FmgPipeline from './viz/FmgPipeline'
+import VoronoiLab from './viz/VoronoiLab'
 import BridgeLineage from './viz/BridgeLineage'
 import YouTube from './YouTube'
 import CarbonDay from './viz/CarbonDay'
@@ -41,6 +44,9 @@ export const components: MDXComponents = {
   PassthroughLayers,
   BridgeSpectrum,
   PixelVsMesh,
+  FmgWorldBuilder,
+  FmgPipeline,
+  VoronoiLab,
   BridgeLineage,
   YouTube,
   CarbonDay,
