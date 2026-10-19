@@ -144,12 +144,14 @@
     {
       "id": "algorithms",
       "label": "Algorithms",
-      "count": 4,
+      "count": 6,
       "slugs": [
         "2019-04-11-dart-game",
         "2024-01-24-leetcode-1239",
         "2024-01-31-js-small-tricks-for-ps-1",
-        "2024-02-21-leetcode-201"
+        "2024-02-21-leetcode-201",
+        "2026-10-19-fantasy-map-generator-architecture",
+        "2026-10-19-voronoi-procedural-generation"
       ]
     },
     {
@@ -1039,6 +1041,22 @@
       {
         "slug": "2026-10-08-passthrough-bridge-spectrum",
         "title": "What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared"
+      },
+      {
+        "slug": "2026-10-19-fantasy-map-generator-architecture",
+        "title": "Fantasy Map Generator Architecture: How Does One Seed Become Continents, Nations and Markets?"
+      }
+    ],
+    "2026-10-07-hyperframes-architecture": [
+      {
+        "slug": "2026-10-19-fantasy-map-generator-architecture",
+        "title": "Fantasy Map Generator Architecture: How Does One Seed Become Continents, Nations and Markets?"
+      }
+    ],
+    "2026-10-19-fantasy-map-generator-architecture": [
+      {
+        "slug": "2026-10-19-voronoi-procedural-generation",
+        "title": "Why Are Voronoi Diagrams Everywhere in Procedural Generation?"
       }
     ]
   },
@@ -1377,6 +1395,13 @@
       "2026-10-07-minecraft-elden-ring-bridge",
       "2026-04-18-claude-code-game-studios-architecture",
       "2026-07-03-skillspector-architecture"
+    ],
+    "2026-10-19-fantasy-map-generator-architecture": [
+      "2026-10-07-hyperframes-architecture",
+      "2026-10-07-minecraft-elden-ring-bridge"
+    ],
+    "2026-10-19-voronoi-procedural-generation": [
+      "2026-10-19-fantasy-map-generator-architecture"
     ]
   },
   "postIndex": [
@@ -3146,6 +3171,44 @@
       "topic": "ai-infrastructure",
       "stage": "budding",
       "summary": "This post opens the code of twelve passthrough mods that merge two running games into one and sorts them by what crosses the bridge: pixels, meshes, logic, or nothing at all."
+    },
+    {
+      "slug": "2026-10-19-fantasy-map-generator-architecture",
+      "title": "Fantasy Map Generator Architecture: How Does One Seed Become Continents, Nations and Markets?",
+      "shortTitle": "Fantasy Map Generator",
+      "date": "2026-10-19T09:00:00.000Z",
+      "tags": [
+        "fantasy-map-generator",
+        "procedural-generation",
+        "voronoi",
+        "dijkstra",
+        "deterministic-generation",
+        "svg",
+        "typescript",
+        "game-dev",
+        "architecture"
+      ],
+      "topic": "algorithms",
+      "stage": "budding",
+      "summary": "Azgaar's Fantasy Map Generator builds a whole fantasy world in the browser: terrain, climate, rivers, cultures, states, roads and an economy. I followed its 40-step generation pipeline through the code, generated maps myself, and checked each stage's output, its run time, and whether the same seed really gives the same world."
+    },
+    {
+      "slug": "2026-10-19-voronoi-procedural-generation",
+      "title": "Why Are Voronoi Diagrams Everywhere in Procedural Generation?",
+      "shortTitle": "Voronoi in procedural generation",
+      "date": "2026-10-19T11:00:00.000Z",
+      "tags": [
+        "voronoi",
+        "delaunay",
+        "procedural-generation",
+        "computational-geometry",
+        "worley-noise",
+        "game-dev",
+        "fantasy-map-generator"
+      ],
+      "topic": "algorithms",
+      "stage": "budding",
+      "summary": "Fantasy map generators, cellular noise, Minecraft biomes and destruction effects all keep returning to the Voronoi diagram. This post covers its definition and history, its duality with the Delaunay triangulation, point distributions and Lloyd relaxation, where it is and is not used, and its pitfalls, checked against primary sources, an in-browser lab and benchmarks I ran myself."
     }
   ],
   "graph": {
@@ -3153,7 +3216,7 @@
       {
         "id": "tag:architecture",
         "label": "architecture",
-        "count": 36
+        "count": 37
       },
       {
         "id": "tag:ai-agent",
@@ -3211,6 +3274,11 @@
         "count": 6
       },
       {
+        "id": "tag:typescript",
+        "label": "typescript",
+        "count": 6
+      },
+      {
         "id": "tag:ai",
         "label": "ai",
         "count": 5
@@ -3228,11 +3296,6 @@
       {
         "id": "tag:rails",
         "label": "rails",
-        "count": 5
-      },
-      {
-        "id": "tag:typescript",
-        "label": "typescript",
         "count": 5
       },
       {
@@ -3293,6 +3356,11 @@
       {
         "id": "tag:e2e",
         "label": "e2e",
+        "count": 3
+      },
+      {
+        "id": "tag:game-dev",
+        "label": "game-dev",
         "count": 3
       },
       {
@@ -3699,6 +3767,10 @@
       {
         "source": "2026-04-18-claude-code-game-studios-architecture",
         "target": "tag:claude-code"
+      },
+      {
+        "source": "2026-04-18-claude-code-game-studios-architecture",
+        "target": "tag:game-dev"
       },
       {
         "source": "2026-04-18-claude-code-game-studios-architecture",
@@ -4379,8 +4451,24 @@
       {
         "source": "2026-10-08-passthrough-bridge-spectrum",
         "target": "tag:ai-agent"
+      },
+      {
+        "source": "2026-10-19-fantasy-map-generator-architecture",
+        "target": "tag:typescript"
+      },
+      {
+        "source": "2026-10-19-fantasy-map-generator-architecture",
+        "target": "tag:game-dev"
+      },
+      {
+        "source": "2026-10-19-fantasy-map-generator-architecture",
+        "target": "tag:architecture"
+      },
+      {
+        "source": "2026-10-19-voronoi-procedural-generation",
+        "target": "tag:game-dev"
       }
     ]
   },
-  "generatedAt": "2026-10-11T04:20:49.499Z"
+  "generatedAt": "2026-10-19T15:20:58.875Z"
 }
