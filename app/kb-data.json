@@ -165,20 +165,21 @@
       ]
     },
     {
+      "id": "software-engineering",
+      "label": "Software Engineering",
+      "count": 2,
+      "slugs": [
+        "2026-06-05-markdown-source-of-truth",
+        "2026-10-23-godot-world-streaming-stutter"
+      ]
+    },
+    {
       "id": "climate",
       "label": "Climate",
       "count": 2,
       "slugs": [
         "2026-09-05-carbon-basics-what-is-carbon",
         "2026-09-12-carbon-basics-daily-life"
-      ]
-    },
-    {
-      "id": "software-engineering",
-      "label": "Software Engineering",
-      "count": 1,
-      "slugs": [
-        "2026-06-05-markdown-source-of-truth"
       ]
     }
   ],
@@ -1402,7 +1403,8 @@
     ],
     "2026-10-19-voronoi-procedural-generation": [
       "2026-10-19-fantasy-map-generator-architecture"
-    ]
+    ],
+    "2026-10-23-godot-world-streaming-stutter": []
   },
   "postIndex": [
     {
@@ -3209,6 +3211,22 @@
       "topic": "algorithms",
       "stage": "budding",
       "summary": "Fantasy map generators, cellular noise, Minecraft biomes and destruction effects all keep returning to the Voronoi diagram. This post covers its definition and history, its duality with the Delaunay triangulation, point distributions and Lloyd relaxation, where it is and is not used, and its pitfalls, checked against primary sources, an in-browser lab and benchmarks I ran myself."
+    },
+    {
+      "slug": "2026-10-23-godot-world-streaming-stutter",
+      "title": "Finding two causes of a walking stutter in a Godot game with a measuring harness",
+      "shortTitle": "Godot world streaming stutter",
+      "date": "2026-10-23T13:30:00.000Z",
+      "tags": [
+        "godot",
+        "gdscript",
+        "game-dev",
+        "performance",
+        "profiling"
+      ],
+      "topic": "software-engineering",
+      "stage": "budding",
+      "summary": "A Godot 4.6 game that streams its world in chunks froze for 0.1 to 0.3 seconds every time the player walked. A harness that walks the hero on its own and logs frame times found two causes: code scanning 19,000 nodes every physics tick, and code building and tearing down whole chunks in a single frame. After the fix, frames over 50 ms are gone."
     }
   ],
   "graph": {
@@ -3304,8 +3322,18 @@
         "count": 4
       },
       {
+        "id": "tag:game-dev",
+        "label": "game-dev",
+        "count": 4
+      },
+      {
         "id": "tag:orm",
         "label": "orm",
+        "count": 4
+      },
+      {
+        "id": "tag:performance",
+        "label": "performance",
         "count": 4
       },
       {
@@ -3359,11 +3387,6 @@
         "count": 3
       },
       {
-        "id": "tag:game-dev",
-        "label": "game-dev",
-        "count": 3
-      },
-      {
         "id": "tag:github",
         "label": "github",
         "count": 3
@@ -3376,11 +3399,6 @@
       {
         "id": "tag:openai",
         "label": "openai",
-        "count": 3
-      },
-      {
-        "id": "tag:performance",
-        "label": "performance",
         "count": 3
       },
       {
@@ -4467,8 +4485,16 @@
       {
         "source": "2026-10-19-voronoi-procedural-generation",
         "target": "tag:game-dev"
+      },
+      {
+        "source": "2026-10-23-godot-world-streaming-stutter",
+        "target": "tag:game-dev"
+      },
+      {
+        "source": "2026-10-23-godot-world-streaming-stutter",
+        "target": "tag:performance"
       }
     ]
   },
-  "generatedAt": "2026-10-19T15:20:58.875Z"
+  "generatedAt": "2026-10-23T13:04:37.921Z"
 }

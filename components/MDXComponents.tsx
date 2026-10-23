@@ -26,6 +26,10 @@ import FoodMasses from './viz/FoodMasses'
 import TravelLanes from './viz/TravelLanes'
 import EmbodiedGoods from './viz/EmbodiedGoods'
 import GridTiles from './viz/GridTiles'
+import FrameTimeline from './viz/FrameTimeline'
+import FrameLadder from './viz/FrameLadder'
+import OccluderScan from './viz/OccluderScan'
+import ChunkStrips from './viz/ChunkStrips'
 
 export const components: MDXComponents = {
   Image,
@@ -55,4 +59,8 @@ export const components: MDXComponents = {
   TravelLanes,
   EmbodiedGoods,
   GridTiles,
+  FrameTimeline,
+  FrameLadder,
+  OccluderScan,
+  ChunkStrips,
 }
