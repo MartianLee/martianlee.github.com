@@ -1,0 +1,433 @@
+---
+slug: '2026-11-04-lemo-opuscar-architecture'
+title: 'Lemo-Opuscar: How Do You Package 66 Film Styles as Code and Prompts?'
+crawlertitle: 'Lemo-Opuscar: How Do You Package 66 Film Styles as Code and Prompts?'
+summary: 'Lemo-Opuscar is a style library that lets a coding agent draw, score and mix a short film in styles like watercolour, ukiyo-e or a satellite briefing. The renderer is under 400 lines; the real body is about 300,000 words of style prompts and directing guides. I followed the code, rendered demos myself, and measured how speed scales with workers and whether the output is really identical.'
+date: 2026-11-04 18:00:00 +0900
+categories: posts
+tags:
+  [
+    'lemo-opuscar',
+    'video-rendering',
+    'claude-code',
+    'agent-skills',
+    'headless-chrome',
+    'playwright',
+    'ffmpeg',
+    'canvas',
+    'deterministic-rendering',
+    'architecture',
+  ]
+topic: backend-architecture
+stage: budding
+author: MartianLee
+kind: note
+shortTitle: 'Lemo-Opuscar'
+---
+
+## 1. Why Lemo-Opuscar?
+
+It showed up on GitHub Trending this week. It went public on September 26, 2026, and five weeks later it has 12,063 stars and 1,394 forks. The `main` branch has only 80 commits, 77 of them from one person (`lemomo-ai`); outside contributors account for three. The first commit shipped 39 styles. There are 66 now.
+
+The README opens with this line:
+
+> A toolbox of film styles made in code: 66 ready to use, and your own.
+
+Right below it sits a warning:
+
+> Built for Claude. The styles are tuned for Claude Opus 5.5; other models may not reproduce them well, so use them with care.
+
+[![A strip of frames, one from each of Lemo-Opuscar's 66 style demos: news captions, satellite maps, ink wash, a pixel RPG, an isometric island, a 3D product render and more in four rows, with the LEMO OPUSCAR logo at the right end.](/static/images/opuscar/cover.webp)](/static/images/opuscar/cover.webp)
+
+_`docs/cover.jpg` from the repository: one frame from each of the 66 demo films. (CC BY 4.0, LemoLab)_
+
+None of these frames came from a video generation model. An agent drew every frame in Canvas 2D, WebGL or three.js code, and composed the music itself from free sample libraries and numpy synthesis. Only the narration is TTS. There is no stock footage either.
+
+So what is actually in this repository? You might expect the renderer to be the centre of it. It isn't. All the rendering tools together come to fewer than 400 lines. Almost everything else is **writing meant for an agent to read**. This post looks at how that writing is organised, and at how the small renderer underneath it works.
+
+## 2. The Short Version
+
+**Lemo-Opuscar** is a **film style library for coding agents**. For each style it ships a `STYLE.md` that says what must stay fixed and one demo film made in code. On top of that come shared directing (`DIRECTOR.md`) and production (`TECHNIQUE.md`) guides and a small toolkit (`core/`) that captures a page's `render(t)` function frame by frame.
+
+| Question                | Lemo-Opuscar's answer                                                                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Who makes the film?     | A coding agent. The user names a style and a topic; the agent handles the plan, drawing, score, mix and render.                                    |
+| What does it draw with? | One HTML page. The page exposes `window.render(t)`, and headless Chrome calls it for every frame and takes a screenshot.                           |
+| Music and sound?        | Python: a sampler (`sampler.py`), physically modelled plucked strings (`pluck.py`) and procedural foley (`sfx.py`).                                |
+| Voice?                  | Kokoro (offline) for English, edge-tts (online) for Chinese. Every generated line is transcribed back with Whisper and checked against the script. |
+| How is a style defined? | In `STYLE.md`: materials, colour logic, type, motion, camera grammar, sound palette and pitfalls. No story.                                        |
+| Why ship a demo film?   | As a reference implementation for techniques. The agent may open it only after writing its own treatment.                                          |
+| How do you install it?  | As a Claude Code plugin (`claude plugin install lemo-opuscar@lemolab`) or by cloning the repository.                                               |
+| Licence?                | Code and docs MIT; demo films and stills CC BY 4.0. Films you make belong to you.                                                                  |
+
+## 3. How Does It Relate to Earlier Posts?
+
+It sits close to three repositories this blog has covered.
+
+| Repository                                                                       | In common                                       | Where Lemo-Opuscar differs                                                                                                                                        |
+| -------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [HyperFrames](/kb/2026-10-07-hyperframes-architecture)                           | Captures HTML in headless Chrome to make an MP4 | HyperFrames spends over 120,000 lines on a renderer that controls the timing of web animations. Opuscar asks the page for `render(t)`; its renderer is 400 lines. |
+| [Superpowers](/kb/2026-04-18-superpowers-architecture)                           | Defines how an agent works in Markdown          | Superpowers covers software development. Opuscar covers filmmaking: treatment, references, cue map, self-review.                                                  |
+| [Claude Code Game Studios](/kb/2026-04-18-claude-code-game-studios-architecture) | Imitates a production studio with agents        | Game Studios splits the work across role agents. In Opuscar one agent is director, artist, composer and mixer.                                                    |
+
+Against HyperFrames in particular, it attacks the same problem from the opposite side. Section 13 comes back to that.
+
+## 4. Layout and Size
+
+```text
+lemo-opuscar/
+├── AGENTS.md          the agent's entry point (request → which doc to read)
+├── DIRECTOR.md        directing: brief, sound, rhythm, camera, performance, review, map rules
+├── TECHNIQUE.md       production: page contract, voice, music, mix, 3D
+├── MY-STYLES.md       how a user makes a style of their own
+├── MAINTAINING.md     for the library owner (adding styles, publishing)
+├── core/              shared tools (render, TTS, voice check, sampler, foley, mastering)
+├── styles/<slug>/     STYLE.md · DEMO.md · style.json · demo/ · poster.jpg
+├── plugin/            the Claude Code plugin (SKILL.md + setup.sh)
+├── styleboard/        GitHub Pages gallery builder
+└── tools/             asset downloads, releases, the plugin-directory edition build
+```
+
+Line counts show where the weight is.
+
+| Area                                           |                      Size | Contents                                               |
+| ---------------------------------------------- | ------------------------: | ------------------------------------------------------ |
+| `core/render/*.mjs` (8 render tools)           |                 393 lines | open a page, stills, video, events, reading-time check |
+| `core/lib.js`                                  |                  44 lines | seeded random, easing, monotone cubic interpolation    |
+| `core/audio/*.py`, `core/tts/*.py`             |               1,403 lines | sampler 670, voice check 193, and so on                |
+| `core/render/mux.sh`                           |                 100 lines | two-pass loudness normalisation, damaged-audio checks  |
+| 7 shared guides (AGENTS, DIRECTOR, TECHNIQUE…) |                 711 lines | read by the agent every time                           |
+| 66 × `styles/*/STYLE.md`                       | 8,175 lines · ~160k words | each style's invariants                                |
+| 66 × `styles/*/DEMO.md`                        | 7,766 lines · ~147k words | how each demo was made                                 |
+| `styles/*/demo/` sources                       |            ~133,800 lines | JS 87k, Python 35k, HTML 7k                            |
+
+The shared renderer is about 400 lines; the demo code is over 133,000. Brush engines, character rigs, shaders and score scripts don't live in a shared library. **Each demo has its own.** Played back to back, the 66 demos run about an hour (3,590 seconds).
+
+There are 11 categories: Edit & Documentary (8), Evidence Films (8), Hand-drawn & Painting (8), Information & Keynote (8), Materials & 3D (7), Graphic & Type (7), Print & Printmaking (6), East Asian Traditions (4), Cartoon & Anime (4), Games (4) and Cinema & Eras (2).
+
+## 5. Rendering It Myself
+
+The demo sources are labelled "to read, not to render", but I rendered two of them to check the renderer contract. Rendering needs only two npm packages (`playwright-core`, `three`) and Chrome Headless Shell.
+
+```sh
+npm install
+node node_modules/playwright-core/cli.js install chromium-headless-shell
+node core/render/still.mjs styles/urban-sketch/demo 6 20 --out stills/us
+```
+
+It didn't work on the first try. Demo fonts aren't in git (`.gitignore` has `styles/*/demo/**/*.ttf`), so the page hits a font 404, throws `[pageerror] A network error occurred.`, and the tool exits. I read the demo's `CREDITS`, pulled Caveat and Reenie Beanie from the Google Fonts repository, and then it rendered. The Halftone Dossier demo ships a `fetch_fonts.mjs` that does this for you.
+
+[![Frame at 20 seconds from the Urban Sketch demo. Pen-drawn buildings stand under a blue sky painted in watercolour washes; on top of a stepped tower in the middle, a figure hangs on and reaches for a straw hat blowing away.](/static/images/opuscar/urban-sketch-t20.webp)](/static/images/opuscar/urban-sketch-t20.webp)
+
+_The 20-second frame of the Urban Sketch · Pen & Wash demo "Where the Wind Went", rendered locally. (Demo: CC BY 4.0, LemoLab)_
+
+[![Frame at 9 seconds from the Halftone Dossier demo. On a paper-textured background is a large Chinese title, 测试重力 ("testing gravity"); in front of a huge orange halftone 01, an orange cat pushes a mug along a table with its paw. Top right reads 今日次数 16 ("today's count: 16").](/static/images/opuscar/halftone-dossier-t9.webp)](/static/images/opuscar/halftone-dossier-t9.webp)
+
+_The 9-second frame of the Halftone Dossier demo "胖橘案卷 Case File: Chubby". (Demo: CC BY 4.0, LemoLab)_
+
+Neither frame uses an image file. The watercolour blooms, halftone dots, paper texture and pen lines are all drawn in code.
+
+## 6. What Are the Steps from Brief to Film?
+
+The diagram at the top of `TECHNIQUE.md` is the whole structure:
+
+```text
+timeline (single source of truth)
+   ├─► picture:  web page with render(t) ──► headless Chrome, frame by frame ──► video.mp4
+   ├─► voice:    TTS per line ──► speech-to-text check ──► word timings
+   ├─► music:    score from the same timeline (samples + synthesis) ──► stems
+   ├─► sound:    procedural foley at event times
+   └─► subtitles: .srt + burned-in captions
+mix (duck, compress, balance) ──► mux with ffmpeg, two-pass loudnorm −14 LUFS ──► film.mp4
+```
+
+The key is **one timeline**. Sections, tempo, beats and hit points live in a single `timeline.js`, and the picture, score, mixer, subtitles and checks all read the same numbers. The frame where the cat lands and the sample where the drum hits come from the same value. A `cuecheck.py` in several demos measures the gap between each visual hit and its music cue; the target is 0 ms.
+
+The agent's workflow is in `AGENTS.md`:
+
+1. **Brief.** Ask, in one message, only what the agent can't decide (facts about the topic, the user's own material, language, whether they want a storyboard). No more questions after that.
+2. **Treatment.** Write `TREATMENT.md`, **before** opening the demo.
+3. **Look.** Render style frames with the real drawing code and check them against `STYLE.md`.
+4. **Storyboard.** Stop for approval only if the user asked for one.
+5. **Produce.** Voice → voice check → score → animation → mix → render.
+6. **Self-check and deliver.** Hand over the film, poster, subtitles, treatment, `CREDITS` and a one-command `build.sh`.
+
+According to the README, one film takes 30–60 minutes and "a fair amount of tokens".
+
+## 7. The Page Contract: The Picture Is a Function of Time
+
+### 7.1 Five globals
+
+The whole agreement between the render tools and a page is one table in `core/README.md`:
+
+```js
+window.DUR = 54.2 // film length in seconds
+window.render = (t) => { ... } // draw the frame at second t; must be deterministic
+window.READY = true // true once fonts and images have loaded
+window.EV = [{ t, type, ... }] // optional: sound and cue events
+window.TEXTS = (t) => [{ id, text, x0, y0, x1, y1 }] // optional: every text visible at t, with its box
+```
+
+`render(t)` may not use state from the previous frame. `TECHNIQUE.md` puts it like this:
+
+> No `Date.now()`, no `Math.random()` without a seed (`core/lib.js` has `mulberry` and `hash`), no state carried from the previous frame. Any frame can be rendered alone, in any order, by any worker.
+
+The Urban Sketch demo's `render(t)` shows the contract in practice. Camera, poses and the hat's path are all functions of `t`; even the hand-drawn line boil is made by changing the seed with `boilOf(t)`.
+
+```js
+window.render = (t) => {
+  const cam = camera(t)
+  comp(cam, t) // WebGL watercolour compositing
+  // ...
+  const hs = him(t),
+    herP = herPose(t)
+  const herPrims = figure(LOOK.her, herP, { ...HER }, { seed: 50, boil: boilOf(t) })
+  const hst = hatState(t, herPrims.head, t >= 24.0 ? himPrims.hand.R : null)
+  // ...
+}
+window.EV = EV // footsteps, wind, bells, landings and other sound events
+window.READY = true
+```
+
+65 of the 66 demos expose `window.DUR`. The exception, Halftone Dossier, is an early demo with its own `render.mjs`, so `core/render/video.mjs` stops on it with `window.DUR must be a positive number of seconds (got undefined)`. 25 demos also expose `TEXTS`.
+
+### 7.2 What does the renderer do?
+
+`core/render/page.mjs` (62 lines) opens the page. It starts a tiny static server (`serve.mjs`) that serves the repository root on `127.0.0.1` only, and mounts a user project outside the repository under `/@film/`. Any request whose Host header isn't `127.0.0.1` or `localhost` gets a 403, which blocks DNS rebinding.
+
+Failures are loud. A JS error in the page, or a 404 on a script or the document, is an immediate `process.exit(1)`. A 404 on a fetch, an image or a font only prints a one-line warning, because many demos read optional files such as `voices/dur.json` and fall back to defaults. As section 5 showed, though, a font 404 that turns into an exception inside the page still stops the tool.
+
+`video.mjs` (72 lines) goes like this:
+
+1. Open the page once, read `window.DUR`, close it.
+2. Split the `round(DUR × FPS)` frames into one contiguous range per worker.
+3. Give each worker its own browser. For every frame, call `render(f / FPS)`, take a JPEG screenshot (quality 95) and pipe it into ffmpeg's stdin (`-f image2pipe -c:v mjpeg`). ffmpeg encodes each range with libx264 at CRF 14.
+4. Join the segments losslessly with `concat`.
+
+That is roughly HyperFrames' simplest path. No virtual clock, no animation adapters, no `beginFrame`. The page receives time directly as `t`, so none of that is needed.
+
+### 7.3 JPEG capture, grain in ffmpeg
+
+`TECHNIQUE.md` gives three reasons capture is fast: JPEG screenshots, one browser per worker, and grain added in ffmpeg rather than in the page. Grain drawn in the page makes every frame incompressible and slow.
+
+I measured the JPEG part. On the Urban Sketch page, capturing a frame took 32.1 ms on average as JPEG and 261.6 ms as PNG, an 8× gap. `render(t)` itself took 8.1 ms, so capture is 80% of the cost of a frame.
+
+### 7.4 Machine-wide limits on concurrent renders
+
+Surprisingly, the most carefully engineered render code here is concurrency control. An agent producing several films in parallel can start dozens of Chrome processes on one machine.
+
+- **Output lock.** `video.mjs` writes its PID to `<out>.lock`. If two renders target the same `--out`, the second one exits with code 2. A lock whose owner is dead, or that hasn't been refreshed in 12 hours, is taken over; the age check covers a PID reused by another process.
+- **Render slots.** With `RENDER_SLOTS` set, `slot.mjs` (108 lines) caps the number of full renders across the whole machine. A slot is a directory under a temp folder, and its owner touches a heartbeat file every 15 seconds. After 90 seconds without a heartbeat, another process can take it. Checking state and taking a slot happen inside a short mutex built on the atomicity of `mkdir`. When a render is already running and free memory is under 30%, no new one starts.
+
+### 7.5 The mastering script distrusts its audio
+
+`mux.sh` is a 100-line shell script, and more than half of it asks one question: is this audio file really intact? It scans decoder output for error wording, compares the decoded length with what the container claims, and reads the WAV header's declared data length with `dd` and `od` to see whether it exceeds the file. A WAV streamed out by `ffmpeg … -f wav -` has a placeholder length and produces the same kind of notices, so those three messages are treated as benign.
+
+Loudness goes through a two-pass `loudnorm` to −14 LUFS with a −1.2 dB true peak; a comment notes that a single pass is off by about 0.5 LU. The result is measured again with `ebur128`, with a warning outside ±1 LU. This is also why ffmpeg 7+ is required: 6.1 under-reports audio length after `loudnorm`, so `mux.sh` rejected intact files as truncated (issue #7).
+
+## 8. How Much Faster with More Workers?
+
+I rendered the Urban Sketch demo (32.4 s, 24 fps, 778 frames, 1920×1080) with 1, 3 and 6 workers. The default is 3; up to 6 is recommended for a render on its own.
+
+| Workers | Frame capture (`done` log) | Whole command (wall) | vs. 1 worker |
+| ------: | -------------------------: | -------------------: | -----------: |
+|       1 |                       46 s |               59.7 s |         1.0× |
+|       3 |                       27 s |               41.7 s |         1.4× |
+|       6 |                       29 s |               43.3 s |         1.4× |
+
+I ran 1 and 3 workers two or three times each; the `done` times were identical every run (46 s and 27 s).
+
+Going from 3 to 6 workers doesn't help. The cause is **page initialisation**. This demo takes 14.5 seconds to reach `window.READY`: it waits for fonts and pre-builds the watercolour paper and the whole city. The arithmetic:
+
+- 1 worker: 14.5 s init + 778 frames × 40.2 ms (8.1 draw + 32.1 capture) = 45.8 s, matching the measured 46 s.
+- 3 workers: 14.5 s init + 260 frames × 40.2 ms = 24.9 s, against 27 s measured.
+- 6 workers: the frame work drops to about 5 s, but six browsers initialising at once slow each other down.
+
+The 13–14 seconds between `done` and wall time are step 1 from section 7.2. To read a single `DUR`, the renderer opens the page and waits for `READY`, so every render pays initialisation twice. In this demo that is a third of the total. Reading `DUR` from `events.json`, or from the first worker's page, looks like an easy saving.
+
+Keep the README's 30–60 minutes per film in mind, though. Rendering is a small slice; most of the time goes to the agent writing and reviewing code.
+
+## 9. Does the Same Input Really Give the Same Film?
+
+By contract, any frame should come out the same regardless of order. I checked in three steps.
+
+**1. Render order.** I captured the same four instants (3.5 s, 12.25 s, 21 s, 28.75 s) going forward, going backward, and in a fresh browser after jumping near the end each time. The PNG hashes matched for all four.
+
+**2. Repeated sequential renders.** I captured frames 0–259, the range worker 0 handles, twice in the same way (JPEG quality 95). All 260 were byte-identical.
+
+**3. Actual `video.mjs` output.** I compared hashes of the decoded frames (`ffmpeg -f framemd5`).
+
+| Comparison                | Differing frames                       |
+| ------------------------- | -------------------------------------- |
+| 1 worker, run 1 vs run 2  | none                                   |
+| 3 workers, run 1 vs run 3 | 197–249 (53 frames)                    |
+| 3 workers, run 2 vs run 3 | 446–447, 449–509 (63 frames)           |
+| 1 worker vs 3 workers     | 534 (each range is encoded separately) |
+
+With one worker, re-rendering gave the same film. With three workers, **one frame** came out slightly different on each run: frame 197 in run 1, frame 446 in run 2, and run 3 agreed with the other run on both. The dozens of frames that follow differ too because x264's P-frames reference the changed frame; the differences stop exactly before the next keyframes (250 and 510).
+
+The difference is tiny. Frame 197's PSNR was 59.3 dB, and a difference image amplified 20× was nearly black. It never reproduced sequentially, only in parallel, so it looks like rasterisation varying under load. This demo composites its watercolour in WebGL, so the GPU is a likely suspect, but I didn't pin down the cause.
+
+The [HyperFrames analysis](/kb/2026-10-07-hyperframes-architecture) also found glyph rasterisation changing with the worker count. Keeping the page-side contract doesn't guarantee bit-level determinism below that, in Chrome and the GPU. If you regression-test films by hash, pin the render to one worker.
+
+## 10. The Prompts Are the Product
+
+### 10.1 `STYLE.md`: only what must stay fixed
+
+Every `STYLE.md` has nearly the same 11 sections. Here is Watercolor Brush:
+
+| Section                        | Contents                                                                                                                                              |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Essence, and what it is not | "Translucent brush strokes on warm cotton paper, nothing drawn with a vector line", plus why it is **not** ink wash, impasto or a crayon picture book |
+| 2. Materials & rendering       | How the paper is generated, the stroke (width profiles, ±22% noise, 3–9 dry-brush tracks), three-pass washes                                          |
+| 3. Colour logic                | Paper is the white; darker means more passes; 3–5 hues per scene plus ink and one accent                                                              |
+| 4. Type & subtitles            | Serif titles, handwritten notes, subtitle position, size and minimum hold                                                                             |
+| 5. Motion quality              | Painting-in is the main motion; sway only once an object is finished                                                                                  |
+| 6. Camera grammar              | Eight camera moves and what each expresses: "a vocabulary, not a route"                                                                               |
+| 7. Sound palette               | Instruments, foley made from the scene's matter, how silence is used, mix character                                                                   |
+| 8. Native moves                | Seven moves only this medium can make, with topics each one suits                                                                                     |
+| 9. Pitfalls of the medium      | Seven bugs actually hit                                                                                                                               |
+| 10. Engine                     | Which demo file holds what                                                                                                                            |
+| 11. Variation space            | Structures, openings and endings **unlike** the demo                                                                                                  |
+
+Section 9 is the most practical. "The stroke builder consumes the global RNG: any stroke created in `render(t)` must be wrapped in `withSeed` or parallel workers disagree." "Classic scripts share one global scope: touching a `const` before its declaration in async init leaves `READY` false and every screenshot times out." These read less like a style guide for people and more like an incident log that keeps an agent from repeating a mistake.
+
+`STYLE.md` contains no story. Story, scene count, length and end card are split out into `DEMO.md`, which always opens with:
+
+> One example among many. Don't reuse its story, arc, shots, props or timings.
+
+### 10.2 Guardrails against copying the demo
+
+A large share of the guidance comes down to **don't copy the demo**. Given a good example, an agent will happily swap the topic and rebuild the same film.
+
+- **Treatment first, demo later.** No opening `DEMO.md` or the demo code before `TREATMENT.md` has three candidate structures and a reasoned choice. In plugin mode the demo source isn't even downloaded; the agent fetches it with `setup.sh demo <slug>` after the treatment exists.
+- **The first idea is the cliché.** "The first idea that comes to mind for a style is usually its cliché." Openings, endings and the score's shape should come from the topic.
+- **"Not the demo again."** Before delivery, compare six things with the demo (structure, opening, signature shot, camera path, score shape, ending): **at least four must differ**. Then put your contact sheet next to the demo poster as a last check.
+- **References teach grammar only.** At the planning stage, pick one or two benchmark works and write down what to learn and what not to take (characters, designs, melodies, specific shots).
+
+### 10.3 `DIRECTOR.md`: directing rules with numbers
+
+Instead of "make it good", the directing guide hands out numbers you can check.
+
+- A film is judged in this order: **sound, rhythm, camera, directing**. Good-looking frames are only the starting point.
+- A hook in the first 3 seconds. No slow logo reveal first.
+- Every visible action has a sound. At least **two real silences** before the turn or peak, and at least two sound-led transitions (J-cut, L-cut).
+- At least **four different camera moves**. Transitions happen inside the medium (a fold that becomes the next scene) rather than default fades and hard cuts.
+- Subtitles hold at least 1.8 s and never less than the spoken line + 0.6 s. Title cards hold at least 4 s.
+- Blend character poses with keyframes and easing, never switch inside an `if`. Held props sit "between the palms, at a depth between the two arms". "Worried" and "angry" are one eyebrow flip apart, so check expressions at final size.
+- **One fix round.** Fix everything the review finds in one round, then check once more.
+
+Section 10, "The failures we saw most", lists things like a subject too small, a colour laid on the same colour, subtitles covering the subject and blank frames in transitions. It reads like a list drawn from real productions.
+
+### 10.4 The map rules
+
+`DIRECTOR.md` §13 applies to every map, globe and satellite view. Don't draw borders unless the film is about them, and keep disputed areas out of frame. So far that's a general principle, but it continues with specific rules for when China is in frame: follow China's standard map (Taiwan, the South China Sea islands, how Zangnan and Aksai Chin are drawn, never listing Taiwan, Hong Kong or Macao as countries). It explicitly says not to draw China from the default boundaries in Natural Earth or OpenStreetMap. Recent commits (`05f2481`, `88bfcc2`) added this section and fixed the globes and maps in existing demos. It shows the author's main audience is Chinese-speaking, and if you make map scenes with this library elsewhere, you should know these rules go straight into the agent's judgement.
+
+## 11. How the Agent Checks Its Own Work
+
+Nobody can watch every film, so there are several checks an agent can run mechanically.
+
+| Tool                       | What it checks                                                                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readcheck.mjs`            | That on-screen text stays long enough to read. It samples `TEXTS(t)` every 0.04 s and requires each text to be fully visible for CJK characters ÷ 4.5 + other characters ÷ 15 + 1.5 s |
+| `asr_check.py`             | That TTS read the script. It transcribes with faster-whisper; English must match word for word, Chinese, Japanese and Korean need character similarity ≥ 0.92                         |
+| `mux.sh`                   | Final loudness −14 LUFS ±1, true peak at or below −1 dB                                                                                                                               |
+| `cuecheck.py` (some demos) | Timing error between visual hits and music cues                                                                                                                                       |
+| `ffmpeg blackdetect`       | Blank frames                                                                                                                                                                          |
+| `tools/release.py check`   | (Library only) images nothing references, demo files nothing reaches, process wording like `PRODUCTION_LOG`                                                                           |
+
+`readcheck` has a rule aimed squarely at agents. If a typewriter effect reports "what has been typed so far" in `TEXTS`, every new character counts as a new text and the whole check fails. So the contract says to report the **full text** from the first frame. It closes off the shortcut of bending the output to pass the check.
+
+The Chinese number comparison in `asr_check.py` is thorough too. 十九 and 19, 两千零二十六 and 2026, 一万九千 and 1.9万, 百分之三十 and 30% count as the same value. 三点五十分 matches 3:50 but not 3点5分. An outside contributor reported this in #10 and sent a fix. The maintainer reimplemented it to compare by value, so that "a misread number still fails", and merged the original PR anyway to credit it. `TECHNIQUE.md` says to spell numbers out in the TTS text and write them as digits in subtitles; this check connects the two.
+
+`readcheck`'s CJK test includes Hangul (`\p{Script=Hangul}`), so Korean subtitles are timed at 4.5 characters per second. There is no Korean-specific TTS path, though. `tts_zh.py` accepts any edge-tts voice name, so you can pass a Korean voice, but the docs only cover English and Chinese.
+
+## 12. Making a Style Your Own
+
+This arrived on October 22. You change a library style, or start from a blank page, and keep the result in `~/lemo-my-styles/<slug>/`, where library updates and uninstalling the plugin don't touch it.
+
+The procedure (`MY-STYLES.md`) says a lot about the repository's character.
+
+1. **One question at a time.** Two or three options with a recommendation and its reason, and always "free conversation" as the last option. About ten questions at most.
+2. **Three groups of how far a change can go.**
+   - Safe to change: palette, type, tempo, sound, signature moves
+   - Changes its character: materials and rendering, colour logic, camera grammar
+   - Can't change: §1 Essence and §10 Engine. Changing those makes it a different style, so the agent suggests a closer base.
+3. **Approve the summary → one style frame → a 15–30 s demo → keep it.** When a library style was changed, the same frame is rendered in the original alongside. If two rounds of fixes don't get there, the agent suggests a closer base.
+
+A kept style carries a `CHANGES.md` (each section's original value, new value and reason) and a `library_version` (the library commit). When the base style changes later, the agent mentions it once and asks whether to pull in the useful fixes. It is the fork and upstream relationship from software, applied to a style prompt.
+
+## 13. How Is It Different from HyperFrames?
+
+Both capture HTML in headless Chrome to produce an MP4, and both say they are built for agents. Where they invest is the opposite.
+
+|                          | HyperFrames                                                 | Lemo-Opuscar                                                        |
+| ------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Who decides the time?    | The renderer seeks the page clock and 13 animation runtimes | The page draws it directly with `render(t)`                         |
+| Renderer size            | 120,000+ lines across engine, producer and core             | 393 lines in `core/render`                                          |
+| How the picture is drawn | Existing web animation: GSAP, CSS, Lottie and more          | Canvas 2D, WebGL or three.js written from scratch every time        |
+| Capture                  | One of `beginFrame`, `drawElement` or screenshot            | JPEG screenshot only                                                |
+| Sound                    | Places video and audio tracks                               | Composes, adds foley, TTS, mixes and masters itself                 |
+| What the agent gets      | 21 skills and lint/check CLIs with JSON output              | Prompts for 66 styles (~300k words) and directing/production guides |
+| Where quality is guarded | 97 lint rules and a deterministic renderer                  | Directing rules written as numbers, and self-check tools            |
+
+HyperFrames says: let the agent write ordinary web animation, and the renderer will turn it into video. Lemo-Opuscar says: keep the renderer minimal, have the agent write everything down to the brush engine, and tell it in great detail what must hold. On the time model alone, Opuscar is closer to Remotion's `useCurrentFrame()`, done without React, as one pure function.
+
+Which is right depends on what you want to make. For slide-like motion graphics HyperFrames is faster. For textures that web animation libraries can't express, like ukiyo-e or watercolour, Opuscar fits better. But the Opuscar approach has the agent write thousands of lines of drawing code each time, so it leans heavily on the model. That is probably why the README warns that it's tuned for Opus 5.5.
+
+## 14. Suggested Reading Order
+
+1. **`AGENTS.md`**: 88 lines. The router that decides which doc to read for each kind of request.
+2. **`styles/watercolor/STYLE.md`**: the clearest view of a style's sections. Don't skip §9, Pitfalls.
+3. **`DIRECTOR.md` §4 and §11**: the treatment format and the pre-delivery checklist.
+4. **`TECHNIQUE.md` §2**: the page contract and a sample `build.sh`.
+5. **`core/render/page.mjs` → `video.mjs`**: 134 lines together. That's the whole renderer.
+6. **`core/render/readcheck.mjs`**: the 51-line reading-time check, with a well-written contract in its header comment.
+7. **`core/render/mux.sh`**: how it learns to distrust damaged audio.
+8. **`styles/urban-sketch/demo/film.js`**: what a real `render(t)` and `EV` look like.
+9. **`MY-STYLES.md` §2**: the question design (one question at a time, recommendation first, a free-conversation exit) is worth borrowing for other agent skills.
+
+## 15. Design Points That Stood Out
+
+**1. A small renderer with a firm contract.** The agreement with the page is five globals. Canvas 2D, WebGL, three.js and SVG demos all render with the same tools, and users can bring their own stack.
+
+**2. Style and story split by file.** `STYLE.md` holds only invariants and `DEMO.md` only the demo's story. The file boundary itself tells the agent what to keep and what to make new.
+
+**3. "Don't copy" enforced as procedure.** Treatment first, demo source later, and a numeric bar before delivery: four of six aspects must differ. It takes on directly the problem that a good example makes results look alike.
+
+**4. Taste turned into checks.** `readcheck` checks "hold subtitles long enough", `asr_check` checks "did it read the script", `mux.sh` checks "is the loudness right". Without anyone watching, the agent can see failures as numbers.
+
+**5. Failures become documentation.** The Pitfalls in `STYLE.md`, the "failures we saw most" in `DIRECTOR.md`, the ffmpeg 6.1 story in `mux.sh`'s comments: most of it comes from problems hit in real production. Commit messages do the same, as in "gable roofs wound outward, so they stop flickering against the wall tops".
+
+## 16. Things to Watch
+
+**1. It's tuned for Opus 5.5.** The README says so itself. With a renderer this small, picture quality depends on the code the model writes.
+
+**2. The demos don't render out of the box.** Demo fonts, audio and textures aren't in git (`CREDITS` names their sources). The docs do say the demos are for reading, but if you run one to study a technique you start by fetching fonts. Early demos that don't follow the shared contract (`window.DUR`), like Halftone Dossier, are still there.
+
+**3. No tests for the shared tools in the repository.** `slot.mjs` has an "exported for tests only" comment, but I couldn't find the tests in the repository. The `test.js` files in demo folders are mostly scene-check pages. Quality rests on human approval and gates like `release.py check`.
+
+**4. Parallel renders may not be bit-identical.** As section 9 showed, three workers change about one frame per run, invisibly. Initialising the page twice (section 8) is also expensive for short films.
+
+**5. Some paths send text to an outside service.** Chinese voices go through edge-tts, which sends the narration text to Microsoft. The standard edition's `DIRECTOR.md` only asks the agent to mention in its questions that this is an online service that needs a connection. `tools/directory.py`, which builds the plugin-directory edition, swaps in a line saying that since the text goes to Microsoft, use it only when the user asks and agrees.
+
+**6. There are licence exceptions.** Demo films are CC BY 4.0, but three voice tracks are excluded: the shouts in Game Show Flat (macOS `say`), the narration in Paper-cut Lightbox (Edge TTS) and in Broadcast News Package (Doubao TTS).
+
+**7. One person, moving fast.** Five weeks, 80 commits, from 39 styles to 66. The outside contributions are three commits: one style (Memphis Diorama), the Chinese number comparison, and a `readcheck` fix. The guides change often, so updating the plugin changes how the agent behaves.
+
+## 17. Conclusion
+
+Lemo-Opuscar's renderer is under 400 lines. A page draws a frame with `render(t)`, headless Chrome captures it as a JPEG, and ffmpeg stitches the frames together; that's all. Instead, the repository spends close to 300,000 words teaching the agent **what must hold** and **what not to copy**. Styles are written as 11 sections of invariants, stories are split off into demo notes, directing is written as numbers, and taste is turned into check tools.
+
+Measured, the renderer was as predictable as it is simple. JPEG capture was 80% of a frame's cost, and on a short demo page initialisation dominated, so going past three workers didn't help. One-worker renders were identical every time; parallel renders occasionally changed a single frame by an amount no one would see.
+
+For anyone designing agent skills, the lesson here is less about rendering than about documents. Give an agent a good example and it will copy it. Lemo-Opuscar gives examples and then writes down the procedure that keeps them from being copied.
+
+---
+
+> Analysed: 2026-11-04
+> Commit: `bebbbe1` (`main`, 2026-11-01)
+> Repository: https://github.com/lemomo-ai/lemo-opuscar (code MIT, demos CC BY 4.0)
+> Measured on: Apple M5 Pro (15 cores), macOS, Node 24.15, FFmpeg 8.1, playwright-core 1.63, Chrome Headless Shell 153. Urban Sketch demo (32.4 s, 24 fps, 1920×1080, 778 frames). The demo frames in this post were rendered locally from LemoLab's demos (CC BY 4.0).
+
+_Written with Claude Code_

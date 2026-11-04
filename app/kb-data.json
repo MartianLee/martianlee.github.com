@@ -114,6 +114,21 @@
       ]
     },
     {
+      "id": "backend-architecture",
+      "label": "Backend Architecture",
+      "count": 8,
+      "slugs": [
+        "2026-04-18-bloom-filter-membership-check-at-scale",
+        "2026-04-18-redisbloom-signup-architecture",
+        "2026-07-25-bitchat-architecture",
+        "2026-09-01-framework-magic-tax",
+        "2026-09-28-request-layers",
+        "2026-09-29-activerecord-anatomy",
+        "2026-10-07-hyperframes-architecture",
+        "2026-11-04-lemo-opuscar-architecture"
+      ]
+    },
+    {
       "id": "backend",
       "label": "Backend",
       "count": 7,
@@ -125,20 +140,6 @@
         "2020-02-09-django-gae-deploy",
         "2023-06-01-pg-duplicate-key-voilates",
         "2024-09-16-til-ruby-rails"
-      ]
-    },
-    {
-      "id": "backend-architecture",
-      "label": "Backend Architecture",
-      "count": 7,
-      "slugs": [
-        "2026-04-18-bloom-filter-membership-check-at-scale",
-        "2026-04-18-redisbloom-signup-architecture",
-        "2026-07-25-bitchat-architecture",
-        "2026-09-01-framework-magic-tax",
-        "2026-09-28-request-layers",
-        "2026-09-29-activerecord-anatomy",
-        "2026-10-07-hyperframes-architecture"
       ]
     },
     {
@@ -324,6 +325,10 @@
       {
         "slug": "2026-09-12-archify-architecture",
         "title": "Archify dissected: what changes when the agent writes an IR instead of drawing the diagram?"
+      },
+      {
+        "slug": "2026-11-04-lemo-opuscar-architecture",
+        "title": "Lemo-Opuscar: How Do You Package 66 Film Styles as Code and Prompts?"
       }
     ],
     "2026-04-18-llm-basics-rnn-sequential-processing": [
@@ -876,6 +881,10 @@
       {
         "slug": "2026-10-08-passthrough-bridge-spectrum",
         "title": "What Crosses the Bridge Between Two Games? Twelve Passthrough Mods Compared"
+      },
+      {
+        "slug": "2026-11-04-lemo-opuscar-architecture",
+        "title": "Lemo-Opuscar: How Do You Package 66 Film Styles as Code and Prompts?"
       }
     ],
     "2026-05-30-weknora-architecture": [
@@ -1052,6 +1061,10 @@
       {
         "slug": "2026-10-19-fantasy-map-generator-architecture",
         "title": "Fantasy Map Generator Architecture: How Does One Seed Become Continents, Nations and Markets?"
+      },
+      {
+        "slug": "2026-11-04-lemo-opuscar-architecture",
+        "title": "Lemo-Opuscar: How Do You Package 66 Film Styles as Code and Prompts?"
       }
     ],
     "2026-10-19-fantasy-map-generator-architecture": [
@@ -1404,7 +1417,12 @@
     "2026-10-19-voronoi-procedural-generation": [
       "2026-10-19-fantasy-map-generator-architecture"
     ],
-    "2026-10-23-godot-world-streaming-stutter": []
+    "2026-10-23-godot-world-streaming-stutter": [],
+    "2026-11-04-lemo-opuscar-architecture": [
+      "2026-10-07-hyperframes-architecture",
+      "2026-04-18-superpowers-architecture",
+      "2026-04-18-claude-code-game-studios-architecture"
+    ]
   },
   "postIndex": [
     {
@@ -3227,6 +3245,27 @@
       "topic": "software-engineering",
       "stage": "budding",
       "summary": "A Godot 4.6 game that streams its world in chunks froze for 0.1 to 0.3 seconds every time the player walked. A harness that walks the hero on its own and logs frame times found two causes: code scanning 19,000 nodes every physics tick, and code building and tearing down whole chunks in a single frame. After the fix, frames over 50 ms are gone."
+    },
+    {
+      "slug": "2026-11-04-lemo-opuscar-architecture",
+      "title": "Lemo-Opuscar: How Do You Package 66 Film Styles as Code and Prompts?",
+      "shortTitle": "Lemo-Opuscar",
+      "date": "2026-11-04T09:00:00.000Z",
+      "tags": [
+        "lemo-opuscar",
+        "video-rendering",
+        "claude-code",
+        "agent-skills",
+        "headless-chrome",
+        "playwright",
+        "ffmpeg",
+        "canvas",
+        "deterministic-rendering",
+        "architecture"
+      ],
+      "topic": "backend-architecture",
+      "stage": "budding",
+      "summary": "Lemo-Opuscar is a style library that lets a coding agent draw, score and mix a short film in styles like watercolour, ukiyo-e or a satellite briefing. The renderer is under 400 lines; the real body is about 300,000 words of style prompts and directing guides. I followed the code, rendered demos myself, and measured how speed scales with workers and whether the output is really identical."
     }
   ],
   "graph": {
@@ -3234,7 +3273,7 @@
       {
         "id": "tag:architecture",
         "label": "architecture",
-        "count": 37
+        "count": 38
       },
       {
         "id": "tag:ai-agent",
@@ -3267,6 +3306,11 @@
         "count": 10
       },
       {
+        "id": "tag:claude-code",
+        "label": "claude-code",
+        "count": 7
+      },
+      {
         "id": "tag:coding-agent",
         "label": "coding-agent",
         "count": 7
@@ -3280,11 +3324,6 @@
         "id": "tag:react",
         "label": "react",
         "count": 7
-      },
-      {
-        "id": "tag:claude-code",
-        "label": "claude-code",
-        "count": 6
       },
       {
         "id": "tag:skills",
@@ -3334,6 +3373,11 @@
       {
         "id": "tag:performance",
         "label": "performance",
+        "count": 4
+      },
+      {
+        "id": "tag:playwright",
+        "label": "playwright",
         "count": 4
       },
       {
@@ -3399,11 +3443,6 @@
       {
         "id": "tag:openai",
         "label": "openai",
-        "count": 3
-      },
-      {
-        "id": "tag:playwright",
-        "label": "playwright",
         "count": 3
       },
       {
@@ -4493,8 +4532,20 @@
       {
         "source": "2026-10-23-godot-world-streaming-stutter",
         "target": "tag:performance"
+      },
+      {
+        "source": "2026-11-04-lemo-opuscar-architecture",
+        "target": "tag:claude-code"
+      },
+      {
+        "source": "2026-11-04-lemo-opuscar-architecture",
+        "target": "tag:playwright"
+      },
+      {
+        "source": "2026-11-04-lemo-opuscar-architecture",
+        "target": "tag:architecture"
       }
     ]
   },
-  "generatedAt": "2026-10-23T13:04:37.921Z"
+  "generatedAt": "2026-11-04T12:55:03.229Z"
 }
