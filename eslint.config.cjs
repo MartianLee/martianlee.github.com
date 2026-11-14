@@ -17,6 +17,7 @@ module.exports = [
       '.claude/**',
       '.superpowers/**',
       '.playwright-mcp/**',
+      '.notes/**',
       'out/**',
       '.contentlayer/**',
       '.yarn/**',
