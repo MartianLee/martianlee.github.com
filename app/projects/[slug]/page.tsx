@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
@@ -24,7 +25,7 @@ export async function generateMetadata(props: {
 function readShotSize(imgSrc?: string): { width: number; height: number } | undefined {
   if (!imgSrc) return undefined
   try {
-    const { width, height } = imageSize(path.join(process.cwd(), 'public', imgSrc))
+    const { width, height } = imageSize(fs.readFileSync(path.join(process.cwd(), 'public', imgSrc)))
     return width && height ? { width, height } : undefined
   } catch {
     return undefined
