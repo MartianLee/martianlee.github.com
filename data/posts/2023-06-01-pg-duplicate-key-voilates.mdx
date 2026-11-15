@@ -4,6 +4,7 @@ title: 'postgresql duplicate key value violates unique constrain 에러 해결�
 crawlertitle: 'postgresql duplicate key value violates unique constrain 에러 해결하기'
 summary: 'postgresql duplicate key 에러를 해결합니다'
 date: 2023-06-01 22:46:51 +0900
+lastmod: 2026-11-16 12:00:00 +0900
 categories: posts
 tags: ['postgresql', 'orm', 'react-native', 'error']
 topic: backend
@@ -50,7 +51,7 @@ Sequence objects are special single-row tables created with CREATE SEQUENCE.
 
    이런 식으로 create query를 조회해 보시면 table_id_seq라는 key를 알 수 있습니다.
 
-2. `select lastval() from 테이블 이름;` 을 실행하면 현재 table에 설정된 key의 값을 알 수 있습니다. 보통 에러가 나는 경우에는 table에 특수한 조작으로 row를 이전에 insert해서 table 내부 table_id_seq값이 max(id)보다 작아서 이미 해당 id의 row가 존재함을 알 수 있습니다.
+2. `select last_value from table_id_seq;` 를 실행하면 시퀀스의 현재 값을 알 수 있습니다. (`lastval()`은 현재 세션에서 마지막으로 발급된 시퀀스 값을 돌려주는 함수라서 특정 테이블의 시퀀스를 확인하는 용도로는 쓸 수 없습니다.) 보통 에러가 나는 경우에는 table에 특수한 조작으로 row를 이전에 insert해서 table 내부 table_id_seq값이 max(id)보다 작아서 이미 해당 id의 row가 존재함을 알 수 있습니다.
 3. `select setval('table_id_seq', (select max(id) from table));` 쿼리를 실행해 키의 최대값을 재설정합니다.
 4. 이후에 아까 실행하려던 insert 쿼리를 생성하면 정상적으로 실행되는 것을 알 수 있습니다.
 

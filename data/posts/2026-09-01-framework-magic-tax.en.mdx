@@ -4,6 +4,7 @@ title: 'Is Rails Slow? I Built the Same Blog API Eight Times to Price the Framew
 crawlertitle: 'Is Rails Slow? I Built the Same Blog API Eight Times to Price the Framework'
 summary: '"Rails is slow" is an unanswerable question, because a Rails app and a Go app are never doing the same work. So I narrowed it: inside one runtime, what do the framework and the ORM cost? Four runtimes, each built twice, all returning identical JSON from the identical four SQL statements, measured three times on Docker Linux with MySQL. The abstraction cost in CPU per request came out at ×7.67 for Ruby, ×6.14 for Python, ×2.62 for Node and ×2.51 for Go — and I counted, object by object, exactly what Active Record builds on every request.'
 date: 2026-09-01 18:00:00 +0900
+lastmod: 2026-11-16 12:00:00 +0900
 categories: posts
 tags:
   [
@@ -148,11 +149,11 @@ Divided inside each pair, that is the abstraction cost:
 
 Three things read out of this.
 
-**① On throughput alone, Rails is genuinely slow.** One fifth of Gin+GORM, one half of Express+Sequelize. That multiplies straight onto your server bill. This axis is not defensible.
+**① On throughput alone, Rails is genuinely slow.** One fifth of Gin+GORM, one half of Express+Sequelize. On this workload, that means proportionally more app-server CPU for the same traffic. This axis is not defensible.
 
 **② But the same table contains a number pointing the other way.** Ruby with the magic removed — Rack plus raw SQL — costs 0.145 ms per request, which is **3.9× cheaper than Express+Sequelize (0.567 ms) and the same order of magnitude as Gin+GORM (0.277 ms)**. Same language, same web server, same driver; remove Active Record and you get 7.67×. The accurate sentence is not "Ruby is slow" but **"Active Record is expensive."**
 
-**③ And it isn't a Ruby problem.** Django's ORM costs ×6.14. **The amount of magic is the price**, and the two frameworks that do the most of it cost the most. Go's cost is small not because Go is fast but because GORM has no callbacks, no dirty tracking, and no generated association methods.
+**③ And it isn't a Ruby problem.** Django's ORM costs ×6.14. **The amount of magic is the price**, and the two frameworks that do the most of it cost the most. Go's cost is small not because Go is fast but because GORM does less work per request. GORM has hooks too, but it checks whether a model defines any just once, when it parses the schema, and it neither arms dirty tracking on each object nor generates association methods for it.
 
 On memory the folk wisdom inverts. **Express+Sequelize uses 183.7 MB — 1.7× Rails' 107.1 MB.** "Ruby is a memory hog" does not survive an equal-functionality comparison. The impression that Rails eats memory comes not from a heavy runtime but from **having to run several workers**, which is what sections 9 and 10 are about.
 
@@ -219,7 +220,7 @@ Same Rails process, same middleware, same router, same renderer — only the ins
 | same 4 queries, `pluck`, no AR objects |   854rps |        0.675 ms |
 | same 4 queries, full Active Record     |   581rps |        1.113 ms |
 
-**What's slow is not Rails, it's Active Record.** Thirteen middlewares, the router, the controller and the renderer together account for 0.127 ms per request — **11.4% of the total**. The other 88.6% is the ORM.
+**What's slow is not Rails, it's Active Record.** Thirteen middlewares, the router, the controller and the renderer together account for 0.127 ms per request — **11.4% of the total**. The other 88.6% goes to reading from the database and building the JSON. That span includes the driver and result handling as well, but the Rack version running the same SQL by hand costs 0.145 ms for the entire request, so most of it is Active Record.
 
 And this is **not a fixed cost you pay once.** The fixed part is only 11.4%; 88.6% scales with rows and objects. Active Record is not a runtime you switch on and use for free — it is the work of building an object per row and attaching machinery to each one.
 
@@ -339,7 +340,7 @@ In a benchmark, the lies live in the silences. So, explicitly:
 
 **One endpoint, uniform load.** No cache, no CDN, no background jobs. **The whole dataset fits in the buffer pool** — on purpose, since the goal is to measure the app rather than the disk. In a real service with longer database waits, **the framework's share is smaller than it is here.**
 
-**No framework was tuned.** Every stack is close to what its `new` command or its documentation hands you. **One machine, arm64.** The ratios and the direction travel; the absolute numbers do not.
+**No framework was tuned.** Every stack is close to what its `new` command or its documentation hands you. **One machine, arm64.** I expect the ratios and the direction to hold in other environments, though I have not tested that. The absolute numbers will differ.
 
 ## 15. Running it yourself
 

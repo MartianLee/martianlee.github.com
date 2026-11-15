@@ -4,6 +4,7 @@ title: 'How to Fix the postgresql duplicate key value violates unique constraint
 crawlertitle: 'How to Fix the postgresql duplicate key value violates unique constraint Error'
 summary: 'How to resolve the postgresql duplicate key error'
 date: 2023-06-01 22:46:51 +0900
+lastmod: 2026-11-16 12:00:00 +0900
 categories: posts
 tags: ['postgresql', 'orm', 'react-native', 'error']
 topic: backend
@@ -51,7 +52,7 @@ Sequence objects are special single-row tables created with CREATE SEQUENCE.
 
    Inspecting the `CREATE` query like this lets you identify the sequence name — in this case `table_id_seq`.
 
-2. Run `select lastval() from <table name>;` to see the current sequence value set on the table. When this error occurs, it is usually because rows were previously inserted into the table through some special operation, causing the internal `table_id_seq` value to fall below `max(id)` — meaning a row with that ID already exists.
+2. Run `select last_value from table_id_seq;` to see the current value of the sequence. (`lastval()` returns the value most recently issued by any sequence in the current session, so it cannot be used to inspect a specific table's sequence.) When this error occurs, it is usually because rows were previously inserted into the table through some special operation, causing the internal `table_id_seq` value to fall below `max(id)` — meaning a row with that ID already exists.
 
 3. Run the query `select setval('table_id_seq', (select max(id) from table));` to reset the sequence to the current maximum ID.
 
